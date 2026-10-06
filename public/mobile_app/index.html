@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,21 +18,54 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Integrated mobile application - clean architecture skeleton">
+  <meta name="description" content="FinAcc — المحاسب الشخصي: نظام محاسبي ومخزون متكامل يعمل بلا إنترنت">
+  <meta name="theme-color" content="#00695C">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="mobile_app">
+  <meta name="apple-mobile-web-app-title" content="المحاسب الشخصي">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>mobile_app</title>
+  <title>المحاسب الشخصي — FinAcc</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* خلفية الافتتاح بلون الهوية قبل تهيئة المحرك (لا وميض أبيض) */
+    html, body { margin: 0; padding: 0; background: #0A1310; height: 100%; }
+    #splash-brand {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      background: radial-gradient(circle at 50% 38%, #10201B 0%, #0A1310 62%);
+      color: #E4EEE9; font-family: system-ui, sans-serif; z-index: 9999;
+      transition: opacity .45s ease;
+    }
+    #splash-brand .logo {
+      width: 84px; height: 84px; border-radius: 50%;
+      background: linear-gradient(135deg, #007A6A, #004D42);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 34px rgba(0, 105, 92, .45);
+    }
+    #splash-brand .title { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+    #splash-brand .sub { font-size: 13px; opacity: .72; }
+    #splash-brand.hidden { opacity: 0; pointer-events: none; }
+  </style>
 </head>
 <body>
+  <div id="splash-brand">
+    <div class="logo">
+      <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
+        <rect x="12" y="10" width="24" height="30" rx="4" fill="#FFFFFF"/>
+        <path d="M17 18h14M17 23h9M17 28h12M17 33h7" stroke="#00695C" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="33" cy="15" r="6.5" fill="#C9A96A"/>
+        <circle cx="33" cy="15" r="4" stroke="#8F6A22" stroke-width="1.6" fill="none"/>
+      </svg>
+    </div>
+    <div class="title">FinAcc</div>
+    <div class="sub">المحاسب الشخصي — يعمل بلا إنترنت</div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -41,6 +74,16 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" defer></script>
+  <script>
+    // إخفاء شاشة الافتتاح فور أول إطار فلاتر.
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('splash-brand');
+      if (el) {
+        el.classList.add('hidden');
+        setTimeout(function () { el.remove(); }, 500);
+      }
+    });
+  </script>
 </body>
 </html>

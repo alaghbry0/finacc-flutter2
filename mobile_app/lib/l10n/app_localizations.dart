@@ -98,71 +98,605 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// The application title shown in the app bar and window title
+  /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Mobile App'**
+  /// **'Personal Accountant'**
   String get appTitle;
 
-  /// Title of the home screen skeleton
+  /// No description provided for @appBrand.
   ///
   /// In en, this message translates to:
-  /// **'Environment Ready'**
-  String get homeTitle;
+  /// **'FinAcc'**
+  String get appBrand;
 
-  /// Confirmation message shown on the home screen
+  /// No description provided for @brandTagline.
   ///
   /// In en, this message translates to:
-  /// **'The clean architecture skeleton is running with localization, declarative routing and MVVM state management.'**
-  String get envReadyMessage;
+  /// **'Complete accounting & inventory system — works fully offline'**
+  String get brandTagline;
 
-  /// Title of the section listing the app layers
+  /// No description provided for @commonNext.
   ///
   /// In en, this message translates to:
-  /// **'Architecture Layers'**
-  String get architectureSectionTitle;
+  /// **'Next'**
+  String get commonNext;
 
-  /// Name of the presentation layer
+  /// No description provided for @commonBack.
   ///
   /// In en, this message translates to:
-  /// **'UI — Views & ViewModels'**
-  String get layerUi;
+  /// **'Back'**
+  String get commonBack;
 
-  /// Name of the domain layer
+  /// No description provided for @commonDone.
   ///
   /// In en, this message translates to:
-  /// **'Domain — Models & Use Cases'**
-  String get layerDomain;
+  /// **'Done'**
+  String get commonDone;
 
-  /// Name of the data layer
+  /// No description provided for @commonCancel.
   ///
   /// In en, this message translates to:
-  /// **'Data — Services & Repositories'**
-  String get layerData;
+  /// **'Cancel'**
+  String get commonCancel;
 
-  /// Title of the counter demonstration card
+  /// No description provided for @commonRetry.
   ///
   /// In en, this message translates to:
-  /// **'MVVM Counter Demo'**
-  String get counterSectionTitle;
+  /// **'Retry'**
+  String get commonRetry;
 
-  /// Pluralized counter label
+  /// No description provided for @commonConfirm.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{Ready} other{{count} taps}}'**
-  String counterValue(num count);
+  /// **'Confirm'**
+  String get commonConfirm;
 
-  /// Label for the increment action
+  /// No description provided for @commonContinue.
   ///
   /// In en, this message translates to:
-  /// **'Increment'**
-  String get increment;
+  /// **'Continue'**
+  String get commonContinue;
 
-  /// Label for the reset action
+  /// No description provided for @commonDetails.
   ///
   /// In en, this message translates to:
-  /// **'Reset'**
-  String get reset;
+  /// **'Details'**
+  String get commonDetails;
+
+  /// No description provided for @commonViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get commonViewAll;
+
+  /// No description provided for @splashLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your local database…'**
+  String get splashLoading;
+
+  /// No description provided for @onboardWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Personal Accountant'**
+  String get onboardWelcomeTitle;
+
+  /// No description provided for @onboardWelcomeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A complete accounting and inventory system for your shop — your data stays on your device, offline, no subscriptions.'**
+  String get onboardWelcomeMessage;
+
+  /// No description provided for @onboardFeature1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Works 100% offline'**
+  String get onboardFeature1Title;
+
+  /// No description provided for @onboardFeature1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell, buy, stocktake and report — even with no network at all.'**
+  String get onboardFeature1Desc;
+
+  /// No description provided for @onboardFeature2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbers you can trust'**
+  String get onboardFeature2Title;
+
+  /// No description provided for @onboardFeature2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Atomic document numbering that never repeats, weighted-average cost, and hard protection against negative stock.'**
+  String get onboardFeature2Desc;
+
+  /// No description provided for @onboardFeature3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Full privacy'**
+  String get onboardFeature3Title;
+
+  /// No description provided for @onboardFeature3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'No data ever leaves to any server — your backups belong to you.'**
+  String get onboardFeature3Desc;
+
+  /// No description provided for @onboardStepCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company details'**
+  String get onboardStepCompany;
+
+  /// No description provided for @onboardStepSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get onboardStepSecurity;
+
+  /// No description provided for @onboardStepReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get onboardStepReview;
+
+  /// No description provided for @companyNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name'**
+  String get companyNameLabel;
+
+  /// No description provided for @companyNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'As it appears to customers on invoices'**
+  String get companyNameHint;
+
+  /// No description provided for @companyPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get companyPhoneLabel;
+
+  /// No description provided for @companyPhoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For WhatsApp support and reminders later'**
+  String get companyPhoneHint;
+
+  /// No description provided for @baseCurrencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency'**
+  String get baseCurrencyLabel;
+
+  /// No description provided for @baseCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed after setup — other currencies get daily rates'**
+  String get baseCurrencyHint;
+
+  /// No description provided for @baseCurrencyDecimalsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{decimals, plural, zero{no decimals} one{one decimal place} other{decimal places: {decimals}}}'**
+  String baseCurrencyDecimalsNote(num decimals);
+
+  /// No description provided for @companyFormInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the company name and choose a base currency'**
+  String get companyFormInvalid;
+
+  /// No description provided for @pinSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your PIN code'**
+  String get pinSetupTitle;
+
+  /// No description provided for @pinSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'4 to 6 digits — asked every time the app opens'**
+  String get pinSetupSubtitle;
+
+  /// No description provided for @pinConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the code'**
+  String get pinConfirmTitle;
+
+  /// No description provided for @pinConfirmSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter the same code to confirm'**
+  String get pinConfirmSubtitle;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The codes do not match. Try again.'**
+  String get pinMismatch;
+
+  /// No description provided for @pinInvalidLength.
+  ///
+  /// In en, this message translates to:
+  /// **'The code must be 4 to 6 digits.'**
+  String get pinInvalidLength;
+
+  /// No description provided for @passphraseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery passphrase'**
+  String get passphraseTitle;
+
+  /// No description provided for @passphraseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery gate when the PIN is forgotten (after 10 wrong attempts) — it can never be recovered'**
+  String get passphraseSubtitle;
+
+  /// No description provided for @passphraseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase (8 characters or more)'**
+  String get passphraseLabel;
+
+  /// No description provided for @passphraseConfirmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm passphrase'**
+  String get passphraseConfirmLabel;
+
+  /// No description provided for @passphraseMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The passphrases do not match. Try again.'**
+  String get passphraseMismatch;
+
+  /// No description provided for @passphraseWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Important — read before continuing'**
+  String get passphraseWarningTitle;
+
+  /// No description provided for @passphraseWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgetting the passphrase means permanent loss of access; the only recovery is a backup file you keep. Store it safely and enable backups early.'**
+  String get passphraseWarningBody;
+
+  /// No description provided for @passphraseShort.
+  ///
+  /// In en, this message translates to:
+  /// **'The passphrase must be at least 8 characters.'**
+  String get passphraseShort;
+
+  /// No description provided for @creatingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up your shop…'**
+  String get creatingTitle;
+
+  /// No description provided for @creatingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating the company, main warehouse, main cashbox and fiscal year inside one safe transaction — any failure rolls everything back.'**
+  String get creatingMessage;
+
+  /// No description provided for @createdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup complete'**
+  String get createdTitle;
+
+  /// No description provided for @createdMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We created “{warehouse}” and “{cashbox}”, ready for your first invoice — no mandatory setup remains.'**
+  String createdMessage(Object cashbox, Object warehouse);
+
+  /// No description provided for @startUsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Start using'**
+  String get startUsing;
+
+  /// No description provided for @setupFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup could not complete'**
+  String get setupFailedTitle;
+
+  /// No description provided for @setupFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the details and try again — nothing was written to the database.'**
+  String get setupFailedBody;
+
+  /// No description provided for @lockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get lockTitle;
+
+  /// No description provided for @lockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The app is locked to protect your financial data'**
+  String get lockSubtitle;
+
+  /// No description provided for @lockWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect code'**
+  String get lockWrong;
+
+  /// No description provided for @lockAttemptsBeforeLock.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} attempts left before a temporary delay'**
+  String lockAttemptsBeforeLock(Object count);
+
+  /// No description provided for @lockDelayedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait {duration} then try again'**
+  String lockDelayedMessage(Object duration);
+
+  /// No description provided for @lockPassphraseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase required'**
+  String get lockPassphraseTitle;
+
+  /// No description provided for @lockPassphraseMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All ten PIN attempts are used. Enter the passphrase you chose during setup to regain access.'**
+  String get lockPassphraseMessage;
+
+  /// No description provided for @lockPassphraseFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get lockPassphraseFieldLabel;
+
+  /// No description provided for @lockPassphraseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect passphrase.'**
+  String get lockPassphraseFailed;
+
+  /// No description provided for @lockUnlockButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get lockUnlockButton;
+
+  /// No description provided for @lockUsePassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Use passphrase'**
+  String get lockUsePassphrase;
+
+  /// No description provided for @lockBackToPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to PIN'**
+  String get lockBackToPin;
+
+  /// No description provided for @lockVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying…'**
+  String get lockVerifying;
+
+  /// No description provided for @wipeDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe all data?'**
+  String get wipeDialogTitle;
+
+  /// No description provided for @wipeDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything will be permanently erased — invoices, items, balances and settings — and the app returns to first-install state. This cannot be undone.'**
+  String get wipeDialogBody;
+
+  /// No description provided for @wipeConfirmWord.
+  ///
+  /// In en, this message translates to:
+  /// **'wipe'**
+  String get wipeConfirmWord;
+
+  /// No description provided for @wipeFinalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Final confirmation'**
+  String get wipeFinalTitle;
+
+  /// No description provided for @wipeFinalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type “wipe” exactly to confirm erasing the whole database. If you have a backup file it stays safe outside the app.'**
+  String get wipeFinalBody;
+
+  /// No description provided for @wipeDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data wiped'**
+  String get wipeDoneTitle;
+
+  /// No description provided for @wipeDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app will now reopen on the setup screen.'**
+  String get wipeDoneBody;
+
+  /// No description provided for @dashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get dashboardTitle;
+
+  /// No description provided for @morningGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get morningGreeting;
+
+  /// No description provided for @eveningGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get eveningGreeting;
+
+  /// No description provided for @todaySales.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s sales'**
+  String get todaySales;
+
+  /// No description provided for @todayProfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s profit'**
+  String get todayProfit;
+
+  /// No description provided for @todayInvoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s invoices'**
+  String get todayInvoices;
+
+  /// No description provided for @netCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Net cash'**
+  String get netCash;
+
+  /// No description provided for @last30DaysTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days of sales'**
+  String get last30DaysTitle;
+
+  /// No description provided for @chartEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sales will appear here after the first invoice'**
+  String get chartEmptyMessage;
+
+  /// No description provided for @stockAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock alerts'**
+  String get stockAlertsTitle;
+
+  /// No description provided for @stockAlertsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No alerts — all items are above their minimum'**
+  String get stockAlertsEmpty;
+
+  /// No description provided for @stockAlertsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, zero{no items} one{one item} other{{count} items}} below minimum'**
+  String stockAlertsCount(num count);
+
+  /// No description provided for @tabHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get tabHome;
+
+  /// No description provided for @tabSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get tabSell;
+
+  /// No description provided for @tabInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get tabInventory;
+
+  /// No description provided for @tabCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get tabCash;
+
+  /// No description provided for @tabMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get tabMore;
+
+  /// No description provided for @comingSoonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming in the next slices'**
+  String get comingSoonTitle;
+
+  /// No description provided for @comingSoonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The “{feature}” module is built in its dedicated slice after phase one approval — the architecture and database are already ready for it.'**
+  String comingSoonBody(Object feature);
+
+  /// No description provided for @featureSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling & POS'**
+  String get featureSell;
+
+  /// No description provided for @featureInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Items, stock & batches'**
+  String get featureInventory;
+
+  /// No description provided for @featureCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashboxes & cash'**
+  String get featureCash;
+
+  /// No description provided for @featureMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Parties, reports & settings'**
+  String get featureMore;
+
+  /// No description provided for @dbOpenErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the database'**
+  String get dbOpenErrorTitle;
+
+  /// No description provided for @dbOpenErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The database file may be busy or storage is full. Try again — your data is unaffected.'**
+  String get dbOpenErrorMessage;
+
+  /// No description provided for @genericErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
+  String get genericErrorTitle;
+
+  /// No description provided for @loadingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get loadingData;
 }
 
 class _AppLocalizationsDelegate

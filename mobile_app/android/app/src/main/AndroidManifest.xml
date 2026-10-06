@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- أذونات FinAcc حصراً وفق SRS §8 (لا شيء آخر — حفاظاً على الخصوصية) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
     <application
-        android:label="mobile_app"
+        android:label="المحاسب الشخصي FinAcc"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

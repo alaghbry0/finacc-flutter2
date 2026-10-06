@@ -1,25 +1,22 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import {
   BadgeCheck,
-  Boxes,
+  Braces,
   CheckCircle2,
+  CreditCard,
+  Database,
   ExternalLink,
-  Eye,
-  FileCode2,
-  FolderTree,
-  Layers,
-  ListChecks,
-  Loader2,
+  Fingerprint,
+  FlaskConical,
+  Info,
+  Package,
   RefreshCw,
-  Rocket,
-  Server,
-  ShieldCheck,
   Smartphone,
   Sparkles,
   Terminal,
-  TestTube2,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,478 +29,601 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
-/* ------------------------------------------------------------------ */
-/* بيانات حالة البيئة — مُتحقَّق منها فعلياً عبر flutter doctor        */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* الثوابت                                                              */
+/* ================================================================== */
 
-const doctorChecks = [
-  { label: "إطار عمل Flutter", detail: "القناة المستقرة 3.47.6", ok: true },
-  { label: "سلسلة أدوات Android", detail: "Android SDK 36.0.0", ok: true },
-  { label: "الويب — Chrome", detail: "نسخة 153 للمعاينة", ok: true },
-  { label: "سلسلة أدوات Linux", detail: "clang 19 · CMake 3.31 · ninja", ok: true },
-  { label: "أجهزة متصلة", detail: "جهازان (Linux · Chrome)", ok: true },
-  { label: "موارد الشبكة", detail: "pub.dev · dl.google.com", ok: true },
-] as const;
+const PREVIEW_URL = "/mobile_app/index.html";
 
-const toolchain = [
-  { name: "Flutter SDK", version: "3.47.6 stable", note: "Dart 3.13.5 · DevTools 2.60" },
-  { name: "Android SDK", version: "API 36", note: "build-tools 36.0.0 · platform-tools" },
-  { name: "Java", version: "OpenJDK 21", note: "لتشغيل Gradle وsdkmanager" },
-  { name: "سلسلة Linux", version: "clang 19 + GTK3", note: "لبناء تطبيقات سطح المكتب" },
-  { name: "Chrome", version: "153", note: "لتشغيل معاينة الويب" },
-  { name: "المهارات الرسمية", version: "25 مهارة", note: "10 Flutter + 15 Dart" },
-] as const;
+/* لوحة الألوان — Premium Fintech داكن (أخضر مالي + ذهبي):             */
+/* خلفيات #0B1512 / #0F1D19 · بذرة #00695C · ذهبي #C9A96A · نص #E8F0EC */
 
-const flutterSkills = [
-  "flutter-apply-architecture-best-practices",
-  "flutter-setup-declarative-routing",
-  "flutter-setup-localization",
-  "flutter-build-responsive-layout",
-  "flutter-use-http-package",
-  "flutter-implement-json-serialization",
-  "flutter-add-widget-test",
-  "flutter-add-integration-test",
-  "flutter-add-widget-preview",
-  "flutter-fix-layout-issues",
-] as const;
+/* ================================================================== */
+/* عناصر مساعدة                                                         */
+/* ================================================================== */
 
-const dartSkills = [
-  "dart-add-unit-test",
-  "dart-run-static-analysis",
-  "dart-fix-runtime-errors",
-  "dart-resolve-package-conflicts",
-  "dart-generate-test-mocks",
-  "dart-use-pattern-matching",
-  "dart-use-primary-constructors",
-  "dart-write-documentation",
-  "dart-use-doc-examples",
-  "dart-build-cli-app",
-  "dart-collect-coverage",
-  "dart-use-path-package",
-  "dart-setup-ffi-assets",
-  "dart-use-ffigen",
-  "dart-migrate-to-checks-package",
-] as const;
-
-const verificationSteps = [
-  { label: "flutter doctor", result: "No issues found!", type: "ok" },
-  { label: "dart analyze", result: "صفر أخطاء وتحذيرات", type: "ok" },
-  { label: "flutter test", result: "اجتازت 2/2 اختبارات", type: "ok" },
-  { label: "flutter build web --release", result: "اكتمل البناء (40MB)", type: "ok" },
-] as const;
-
-const projectTree = `mobile_app/
-├── lib/
-│   ├── main.dart              ← نقطة الدخول + تسجيل ViewModels
-│   ├── app.dart               ← MaterialApp.router + التوطين
-│   ├── l10n/                  ← app_en.arb · app_ar.arb
-│   ├── data/                  ← services · repositories · models
-│   ├── domain/                ← use_cases · models
-│   └── ui/
-│       ├── core/              ← theme · router
-│       └── features/home/     ← views · view_models
-├── test/widget_test.dart      ← اختبارات Widgets
-├── pubspec.yaml               ← go_router · provider · l10n
-└── analysis_options.yaml      ← flutter_lints 6` as const;
-
-/* ------------------------------------------------------------------ */
-/* عناصر واجهة مساعدة                                                 */
-/* ------------------------------------------------------------------ */
-
-function FlutterMark({ className }: { className?: string }) {
+/** شعار FinAcc — دفتر حسابات وقطعة نقد داخل دائرة بلمسة ذهبية. */
+function FinAccMark({
+  idSuffix,
+  className,
+}: {
+  idSuffix: string;
+  className?: string;
+}) {
+  const emeraldId = `fa-emerald-${idSuffix}`;
+  const goldId = `fa-gold-${idSuffix}`;
   return (
-    <svg viewBox="0 0 48 60" aria-hidden="true" className={className} fill="none">
-      <path d="M31 2 47 18 19 46H3l12-12L3 22 15 10l16 16 8-8-16-16z" clipRule="evenodd" />
-      <path d="M31 2 15 18l12 12-8 8 12 8 16-16L31 2z" fillOpacity="0.55" clipRule="evenodd" />
+    <svg
+      viewBox="0 0 48 48"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      role="presentation"
+    >
+      <defs>
+        <linearGradient id={emeraldId} x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#0E4A40" />
+          <stop offset="1" stopColor="#00695C" />
+        </linearGradient>
+        <linearGradient id={goldId} x1="14" y1="9" x2="34" y2="29" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#E3C88F" />
+          <stop offset="1" stopColor="#C9A96A" />
+        </linearGradient>
+      </defs>
+      {/* الإطار الدائري بحلقة ذهبية */}
+      <circle cx="24" cy="24" r="21.5" fill={`url(#${emeraldId})`} stroke={`url(#${goldId})`} strokeWidth="1.5" />
+      {/* قطعة نقد ذهبية أعلى الدفتر */}
+      <circle cx="24" cy="16.5" r="5.5" stroke={`url(#${goldId})`} strokeWidth="2" />
+      <path d="M20.5 16.5h7" stroke={`url(#${goldId})`} strokeWidth="1.25" strokeLinecap="round" />
+      {/* سطور دفتر الحسابات */}
+      <path d="M14 27.5h20" stroke="#E8F0EC" strokeWidth="2" strokeLinecap="round" opacity="0.95" />
+      <path d="M14 33h20" stroke="#E8F0EC" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      <path d="M14 38.5h12" stroke="#E8F0EC" strokeWidth="2" strokeLinecap="round" opacity="0.45" />
     </svg>
   );
 }
 
-function SectionTitle({
+/** مقطع رمزي (أسماء جداول وأوامر) باتجاه LTR داخل النص العربي. */
+function Mono({ children }: { children: React.ReactNode }) {
+  return (
+    <code
+      dir="ltr"
+      className="mx-1 inline-block rounded-md bg-[#16302A] px-1.5 py-0.5 font-mono text-[11px] leading-5 text-[#8FD9C6] ring-1 ring-inset ring-[#1E332D]"
+    >
+      {children}
+    </code>
+  );
+}
+
+/** عنوان قسم موحّد. */
+function SectionHeading({
   icon: Icon,
+  kicker,
   title,
   subtitle,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  kicker?: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
 }) {
   return (
-    <div className="mb-4 flex items-start gap-3">
-      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600/10 text-teal-700 dark:bg-teal-400/10 dark:text-teal-300">
+    <div className="mb-5 flex items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8] shadow-inner shadow-black/30">
         <Icon className="h-5 w-5" />
       </div>
-      <div>
-        <h2 className="text-lg font-bold tracking-tight">{title}</h2>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      <div className="min-w-0">
+        {kicker && (
+          <p className="text-[11px] font-bold tracking-wide text-[#C9A96A]">{kicker}</p>
+        )}
+        <h2 className="text-lg font-extrabold leading-snug text-[#E8F0EC] sm:text-xl">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-0.5 text-xs leading-relaxed text-[#9DB5AC] sm:text-sm">{subtitle}</p>
+        )}
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* الصفحة                                                             */
-/* ------------------------------------------------------------------ */
+/** بند إنجاز بعلامة إتمام. */
+function DoneItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5 rounded-xl border border-[#1E332D]/70 bg-[#0B1512]/70 px-3.5 py-3">
+      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+      <p className="text-sm leading-relaxed text-[#D7E4DE]">{children}</p>
+    </li>
+  );
+}
 
-export default function FlutterEnvDashboard() {
+/* ================================================================== */
+/* بيانات الأقسام                                                       */
+/* ================================================================== */
+
+const slice0Items: React.ReactNode[] = [
+  <>
+    تعريف <Mono>34</Mono> جدولاً عبر DDL وفق <Mono>SRS §5.3</Mono> — المخطط
+    البياني الكامل للنظام
+  </>,
+  <>
+    وضع <Mono>WAL</Mono> مفعّل لتحسين أداء الكتابة والقراءة المتزامنة
+  </>,
+  <>
+    جدول الترقيم الذري <Mono>doc_sequence</Mono> بعملية <Mono>UPSERT</Mono> ذرّية
+    لضمان تسلسل المستندات دون تصادم
+  </>,
+  <>
+    مشغّلات حماية سجل التدقيق <Mono>audit_log</Mono> — منع <Mono>UPDATE</Mono> و
+    <Mono>DELETE</Mono> نهائياً
+  </>,
+  <>
+    هجرات مُدارة عبر جدول <Mono>_migrations</Mono> قابلة لإعادة التشغيل بأمان
+  </>,
+  <>
+    بذور العملات (<Mono>YER/SAR/USD/AED</Mono>) والإعدادات الافتراضية جاهزة
+    منذ أول إقلاع
+  </>,
+];
+
+const slice1Items: React.ReactNode[] = [
+  <>
+    هوية <Mono>Almarai</Mono> الطباعية مع بذرة اللون <Mono>0xFF00695C</Mono> بوضعين
+    فاتح وداكن
+  </>,
+  <>
+    شاشة <Mono>Onboarding</Mono> لإنشاء المنشأة مع توليد المخزن والصندوق
+    الافتراضيين تلقائياً
+  </>,
+  <>
+    إعداد وقفل رمز <Mono>PIN</Mono> بسياسة القفل: <Mono>5</Mono> محاولات ← تأخير
+    متصاعد، و<Mono>10</Mono> ← عبارة مرور
+  </>,
+  <>
+    لوحة التحكم الرئيسية (Dashboard) ببلاطات الإحصاء ورسم بياني لآخر
+    <Mono>30</Mono> يوماً
+  </>,
+  <>شريط تبويب سفلي بخمسة أقسام رئيسية للتطبيق</>,
+];
+
+const qualityGates = [
+  {
+    icon: Terminal,
+    name: "dart analyze",
+    result: "صفر أخطاء وصفر تحذيرات",
+  },
+  {
+    icon: FlaskConical,
+    name: "flutter test",
+    result: "كافة الاختبارات خضراء",
+  },
+  {
+    icon: Braces,
+    name: "dart format",
+    result: "تنسيق قياسي",
+  },
+  {
+    icon: Smartphone,
+    name: "المعاينة الحية",
+    result: "تعمل داخل إطار الهاتف",
+  },
+] as const;
+
+/* ================================================================== */
+/* الصفحة                                                               */
+/* ================================================================== */
+
+export default function FinAccStage1DeliveryPanel() {
   const [iframeKey, setIframeKey] = useState(0);
-  const [reloading, setReloading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * منطق التحديث: رفع key الـ iframe يجعل React يفكّ العنصر القديم ويركّب
+   * عنصراً جديداً بنفس src → المتصفح يحمّل المستند من جديد بالكامل، ثم
+   * يُطلق onLoad فتُخفى الهيكل (skeleton). شبكة أمان زمنية تخفي الهيكل
+   * بعد 15 ثانية كحد أقصى حتى لو تأخر الحدث لأي سبب.
+   */
+  const handleFrameLoad = useCallback(() => {
+    setLoading(false);
+  }, []);
 
   const refreshPreview = useCallback(() => {
-    setReloading(true);
+    setLoading(true);
     setIframeKey((k) => k + 1);
-    window.setTimeout(() => setReloading(false), 900);
   }, []);
+
+  useEffect(() => {
+    if (!loading) return;
+    const timer = window.setTimeout(() => setLoading(false), 15_000);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
 
   return (
     <div
       dir="rtl"
       lang="ar"
-      className="flex min-h-screen flex-col bg-gradient-to-b from-teal-50/60 via-background to-background dark:from-teal-950/20"
+      className="relative flex min-h-screen flex-col bg-[#0B1512] text-[#E8F0EC]"
     >
-      {/* ============================ الترويسة ============================ */}
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-emerald-700 text-white shadow-md shadow-teal-600/20">
-              <FlutterMark className="h-6 w-6 fill-current" />
-            </div>
-            <div>
-              <p className="text-sm font-bold leading-tight">مشروع تطبيق الهاتف المتكامل</p>
-              <p className="text-xs text-muted-foreground">Flutter · Clean Architecture</p>
+      {/* ======================= زخرفة الخلفية ======================= */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-36 right-[-12%] h-[460px] w-[560px] rounded-full bg-[#00695C]/[0.14] blur-[130px]" />
+        <div className="absolute bottom-[-14%] left-[-10%] h-[400px] w-[440px] rounded-full bg-[#C9A96A]/[0.05] blur-[120px]" />
+        <div className="absolute left-1/2 top-0 h-px w-full max-w-3xl -translate-x-1/2 bg-gradient-to-r from-transparent via-[#C9A96A]/30 to-transparent" />
+      </div>
+
+      {/* =========================== الترويسة =========================== */}
+      <header className="sticky top-0 z-40 border-b border-[#C9A96A]/15 bg-[#0B1512]/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <FinAccMark idSuffix="header" className="h-10 w-10 shrink-0 drop-shadow-[0_4px_12px_rgba(0,105,92,0.45)]" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-extrabold leading-tight text-[#E8F0EC] sm:text-base">
+                FinAcc — المُحاسِب الشخصي
+              </p>
+              <p className="truncate text-[11px] text-[#9DB5AC]">لوحة تسليم المرحلة الأولى</p>
             </div>
           </div>
-          <div className="hidden items-center gap-2 sm:flex">
-            <Badge variant="secondary" className="gap-1.5 font-mono text-xs">
-              <Terminal className="h-3 w-3" /> Flutter 3.47.6
-            </Badge>
-            <Badge variant="secondary" className="gap-1.5 font-mono text-xs">
-              Dart 3.13.5
-            </Badge>
-            <Badge className="gap-1.5 bg-teal-600 hover:bg-teal-600">
-              <BadgeCheck className="h-3 w-3" /> البيئة جاهزة
-            </Badge>
+
+          <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 md:flex">
+              <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                <Sparkles className="h-3 w-3" aria-hidden="true" />
+                المرحلة الأولى — الشريحة 0 + الشريحة 1
+              </Badge>
+              <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
+                <BadgeCheck className="h-3 w-3" aria-hidden="true" />
+                SRS v1.5 مُعتمدة
+              </Badge>
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={refreshPreview}
+              aria-label="تحديث المعاينة الحية"
+              className="h-11 gap-2 border-[#2A4A42] bg-[#0F1D19]/70 px-4 text-[#E3C88F] hover:border-[#C9A96A]/50 hover:bg-[#C9A96A]/10 hover:text-[#E3C88F] focus-visible:ring-[#4DBFA8]/40"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              <span className="hidden sm:inline">تحديث المعاينة</span>
+            </Button>
           </div>
+        </div>
+
+        {/* شارتا المرحلة على الشاشات الصغيرة */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
+          <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
+            المرحلة الأولى — الشريحة 0 + الشريحة 1
+          </Badge>
+          <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
+            <BadgeCheck className="h-3 w-3" aria-hidden="true" />
+            SRS v1.5 مُعتمدة
+          </Badge>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        {/* ============================ البطل ============================ */}
-        <section className="mb-10 text-center sm:mb-12">
-          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-teal-600/20 bg-teal-600/5 px-4 py-1.5 text-xs font-semibold text-teal-700 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-teal-300">
-            <Sparkles className="h-3.5 w-3.5" />
-            اكتملت مرحلة التهيئة والتجهيز بنجاح
-          </div>
-          <h1 className="mx-auto max-w-2xl text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
-            بيئة تطوير Flutter{" "}
-            <span className="bg-gradient-to-l from-teal-600 to-emerald-500 bg-clip-text text-transparent dark:from-teal-400 dark:to-emerald-300">
-              جاهزة بالكامل
-            </span>
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            حزمة المهارات الرسمية مثبتة، ووثائق Flutter للعمل مع الذكاء الاصطناعي روجعت، والهيكل
-            المعماري النظيف أُنشئ واجتاز التحليل الساكن والاختبارات — بانتظار وثيقة المتطلبات
-            لنبدأ البناء.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="gap-2 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600"
-            >
-              <a href="#preview" id="preview-btn">
-                <Eye className="h-4 w-4" />
-                شاهد التطبيق مباشرة
-              </a>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="gap-2">
-              <a href="/mobile_app/index.html" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4" />
-                فتح بملء الشاشة
-              </a>
-            </Button>
-          </div>
-        </section>
-
-        {/* ================== حالة flutter doctor ================== */}
-        <section className="mb-10">
-          <SectionTitle
-            icon={ShieldCheck}
-            title="نتيجة flutter doctor — لا مشاكل"
-            subtitle="جميع الفحوصات الست ناجحة في هذه البيئة المعزولة"
-          />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {doctorChecks.map((check) => (
-              <Card key={check.label} className="border-emerald-600/20 bg-emerald-500/[0.04]">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{check.label}</p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">
-                      {check.detail}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* ================ المعاينة الحية داخل هاتف ================ */}
-        <section id="preview" className="mb-10 scroll-mt-24">
-          <SectionTitle
+      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        {/* ==================== المعاينة الحية (الأبرز) ==================== */}
+        <section id="preview" className="mb-12 scroll-mt-28">
+          <SectionHeading
             icon={Smartphone}
-            title="معاينة حية — التطبيق يعمل الآن"
-            subtitle="بناء ويب حقيقي لنفس الكود المترجم لـ Android/iOS، يعرضه متصفحك حسب لغته (عربي RTL أو إنجليزي)"
+            kicker="تفاعل مباشر"
+            title="المعاينة الحية — التطبيق يعمل الآن"
+            subtitle="بناء ويب حقيقي لنفس الكود المُترجم إلى أندرويد، يُعرض داخل إطار هاتف ويمكن التفاعل معه فوراً"
           />
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
-            {/* إطار الهاتف */}
-            <div className="mx-auto w-full max-w-[320px]">
-              <div className="relative rounded-[2.75rem] border-[10px] border-neutral-900 bg-neutral-900 shadow-2xl shadow-neutral-900/30 dark:border-neutral-800">
-                <div className="absolute inset-x-0 top-0 z-10 flex h-7 items-center justify-center">
-                  <div className="h-4 w-24 rounded-b-2xl bg-neutral-900 dark:bg-neutral-800" />
-                </div>
-                <div className="relative aspect-[9/19.2] overflow-hidden rounded-[2rem] bg-white">
-                  {reloading && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/85 backdrop-blur-sm dark:bg-neutral-900/85">
-                      <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+
+          <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+            {/* ------------------ إطار الهاتف ------------------ */}
+            <div className="mx-auto w-full max-w-[390px]">
+              <div className="relative rounded-[48px] bg-[#050B09] p-[10px] shadow-[0_40px_80px_-30px_rgba(0,0,0,0.75)] ring-1 ring-[#C9A96A]/20">
+                {/* أزرار الحواف */}
+                <span aria-hidden="true" className="absolute -left-[3px] top-[120px] h-11 w-[3px] rounded-full bg-[#24382F]" />
+                <span aria-hidden="true" className="absolute -left-[3px] top-[168px] h-8 w-[3px] rounded-full bg-[#24382F]" />
+                <span aria-hidden="true" className="absolute -right-[3px] top-[140px] h-16 w-[3px] rounded-full bg-[#24382F]" />
+
+                {/* الشاشة */}
+                <div
+                  aria-busy={loading}
+                  className="relative h-[800px] max-h-[75vh] overflow-hidden rounded-[38px] bg-[#0B1512] sm:max-h-none"
+                >
+                  {/* الجزيرة الديناميكية */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-1/2 top-[10px] z-20 flex h-[24px] w-[96px] -translate-x-1/2 items-center justify-end rounded-full bg-[#050B09] pr-3.5"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-[#16302A] ring-1 ring-[#2A4A42]/70" />
+                  </div>
+
+                  {/* مؤشر الصفحة الرئيسية */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute bottom-[6px] left-1/2 z-20 h-[4px] w-[120px] -translate-x-1/2 rounded-full bg-[#E8F0EC]/20"
+                  />
+
+                  {/* هيكل التحميل */}
+                  {loading && (
+                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 bg-[#0B1512]/95 px-10">
+                      <FinAccMark idSuffix="loader" className="h-14 w-14 animate-pulse" />
+                      <p className="text-xs font-bold text-[#9DB5AC]">جارٍ تحميل التطبيق…</p>
+                      <div className="w-full max-w-[240px] space-y-3">
+                        <Skeleton className="h-3 w-3/4 rounded-full bg-[#16302A]" />
+                        <Skeleton className="h-3 w-full rounded-full bg-[#16302A]" />
+                        <Skeleton className="h-3 w-2/3 rounded-full bg-[#16302A]" />
+                        <Skeleton className="mt-5 h-20 w-full rounded-2xl bg-[#16302A]" />
+                      </div>
                     </div>
                   )}
+
+                  {/* التطبيق الفعلي */}
                   <iframe
                     key={iframeKey}
-                    src="/mobile_app/index.html"
-                    title="معاينة تطبيق Flutter"
-                    className="h-full w-full border-0"
-                    loading="lazy"
+                    id="flutter-view"
+                    src={PREVIEW_URL}
+                    title="FinAcc Live Preview"
+                    loading="eager"
+                    onLoad={handleFrameLoad}
+                    className="absolute inset-0 h-full w-full border-0 bg-[#0B1512]"
                   />
                 </div>
               </div>
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={refreshPreview}
-                  className="gap-2"
-                  aria-label="تحديث المعاينة"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${reloading ? "animate-spin" : ""}`} />
-                  تحديث
-                </Button>
-                <Button asChild variant="ghost" size="sm" className="gap-2">
-                  <a href="/mobile_app/index.html" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    تبويب جديد
-                  </a>
-                </Button>
-              </div>
+              <p className="mt-3 text-center text-[11px] text-[#9DB5AC]">
+                إطار مرجعي بعرض <span dir="ltr" className="font-mono">390px</span> — يتوسّط
+                الشاشات الصغيرة تلقائياً
+              </p>
             </div>
 
-            {/* لوحة التحقق */}
+            {/* ------------------ بطاقة حالة المعاينة ------------------ */}
             <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <ListChecks className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                    بوابات الجودة المكتملة
+              <Card className="gap-5 border-[#1E332D] bg-[#0F1D19]/90 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
+                <CardHeader className="px-6">
+                  <CardTitle className="flex items-center gap-2.5 text-base font-extrabold">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
+                      <Smartphone className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    حالة المعاينة
                   </CardTitle>
-                  <CardDescription>
-                    كل أمر تم تشغيله فعلياً داخل البيئة قبل عرض هذه اللوحة
+                  <CardDescription className="text-sm text-[#9DB5AC]">
+                    تُخدَّم حزمة الويب مباشرة من خادم Next.js نفسه
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  {verificationSteps.map((step) => (
-                    <div
-                      key={step.label}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2"
-                    >
-                      <code className="font-mono text-xs font-semibold">{step.label}</code>
-                      <Badge
-                        variant="secondary"
-                        className="gap-1 border-emerald-600/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                      >
-                        <CheckCircle2 className="h-3 w-3" />
-                        {step.result}
-                      </Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Rocket className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                    دورة التطوير داخل البيئة
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p className="flex items-start gap-2">
-                    <FileCode2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600/70" />
-                    كتابة كود Dart في <code className="font-mono text-xs">mobile_app/lib</code> ثم
-                    تنفيذ{" "}
-                    <code className="font-mono text-xs">scripts/build-flutter-web.sh</code>{" "}
-                    وتحديث المعاينة — بدون إعادة تشغيل خادم.
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <Boxes className="mt-0.5 h-4 w-4 shrink-0 text-teal-600/70" />
-                    حزمة Android (APK) تُبنى مباشرة عبر Gradle المدمج عند الحاجة للتسليم.
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <Server className="mt-0.5 h-4 w-4 shrink-0 text-teal-600/70" />
-                    الـ keeper يعيد تفعيل SDK تلقائياً بعد أي إعادة تشغيل للحاوية.
-                  </p>
+                <CardContent className="space-y-3.5 px-6">
+                  {/* مؤشر الجاهزية */}
+                  <div className="flex items-center gap-3 rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                    <span className="relative flex h-3 w-3 shrink-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4DBFA8] opacity-50" />
+                      <span className="relative inline-flex h-3 w-3 rounded-full bg-[#4DBFA8]" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-extrabold text-[#E8F0EC]">جاهز</p>
+                      <p className="text-xs text-[#9DB5AC]">
+                        المعاينة متاحة ويمكن التفاعل معها الآن
+                      </p>
+                    </div>
+                    <Badge className="border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
+                      مباشر
+                    </Badge>
+                  </div>
+
+                  {/* الرابط */}
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                    <p className="text-xs text-[#9DB5AC]">رابط المعاينة</p>
+                    <a
+                      href={PREVIEW_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      dir="ltr"
+                      className="font-mono text-xs text-[#8FD9C6] underline decoration-[#4DBFA8]/40 underline-offset-4 transition-colors hover:decoration-[#4DBFA8]"
+                    >
+                      /mobile_app/index.html
+                    </a>
+                  </div>
+
+                  {/* ملاحظة الأداء */}
+                  <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
+                    <p className="text-xs leading-relaxed text-[#D7E4DE]">
+                      تطبيق ويب تجريبي — الأداء الكامل على أندرويد
+                    </p>
+                  </div>
+
+                  <Separator className="bg-[#1E332D]" />
+
+                  {/* أزرار التحكم */}
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    <Button
+                      variant="outline"
+                      onClick={refreshPreview}
+                      className="h-11 gap-2 border-[#2A4A42] bg-transparent text-[#E8F0EC] hover:border-[#4DBFA8]/50 hover:bg-[#4DBFA8]/10 hover:text-[#8FD9C6] focus-visible:ring-[#4DBFA8]/40"
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                        aria-hidden="true"
+                      />
+                      تحديث المعاينة
+                    </Button>
+                    <Button
+                      asChild
+                      className="h-11 gap-2 border-transparent bg-[#00695C] text-[#E8F0EC] shadow-lg shadow-[#00695C]/25 hover:bg-[#007A6A] focus-visible:ring-[#4DBFA8]/40"
+                    >
+                      <a href={PREVIEW_URL} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                        فتح في تبويب جديد
+                      </a>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
           </div>
         </section>
 
-        {/* ==================== سلسلة الأدوات ==================== */}
-        <section className="mb-10">
-          <SectionTitle
-            icon={Layers}
-            title="مكونات سلسلة الأدوات"
-            subtitle="كل ما يلزم للبناء إلى Android وiOS والويب وسطح المكتب"
+        {/* ================= ما تم إنجازه — المرحلة الأولى ================= */}
+        <section className="mb-12">
+          <SectionHeading
+            icon={Database}
+            kicker="حصاد المرحلة"
+            title="ما تم إنجازه — المرحلة الأولى"
+            subtitle="شريحتان مكتملتان: أساس التخزين الذرّي، ثم تجربة الهوية والدخول حتى لوحة التحكم"
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {toolchain.map((tool) => (
-              <Card key={tool.name} className="text-center">
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">{tool.name}</p>
-                  <p className="mt-1 text-sm font-bold text-teal-700 dark:text-teal-300">
-                    {tool.version}
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* ---------- الشريحة 0 ---------- */}
+            <Card className="gap-5 border-[#1E332D] bg-[#0F1D19]/90 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
+              <CardHeader className="px-6">
+                <CardTitle className="flex flex-wrap items-center gap-2.5 text-base font-extrabold">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
+                    <Database className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  الشريحة 0 — محرك التخزين
+                  <Badge className="ml-auto gap-1 border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
+                    <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                    مكتملة
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-sm text-[#9DB5AC]">
+                  قاعدة البيانات المحلية بمعايير الإنتاج: ذرّية، مُدقَّقة، ومحمية من التعديل
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6">
+                <ul className="space-y-2.5">
+                  {slice0Items.map((item, i) => (
+                    <DoneItem key={i}>{item}</DoneItem>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* ---------- الشريحة 1 ---------- */}
+            <Card className="gap-5 border-[#1E332D] bg-[#0F1D19]/90 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
+              <CardHeader className="px-6">
+                <CardTitle className="flex flex-wrap items-center gap-2.5 text-base font-extrabold">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
+                    <Fingerprint className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  الشريحة 1 — الهوية والدخول
+                  <Badge className="ml-auto gap-1 border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
+                    <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                    مكتملة
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-sm text-[#9DB5AC]">
+                  من أول إقلاع حتى لوحة التحكم: هوية بصرية موحّدة ودخول محمي برمز PIN
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6">
+                <ul className="space-y-2.5">
+                  {slice1Items.map((item, i) => (
+                    <DoneItem key={i}>{item}</DoneItem>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* ======================= بوابات الجودة ======================= */}
+        <section className="mb-12">
+          <SectionHeading
+            icon={BadgeCheck}
+            kicker="جودة التسليم"
+            title="بوابات الجودة"
+            subtitle="كل بوابة اجتازها المشروع قبل عرض هذه اللوحة"
+          />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {qualityGates.map((gate) => (
+              <Card
+                key={gate.name}
+                className="gap-0 border-[#1E332D] bg-[#0F1D19]/90 py-5 text-[#E8F0EC] shadow-[0_18px_45px_-30px_rgba(0,0,0,0.65)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]"
+              >
+                <CardContent className="flex flex-col gap-3 px-5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
+                      <gate.icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#4DBFA8]/15 text-[#4DBFA8]">
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <p dir="ltr" className="text-start font-mono text-sm font-bold text-[#E8F0EC]">
+                    {gate.name}
                   </p>
-                  <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-                    {tool.note}
-                  </p>
+                  <p className="text-xs leading-relaxed text-[#9DB5AC]">{gate.result}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
         </section>
 
-        {/* ==================== المهارات الرسمية ==================== */}
-        <section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                مهارات Flutter الرسمية
-                <Badge variant="secondary" className="ml-auto font-mono">
-                  {flutterSkills.length}
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                من مستودع <code className="font-mono text-xs">flutter/agent-plugins</code> — مراجع
-                إجرائية معتمدة للتوجيه أثناء التطوير
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="max-h-72 space-y-1.5 overflow-y-auto pl-1 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-teal-600/30 [&::-webkit-scrollbar]:w-1.5">
-                {flutterSkills.map((skill) => (
-                  <li
-                    key={skill}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-muted"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <code className="font-mono">{skill}</code>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <TestTube2 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                مهارات Dart الرسمية
-                <Badge variant="secondary" className="ml-auto font-mono">
-                  {dartSkills.length}
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                من مستودع <code className="font-mono text-xs">dart-lang/skills</code> — جودة
-                الاختبارات والتحليل الساكن وحل التعارضات
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="max-h-72 space-y-1.5 overflow-y-auto pl-1 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-teal-600/30 [&::-webkit-scrollbar]:w-1.5">
-                {dartSkills.map((skill) => (
-                  <li
-                    key={skill}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-muted"
-                  >
-                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <code className="font-mono">{skill}</code>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* ==================== هيكل المشروع ==================== */}
-        <section className="mb-10">
-          <SectionTitle
-            icon={FolderTree}
-            title="الهيكل المعماري النظيف"
-            subtitle="طبقات UI / Domain / Data وفق مهارة البنية المعمارية الرسمية — جاهز لاستقبال ميزات SRS"
-          />
-          <Card className="overflow-hidden">
-            <CardContent className="p-0">
-              <div
-                dir="ltr"
-                className="max-h-96 overflow-auto bg-neutral-950 p-5 font-mono text-xs leading-relaxed text-neutral-200 [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-700 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2"
-              >
-                <pre className="whitespace-pre">{projectTree}</pre>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* ==================== الخطوة التالية ==================== */}
+        {/* ======================= الخطوة التالية ======================= */}
         <section className="mb-4">
-          <SectionTitle
+          <SectionHeading
             icon={Sparkles}
-            title="الخطوة التالية — وثيقة المتطلبات (SRS)"
-            subtitle="شاركني المواصفات: الفكرة، الجمهور، الميزات الأساسية، واللغات المستهدفة"
+            kicker="ما بعد الاعتماد"
+            title="الخطوة التالية"
+            subtitle="قرار واحد يفصلنا عن مواصلة البناء"
           />
-          <Card className="border-teal-600/25 bg-gradient-to-l from-teal-600/[0.06] to-transparent">
-            <CardContent className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-3">
-              {[
-                { n: "1", t: "أرسل وثيقة SRS", d: "الميزات، التدفقات، والمعايير غير الوظيفية" },
-                { n: "2", t: "نفاوض على النطاق", d: "MVP أولاً ثم خارطة طريق للتكرارات" },
-                { n: "3", t: "نبدأ البناء فوراً", d: "ميزة-بميزة مع اختبارات وتحليل نظيف" },
-              ].map((step) => (
-                <div key={step.n} className="flex items-start gap-3 rounded-xl border bg-background/60 p-4">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white dark:bg-teal-500">
-                    {step.n}
+
+          <Card className="gap-4 border-[#C9A96A]/25 bg-gradient-to-l from-[#C9A96A]/[0.07] via-[#0F1D19]/95 to-[#0F1D19]/95 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)]">
+            <CardContent className="flex flex-col gap-5 px-6 sm:flex-row sm:items-center">
+              <div className="flex-1">
+                <p className="text-sm leading-relaxed text-[#D7E4DE] sm:text-base">
+                  بانتظار مراجعتك واعتمادك للمرحلة الأولى — ثم نبدأ{" "}
+                  <span className="font-extrabold text-[#E3C88F]">
+                    الشريحة 2 (الأصناف والدفعات)
                   </span>
-                  <div>
-                    <p className="text-sm font-bold">{step.t}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{step.d}</p>
-                  </div>
+                  .
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <Package className="h-3.5 w-3.5" aria-hidden="true" />
+                    الأصناف
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+                    الدفعات
+                  </Badge>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5 sm:max-w-[280px]">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
+                <p className="text-xs leading-relaxed text-[#D7E4DE]">
+                  لتجربة التطبيق بكامل الشاشة، استخدم زر{" "}
+                  <span className="font-bold text-[#E3C88F]">«فتح في تبويب جديد»</span> من{" "}
+                  <a
+                    href="#preview"
+                    className="font-bold text-[#8FD9C6] underline decoration-[#4DBFA8]/40 underline-offset-4 hover:decoration-[#4DBFA8]"
+                  >
+                    لوحة المعاينة الجانبية
+                  </a>{" "}
+                  بالأعلى.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </section>
       </main>
 
-      {/* ============================ التذييل ============================ */}
-      <footer className="mt-auto border-t bg-background/80">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-center text-xs text-muted-foreground sm:flex-row sm:px-6 sm:text-start">
+      {/* =========================== التذييل =========================== */}
+      <footer className="relative z-10 mt-auto border-t border-[#C9A96A]/15 bg-[#0B1512]/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-1.5 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 text-center text-xs text-[#9DB5AC] sm:flex-row sm:px-6 sm:text-start">
           <p>
-            بيئة Flutter مُدارة بواسطة{" "}
-            <code className="font-mono text-teal-700 dark:text-teal-300">
-              mini-services/flutter-env
-            </code>{" "}
-            — تعيد تفعيل ذاتياً بعد كل إعادة تشغيل
+            <span className="font-extrabold text-[#E8F0EC]">FinAcc</span> — نظام محاسبي ومخزون
+            متكامل
           </p>
-          <Separator className="hidden h-4 w-px sm:block" orientation="vertical" />
-          <p className="shrink-0">جاهز لاستلام وثيقة المتطلبات والبدء 🚀</p>
+          <Separator
+            orientation="vertical"
+            className="hidden h-4 w-px bg-[#1E332D] sm:block"
+          />
+          <p>
+            تم التطوير داخل بيئة <span className="text-[#C9A96A]">Z.ai</span> •{" "}
+            <span dir="ltr" className="font-mono">SRS v1.5</span>
+          </p>
         </div>
       </footer>
     </div>

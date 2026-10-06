@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cairo, Geist, Geist_Mono } from "next/font/google";
+import { Almarai, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -13,17 +13,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const cairo = Cairo({
-  variable: "--font-cairo",
+// Almarai — الخط العربي الرسمي لهوية FinAcc (الأوزان المتاحة على Google Fonts:
+// 300 / 400 / 700 / 800 — لا يوجد وزن 500 لهذا الخط).
+const almarai = Almarai({
+  variable: "--font-almarai",
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "بيئة تطوير Flutter — جاهزة للبدء",
+  title: "FinAcc — المُحاسِب الشخصي | تسليم المرحلة الأولى",
   description:
-    "لوحة متابعة بيئة تطوير Flutter المجهزة بالكامل: SDK وسلاسل أدوات Android وWeb وLinux مع معاينة حية لتطبيق الهاتف.",
-  keywords: ["Flutter", "Dart", "mobile", "Android", "بيئة تطوير", "Flutter doctor"],
+    "لوحة تسليم المرحلة الأولى لمشروع FinAcc: معاينة حية للتطبيق داخل إطار هاتف، إنجازات الشريحة 0 (محرك التخزين) والشريحة 1 (الهوية والدخول)، وبوابات الجودة.",
+  keywords: [
+    "FinAcc",
+    "المحاسب الشخصي",
+    "محاسبة",
+    "مخزون",
+    "Flutter",
+    "تسليم",
+    "SRS v1.5",
+  ],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
@@ -37,7 +47,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} font-[family-name:var(--font-cairo)] antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} ${almarai.variable} font-[family-name:var(--font-almarai)] antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />

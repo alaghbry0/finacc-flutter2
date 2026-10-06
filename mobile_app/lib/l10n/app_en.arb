@@ -1,52 +1,115 @@
 {
-  "appTitle": "Mobile App",
-  "@appTitle": {
-    "description": "The application title shown in the app bar and window title"
-  },
-  "homeTitle": "Environment Ready",
-  "@homeTitle": {
-    "description": "Title of the home screen skeleton"
-  },
-  "envReadyMessage": "The clean architecture skeleton is running with localization, declarative routing and MVVM state management.",
-  "@envReadyMessage": {
-    "description": "Confirmation message shown on the home screen"
-  },
-  "architectureSectionTitle": "Architecture Layers",
-  "@architectureSectionTitle": {
-    "description": "Title of the section listing the app layers"
-  },
-  "layerUi": "UI — Views & ViewModels",
-  "@layerUi": {
-    "description": "Name of the presentation layer"
-  },
-  "layerDomain": "Domain — Models & Use Cases",
-  "@layerDomain": {
-    "description": "Name of the domain layer"
-  },
-  "layerData": "Data — Services & Repositories",
-  "@layerData": {
-    "description": "Name of the data layer"
-  },
-  "counterSectionTitle": "MVVM Counter Demo",
-  "@counterSectionTitle": {
-    "description": "Title of the counter demonstration card"
-  },
-  "counterValue": "{count, plural, =0{Ready} other{{count} taps}}",
-  "@counterValue": {
-    "description": "Pluralized counter label",
-    "placeholders": {
-      "count": {
-        "type": "num",
-        "example": "3"
-      }
-    }
-  },
-  "increment": "Increment",
-  "@increment": {
-    "description": "Label for the increment action"
-  },
-  "reset": "Reset",
-  "@reset": {
-    "description": "Label for the reset action"
-  }
+  "appTitle": "Personal Accountant",
+  "appBrand": "FinAcc",
+  "brandTagline": "Complete accounting & inventory system — works fully offline",
+
+  "commonNext": "Next",
+  "commonBack": "Back",
+  "commonDone": "Done",
+  "commonCancel": "Cancel",
+  "commonRetry": "Retry",
+  "commonConfirm": "Confirm",
+  "commonContinue": "Continue",
+  "commonDetails": "Details",
+  "commonViewAll": "View all",
+
+  "splashLoading": "Preparing your local database…",
+
+  "onboardWelcomeTitle": "Welcome to Personal Accountant",
+  "onboardWelcomeMessage": "A complete accounting and inventory system for your shop — your data stays on your device, offline, no subscriptions.",
+  "onboardFeature1Title": "Works 100% offline",
+  "onboardFeature1Desc": "Sell, buy, stocktake and report — even with no network at all.",
+  "onboardFeature2Title": "Numbers you can trust",
+  "onboardFeature2Desc": "Atomic document numbering that never repeats, weighted-average cost, and hard protection against negative stock.",
+  "onboardFeature3Title": "Full privacy",
+  "onboardFeature3Desc": "No data ever leaves to any server — your backups belong to you.",
+  "onboardStepCompany": "Company details",
+  "onboardStepSecurity": "Security",
+  "onboardStepReview": "Ready",
+
+  "companyNameLabel": "Company name",
+  "companyNameHint": "As it appears to customers on invoices",
+  "companyPhoneLabel": "Phone (optional)",
+  "companyPhoneHint": "For WhatsApp support and reminders later",
+  "baseCurrencyLabel": "Base currency",
+  "baseCurrencyHint": "Fixed after setup — other currencies get daily rates",
+  "baseCurrencyDecimalsNote": "{decimals, plural, zero{no decimals} one{one decimal place} other{decimal places: {decimals}}}",
+  "companyFormInvalid": "Complete the company name and choose a base currency",
+
+  "pinSetupTitle": "Your PIN code",
+  "pinSetupSubtitle": "4 to 6 digits — asked every time the app opens",
+  "pinConfirmTitle": "Confirm the code",
+  "pinConfirmSubtitle": "Re-enter the same code to confirm",
+  "pinMismatch": "The codes do not match. Try again.",
+  "pinInvalidLength": "The code must be 4 to 6 digits.",
+  "passphraseTitle": "Recovery passphrase",
+  "passphraseSubtitle": "Recovery gate when the PIN is forgotten (after 10 wrong attempts) — it can never be recovered",
+  "passphraseLabel": "Passphrase (8 characters or more)",
+  "passphraseConfirmLabel": "Confirm passphrase",
+  "passphraseMismatch": "The passphrases do not match. Try again.",
+  "passphraseWarningTitle": "Important — read before continuing",
+  "passphraseWarningBody": "Forgetting the passphrase means permanent loss of access; the only recovery is a backup file you keep. Store it safely and enable backups early.",
+  "passphraseShort": "The passphrase must be at least 8 characters.",
+
+  "creatingTitle": "Setting up your shop…",
+  "creatingMessage": "Creating the company, main warehouse, main cashbox and fiscal year inside one safe transaction — any failure rolls everything back.",
+  "createdTitle": "Setup complete",
+  "createdMessage": "We created “{warehouse}” and “{cashbox}”, ready for your first invoice — no mandatory setup remains.",
+  "startUsing": "Start using",
+
+  "setupFailedTitle": "Setup could not complete",
+  "setupFailedBody": "Review the details and try again — nothing was written to the database.",
+
+  "lockTitle": "Enter your PIN",
+  "lockSubtitle": "The app is locked to protect your financial data",
+  "lockWrong": "Incorrect code",
+  "lockAttemptsBeforeLock": "{count} attempts left before a temporary delay",
+  "lockDelayedMessage": "Wait {duration} then try again",
+  "lockPassphraseTitle": "Passphrase required",
+  "lockPassphraseMessage": "All ten PIN attempts are used. Enter the passphrase you chose during setup to regain access.",
+  "lockPassphraseFieldLabel": "Passphrase",
+  "lockPassphraseFailed": "Incorrect passphrase.",
+  "lockUnlockButton": "Unlock",
+  "lockUsePassphrase": "Use passphrase",
+  "lockBackToPin": "Back to PIN",
+  "lockVerifying": "Verifying…",
+
+  "wipeDialogTitle": "Wipe all data?",
+  "wipeDialogBody": "Everything will be permanently erased — invoices, items, balances and settings — and the app returns to first-install state. This cannot be undone.",
+  "wipeConfirmWord": "wipe",
+  "wipeFinalTitle": "Final confirmation",
+  "wipeFinalBody": "Type “wipe” exactly to confirm erasing the whole database. If you have a backup file it stays safe outside the app.",
+  "wipeDoneTitle": "Data wiped",
+  "wipeDoneBody": "The app will now reopen on the setup screen.",
+
+  "dashboardTitle": "Home",
+  "morningGreeting": "Good morning",
+  "eveningGreeting": "Good evening",
+  "todaySales": "Today's sales",
+  "todayProfit": "Today's profit",
+  "todayInvoices": "Today's invoices",
+  "netCash": "Net cash",
+  "last30DaysTitle": "Last 30 days of sales",
+  "chartEmptyMessage": "Your sales will appear here after the first invoice",
+  "stockAlertsTitle": "Stock alerts",
+  "stockAlertsEmpty": "No alerts — all items are above their minimum",
+  "stockAlertsCount": "{count, plural, zero{no items} one{one item} other{{count} items}} below minimum",
+
+  "tabHome": "Home",
+  "tabSell": "Sell",
+  "tabInventory": "Inventory",
+  "tabCash": "Cash",
+  "tabMore": "More",
+
+  "comingSoonTitle": "Coming in the next slices",
+  "comingSoonBody": "The “{feature}” module is built in its dedicated slice after phase one approval — the architecture and database are already ready for it.",
+  "featureSell": "Selling & POS",
+  "featureInventory": "Items, stock & batches",
+  "featureCash": "Cashboxes & cash",
+  "featureMore": "Parties, reports & settings",
+
+  "dbOpenErrorTitle": "Could not open the database",
+  "dbOpenErrorMessage": "The database file may be busy or storage is full. Try again — your data is unaffected.",
+  "genericErrorTitle": "An unexpected error occurred",
+  "loadingData": "Loading…"
 }
