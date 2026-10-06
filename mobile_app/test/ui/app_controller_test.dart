@@ -40,10 +40,7 @@ void main() {
   test('بعد التأسيس: الجلسة الجديدة مقفلة دائماً (FR-12-01)', () async {
     final companies = CompanyRepository(app.db);
     final controller = AppController(forTesting: app);
-    await companies.executeSetup(
-      await testDraft(),
-      DateTime.utc(2026, 10, 6, 12),
-    );
+    await companies.executeSetup(testDraft(), DateTime.utc(2026, 10, 6, 12));
     await controller.decidePhaseForTest();
     expect(controller.phase, AppPhase.locked);
     expect(controller.company!.name, 'متجر النور للأدوات المنزلية');
@@ -125,14 +122,8 @@ void main() {
 
       await controller.setAutolockMinutes(15);
       expect(controller.autolockMinutes, 15);
-      expect(
-        () => controller.setAutolockMinutes(0),
-        throwsArgumentError,
-      );
-      expect(
-        () => controller.setAutolockMinutes(61),
-        throwsArgumentError,
-      );
+      expect(() => controller.setAutolockMinutes(0), throwsArgumentError);
+      expect(() => controller.setAutolockMinutes(61), throwsArgumentError);
 
       // قيد تدقيق للتغيير الأمني.
       final auditRows = await app.db.query(
@@ -169,7 +160,7 @@ void main() {
     final controller = AppController(forTesting: app);
     await controller.decidePhaseForTest();
     await controller.companies!.executeSetup(
-      await testDraft(),
+      testDraft(),
       DateTime.utc(2026, 10, 6, 12),
     );
     await controller.completeOnboarding();

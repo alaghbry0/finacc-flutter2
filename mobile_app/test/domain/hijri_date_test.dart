@@ -55,8 +55,17 @@ void main() {
 
     test('أسماء الأشهر الاثنا عشر كاملة', () {
       const expected = [
-        'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى',
-        'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة',
+        'محرم',
+        'صفر',
+        'ربيع الأول',
+        'ربيع الآخر',
+        'جمادى الأولى',
+        'جمادى الآخرة',
+        'رجب',
+        'شعبان',
+        'رمضان',
+        'شوال',
+        'ذو القعدة',
         'ذو الحجة',
       ];
       expect(HijriDate.monthNames, expected);
@@ -74,8 +83,11 @@ void main() {
           final length = next.day == 1
               ? (current.day == 30 ? 30 : (current.day == 29 ? 29 : -1))
               : -1;
-          expect(length, isIn([29, 30]),
-              reason: 'شهر ${current.monthName} طوله غير صالح ($length)');
+          expect(
+            length,
+            isIn([29, 30]),
+            reason: 'شهر ${current.monthName} طوله غير صالح ($length)',
+          );
           expect(next.day, 1, reason: 'الشهر الجديد يجب أن يبدأ بيوم 1');
         }
         current = next;

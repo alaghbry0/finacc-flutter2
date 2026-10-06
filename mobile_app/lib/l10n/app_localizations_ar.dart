@@ -561,4 +561,60 @@ class AppLocalizationsAr extends AppLocalizations {
   String auditLoadMore(Object shown, Object total) {
     return 'عرض المزيد ($shown من $total)';
   }
+
+  @override
+  String get auditFilterAll => 'الكل';
+
+  @override
+  String get auditFilterSetup => 'التأسيس';
+
+  @override
+  String get auditFilterSecurity => 'الأمان';
+
+  @override
+  String get auditFilterSettings => 'الإعدادات';
+
+  @override
+  String get auditFilterOther => 'أخرى';
+
+  @override
+  String get auditFilterEmptyTitle => 'لا أحداث في هذا التصنيف';
+
+  @override
+  String get auditFilterEmptyBody =>
+      'اختر تصنيفاً آخر أو أزل التصفية لعرض كل الأحداث المسجلة.';
+
+  @override
+  String auditCountsAll(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أحداث',
+      two: 'حدثان',
+      one: 'حدث واحد',
+      zero: 'لا أحداث',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsLicenses => 'التراخيص المفتوحة';
+
+  @override
+  String get settingsLicensesDesc => 'مكونات مفتوحة المصدر داخل التطبيق';
+
+  @override
+  String get dateSheetTitle => 'تاريخ اليوم';
+
+  @override
+  String get dateSheetTodayBadge => 'اليوم';
+
+  @override
+  String get dateSheetHijriLabel => 'التقويم الهجري';
+
+  @override
+  String get dateSheetGregorianLabel => 'التقويم الميلادي';
+
+  @override
+  String get dateSheetWeekdayLabel => 'اليوم';
 }

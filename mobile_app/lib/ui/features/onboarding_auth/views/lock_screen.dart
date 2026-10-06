@@ -9,9 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/services/hijri_date.dart';
+import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/brand_mark.dart';
+import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/pin_pad.dart';
 import '../view_models/lock_view_model.dart';
 
@@ -415,12 +419,16 @@ class _LockClockState extends State<_LockClock> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
     final time = DateFormat('HH:mm').format(_now);
+    final hijri = HijriCalendar.fromDateTime(_now).toString();
+    final arabicIndic = NumeralsScope.of(context);
+    String num(String t) => arabicIndic ? Numerals.toArabicIndic(t) : t;
     return Center(
       child: Column(
         children: [
           Text(
-            time,
+            num(time),
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.w800,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -428,8 +436,26 @@ class _LockClockState extends State<_LockClock> {
               letterSpacing: 1.2,
             ),
           ),
+          const SizedBox(height: 6),
+          // شريط التاريخ الهجري — كبسولة ذهبية رفيعة تحت الساعة.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: colors.gold.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: colors.gold.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              num(hijri),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.gold,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
           if (widget.companyName != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 8),
             Text(
               widget.companyName!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(

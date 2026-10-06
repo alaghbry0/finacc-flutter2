@@ -20,25 +20,54 @@ void main() {
     await app.close();
   });
 
-  test('المخطط الكامل: 33 جدول أعمال + _migrations (+sqlite_sequence تلقائي)', () async {
-    final rows = await app.db.rawQuery(
-      "SELECT name FROM sqlite_master WHERE type='table'",
-    );
-    final names = rows.map((r) => r['name'] as String).toSet();
-    const expected = [
-      'doc_sequence', 'company', 'currency', 'exchange_rate', 'category',
-      'unit', 'warehouse', 'cashbox', 'expense_category', 'fiscal_year',
-      'product', 'product_price', 'stock_level', 'stock_movement', 'batch',
-      'stocktake', 'stocktake_line', 'customer', 'supplier', 'invoice',
-      'invoice_item', 'quotation', 'quotation_item', 'cash_tx',
-      'payment_allocation', 'shift', 'cheque', 'installment_plan',
-      'installment', 'app_user', 'audit_log', 'backup_log', 'settings',
-      '_migrations',
-    ];
-    for (final table in expected) {
-      expect(names, contains(table), reason: 'الجدول $table مفقود من المخطط');
-    }
-  });
+  test(
+    'المخطط الكامل: 33 جدول أعمال + _migrations (+sqlite_sequence تلقائي)',
+    () async {
+      final rows = await app.db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table'",
+      );
+      final names = rows.map((r) => r['name'] as String).toSet();
+      const expected = [
+        'doc_sequence',
+        'company',
+        'currency',
+        'exchange_rate',
+        'category',
+        'unit',
+        'warehouse',
+        'cashbox',
+        'expense_category',
+        'fiscal_year',
+        'product',
+        'product_price',
+        'stock_level',
+        'stock_movement',
+        'batch',
+        'stocktake',
+        'stocktake_line',
+        'customer',
+        'supplier',
+        'invoice',
+        'invoice_item',
+        'quotation',
+        'quotation_item',
+        'cash_tx',
+        'payment_allocation',
+        'shift',
+        'cheque',
+        'installment_plan',
+        'installment',
+        'app_user',
+        'audit_log',
+        'backup_log',
+        'settings',
+        '_migrations',
+      ];
+      for (final table in expected) {
+        expect(names, contains(table), reason: 'الجدول $table مفقود من المخطط');
+      }
+    },
+  );
 
   test('فهارس الأداء الأساسية موجودة (فواتير/حركات/أصناف)', () async {
     final rows = await app.db.rawQuery(
@@ -69,10 +98,12 @@ void main() {
       'details': 'probe',
       'at': '2026-10-06T00:00:00Z',
     });
-    final id = (await app.db.query(
-      'audit_log',
-      where: "action = 'test_event'",
-    )).first['id'] as int;
+    final id =
+        (await app.db.query(
+              'audit_log',
+              where: "action = 'test_event'",
+            )).first['id']
+            as int;
 
     expect(
       () => app.db.update(
@@ -100,8 +131,11 @@ void main() {
     final rows = await app.db.rawQuery('PRAGMA journal_mode');
     // الوضع قد يكون wal أو persist(WAL) — الأساس ليس delete.
     final mode = (rows.first.values.first as String).toLowerCase();
-    expect(mode, contains('wal'),
-        reason: 'وضع اليومية يجب أن يكون WAL وليس $mode');
+    expect(
+      mode,
+      contains('wal'),
+      reason: 'وضع اليومية يجب أن يكون WAL وليس $mode',
+    );
     expect(app.journalMode.toLowerCase(), contains('wal'));
   });
 

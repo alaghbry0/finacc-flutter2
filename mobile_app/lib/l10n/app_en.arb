@@ -179,5 +179,23 @@
   "auditActionLockoutPassphrase": "Attempts exhausted — passphrase required",
   "auditActionSettingsChange": "Security setting changed",
   "auditActionUnknown": "Event: {action}",
-  "auditLoadMore": "Load more ({shown} of {total})"
+  "auditLoadMore": "Load more ({shown} of {total})",
+
+  "auditFilterAll": "All",
+  "auditFilterSetup": "Setup",
+  "auditFilterSecurity": "Security",
+  "auditFilterSettings": "Settings",
+  "auditFilterOther": "Other",
+  "auditFilterEmptyTitle": "No events in this category",
+  "auditFilterEmptyBody": "Pick another category or clear the filter to see all recorded events.",
+  "auditCountsAll": "{count, plural, =0{No events} one{1 event} other{{count} events}}",
+
+  "settingsLicenses": "Open-source licenses",
+  "settingsLicensesDesc": "Open-source components inside the app",
+
+  "dateSheetTitle": "Today's date",
+  "dateSheetTodayBadge": "Today",
+  "dateSheetHijriLabel": "Hijri calendar",
+  "dateSheetGregorianLabel": "Gregorian calendar",
+  "dateSheetWeekdayLabel": "Weekday"
 }

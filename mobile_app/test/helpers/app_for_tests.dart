@@ -42,13 +42,13 @@ Future<AppDatabase> openUniqueFileApp() async {
 }
 
 /// مسودة تأسيس قياسية للاختبارات (PIN خام — يُهشَّر هنا).
-Future<SetupCompanyDraft> testDraft({
+SetupCompanyDraft testDraft({
   String name = 'متجر النور للأدوات المنزلية',
   String? phone = '777123456',
   String currencyCode = 'YER',
   String pin = '1234',
   String passphrase = 'Passphrase-2026',
-}) async {
+}) {
   final now = DateTime.utc(2026, 10, 6, 12);
   return SetupCompanyDraft(
     companyName: name,
@@ -58,8 +58,8 @@ Future<SetupCompanyDraft> testDraft({
     warehouseName: 'المخزن الرئيسي',
     cashboxName: 'الصندوق الرئيسي',
     adminDisplayName: 'أبو نور',
-    pinHash: await PinHasher.hash(pin),
-    passphraseHash: await PinHasher.hash(passphrase),
+    pinHash: PinHasher.hash(pin),
+    passphraseHash: PinHasher.hash(passphrase),
     fiscalYear: now.year,
     fiscalStart: DateTime(now.year, 1, 1),
     fiscalEnd: DateTime(now.year, 12, 31),
@@ -67,23 +67,13 @@ Future<SetupCompanyDraft> testDraft({
 }
 
 /// يفتح قاعدة ويؤسسها كاملة (جاهزة للاستخدام مباشرة).
-Future<
-  (
-    AppDatabase,
-    CompanyRepository,
-    UserRepository,
-    SettingsRepository,
-  )
->
+Future<(AppDatabase, CompanyRepository, UserRepository, SettingsRepository)>
 openSeededApp() async {
   final app = await openUniqueFileApp();
   final companies = CompanyRepository(app.db);
   final users = UserRepository(app.db);
   final settings = SettingsRepository(app.db);
-  await companies.executeSetup(
-    await testDraft(),
-    DateTime.utc(2026, 10, 6, 12),
-  );
+  await companies.executeSetup(testDraft(), DateTime.utc(2026, 10, 6, 12));
   return (app, companies, users, settings);
 }
 

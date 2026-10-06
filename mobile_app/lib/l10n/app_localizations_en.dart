@@ -571,4 +571,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String auditLoadMore(Object shown, Object total) {
     return 'Load more ($shown of $total)';
   }
+
+  @override
+  String get auditFilterAll => 'All';
+
+  @override
+  String get auditFilterSetup => 'Setup';
+
+  @override
+  String get auditFilterSecurity => 'Security';
+
+  @override
+  String get auditFilterSettings => 'Settings';
+
+  @override
+  String get auditFilterOther => 'Other';
+
+  @override
+  String get auditFilterEmptyTitle => 'No events in this category';
+
+  @override
+  String get auditFilterEmptyBody =>
+      'Pick another category or clear the filter to see all recorded events.';
+
+  @override
+  String auditCountsAll(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+      zero: 'No events',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsLicenses => 'Open-source licenses';
+
+  @override
+  String get settingsLicensesDesc => 'Open-source components inside the app';
+
+  @override
+  String get dateSheetTitle => 'Today\'s date';
+
+  @override
+  String get dateSheetTodayBadge => 'Today';
+
+  @override
+  String get dateSheetHijriLabel => 'Hijri calendar';
+
+  @override
+  String get dateSheetGregorianLabel => 'Gregorian calendar';
+
+  @override
+  String get dateSheetWeekdayLabel => 'Weekday';
 }

@@ -8,8 +8,11 @@ void main() {
   group('PinPolicy.lockoutDelay — الجدول المتدرج', () {
     test('أقل من 5 محاولات: لا انتظار', () {
       for (final attempts in [0, 1, 2, 3, 4]) {
-        expect(PinPolicy.lockoutDelay(attempts), isNull,
-            reason: 'المحاولة $attempts لا توجب انتظاراً');
+        expect(
+          PinPolicy.lockoutDelay(attempts),
+          isNull,
+          reason: 'المحاولة $attempts لا توجب انتظاراً',
+        );
       }
     });
 

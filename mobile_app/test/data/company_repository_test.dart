@@ -24,14 +24,14 @@ void main() {
   test('hasCompany: خطأ قبل التأسيس وصواب بعده', () async {
     final repo = CompanyRepository(handle.db);
     expect(await repo.hasCompany(), isFalse);
-    await repo.executeSetup(await testDraft(), DateTime.utc(2026, 10, 6));
+    await repo.executeSetup(testDraft(), DateTime.utc(2026, 10, 6));
     expect(await repo.hasCompany(), isTrue);
   });
 
   test('التأسيس الذرّي ينشئ كل الكيانات الثمانية (منشأة/مخزن/صندوق/مدير/سنة/عبارة/تدقيق/عملة)', () async {
     final repo = CompanyRepository(handle.db);
     final company = await repo.executeSetup(
-      await testDraft(),
+      testDraft(),
       DateTime.utc(2026, 10, 6),
     );
 
@@ -80,7 +80,7 @@ void main() {
   test('اختيار عملة أخرى يثبّتها ويعيد ضبط YER (FR-08-01)', () async {
     final repo = CompanyRepository(handle.db);
     await repo.executeSetup(
-      await testDraft(currencyCode: 'SAR'),
+      testDraft(currencyCode: 'SAR'),
       DateTime.utc(2026, 10, 6),
     );
     final base = await repo.findBaseCurrency();
@@ -94,7 +94,7 @@ void main() {
 
   test('عملة غير موجودة: التأسيس يفشل ولا يكتب شيئاً (ذرّية)', () async {
     final repo = CompanyRepository(handle.db);
-    final badDraft = await testDraft(currencyCode: 'ZZZ');
+    final badDraft = testDraft(currencyCode: 'ZZZ');
     expect(
       () => repo.executeSetup(badDraft, DateTime.utc(2026, 10, 6)),
       throwsA(anything),
@@ -113,7 +113,7 @@ void main() {
   test('findCompany وfindBaseCurrency بعد التأسيس', () async {
     final repo = CompanyRepository(handle.db);
     expect(await repo.findCompany(), isNull);
-    await repo.executeSetup(await testDraft(), DateTime.utc(2026, 10, 6));
+    await repo.executeSetup(testDraft(), DateTime.utc(2026, 10, 6));
     final company = await repo.findCompany();
     expect(company!.name, 'متجر النور للأدوات المنزلية');
     final currency = await repo.findBaseCurrency();
@@ -126,6 +126,9 @@ void main() {
     final repo = CompanyRepository(handle.db);
     final currencies = await repo.listActiveCurrencies();
     expect(currencies, hasLength(4));
-    expect(currencies.map((c) => c.code), containsAll(['YER', 'SAR', 'USD', 'AED']));
+    expect(
+      currencies.map((c) => c.code),
+      containsAll(['YER', 'SAR', 'USD', 'AED']),
+    );
   });
 }

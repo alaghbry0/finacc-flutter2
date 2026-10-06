@@ -84,7 +84,11 @@ void main() {
       vm.addDigit(d);
     }
     await vm.submitPin(controller);
-    expect(vm.mode, LockUiMode.passphrase, reason: 'بعد 10 محاولات تتحول البوابة');
+    expect(
+      vm.mode,
+      LockUiMode.passphrase,
+      reason: 'بعد 10 محاولات تتحول البوابة',
+    );
 
     await vm.submitPassphrase(controller, 'wrong-pass');
     expect(controller.phase, AppPhase.locked);

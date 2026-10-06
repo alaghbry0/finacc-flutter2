@@ -37,8 +37,11 @@ void main() {
     expect(series.first.date, '2026-09-07');
     expect(series.last.date, '2026-10-06');
     for (var i = 1; i < series.length; i++) {
-      expect(series[i].date.compareTo(series[i - 1].date), greaterThan(0),
-          reason: 'التواريخ يجب أن تكون تصاعدية بلا تكرار');
+      expect(
+        series[i].date.compareTo(series[i - 1].date),
+        greaterThan(0),
+        reason: 'التواريخ يجب أن تكون تصاعدية بلا تكرار',
+      );
     }
     expect(series.every((p) => p.total == 0), isTrue);
   });

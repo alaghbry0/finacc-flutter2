@@ -1,8 +1,6 @@
 /// اختبارات الترقيم الذرّي doc_sequence — المساران (UPSERT والاحتياطي).
 library;
 
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/core/storage/app_database.dart';
 import 'package:mobile_app/core/storage/doc_sequence.dart';
@@ -12,8 +10,8 @@ import '../../helpers/app_for_tests.dart';
 void main() {
   setUpAll(initFfiForTests);
 
-  Future<void> runSuite(String label, {bool forceLegacy = false}) async {
-    group('مسار ${label} — ', () {
+  void runSuite(String label, {bool forceLegacy = false}) {
+    group('مسار $label — ', () {
       late AppDatabase app;
       late DocSequenceService seq;
 
@@ -47,8 +45,11 @@ void main() {
         await seq.nextNumber(DocSequenceType.invoice, 2026);
         await seq.nextNumber(DocSequenceType.invoice, 2026);
         expect(await seq.lastIssuedNumber(DocSequenceType.invoice, 2026), 2);
-        expect(await seq.lastIssuedNumber(DocSequenceType.invoice, 2026), 2,
-            reason: 'القراءة لا تستهلك');
+        expect(
+          await seq.lastIssuedNumber(DocSequenceType.invoice, 2026),
+          2,
+          reason: 'القراءة لا تستهلك',
+        );
       });
 
       test('setStartNumber: قبل أول إصدار فقط (FR-13-02)', () async {
@@ -74,20 +75,24 @@ void main() {
           ),
         );
         final sorted = results.toList()..sort();
-        expect(sorted, List.generate(count, (i) => i + 1),
-            reason: 'الأرقام يجب أن تكون 1..100 بلا فجوات أو تكرار');
+        expect(
+          sorted,
+          List.generate(count, (i) => i + 1),
+          reason: 'الأرقام يجب أن تكون 1..100 بلا فجوات أو تكرار',
+        );
       });
 
       test('الاستهلاك داخل معاملة المتصل يرث ذرّيتها', () async {
         // نفس النمط الملزم عند إصدار مستند حقيقي لاحقاً.
         final numbers = <int>[];
         await app.db.transaction((txn) async {
-          final inner = DocSequenceService(
-            txn,
-            forceLegacyPath: forceLegacy,
+          final inner = DocSequenceService(txn, forceLegacyPath: forceLegacy);
+          numbers.add(
+            await inner.nextNumber(DocSequenceType.receiptVoucher, 2026),
           );
-          numbers.add(await inner.nextNumber(DocSequenceType.receiptVoucher, 2026));
-          numbers.add(await inner.nextNumber(DocSequenceType.receiptVoucher, 2026));
+          numbers.add(
+            await inner.nextNumber(DocSequenceType.receiptVoucher, 2026),
+          );
         });
         expect(numbers, [1, 2]);
       });

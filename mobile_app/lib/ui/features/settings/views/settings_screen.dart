@@ -449,7 +449,9 @@ class _SecuritySection extends StatelessWidget {
                 title: l10n.settingsChangePin,
                 subtitle: l10n.settingsChangePinDesc,
                 trailing: const Icon(Icons.chevron_left_rounded),
-                onTap: () => context.push('/more/change-pin'),
+                // go (لا push): يحدّث عنوان URL للمسارات الفرعية للفرع ويحفظ
+                // عمق الرجوع داخل شريط التطبيق (push كان يترك #/more ثابتاً).
+                onTap: () => context.go('/more/change-pin'),
               ),
               Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
               _ActionRow(
@@ -458,7 +460,7 @@ class _SecuritySection extends StatelessWidget {
                 title: l10n.settingsAuditLog,
                 subtitle: l10n.settingsAuditLogDesc,
                 trailing: const Icon(Icons.chevron_left_rounded),
-                onTap: () => context.push('/more/audit-log'),
+                onTap: () => context.go('/more/audit-log'),
               ),
               Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
               _ActionRow(
@@ -807,6 +809,33 @@ class _AboutCard extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 14),
+          Divider(
+            color: Theme.of(context).colorScheme.outlineVariant
+                .withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: 10),
+          // صف التراخيص المفتوحة — صفحة تراخيص Flutter الرسمية.
+          _ActionRow(
+            icon: Icons.description_rounded,
+            iconColor: colors.gold,
+            title: l10n.settingsLicenses,
+            subtitle: l10n.settingsLicensesDesc,
+            trailing: const Icon(Icons.chevron_left_rounded),
+            onTap: () => showLicensePage(
+              context: context,
+              applicationName: '${l10n.appBrand} — ${l10n.appTitle}',
+              applicationVersion: l10n.settingsAboutVersion,
+              applicationIcon: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Icon(
+                  Icons.menu_book_rounded,
+                  color: colors.gold,
+                  size: 40,
+                ),
+              ),
+            ),
           ),
         ],
       ),

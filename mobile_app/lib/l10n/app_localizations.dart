@@ -1075,6 +1075,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load more ({shown} of {total})'**
   String auditLoadMore(Object shown, Object total);
+
+  /// No description provided for @auditFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get auditFilterAll;
+
+  /// No description provided for @auditFilterSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get auditFilterSetup;
+
+  /// No description provided for @auditFilterSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get auditFilterSecurity;
+
+  /// No description provided for @auditFilterSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get auditFilterSettings;
+
+  /// No description provided for @auditFilterOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get auditFilterOther;
+
+  /// No description provided for @auditFilterEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No events in this category'**
+  String get auditFilterEmptyTitle;
+
+  /// No description provided for @auditFilterEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another category or clear the filter to see all recorded events.'**
+  String get auditFilterEmptyBody;
+
+  /// No description provided for @auditCountsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No events} one{1 event} other{{count} events}}'**
+  String auditCountsAll(num count);
+
+  /// No description provided for @settingsLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source licenses'**
+  String get settingsLicenses;
+
+  /// No description provided for @settingsLicensesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-source components inside the app'**
+  String get settingsLicensesDesc;
+
+  /// No description provided for @dateSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s date'**
+  String get dateSheetTitle;
+
+  /// No description provided for @dateSheetTodayBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dateSheetTodayBadge;
+
+  /// No description provided for @dateSheetHijriLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hijri calendar'**
+  String get dateSheetHijriLabel;
+
+  /// No description provided for @dateSheetGregorianLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gregorian calendar'**
+  String get dateSheetGregorianLabel;
+
+  /// No description provided for @dateSheetWeekdayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekday'**
+  String get dateSheetWeekdayLabel;
 }
 
 class _AppLocalizationsDelegate
