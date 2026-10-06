@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/dashboard_repository.dart';
 
 class DashboardState {
@@ -13,6 +14,7 @@ class DashboardState {
     required this.series,
     required this.lowStock,
     this.error,
+    this.lastUpdated,
   });
 
   final bool loading;
@@ -20,6 +22,9 @@ class DashboardState {
   final List<DailySalesPoint> series;
   final int lowStock;
   final Object? error;
+
+  /// لحظة آخر تحميل ناجح (شارة «آخر تحديث»).
+  final DateTime? lastUpdated;
 
   static const DashboardState initial = DashboardState(
     loading: true,
@@ -35,18 +40,26 @@ class DashboardState {
 }
 
 class DashboardViewModel extends ChangeNotifier {
-  DashboardViewModel({required DashboardRepository repository})
-    : _repo = repository;
+  DashboardViewModel({
+    required DashboardRepository repository,
+    CompanyRepository? companyRepository,
+  }) : _repo = repository,
+       _companyRepo = companyRepository;
 
   final DashboardRepository _repo;
+  final CompanyRepository? _companyRepo;
 
   DashboardState _state = DashboardState.initial;
   String? _companyName;
   String? _adminName;
+  String? _currencyCode;
 
   DashboardState get state => _state;
   String? get companyName => _companyName;
   String? get adminName => _adminName;
+
+  /// رمز العملة الأساسية (YER/SAR/… — لفقاعة الرسم البياني).
+  String? get currencyCode => _currencyCode;
 
   /// تحميل كامل (يُستدعى عند بناء الشاشة وعند السحب للتحديث).
   Future<void> load({String? companyName, String? adminName}) async {
@@ -64,11 +77,15 @@ class DashboardViewModel extends ChangeNotifier {
       final stats = await _repo.todayStats(now);
       final series = await _repo.last30DaysSales(now);
       final lowStock = await _repo.lowStockCount();
+      if (_currencyCode == null && _companyRepo != null) {
+        _currencyCode = (await _companyRepo.findBaseCurrency())?.code;
+      }
       _state = DashboardState(
         loading: false,
         stats: stats,
         series: series,
         lowStock: lowStock,
+        lastUpdated: DateTime.now(),
       );
     } catch (error) {
       _state = DashboardState(

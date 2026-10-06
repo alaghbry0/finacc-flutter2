@@ -56,6 +56,10 @@ class AppController extends ChangeNotifier {
   Timer? _idleTicker;
   int _autolockMinutes = 5;
 
+  /// وضع الثيم المحفوظ (`system`/`light`/`dark`) — يُقرأ عند التهيئة
+  /// ويُكتب فور التبديل من شاشة الإعدادات (حالة نظامية في settings).
+  String _themeMode = 'system';
+
   /// الطور الحالي.
   AppPhase get phase => _phase;
 
@@ -75,6 +79,9 @@ class AppController extends ChangeNotifier {
 
   /// المنشأة الحالية (بعد التأسيس).
   Company? get company => _company;
+
+  /// وضع الثيم الحالي (نص خام قابل للحفظ — يُحوّله العرض إلى ThemeMode).
+  String get themeMode => _themeMode;
 
   /// يبدأ التهيئة (يُستدعى مرة عند الإقلاع).
   Future<void> bootstrap() async {
@@ -105,6 +112,7 @@ class AppController extends ChangeNotifier {
     final company = await _companyRepo!.findCompany();
     _company = company;
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
+    _themeMode = await _settingsRepo!.themeMode();
     // جلسة جديدة = مقفلة دائماً (PIN عند كل فتح — FR-12-01).
     _phase = company == null ? AppPhase.needsOnboarding : AppPhase.locked;
     notifyListeners();
@@ -134,6 +142,20 @@ class AppController extends ChangeNotifier {
     _idleTicker?.cancel();
     _idleTicker = null;
     notifyListeners();
+  }
+
+  // ── وضع الثيم ──
+
+  /// يثبّت وضع الثيم محلياً وفي القاعدة (يستدعيه شاشة الإعدادات).
+  Future<void> setThemeMode(String mode) async {
+    if (mode == _themeMode) return;
+    _themeMode = mode;
+    notifyListeners();
+    try {
+      await _settingsRepo?.setThemeMode(mode);
+    } catch (_) {
+      // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
+    }
   }
 
   // ── القفل التلقائي بعد الخمول (FR-12-05) ──

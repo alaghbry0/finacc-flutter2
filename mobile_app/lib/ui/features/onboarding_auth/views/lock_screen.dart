@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -48,6 +49,7 @@ class _LockBodyState extends State<_LockBody> {
     final vm = context.watch<LockViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final companyName = context.read<AppController>().company?.name;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -55,8 +57,8 @@ class _LockBodyState extends State<_LockBody> {
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 260),
           child: vm.mode == LockUiMode.pin
-              ? _pinMode(context, vm, l10n)
-              : _passphraseMode(context, vm, l10n),
+              ? _pinMode(context, vm, l10n, companyName)
+              : _passphraseMode(context, vm, l10n, companyName),
         ),
       ),
     );
@@ -66,6 +68,7 @@ class _LockBodyState extends State<_LockBody> {
     BuildContext context,
     LockViewModel vm,
     AppLocalizations l10n,
+    String? companyName,
   ) {
     final scheme = Theme.of(context).colorScheme;
     final gate = vm.gate;
@@ -75,7 +78,10 @@ class _LockBodyState extends State<_LockBody> {
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       children: [
         const BrandMark(size: 72),
-        const SizedBox(height: 22),
+        const SizedBox(height: 18),
+        // ساعة حية + اسم المنشأة — سياق «من يفتح ومتى» بلغة فاخرة.
+        _LockClock(companyName: companyName),
+        const SizedBox(height: 18),
         Text(
           l10n.lockTitle,
           style: Theme.of(context).textTheme.titleLarge,
@@ -157,6 +163,7 @@ class _LockBodyState extends State<_LockBody> {
     BuildContext context,
     LockViewModel vm,
     AppLocalizations l10n,
+    String? companyName,
   ) {
     final scheme = Theme.of(context).colorScheme;
     final gate = vm.gate;
@@ -371,6 +378,69 @@ class _CountdownBadge extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// ساعة حية أعلى شاشة القفل: الوقت الآن (يُحدَّث كل 20 ثانية) بأرقام
+/// جدولية كبيرة + اسم المنشأة تحتها — تفتح الجلسة بسياق زمني ومؤسسي.
+class _LockClock extends StatefulWidget {
+  const _LockClock({this.companyName});
+
+  final String? companyName;
+
+  @override
+  State<_LockClock> createState() => _LockClockState();
+}
+
+class _LockClockState extends State<_LockClock> {
+  DateTime _now = DateTime.now();
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 20), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final time = DateFormat('HH:mm').format(_now);
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            time,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: scheme.onSurface,
+              letterSpacing: 1.2,
+            ),
+          ),
+          if (widget.companyName != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              widget.companyName!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }

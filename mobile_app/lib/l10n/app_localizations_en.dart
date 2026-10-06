@@ -329,6 +329,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get comingGatedBadge => 'Awaiting phase-one approval';
+
+  @override
   String get featureSell => 'Selling & POS';
 
   @override
@@ -339,6 +342,143 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featureMore => 'Parties, reports & settings';
+
+  @override
+  String get comingSellH1 => 'A fast POS — one or two taps per item';
+
+  @override
+  String get comingSellH2 =>
+      'Credit invoices and full installment plans with guard policies';
+
+  @override
+  String get comingInventoryH1 =>
+      'Items with weighted-average cost and barcode cards';
+
+  @override
+  String get comingInventoryH2 =>
+      'Supply batches, FEFO expiry dates, and negative-stock protection';
+
+  @override
+  String get comingCashH1 =>
+      'Receipt and payment movements across multiple cashboxes';
+
+  @override
+  String get comingCashH2 =>
+      'Reconciliations and end-of-day balances in all currencies';
+
+  @override
+  String get comingMoreH1 =>
+      'Parties (customers/suppliers) with governed credit limits';
+
+  @override
+  String get comingMoreH2 => 'Reports, analytics, and scheduled backups';
+
+  @override
+  String get settingsBaseCurrency => 'Base currency';
+
+  @override
+  String get settingsAdmin => 'Admin';
+
+  @override
+  String get settingsAutolock => 'Auto-lock after';
+
+  @override
+  String settingsAutolackValue(num minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: 'one minute',
+    );
+    return '$_temp0 of inactivity';
+  }
+
+  @override
+  String get settingsSecurity => 'Security';
+
+  @override
+  String get settingsChangePin => 'Change PIN';
+
+  @override
+  String get settingsChangePinDesc =>
+      'Verify your current PIN, then set a new one';
+
+  @override
+  String get settingsLockNow => 'Lock the app now';
+
+  @override
+  String get settingsLockNowDesc => 'Returns to the sign-in screen immediately';
+
+  @override
+  String get settingsTheme => 'Appearance';
+
+  @override
+  String get themeSystem => 'Auto (follow system)';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get settingsThemeNote =>
+      'Your choice is stored in your local database and survives restarts.';
+
+  @override
+  String get settingsData => 'Data';
+
+  @override
+  String get settingsWipe => 'Erase all data';
+
+  @override
+  String get settingsWipeDesc =>
+      'Resets the app to first-install state — irreversible';
+
+  @override
+  String get settingsAboutPhase1 => 'Phase 1 complete';
+
+  @override
+  String get settingsAboutVersion => 'Version 1.0.0 — Slice 0 + Slice 1';
+
+  @override
+  String get settingsAboutSrs =>
+      'Built per the approved SRS v1.5 specification';
+
+  @override
+  String get changePinStep1Label => 'Current';
+
+  @override
+  String get changePinStep2Label => 'New';
+
+  @override
+  String get changePinStep3Label => 'Confirm';
+
+  @override
+  String get changePinStepCurrent => 'Enter your current PIN to continue';
+
+  @override
+  String get changePinStepNew => 'Choose a new PIN of 4 to 6 digits';
+
+  @override
+  String get changePinStepConfirm => 'Re-enter the new PIN to confirm';
+
+  @override
+  String get changePinDoneTitle => 'PIN changed successfully';
+
+  @override
+  String get changePinDoneBody =>
+      'Use the new PIN to unlock the app from now on — the change has been recorded in the audit log.';
+
+  @override
+  String get changePinWrongCurrent => 'Current PIN is incorrect — try again';
+
+  @override
+  String get changePinSameAsCurrent =>
+      'The new PIN matches the current one — choose a different PIN';
+
+  @override
+  String get changePinNoPin => 'No PIN is configured — set up the app again';
 
   @override
   String get dbOpenErrorTitle => 'Could not open the database';

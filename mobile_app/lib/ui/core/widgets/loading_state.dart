@@ -1,12 +1,15 @@
 /// LoadingState — DS-32: هيكل Skeleton للقوائم والبطاقات والتقارير —
 /// **لا شاشة بيضاء أبداً**.
+///
+/// الوميض: **Shimmer انسيابي** — مسح متدرج قطري يمر فوق الهيكل كل
+/// دورة (مظهر Premium متعارف عليه في تطبيقات المالية) بدل النبض الثابت.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// وميض الهيكل العظمي.
+/// وميض Shimmer — يلف أي عنصر يجعله يلمع بتمرير ضوء قطري دوراني.
 class SkeletonPulse extends StatefulWidget {
   const SkeletonPulse({super.key, required this.child});
 
@@ -20,8 +23,8 @@ class _SkeletonPulseState extends State<SkeletonPulse>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1300),
-  )..repeat(reverse: true);
+    duration: const Duration(milliseconds: 1500),
+  )..repeat();
 
   @override
   void dispose() {
@@ -32,11 +35,36 @@ class _SkeletonPulseState extends State<SkeletonPulse>
   @override
   Widget build(BuildContext context) {
     final colors = FinColors.of(context);
-    return FadeTransition(
-      opacity: Tween<double>(
-        begin: 0.55,
-        end: 1,
-      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut)),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        // موجة المسح: من -1.2 إلى 2.2 لخروج كامل خارج الحدود.
+        final t = _controller.value * 3.4 - 1.2;
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              stops: [
+                0.0,
+                (t - 0.18).clamp(0.0, 1.0),
+                t.clamp(0.0, 1.0),
+                (t + 0.18).clamp(0.0, 1.0),
+                1.0,
+              ],
+              colors: [
+                colors.skeletonBase,
+                colors.skeletonBase,
+                colors.skeletonHighlight,
+                colors.skeletonBase,
+                colors.skeletonBase,
+              ],
+            ).createShader(bounds);
+          },
+          child: child,
+        );
+      },
       child: DecoratedBox(
         decoration: BoxDecoration(color: colors.skeletonBase),
         child: widget.child,
@@ -100,18 +128,35 @@ class ListSkeleton extends StatelessWidget {
   }
 }
 
-/// هيكل عظمي لبطاقة رسم (30 يوماً).
+/// هيكل عظمي لبطاقة رسم (30 يوماً) — أعمدة وهمية بنسب متفاوتة.
 class ChartSkeleton extends StatelessWidget {
   const ChartSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = FinColors.of(context);
+    // 30 عموداً بارتفاعات عشوائية ثابتة (مظهر رسم حقيقي قيد التحميل).
+    final heights = List.generate(30, (i) => 18.0 + (i * 37 % 13) * 5.2);
     return SkeletonPulse(
-      child: Container(
+      child: SizedBox(
         height: 120,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.transparent,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (final h in heights)
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 1.2),
+                  height: h,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(2),
+                    ),
+                    color: colors.skeletonHighlight,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

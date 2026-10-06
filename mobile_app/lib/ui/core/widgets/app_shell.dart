@@ -81,7 +81,10 @@ class AppShell extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
+              // كبسولة مؤشر متحركة (تمدد/انكماش ناعم + قفزة أيقونة).
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 3,
@@ -90,12 +93,24 @@ class AppShell extends StatelessWidget {
                     ? BoxDecoration(
                         color: scheme.primaryContainer,
                         borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: scheme.primary.withValues(alpha: 0.18),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       )
-                    : null,
-                child: Icon(
-                  selected ? spec.activeIcon : spec.icon,
-                  size: 23,
-                  color: selected ? scheme.onPrimaryContainer : color,
+                    : const BoxDecoration(),
+                child: AnimatedScale(
+                  scale: selected ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutBack,
+                  child: Icon(
+                    selected ? spec.activeIcon : spec.icon,
+                    size: 23,
+                    color: selected ? scheme.onPrimaryContainer : color,
+                  ),
                 ),
               ),
               const SizedBox(height: 3),
@@ -114,39 +129,50 @@ class AppShell extends StatelessWidget {
       );
     }
 
-    // زر البيع البارز في الوسط (أهم فعل يومي — §6.4).
+    // زر البيع البارز في الوسط (أهم فعل يومي — §6.4) — توهج نابض خافت
+    // في الوضع النشط يحفز الانتباه دون إزعاج.
     final sellActive = currentIndex == _sellBranch;
     final sellButton = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          width: 58,
-          height: 58,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                scheme.primary,
-                Color.lerp(scheme.primary, Colors.black, 0.3)!,
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withValues(alpha: isDark ? 0.5 : 0.35),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.9, end: 1.0),
+          duration: const Duration(milliseconds: 340),
+          curve: Curves.easeOutBack,
+          builder: (context, t, child) {
+            return Transform.scale(scale: t, child: child);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  scheme.primary,
+                  Color.lerp(scheme.primary, Colors.black, 0.3)!,
+                ],
               ),
-            ],
-            border: Border.all(color: scheme.surface, width: 3.5),
-          ),
-          child: Icon(
-            sellActive
-                ? Icons.point_of_sale_rounded
-                : Icons.add_shopping_cart_rounded,
-            color: scheme.onPrimary,
-            size: 26,
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.primary.withValues(alpha: isDark ? 0.5 : 0.35),
+                  blurRadius: sellActive ? 20 : 14,
+                  spreadRadius: sellActive ? 2 : 0,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+              border: Border.all(color: scheme.surface, width: 3.5),
+            ),
+            child: Icon(
+              sellActive
+                  ? Icons.point_of_sale_rounded
+                  : Icons.add_shopping_cart_rounded,
+              color: scheme.onPrimary,
+              size: 26,
+            ),
           ),
         ),
         const SizedBox(height: 2),

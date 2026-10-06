@@ -327,6 +327,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get comingGatedBadge => 'بانتظار اعتماد المرحلة الأولى';
+
+  @override
   String get featureSell => 'البيع والكاشير';
 
   @override
@@ -337,6 +340,136 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get featureMore => 'الأطراف والتقارير والإعدادات';
+
+  @override
+  String get comingSellH1 => 'كاشير سريع بلمسة أو اثنتين لكل صنف';
+
+  @override
+  String get comingSellH2 => 'فواتير آجلة وتقسيط دفعات كامل مع سياسات الحماية';
+
+  @override
+  String get comingInventoryH1 => 'أصناف بتكلفة المتوسط المرجّح وبطاقات باركود';
+
+  @override
+  String get comingInventoryH2 =>
+      'دفعات توريد وتاريخ صلاحية FEFO ومنع السالب المخزوني';
+
+  @override
+  String get comingCashH1 => 'حركات قبض وصرف بين صناديق متعددة';
+
+  @override
+  String get comingCashH2 => 'تسويات وحساب أرصدة نهاية اليوم بالعملات';
+
+  @override
+  String get comingMoreH1 => 'أطراف (عملاء/موردون) بحدود ائتمان محكومة';
+
+  @override
+  String get comingMoreH2 => 'تقارير وتحليلات ونسخ احتياطي مجدول';
+
+  @override
+  String get settingsBaseCurrency => 'العملة الأساسية';
+
+  @override
+  String get settingsAdmin => 'المدير';
+
+  @override
+  String get settingsAutolock => 'القفل التلقائي بعد';
+
+  @override
+  String settingsAutolackValue(num minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes دقائق',
+      one: 'دقيقة واحدة',
+    );
+    return '$_temp0 من الخمول';
+  }
+
+  @override
+  String get settingsSecurity => 'الأمان';
+
+  @override
+  String get settingsChangePin => 'تغيير رمز PIN';
+
+  @override
+  String get settingsChangePinDesc =>
+      'تحقق من الرمز الحالي ثم ثبّت رمزاً جديداً';
+
+  @override
+  String get settingsLockNow => 'قفل التطبيق الآن';
+
+  @override
+  String get settingsLockNowDesc => 'يعود إلى شاشة الدخول فوراً';
+
+  @override
+  String get settingsTheme => 'المظهر';
+
+  @override
+  String get themeSystem => 'تلقائي (حسب النظام)';
+
+  @override
+  String get themeLight => 'فاتح';
+
+  @override
+  String get themeDark => 'داكن';
+
+  @override
+  String get settingsThemeNote =>
+      'يُحفظ اختيارك في قاعدتك المحلية ويبقى بعد إعادة التشغيل.';
+
+  @override
+  String get settingsData => 'البيانات';
+
+  @override
+  String get settingsWipe => 'مسح كل البيانات';
+
+  @override
+  String get settingsWipeDesc => 'إعادة التطبيق لحالة التثبيت الأول — لا تراجع';
+
+  @override
+  String get settingsAboutPhase1 => 'المرحلة الأولى مكتملة';
+
+  @override
+  String get settingsAboutVersion => 'الإصدار 1.0.0 — الشريحة 0 + الشريحة 1';
+
+  @override
+  String get settingsAboutSrs => 'وفق وثيقة المتطلبات SRS v1.5 المعتمدة';
+
+  @override
+  String get changePinStep1Label => 'الحالي';
+
+  @override
+  String get changePinStep2Label => 'الجديد';
+
+  @override
+  String get changePinStep3Label => 'التأكيد';
+
+  @override
+  String get changePinStepCurrent => 'أدخل رمز PIN الحالي للمتابعة';
+
+  @override
+  String get changePinStepNew => 'اختر رمزاً جديداً من 4 إلى 6 خانات';
+
+  @override
+  String get changePinStepConfirm => 'أعد إدخال الرمز الجديد للتأكيد';
+
+  @override
+  String get changePinDoneTitle => 'تم تغيير الرمز بنجاح';
+
+  @override
+  String get changePinDoneBody =>
+      'استخدم الرمز الجديد عند فتح التطبيق من الآن — وقد سُجّل التغيير في سجل التدقيق.';
+
+  @override
+  String get changePinWrongCurrent => 'الرمز الحالي غير صحيح — أعد المحاولة';
+
+  @override
+  String get changePinSameAsCurrent =>
+      'الرمز الجديد مطابق للحالي — اختر رمزاً مختلفاً';
+
+  @override
+  String get changePinNoPin => 'لا يوجد رمز مضبوط — أعد تأسيس التطبيق';
 
   @override
   String get dbOpenErrorTitle => 'تعذّر فتح قاعدة البيانات';
