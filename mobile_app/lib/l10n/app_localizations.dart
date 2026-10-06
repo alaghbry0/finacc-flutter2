@@ -650,6 +650,12 @@ abstract class AppLocalizations {
   /// **'The “{feature}” module is built in its dedicated slice after phase one approval — the architecture and database are already ready for it.'**
   String comingSoonBody(Object feature);
 
+  /// No description provided for @comingGatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting phase-one approval'**
+  String get comingGatedBadge;
+
   /// No description provided for @featureSell.
   ///
   /// In en, this message translates to:
@@ -673,6 +679,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parties, reports & settings'**
   String get featureMore;
+
+  /// No description provided for @comingSellH1.
+  ///
+  /// In en, this message translates to:
+  /// **'A fast POS — one or two taps per item'**
+  String get comingSellH1;
+
+  /// No description provided for @comingSellH2.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit invoices and full installment plans with guard policies'**
+  String get comingSellH2;
+
+  /// No description provided for @comingInventoryH1.
+  ///
+  /// In en, this message translates to:
+  /// **'Items with weighted-average cost and barcode cards'**
+  String get comingInventoryH1;
+
+  /// No description provided for @comingInventoryH2.
+  ///
+  /// In en, this message translates to:
+  /// **'Supply batches, FEFO expiry dates, and negative-stock protection'**
+  String get comingInventoryH2;
+
+  /// No description provided for @comingCashH1.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt and payment movements across multiple cashboxes'**
+  String get comingCashH1;
+
+  /// No description provided for @comingCashH2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconciliations and end-of-day balances in all currencies'**
+  String get comingCashH2;
+
+  /// No description provided for @comingMoreH1.
+  ///
+  /// In en, this message translates to:
+  /// **'Parties (customers/suppliers) with governed credit limits'**
+  String get comingMoreH1;
+
+  /// No description provided for @comingMoreH2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports, analytics, and scheduled backups'**
+  String get comingMoreH2;
+
+  /// No description provided for @settingsBaseCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency'**
+  String get settingsBaseCurrency;
+
+  /// No description provided for @settingsAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get settingsAdmin;
+
+  /// No description provided for @settingsAutolock.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-lock after'**
+  String get settingsAutolock;
+
+  /// No description provided for @settingsAutolackValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, one{one minute} other{{minutes} minutes}} of inactivity'**
+  String settingsAutolackValue(num minutes);
+
+  /// No description provided for @settingsSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get settingsSecurity;
+
+  /// No description provided for @settingsChangePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get settingsChangePin;
+
+  /// No description provided for @settingsChangePinDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your current PIN, then set a new one'**
+  String get settingsChangePinDesc;
+
+  /// No description provided for @settingsLockNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock the app now'**
+  String get settingsLockNow;
+
+  /// No description provided for @settingsLockNowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns to the sign-in screen immediately'**
+  String get settingsLockNowDesc;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingsTheme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (follow system)'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @settingsThemeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your choice is stored in your local database and survives restarts.'**
+  String get settingsThemeNote;
+
+  /// No description provided for @settingsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get settingsData;
+
+  /// No description provided for @settingsWipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase all data'**
+  String get settingsWipe;
+
+  /// No description provided for @settingsWipeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets the app to first-install state — irreversible'**
+  String get settingsWipeDesc;
+
+  /// No description provided for @settingsAboutPhase1.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase 1 complete'**
+  String get settingsAboutPhase1;
+
+  /// No description provided for @settingsAboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.0.0 — Slice 0 + Slice 1'**
+  String get settingsAboutVersion;
+
+  /// No description provided for @settingsAboutSrs.
+  ///
+  /// In en, this message translates to:
+  /// **'Built per the approved SRS v1.5 specification'**
+  String get settingsAboutSrs;
+
+  /// No description provided for @changePinStep1Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get changePinStep1Label;
+
+  /// No description provided for @changePinStep2Label.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get changePinStep2Label;
+
+  /// No description provided for @changePinStep3Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get changePinStep3Label;
+
+  /// No description provided for @changePinStepCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current PIN to continue'**
+  String get changePinStepCurrent;
+
+  /// No description provided for @changePinStepNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new PIN of 4 to 6 digits'**
+  String get changePinStepNew;
+
+  /// No description provided for @changePinStepConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter the new PIN to confirm'**
+  String get changePinStepConfirm;
+
+  /// No description provided for @changePinDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN changed successfully'**
+  String get changePinDoneTitle;
+
+  /// No description provided for @changePinDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the new PIN to unlock the app from now on — the change has been recorded in the audit log.'**
+  String get changePinDoneBody;
+
+  /// No description provided for @changePinWrongCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN is incorrect — try again'**
+  String get changePinWrongCurrent;
+
+  /// No description provided for @changePinSameAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The new PIN matches the current one — choose a different PIN'**
+  String get changePinSameAsCurrent;
+
+  /// No description provided for @changePinNoPin.
+  ///
+  /// In en, this message translates to:
+  /// **'No PIN is configured — set up the app again'**
+  String get changePinNoPin;
 
   /// No description provided for @dbOpenErrorTitle.
   ///

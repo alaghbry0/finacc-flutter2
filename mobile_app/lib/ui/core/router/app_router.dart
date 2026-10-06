@@ -12,6 +12,8 @@ import '../../features/home/views/home_screen.dart';
 import '../../features/onboarding_auth/views/lock_screen.dart';
 import '../../features/onboarding_auth/views/onboarding_screen.dart';
 import '../../features/placeholders/coming_soon_screen.dart';
+import '../../features/settings/views/change_pin_screen.dart';
+import '../../features/settings/views/settings_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
 import '../session/app_controller.dart';
 import '../widgets/app_shell.dart';
@@ -94,8 +96,13 @@ GoRouter buildAppRouter(AppController controller) {
             routes: [
               GoRoute(
                 path: '/more',
-                builder: (context, state) =>
-                    const ComingSoonScreen(feature: ComingFeature.more),
+                builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'change-pin',
+                    builder: (context, state) => const ChangePinScreen(),
+                  ),
+                ],
               ),
             ],
           ),

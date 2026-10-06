@@ -32,6 +32,9 @@ class SettingsRepository {
     'dating.max_backdate_days',
     // حالة نظامية (ليست إعداداً قابلاً للضبط — انظر CompanyRepository).
     'security.passphrase_hash',
+    // حالة نظامية: تفضيل وضع الثيم المحفوظ محلياً (الإعداد نفسه
+    // نظامي خارج ملحق هـ — يُدار من شاشة الإعدادات ويُخزَّن كنص).
+    'ui.theme_mode',
   };
 
   /// يقرأ قيمة خام (JSON) أو null.
@@ -102,5 +105,19 @@ class SettingsRepository {
     } on FormatException {
       return null;
     }
+  }
+
+  // ── وضع الثيم (حالة نظامية تُحفَظ فوراً) ──
+
+  /// `ui.theme_mode` — `system` / `light` / `dark` (افتراضي system).
+  Future<String> themeMode() => getString('ui.theme_mode', 'system');
+
+  /// يثبّت وضع الثيم (يتحقق من القيم الثلاث فقط).
+  Future<void> setThemeMode(String mode) async {
+    const allowed = {'system', 'light', 'dark'};
+    if (!allowed.contains(mode)) {
+      throw ArgumentError('وضع ثيم غير معروف: $mode');
+    }
+    await set('ui.theme_mode', mode);
   }
 }

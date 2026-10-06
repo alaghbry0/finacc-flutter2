@@ -67,65 +67,71 @@ class PinPad extends StatelessWidget {
       );
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final row in [
-          [1, 2, 3],
-          [4, 5, 6],
-          [7, 8, 9],
-        ])
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (final d in row)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: key(
-                      child: Center(child: Text('$d', style: digitStyle)),
-                      onTap: () => onDigit(d),
+    return Directionality(
+      // لوحة الأرقام تبقى LTR دائماً (1-2-3 من اليسار) — معيار التطبيقات
+      // المالية العربية (البنوك والمحافظ): الأرقام تُقرأ يساراً يميناً مهما
+      // كان اتجاه الواجهة، وعكسها يربك الإدخال السريع عند الكاشير.
+      textDirection: TextDirection.ltr,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final row in [
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9],
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final d in row)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: key(
+                        child: Center(child: Text('$d', style: digitStyle)),
+                        onTap: () => onDigit(d),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: key(
+                  child: Center(child: footer ?? const SizedBox.shrink()),
+                  onTap: () {},
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: key(
+                  child: Center(child: Text('0', style: digitStyle)),
+                  onTap: () => onDigit(0),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: key(
+                  child: Center(
+                    child: Icon(
+                      Icons.backspace_outlined,
+                      size: 26,
+                      color: enabled
+                          ? scheme.onSurfaceVariant
+                          : scheme.onSurfaceVariant.withValues(alpha: 0.35),
                     ),
                   ),
-              ],
-            ),
-          ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: key(
-                child: Center(child: footer ?? const SizedBox.shrink()),
-                onTap: () {},
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: key(
-                child: Center(child: Text('0', style: digitStyle)),
-                onTap: () => onDigit(0),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: key(
-                child: Center(
-                  child: Icon(
-                    Icons.backspace_outlined,
-                    size: 26,
-                    color: enabled
-                        ? scheme.onSurfaceVariant
-                        : scheme.onSurfaceVariant.withValues(alpha: 0.35),
-                  ),
+                  onTap: onBackspace,
                 ),
-                onTap: onBackspace,
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -193,28 +199,73 @@ class _PinDotsState extends State<PinDots> with SingleTickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(widget.length, (i) {
           final filled = i < widget.filled;
-          return Container(
-            width: 16,
-            height: 16,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: widget.error
-                  ? errorColor
-                  : filled
-                  ? scheme.primary
-                  : Colors.transparent,
-              border: Border.all(
-                color: widget.error
-                    ? errorColor
-                    : filled
-                    ? scheme.primary
-                    : scheme.outlineVariant,
-                width: filled ? 0 : 2,
-              ),
-            ),
+          return _AnimatedDot(
+            filled: filled,
+            error: widget.error,
+            filledColor: scheme.primary,
+            outlineColor: scheme.outlineVariant,
+            errorColor: errorColor,
           );
         }),
+      ),
+    );
+  }
+}
+
+/// نقطة واحدة بحركة مقياس/ارتداد عند الامتلاء (لمسة حية عند كل ضغطة).
+class _AnimatedDot extends StatelessWidget {
+  const _AnimatedDot({
+    required this.filled,
+    required this.error,
+    required this.filledColor,
+    required this.outlineColor,
+    required this.errorColor,
+  });
+
+  final bool filled;
+  final bool error;
+  final Color filledColor;
+  final Color outlineColor;
+  final Color errorColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = error
+        ? errorColor
+        : filled
+        ? filledColor
+        : Colors.transparent;
+    return AnimatedScale(
+      scale: filled || error ? 1.18 : 1.0,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOutBack,
+      child: AnimatedContainer(
+        width: 16,
+        height: 16,
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          border: Border.all(
+            color: error
+                ? errorColor
+                : filled
+                ? filledColor
+                : outlineColor,
+            width: filled ? 0 : 2,
+          ),
+          boxShadow: filled && !error
+              ? [
+                  BoxShadow(
+                    color: filledColor.withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
       ),
     );
   }

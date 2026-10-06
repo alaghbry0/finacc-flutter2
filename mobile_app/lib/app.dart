@@ -1,7 +1,8 @@
 /// FinAcc — «المُحاسِب الشخصي» — جذر التطبيق.
 ///
-/// عربية RTL حصراً (§6.1) بمعايرة أرقام غربية، ثيم Material 3 من البذرة
-/// المالية بلونَي الوضعين، وتوجيه تصريحي محروس بأطوار الجلسة.
+/// عربية RTL حصراً (§6.1) بمعايرة أرقام غربية، ثيم Material 3 من بذرة
+/// المالية بلونَي الوضعين مع وضع ثيم محفوظ (نظام/فاتح/داكن)، وتوجيه
+/// تصريحي محروس بأطوار الجلسة.
 library;
 
 import 'dart:async';
@@ -60,34 +61,47 @@ class _FinAccAppState extends State<FinAccApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AppController>.value(
-      value: widget.controller,
-      child: MaterialApp.router(
-        onGenerateTitle: (context) =>
-            '${AppLocalizations.of(context)!.appBrand} — '
-            '${AppLocalizations.of(context)!.appTitle}',
-        theme: FinTheme.light(),
-        darkTheme: FinTheme.dark(),
-        themeMode: ThemeMode.system,
-        debugShowCheckedModeBanner: false,
-        // عربية حصراً في V1 (§6.1) — اتجاه RTL تلقائي عبر Locale.
-        locale: const Locale('ar'),
-        supportedLocales: const [Locale('ar'), Locale('en')],
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        routerConfig: _router,
-        builder: (context, child) {
-          // تجديد نشاط الجلسة عند أي لمس (القفل التلقائي — FR-12-05).
-          return Listener(
-            onPointerDown: (_) => widget.controller.touch(),
-            child: child,
-          );
-        },
-      ),
+    final controller = widget.controller;
+    return ListenableBuilder(
+      // إعادة بناء الجذر عند تغيّر وضع الثيم (ومرحلة الجلسة).
+      listenable: controller,
+      builder: (context, _) {
+        return ChangeNotifierProvider<AppController>.value(
+          value: controller,
+          child: MaterialApp.router(
+            onGenerateTitle: (context) =>
+                '${AppLocalizations.of(context)!.appBrand} — '
+                '${AppLocalizations.of(context)!.appTitle}',
+            theme: FinTheme.light(),
+            darkTheme: FinTheme.dark(),
+            // وضع الثيم المحفوظ (نظام/فاتح/داكن) — يتغير فورياً من
+            // شاشة الإعدادات ويُقرأ من القاعدة عند كل إقلاع.
+            themeMode: switch (controller.themeMode) {
+              'light' => ThemeMode.light,
+              'dark' => ThemeMode.dark,
+              _ => ThemeMode.system,
+            },
+            debugShowCheckedModeBanner: false,
+            // عربية حصراً في V1 (§6.1) — اتجاه RTL تلقائي عبر Locale.
+            locale: const Locale('ar'),
+            supportedLocales: const [Locale('ar'), Locale('en')],
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            routerConfig: _router,
+            builder: (context, child) {
+              // تجديد نشاط الجلسة عند أي لمس (القفل التلقائي — FR-12-05).
+              return Listener(
+                onPointerDown: (_) => widget.controller.touch(),
+                child: child,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

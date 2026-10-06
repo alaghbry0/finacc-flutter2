@@ -26,6 +26,21 @@ enum PinVerifyOutcome {
   passphraseRequired,
 }
 
+/// نتيجة تغيير رمز PIN (شاشة الإعدادات).
+enum PinChangeOutcome {
+  /// نجح التغيير وسُجّل في التدقيق.
+  success,
+
+  /// الرمز الحالي غير صحيح.
+  wrongCurrent,
+
+  /// الرمز الجديد خارج نطاق 4-6 خانات.
+  invalidLength,
+
+  /// لا يوجد PIN مضبوط أصلاً (وضع شاذ بعد التأسيس).
+  noPin,
+}
+
 class UserRepository {
   UserRepository(this._db, {SettingsRepository? settingsRepository})
     : _settings = settingsRepository ?? SettingsRepository(_db);
@@ -154,6 +169,53 @@ class UserRepository {
       'entity_id': entityId,
       'details': details,
       'at': (at ?? DateTime.now()).toUtc().toIso8601String(),
+    });
+  }
+
+  /// يغيّر رمز PIN — يتحقق من الرمز الحالي أولاً ثم يستبدله ذرّياً
+  /// (تدقيق `pin_change` عند النجاح — نفس عتبات السياسة للرمز الجديد).
+  Future<PinChangeOutcome> changePin(
+    String currentPin,
+    String newPin, {
+    DateTime? now,
+  }) async {
+    final at = now ?? DateTime.now();
+    if (newPin.length < 4 || newPin.length > 6) {
+      return PinChangeOutcome.invalidLength;
+    }
+    return _db.transaction((txn) async {
+      final rows = await txn.query(
+        'app_user',
+        where: "role = 'admin' AND is_active = 1",
+        limit: 1,
+      );
+      if (rows.isEmpty || (rows.first['pin_hash'] as String?) == null) {
+        return PinChangeOutcome.noPin;
+      }
+      final userId = rows.first['id'] as int;
+      final storedHash = rows.first['pin_hash'] as String;
+      if (!PinHasher.verify(currentPin, storedHash)) {
+        return PinChangeOutcome.wrongCurrent;
+      }
+      await txn.update(
+        'app_user',
+        {
+          'pin_hash': PinHasher.hash(newPin),
+          'failed_attempts': 0,
+          'locked_until': null,
+          'updated_at': at.toUtc().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [userId],
+      );
+      await txn.insert('audit_log', {
+        'user_id': userId,
+        'action': 'pin_change',
+        'entity': 'app_user',
+        'entity_id': userId,
+        'at': at.toUtc().toIso8601String(),
+      });
+      return PinChangeOutcome.success;
     });
   }
 
