@@ -230,6 +230,10 @@ class AppController extends ChangeNotifier {
     _lastActivity = DateTime.now();
   }
 
+  /// لحظة آخر نشاط (اختبارات — مراقبة الخمول).
+  @visibleForTesting
+  DateTime get lastActivityForTest => _lastActivity;
+
   void _startIdleWatch() {
     _idleTicker?.cancel();
     _idleTicker = Timer.periodic(const Duration(seconds: 15), (_) {
