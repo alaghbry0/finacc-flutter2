@@ -179,5 +179,23 @@
   "auditActionLockoutPassphrase": "استنفاد المحاولات — طلب عبارة المرور",
   "auditActionSettingsChange": "تغيير إعداد أمني",
   "auditActionUnknown": "حدث: {action}",
-  "auditLoadMore": "عرض المزيد ({shown} من {total})"
+  "auditLoadMore": "عرض المزيد ({shown} من {total})",
+
+  "auditFilterAll": "الكل",
+  "auditFilterSetup": "التأسيس",
+  "auditFilterSecurity": "الأمان",
+  "auditFilterSettings": "الإعدادات",
+  "auditFilterOther": "أخرى",
+  "auditFilterEmptyTitle": "لا أحداث في هذا التصنيف",
+  "auditFilterEmptyBody": "اختر تصنيفاً آخر أو أزل التصفية لعرض كل الأحداث المسجلة.",
+  "auditCountsAll": "{count, plural, =0{لا أحداث} one{حدث واحد} two{حدثان} other{{count} أحداث}}",
+
+  "settingsLicenses": "التراخيص المفتوحة",
+  "settingsLicensesDesc": "مكونات مفتوحة المصدر داخل التطبيق",
+
+  "dateSheetTitle": "تاريخ اليوم",
+  "dateSheetTodayBadge": "اليوم",
+  "dateSheetHijriLabel": "التقويم الهجري",
+  "dateSheetGregorianLabel": "التقويم الميلادي",
+  "dateSheetWeekdayLabel": "اليوم"
 }

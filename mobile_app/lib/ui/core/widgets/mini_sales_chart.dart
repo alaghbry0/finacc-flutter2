@@ -57,14 +57,74 @@ class _MiniSalesChartState extends State<MiniSalesChart>
     final colors = FinColors.of(context);
     final hasData = widget.points.any((p) => p.total > 0);
     if (!hasData) {
+      // حالة فراغ أنيقة: أعمدة وهمية شبحية بأحجام متفاوتة + رسالة وسطية.
+      const ghostHeights = [34.0, 52.0, 40.0, 66.0, 48.0, 72.0, 44.0, 58.0];
       return SizedBox(
         height: 128,
-        child: Center(
-          child: Text(
-            'ستظهر مبيعاتك هنا بعد أول فاتورة',
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
-          ),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // خط قاعدة خافت.
+            Container(
+              height: 1,
+              margin: const EdgeInsets.only(bottom: 2),
+              color: scheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (final h in ghostHeights)
+                  Container(
+                    width: 18,
+                    height: h,
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(5),
+                      ),
+                      color: scheme.primary.withValues(alpha: 0.07),
+                      border: Border.all(
+                        color: scheme.primary.withValues(alpha: 0.16),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: scheme.surface.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.show_chart_rounded,
+                      size: 15,
+                      color: colors.gold,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'ستظهر مبيعاتك هنا بعد أول فاتورة',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }

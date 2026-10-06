@@ -24,30 +24,30 @@ void main() {
   });
 
   group('verifyPin — النجاح', () {
-    test('PIN صحيح: نجاح + تصفير العدّاد (بلا قيد تدقيق للنجاح العادي)', () async {
-      // محاولتان خاطئتان أولاً لرفع العدّاد.
-      await users.verifyPin('0000', now: DateTime.utc(2026, 10, 6, 13));
-      await users.verifyPin('0000', now: DateTime.utc(2026, 10, 6, 13, 0, 1));
-      final outcome = await users.verifyPin(
-        '1234',
-        now: DateTime.utc(2026, 10, 6, 13, 0, 2),
-      );
-      expect(outcome, PinVerifyOutcome.success);
-      expect(await users.currentFailedAttempts(), 0);
-      expect(await users.currentLockedUntil(), isNull);
-      // النجاح العادي لا يقيّد في التدقيق — القيود للعتبات فقط (AC-15).
-      expect(
-        await app.db.query(
-          'audit_log',
-          where: "action LIKE 'pin_lockout%'",
-        ),
-        isEmpty,
-        reason: 'محاولتان فقط دون بلوغ عتبة 5',
-      );
-      // آخر دخول مسجل.
-      final admin = (await app.db.query('app_user')).first;
-      expect(admin['last_login_at'], isNotNull);
-    });
+    test(
+      'PIN صحيح: نجاح + تصفير العدّاد (بلا قيد تدقيق للنجاح العادي)',
+      () async {
+        // محاولتان خاطئتان أولاً لرفع العدّاد.
+        await users.verifyPin('0000', now: DateTime.utc(2026, 10, 6, 13));
+        await users.verifyPin('0000', now: DateTime.utc(2026, 10, 6, 13, 0, 1));
+        final outcome = await users.verifyPin(
+          '1234',
+          now: DateTime.utc(2026, 10, 6, 13, 0, 2),
+        );
+        expect(outcome, PinVerifyOutcome.success);
+        expect(await users.currentFailedAttempts(), 0);
+        expect(await users.currentLockedUntil(), isNull);
+        // النجاح العادي لا يقيّد في التدقيق — القيود للعتبات فقط (AC-15).
+        expect(
+          await app.db.query('audit_log', where: "action LIKE 'pin_lockout%'"),
+          isEmpty,
+          reason: 'محاولتان فقط دون بلوغ عتبة 5',
+        );
+        // آخر دخول مسجل.
+        final admin = (await app.db.query('app_user')).first;
+        expect(admin['last_login_at'], isNotNull);
+      },
+    );
 
     test('hasPin بعد التأسيس', () async {
       expect(await users.hasPin(), isTrue);
@@ -78,7 +78,10 @@ void main() {
       expect(lockedUntil, isNotNull);
 
       // داخل نافذة الانتظار — ولو أدخل الصحيح.
-      final inside = await users.verifyPin('1234', now: now.add(const Duration(seconds: 10)));
+      final inside = await users.verifyPin(
+        '1234',
+        now: now.add(const Duration(seconds: 10)),
+      );
       expect(inside, PinVerifyOutcome.delayed);
       // العدّاد لم يزد (رفض مبكر).
       expect(await users.currentFailedAttempts(), 5);
@@ -107,27 +110,33 @@ void main() {
         'audit_log',
         where: "action LIKE 'pin_lockout%'",
       );
-      expect(lockouts, isNotEmpty,
-          reason: 'عتبات التأخير وعبارة المرور تقيَّد في التدقيق');
+      expect(
+        lockouts,
+        isNotEmpty,
+        reason: 'عتبات التأخير وعبارة المرور تقيَّد في التدقيق',
+      );
     });
   });
 
   group('verifyPassphrase', () {
-    test('الصحيحة تتحقق، وresetLockout يصفر العدّاد (تدفق LockViewModel)', () async {
-      var now = DateTime.utc(2026, 10, 6, 15);
-      for (var i = 0; i < 10; i++) {
-        await users.verifyPin('0000', now: now);
-        now = now.add(const Duration(minutes: 16));
-      }
-      expect(await users.currentFailedAttempts(), 10);
-      expect(await users.verifyPassphrase('wrong-pass'), isFalse);
-      // التحقق الناجح وحده لا يصفر — الفصل مقصود (استرداد صريح).
-      expect(await users.verifyPassphrase('Passphrase-2026'), isTrue);
-      expect(await users.currentFailedAttempts(), 10);
-      await users.resetLockout(now: now);
-      expect(await users.currentFailedAttempts(), 0);
-      expect(await users.currentLockedUntil(), isNull);
-    });
+    test(
+      'الصحيحة تتحقق، وresetLockout يصفر العدّاد (تدفق LockViewModel)',
+      () async {
+        var now = DateTime.utc(2026, 10, 6, 15);
+        for (var i = 0; i < 10; i++) {
+          await users.verifyPin('0000', now: now);
+          now = now.add(const Duration(minutes: 16));
+        }
+        expect(await users.currentFailedAttempts(), 10);
+        expect(await users.verifyPassphrase('wrong-pass'), isFalse);
+        // التحقق الناجح وحده لا يصفر — الفصل مقصود (استرداد صريح).
+        expect(await users.verifyPassphrase('Passphrase-2026'), isTrue);
+        expect(await users.currentFailedAttempts(), 10);
+        await users.resetLockout(now: now);
+        expect(await users.currentFailedAttempts(), 0);
+        expect(await users.currentLockedUntil(), isNull);
+      },
+    );
   });
 
   group('changePin — الذرّية والتدقيق', () {

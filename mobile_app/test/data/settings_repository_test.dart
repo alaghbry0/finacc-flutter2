@@ -14,16 +14,19 @@ import '../helpers/app_for_tests.dart';
 void main() {
   setUpAll(initFfiForTests);
 
-  test('الافتراضيات قبل أي كتابة: numerals=western وautolock=5 وtheme=system', () async {
-    final app = await openUniqueFileApp();
-    addTearDown(app.close);
-    final settings = SettingsRepository(app.db);
+  test(
+    'الافتراضيات قبل أي كتابة: numerals=western وautolock=5 وtheme=system',
+    () async {
+      final app = await openUniqueFileApp();
+      addTearDown(app.close);
+      final settings = SettingsRepository(app.db);
 
-    expect(await settings.numerals(), 'western');
-    expect(await settings.autolockMinutes(), 5);
-    expect(await settings.themeMode(), 'system');
-    expect(await settings.highContrast(), isFalse);
-  });
+      expect(await settings.numerals(), 'western');
+      expect(await settings.autolockMinutes(), 5);
+      expect(await settings.themeMode(), 'system');
+      expect(await settings.highContrast(), isFalse);
+    },
+  );
 
   test('كتابة/قراءة جولة كاملة لكل الموصلات المطبّعة', () async {
     final app = await openUniqueFileApp();
@@ -61,13 +64,16 @@ void main() {
 
     expect(() => settings.set('unknown.key', 'x'), throwsArgumentError);
     // المفاتيح الجديدة من الميزات موجودة في السجل.
-    expect(SettingsRepository.knownKeys, containsAll(<String>[
-      'display.numerals',
-      'ui.theme_mode',
-      'security.autolock_minutes',
-      'security.passphrase_hash',
-      'ui.high_contrast',
-    ]));
+    expect(
+      SettingsRepository.knownKeys,
+      containsAll(<String>[
+        'display.numerals',
+        'ui.theme_mode',
+        'security.autolock_minutes',
+        'security.passphrase_hash',
+        'ui.high_contrast',
+      ]),
+    );
   });
 
   test('raw يخزن JSON خام — والقراءة النصية تفكّ الترميز', () async {
@@ -88,15 +94,11 @@ void main() {
     addTearDown(app.close);
     final settings = SettingsRepository(app.db);
 
-    await app.db.insert(
-      'settings',
-      {
-        'key': 'backup.retention_count',
-        'value': 'not-json{',
-        'updated_at': '2026-10-06T00:00:00Z',
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await app.db.insert('settings', {
+      'key': 'backup.retention_count',
+      'value': 'not-json{',
+      'updated_at': '2026-10-06T00:00:00Z',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     expect(await settings.getInt('backup.retention_count', 3), 3);
   });
 

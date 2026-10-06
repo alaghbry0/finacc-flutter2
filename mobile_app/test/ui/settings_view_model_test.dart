@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/core/storage/app_database.dart';
 import 'package:mobile_app/data/repositories/company_repository.dart';
 import 'package:mobile_app/data/repositories/settings_repository.dart';
 import 'package:mobile_app/data/repositories/user_repository.dart';

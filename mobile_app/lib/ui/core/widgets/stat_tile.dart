@@ -57,59 +57,90 @@ class StatTile extends StatelessWidget {
       FinSign.outgoing => colors.onNegativeContainer,
       FinSign.neutral => scheme.onSurfaceVariant,
     };
+    // لون الخط الدلالي العلوي — هوية لكل بلاطة دون ضجيج.
+    final accent = switch (sign) {
+      FinSign.incoming => colors.positive,
+      FinSign.outgoing => colors.negative,
+      FinSign.neutral => scheme.primary.withValues(alpha: 0.75),
+    };
     return Material(
       color: tileColor,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: scheme.surface.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(10),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: scheme.surface.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(icon, size: 19, color: iconColor),
+                        ),
+                        const Spacer(),
+                        Icon(
+                          Icons.chevron_left_rounded,
+                          size: 18,
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: 0.55,
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Icon(icon, size: 19, color: iconColor),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.chevron_left_rounded,
-                    size: 18,
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (isCount)
-                Text(
-                  value.toInt().toString(),
-                  style: FinText.amountLarge(
-                    Theme.of(context).colorScheme.onSurface,
-                  ),
-                )
-              else
-                AmountText(
-                  amount: value,
-                  sign: sign,
-                  size: AmountSize.large,
-                  decimals: decimals,
-                  showSignMarker: sign != FinSign.neutral,
+                    const SizedBox(height: 12),
+                    if (isCount)
+                      Text(
+                        value.toInt().toString(),
+                        style: FinText.amountLarge(
+                          Theme.of(context).colorScheme.onSurface,
+                        ),
+                      )
+                    else
+                      AmountText(
+                        amount: value,
+                        sign: sign,
+                        size: AmountSize.large,
+                        decimals: decimals,
+                        showSignMarker: sign != FinSign.neutral,
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ),
+              // شريط دلالي علوي رفيع (3px) بتدرج متلاشٍ نحو اليسار.
+              Positioned(
+                top: 0,
+                right: 0,
+                left: 0,
+                child: Container(
+                  height: 3,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [accent, accent.withValues(alpha: 0.0)],
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

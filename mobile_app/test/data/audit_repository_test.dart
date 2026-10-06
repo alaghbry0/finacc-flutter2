@@ -34,8 +34,6 @@ void main() {
   });
 
   test('الترتيب تنازلي بالزمن (الأحدث أولاً)', () async {
-    await repo
-        ..page();
     // نضيف حدثين أحدث من التأسيس بفاصل زمني.
     final db = app.db;
     await db.insert('audit_log', {
@@ -51,8 +49,11 @@ void main() {
     final page = await repo.page(limit: 10);
     final times = page.events.map((e) => e.atUtc).toList();
     for (var i = 1; i < times.length; i++) {
-      expect(times[i - 1].isAfter(times[i]) || times[i - 1] == times[i], isTrue,
-          reason: 'الأحدث يجب أن يسبق');
+      expect(
+        times[i - 1].isAfter(times[i]) || times[i - 1] == times[i],
+        isTrue,
+        reason: 'الأحدث يجب أن يسبق',
+      );
     }
     expect(page.events.first.action, 'pin_change');
   });

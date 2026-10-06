@@ -30,13 +30,14 @@ void main() {
   test('بذور العملات: 4 عملات وYER أساسية بلا كسور (قاعدة 5.4-9)', () async {
     final rows = await app.db.query('currency');
     expect(rows, hasLength(4));
-    final byCode = {
-      for (final r in rows) r['code'] as String: r,
-    };
+    final byCode = {for (final r in rows) r['code'] as String: r};
     expect(byCode.keys, containsAll(['YER', 'SAR', 'USD', 'AED']));
     expect(byCode['YER']!['is_base'], 1);
-    expect(byCode['YER']!['decimals'], 0,
-        reason: 'الريال اليمني بلا كسور عشرية');
+    expect(
+      byCode['YER']!['decimals'],
+      0,
+      reason: 'الريال اليمني بلا كسور عشرية',
+    );
     expect(byCode['SAR']!['is_base'], 0);
     expect(byCode['SAR']!['decimals'], 2);
   });
@@ -51,13 +52,15 @@ void main() {
 
   test('بذور الإعدادات الـ15 من ملحق هـ بقيمها المعتمدة', () async {
     final rows = await app.db.query('settings');
-    final byKey = {
-      for (final r in rows) r['key'] as String: r['value'],
-    };
+    final byKey = {for (final r in rows) r['key'] as String: r['value']};
     expect(byKey.length, greaterThanOrEqualTo(15));
     expect(byKey['display.numerals'], '"western"');
     expect(byKey['ui.high_contrast'], '"off"');
-    expect(byKey['security.autolock_minutes'], '5', reason: 'تُخزَّن الرقمية كنص رقمي خام');
+    expect(
+      byKey['security.autolock_minutes'],
+      '5',
+      reason: 'تُخزَّن الرقمية كنص رقمي خام',
+    );
     expect(byKey['backup.retention_count'], '7');
     expect(byKey['dating.max_backdate_days'], '30');
     expect(byKey['invoicing.print_on_save'], '"ask"');

@@ -75,8 +75,11 @@ void main() {
       );
       await pumpQuietly(tester);
       expect(find.textContaining('1,234.50'), findsOneWidget);
-      expect(find.textContaining('+'), findsOneWidget,
-          reason: 'العلامة غير اللونية إلزامية');
+      expect(
+        find.textContaining('+'),
+        findsOneWidget,
+        reason: 'العلامة غير اللونية إلزامية',
+      );
     });
 
     testWidgets('نظام الأرقام الشرقي عبر NumeralsScope ينعكس فوراً', (
@@ -86,10 +89,7 @@ void main() {
         wrapWithL10n(
           NumeralsScope(
             arabicIndic: true,
-            child: const AmountText(
-              amount: 1234.5,
-              sign: FinSign.outgoing,
-            ),
+            child: const AmountText(amount: 1234.5, sign: FinSign.outgoing),
           ),
         ),
       );
@@ -100,9 +100,7 @@ void main() {
 
     testWidgets('YER بلا كسور (decimals=0)', (tester) async {
       await tester.pumpWidget(
-        wrapWithL10n(
-          const AmountText(amount: 12500, decimals: 0),
-        ),
+        wrapWithL10n(const AmountText(amount: 12500, decimals: 0)),
       );
       await pumpQuietly(tester);
       expect(find.textContaining('12,500'), findsOneWidget);
@@ -133,9 +131,7 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        wrapWithL10n(
-          const NumeralsScope(arabicIndic: true, child: SizedBox()),
-        ),
+        wrapWithL10n(const NumeralsScope(arabicIndic: true, child: SizedBox())),
       );
       await pumpQuietly(tester, 2);
       expect(NumeralsScope.of(tester.element(find.byType(SizedBox))), isTrue);

@@ -47,10 +47,7 @@ void main() {
   test('مصنع docSequence يرتبط بنفس القاعدة', () async {
     final app = await openUniqueFileApp();
     expect(app.docSequence, isNotNull);
-    expect(
-      await app.docSequence.nextNumber(DocSequenceType.invoice, 2026),
-      1,
-    );
+    expect(await app.docSequence.nextNumber(DocSequenceType.invoice, 2026), 1);
     await app.close();
   });
 }

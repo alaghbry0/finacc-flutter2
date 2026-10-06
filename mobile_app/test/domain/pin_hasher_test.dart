@@ -9,8 +9,11 @@ void main() {
     test('صيغة المخزن: scheme\$iterations\$ملح\$تجزئة بلا بيانات خام', () {
       final stored = PinHasher.hash('1234');
       expect(stored.startsWith('pbkdf2-sha256\$100000\$'), isTrue);
-      expect(stored.contains('1234'), isFalse,
-          reason: 'النص الخام لا يجوز ظهوره في المخزن');
+      expect(
+        stored.contains('1234'),
+        isFalse,
+        reason: 'النص الخام لا يجوز ظهوره في المخزن',
+      );
       final parts = stored.split(r'$');
       expect(parts, hasLength(4));
       expect(parts[2].length, 32, reason: 'ملح 16 بايت = 32 محرفاً سداسياً');
@@ -47,7 +50,10 @@ void main() {
     test('مخزن تالف يُرفض بأمان لا باستثناء', () {
       expect(PinHasher.verify('1234', 'garbage'), isFalse);
       expect(PinHasher.verify('1234', ''), isFalse);
-      expect(PinHasher.verify('1234', 'pbkdf2-sha256\$100000\$zz\$yy'), isFalse);
+      expect(
+        PinHasher.verify('1234', 'pbkdf2-sha256\$100000\$zz\$yy'),
+        isFalse,
+      );
     });
   });
 }

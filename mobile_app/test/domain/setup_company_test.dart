@@ -32,8 +32,11 @@ void main() {
     expect(draft.currencyCode, 'YER');
     expect(draft.warehouseName, 'المخزن الرئيسي');
     expect(draft.cashboxName, 'الصندوق الرئيسي');
-    expect(draft.adminDisplayName, 'متجر النور',
-        reason: 'المدير يرث اسم المنشأة إن لم يُحدد');
+    expect(
+      draft.adminDisplayName,
+      'متجر النور',
+      reason: 'المدير يرث اسم المنشأة إن لم يُحدد',
+    );
     expect(draft.fiscalYear, 2026);
     expect(draft.fiscalStart, DateTime(2026, 1, 1));
     expect(draft.fiscalEnd, DateTime(2026, 12, 31));
@@ -52,10 +55,7 @@ void main() {
         now: now,
       );
       expect(result, isA<Err<SetupCompanyDraft, DomainError>>());
-      expect(
-        (result as Err).error.message,
-        contains('اسم المنشأة'),
-      );
+      expect((result as Err).error.message, contains('اسم المنشأة'));
     }
   });
 
@@ -68,8 +68,11 @@ void main() {
         passphrase: 'Passphrase-2026',
         now: now,
       );
-      expect(result, isA<Err<SetupCompanyDraft, DomainError>>(),
-          reason: 'العملة $bad يجب أن ترفض');
+      expect(
+        result,
+        isA<Err<SetupCompanyDraft, DomainError>>(),
+        reason: 'العملة $bad يجب أن ترفض',
+      );
     }
     expect(validateOk(currency: 'SAR').currencyCode, 'SAR');
   });

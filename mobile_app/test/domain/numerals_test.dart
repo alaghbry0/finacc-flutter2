@@ -23,10 +23,7 @@ void main() {
 
     test('النصوص المختلطة: الحروف تبقى والأرقام تتحول', () {
       expect(Numerals.toArabicIndic('INV-2026-001'), 'INV-٢٠٢٦-٠٠١');
-      expect(
-        Numerals.toArabicIndic('المحاولة 3 من 10'),
-        'المحاولة ٣ من ١٠',
-      );
+      expect(Numerals.toArabicIndic('المحاولة 3 من 10'), 'المحاولة ٣ من ١٠');
     });
 
     test('سلسلة فارغة تبقى فارغة', () {
@@ -42,9 +39,7 @@ void main() {
 
     test('دورة كاملة: غربي ← شرقي ← غربي بلا فقد', () {
       for (final original in ['7', '1,234.50', '0.00', '999,999.99', '42']) {
-        final roundtrip = Numerals.toWestern(
-          Numerals.toArabicIndic(original),
-        );
+        final roundtrip = Numerals.toWestern(Numerals.toArabicIndic(original));
         expect(roundtrip, original);
       }
     });
