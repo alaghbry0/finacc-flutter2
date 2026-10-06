@@ -1,7 +1,8 @@
 /// شاشة «المزيد» — مركز الإعدادات (ضمن نطاق المرحلة الأولى: الهوية
-/// والجلسة والأمان — لا وحدات أعمال): بطاقة المنشأة، الأمان (تغيير
-/// PIN، القفل الفوري، مدة القفل التلقائي)، التفضيلات (وضع الثيم
-/// المحفوظ)، البيانات (المسح الكامل بتأكيد مزدوج)، وحول التطبيق.
+/// والجلسة والأمان — لا وحدات أعمال): بطاقة المنشأة (مع مدة القفل
+/// التلقائي القابلة للضبط — FR-12-05)، الأمان (تغيير PIN، سجل التدقيق،
+/// القفل الفوري)، المظهر (وضع الثيم + نظام الأرقام — `display.numerals`)،
+/// البيانات (المسح الكامل بتأكيد مزدوج)، وحول التطبيق.
 library;
 
 import 'dart:async';
@@ -77,7 +78,7 @@ class _SettingsBody extends StatelessWidget {
             const SizedBox(height: 16),
             _SecuritySection(),
             const SizedBox(height: 16),
-            _ThemeSection(currentMode: state.themeMode),
+            const _AppearanceSection(),
             const SizedBox(height: 16),
             _DataSection(),
             const SizedBox(height: 16),
@@ -152,13 +153,233 @@ class _CompanyCard extends StatelessWidget {
             label: l10n.settingsAdmin,
             value: state.adminName ?? '—',
           ),
-          _InfoRow(
-            icon: Icons.timer_outlined,
-            label: l10n.settingsAutolock,
-            value: l10n.settingsAutolackValue(state.autolockMinutes),
-            isLast: true,
-          ),
+          // مدة القفل التلقائي — قابلة للضبط (FR-12-05: 1–60 دقيقة).
+          const _AutolockRow(),
         ],
+      ),
+    );
+  }
+}
+
+/// صف مدة القفل التلقائي — قابل للنقر يفتح لوحة الخيارات.
+///
+/// يقرأ القيمة من AppController مباشرة (مراقبة حية) — التغيير من
+/// اللوحة ينعكس فوراً دون إعادة تحميل الشاشة كاملة.
+class _AutolockRow extends StatelessWidget {
+  const _AutolockRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = context.watch<AppController>().autolockMinutes;
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Material(
+        color: scheme.primaryContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: () => _openAutolockSheet(context),
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 18,
+                  color: scheme.onPrimaryContainer,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.settingsAutolock,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: scheme.onPrimaryContainer),
+                  ),
+                ),
+                Text(
+                  l10n.settingsAutolackValue(minutes),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.expand_more_rounded,
+                  size: 18,
+                  color: scheme.onPrimaryContainer,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openAutolockSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      // لوحة كاملة العرض بحواف علوية مستديرة ومقبض.
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => _AutolockSheet(
+        current: context.read<AppController>().autolockMinutes,
+      ),
+    );
+  }
+}
+
+/// لوحة اختيار مدة القفل التلقائي (FR-12-05 — 1–60 دقيقة).
+class _AutolockSheet extends StatelessWidget {
+  const _AutolockSheet({required this.current});
+
+  final int current;
+
+  /// الخيارات المعروضة (خيارات مشتركة ضمن النطاق الملزم 1–60).
+  static const options = [1, 5, 10, 15, 30, 60];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        // تمرير آمن للشاشات القصيرة (لا تجاوز أبداً).
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // مقبض اللوحة.
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          scheme.primary,
+                          Color.lerp(scheme.primary, Colors.black, 0.25)!,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.timer_outlined,
+                      color: scheme.onPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.settingsAutolockSheetTitle,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          l10n.settingsAutolockSheetSubtitle,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              for (final option in options)
+                _AutolockOption(
+                  minutes: option,
+                  selected: option == current,
+                  onTap: () {
+                    unawaited(
+                      context.read<AppController>().setAutolockMinutes(option),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// خيار مدة واحد داخل اللوحة — علامة تحديد متحركة عند الاختيار.
+class _AutolockOption extends StatelessWidget {
+  const _AutolockOption({
+    required this.minutes,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int minutes;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? scheme.primaryContainer : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.settingsAutolackValue(minutes),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: selected ? scheme.onPrimaryContainer : null,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            AnimatedScale(
+              duration: const Duration(milliseconds: 220),
+              scale: selected ? 1 : 0,
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: scheme.primary,
+                size: 22,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -169,19 +390,17 @@ class _InfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    this.isLast = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
           Icon(icon, size: 18, color: scheme.onSurfaceVariant),
@@ -210,7 +429,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// قسم الأمان: تغيير PIN + القفل الفوري.
+/// قسم الأمان: تغيير PIN + سجل التدقيق + القفل الفوري.
 class _SecuritySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -234,6 +453,15 @@ class _SecuritySection extends StatelessWidget {
               ),
               Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
               _ActionRow(
+                icon: Icons.receipt_long_rounded,
+                iconColor: scheme.tertiary,
+                title: l10n.settingsAuditLog,
+                subtitle: l10n.settingsAuditLogDesc,
+                trailing: const Icon(Icons.chevron_left_rounded),
+                onTap: () => context.push('/more/audit-log'),
+              ),
+              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+              _ActionRow(
                 icon: Icons.lock_rounded,
                 iconColor: scheme.onSurfaceVariant,
                 title: l10n.settingsLockNow,
@@ -249,17 +477,18 @@ class _SecuritySection extends StatelessWidget {
   }
 }
 
-/// قسم التفضيلات: وضع الثيم (نظام/فاتح/داكن) — ثلاث بطاقات اختيار.
-class _ThemeSection extends StatelessWidget {
-  const _ThemeSection({required this.currentMode});
-
-  final String currentMode;
+/// قسم المظهر: وضع الثيم (نظام/فاتح/داكن) + نظام الأرقام
+/// (`display.numerals` — غربي/عربي شرقي بمعاينة حيّة).
+class _AppearanceSection extends StatelessWidget {
+  const _AppearanceSection();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final app = context.read<AppController>();
+    // المراقبة الحيّة للمتحكم: التحديد يتحرك فور التبديل (ثيم/أرقام).
+    final app = context.watch<AppController>();
+    final themeMode = app.themeMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -279,7 +508,7 @@ class _ThemeSection extends StatelessWidget {
                     mode: mode,
                     icon: icon,
                     label: label,
-                    selected: currentMode == mode,
+                    selected: themeMode == mode,
                     onTap: () => app.setThemeMode(mode),
                   ),
                 ),
@@ -294,7 +523,125 @@ class _ThemeSection extends StatelessWidget {
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ),
+        const SizedBox(height: 16),
+        _SectionTitle(icon: Icons.pin_rounded, title: l10n.settingsNumerals),
+        const SizedBox(height: 8),
+        // نظام الأرقام: بطاقتان بمعاينة حيّة للأرقام بكل نظام.
+        Row(
+          children: [
+            Expanded(
+              child: _NumeralsOption(
+                mode: 'western',
+                title: l10n.numeralsWestern,
+                sample: '1,234.50',
+                selected: app.numerals == 'western',
+                onTap: () => app.setNumerals('western'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _NumeralsOption(
+                mode: 'arabic_indic',
+                title: l10n.numeralsArabicIndic,
+                sample: '١٬٢٣٤٫٥٠',
+                selected: app.numerals == 'arabic_indic',
+                onTap: () => app.setNumerals('arabic_indic'),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8, right: 4),
+          child: Text(
+            l10n.settingsNumeralsNote,
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// بطاقة خيار نظام الأرقام — معاينة المبلغ بخط المبالغ نفسه.
+class _NumeralsOption extends StatelessWidget {
+  const _NumeralsOption({
+    required this.mode,
+    required this.title,
+    required this.sample,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String mode;
+  final String title;
+  final String sample;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected
+              ? scheme.primaryContainer
+              : scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? scheme.primary : scheme.outlineVariant,
+            width: selected ? 1.6 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: selected ? scheme.onPrimaryContainer : null,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 220),
+                  scale: selected ? 1 : 0,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: scheme.primary,
+                    size: 17,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(
+                sample,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: selected
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -478,8 +825,17 @@ class _SectionTitle extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: scheme.primary),
-        const SizedBox(width: 8),
+        // حاوية أيقونة مصبوغة خفيفة — عمق بصري لأقسام الإعدادات.
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, size: 16, color: scheme.primary),
+        ),
+        const SizedBox(width: 10),
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall

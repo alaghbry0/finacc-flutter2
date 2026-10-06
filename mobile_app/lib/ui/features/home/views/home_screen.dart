@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/services/hijri_date.dart';
+import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -24,6 +25,7 @@ import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/mini_sales_chart.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../view_models/home_view_model.dart';
 
@@ -69,8 +71,8 @@ class _DashboardBody extends StatelessWidget {
                 index: 0,
                 child: _WelcomeCard(
                   companyName: vm.companyName ?? l10n.appTitle,
-                  hijriText: _hijriText(),
-                  gregorianText: _gregorianText(),
+                  hijriText: _hijriText(NumeralsScope.of(context)),
+                  gregorianText: _gregorianText(NumeralsScope.of(context)),
                 ),
               ),
               const SizedBox(height: 18),
@@ -198,13 +200,16 @@ class _DashboardBody extends StatelessWidget {
     );
   }
 
-  static String _hijriText() {
-    final hijri = HijriCalendar.today();
-    return hijri.toString();
+  static String _hijriText(bool arabicIndic) {
+    final hijri = HijriCalendar.today().toString();
+    // الهجري يُخرَج بأرقام غربية — يُحوَّل للشرقية عند تفعيل النظام العربي.
+    return arabicIndic ? Numerals.toArabicIndic(hijri) : hijri;
   }
 
-  static String _gregorianText() {
-    return DateFormat('EEEE، d MMMM y', 'ar').format(DateTime.now());
+  static String _gregorianText(bool arabicIndic) {
+    // الميلادي بـ intl العربي يخرج بأرقام شرقية — يُوحَّد مع النظام المختار.
+    final text = DateFormat('EEEE، d MMMM y', 'ar').format(DateTime.now());
+    return arabicIndic ? text : Numerals.toWestern(text);
   }
 }
 

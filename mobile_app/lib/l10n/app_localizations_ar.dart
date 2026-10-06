@@ -483,4 +483,82 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get loadingData => 'جارٍ التحميل…';
+
+  @override
+  String get settingsAutolockSheetTitle => 'مدة القفل التلقائي';
+
+  @override
+  String get settingsAutolockSheetSubtitle =>
+      'يُقفل التطبيق بعد هذه المدة من الخمول — النطاق المسموح من دقيقة إلى ٦٠ دقيقة.';
+
+  @override
+  String get settingsNumerals => 'نظام الأرقام';
+
+  @override
+  String get numeralsWestern => 'غربي';
+
+  @override
+  String get numeralsArabicIndic => 'عربي شرقي';
+
+  @override
+  String get settingsNumeralsNote =>
+      'ينعكس فوراً على المبالغ والتواريخ في كل التطبيق — التخزين يبقى بأرقام غربية دائماً.';
+
+  @override
+  String get settingsAuditLog => 'سجل التدقيق';
+
+  @override
+  String get settingsAuditLogDesc => 'أحداث أمنية موسّعة — للإضافة فقط';
+
+  @override
+  String get auditTitle => 'سجل التدقيق';
+
+  @override
+  String get auditProtectedTitle => 'سجل محمي داخل قاعدة بياناتك';
+
+  @override
+  String get auditProtectedBody =>
+      'الأحداث الأمنية الحرجة تُسجّل هنا ولا يمكن تعديلها أو حذفها من التطبيق — الحماية نفسها مبنية داخل ملف القاعدة (Triggers تمنع التعديل والحذف من أي جهة).';
+
+  @override
+  String get auditAppendOnlyBadge => 'للإضافة فقط';
+
+  @override
+  String get auditEmptyTitle => 'لا أحداث مسجّلة بعد';
+
+  @override
+  String get auditEmptyBody =>
+      'تظهر هنا الأحداث الأمنية الحرجة: التأسيس، تغيير الرمز، تجاوز عتبات المحاولات، والتغييرات الأمنية في الإعدادات.';
+
+  @override
+  String get auditDayToday => 'اليوم';
+
+  @override
+  String get auditDayYesterday => 'أمس';
+
+  @override
+  String get auditActionAppSetup => 'تأسيس التطبيق';
+
+  @override
+  String get auditActionPinChange => 'تغيير رمز PIN';
+
+  @override
+  String get auditActionLockoutDelay => 'تجاوز حد المحاولات — تأخير مؤقت';
+
+  @override
+  String get auditActionLockoutPassphrase =>
+      'استنفاد المحاولات — طلب عبارة المرور';
+
+  @override
+  String get auditActionSettingsChange => 'تغيير إعداد أمني';
+
+  @override
+  String auditActionUnknown(Object action) {
+    return 'حدث: $action';
+  }
+
+  @override
+  String auditLoadMore(Object shown, Object total) {
+    return 'عرض المزيد ($shown من $total)';
+  }
 }

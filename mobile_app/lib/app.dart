@@ -17,6 +17,7 @@ import 'l10n/app_localizations.dart';
 import 'ui/core/router/app_router.dart';
 import 'ui/core/session/app_controller.dart';
 import 'ui/core/theme/app_theme.dart';
+import 'ui/core/widgets/numerals_scope.dart';
 
 /// الجذر — يستقبل متحكم الجلسة (يُنشأ في main) ويبني الموجّه مرة واحدة.
 class FinAccApp extends StatefulWidget {
@@ -94,9 +95,14 @@ class _FinAccAppState extends State<FinAccApp> with WidgetsBindingObserver {
             routerConfig: _router,
             builder: (context, child) {
               // تجديد نشاط الجلسة عند أي لمس (القفل التلقائي — FR-12-05).
-              return Listener(
-                onPointerDown: (_) => widget.controller.touch(),
-                child: child,
+              return NumeralsScope(
+                // نظام الأرقام (`display.numerals`) — يبثّ لكل المبالغ
+                // والتواريخ وينعكس فور التبديل من شاشة الإعدادات.
+                arabicIndic: controller.arabicIndicNumerals,
+                child: Listener(
+                  onPointerDown: (_) => widget.controller.touch(),
+                  child: child,
+                ),
               );
             },
           ),
