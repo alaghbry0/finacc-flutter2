@@ -153,5 +153,31 @@
   "dbOpenErrorTitle": "Could not open the database",
   "dbOpenErrorMessage": "The database file may be busy or storage is full. Try again — your data is unaffected.",
   "genericErrorTitle": "An unexpected error occurred",
-  "loadingData": "Loading…"
+  "loadingData": "Loading…",
+
+  "settingsAutolockSheetTitle": "Auto-lock delay",
+  "settingsAutolockSheetSubtitle": "The app locks after this idle period — allowed range is 1 to 60 minutes.",
+
+  "settingsNumerals": "Numerals",
+  "numeralsWestern": "Western",
+  "numeralsArabicIndic": "Eastern Arabic",
+  "settingsNumeralsNote": "Applies instantly to amounts and dates across the app — storage always stays in western digits.",
+
+  "settingsAuditLog": "Audit log",
+  "settingsAuditLogDesc": "Extended security events — append-only",
+  "auditTitle": "Audit log",
+  "auditProtectedTitle": "Protected inside your database",
+  "auditProtectedBody": "Critical security events are recorded here and can never be edited or deleted from the app — the protection itself lives inside the database file (triggers block updates and deletes from any tool).",
+  "auditAppendOnlyBadge": "Append-only",
+  "auditEmptyTitle": "No events recorded yet",
+  "auditEmptyBody": "Critical security events appear here: setup, PIN changes, lockout thresholds, and security settings changes.",
+  "auditDayToday": "Today",
+  "auditDayYesterday": "Yesterday",
+  "auditActionAppSetup": "App setup",
+  "auditActionPinChange": "PIN changed",
+  "auditActionLockoutDelay": "Attempt limit exceeded — temporary delay",
+  "auditActionLockoutPassphrase": "Attempts exhausted — passphrase required",
+  "auditActionSettingsChange": "Security setting changed",
+  "auditActionUnknown": "Event: {action}",
+  "auditLoadMore": "Load more ({shown} of {total})"
 }

@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/db_factory.dart';
 import '../../../domain/models/company.dart';
+import '../../../data/repositories/audit_repository.dart';
 import '../../../data/repositories/company_repository.dart';
 import '../../../data/repositories/dashboard_repository.dart';
 import '../../../data/repositories/settings_repository.dart';
@@ -49,6 +50,7 @@ class AppController extends ChangeNotifier {
   UserRepository? _userRepo;
   SettingsRepository? _settingsRepo;
   DashboardRepository? _dashboardRepo;
+  AuditRepository? _auditRepo;
   Company? _company;
 
   DateTime _lastActivity = DateTime.now();
@@ -59,6 +61,9 @@ class AppController extends ChangeNotifier {
   /// وضع الثيم المحفوظ (`system`/`light`/`dark`) — يُقرأ عند التهيئة
   /// ويُكتب فور التبديل من شاشة الإعدادات (حالة نظامية في settings).
   String _themeMode = 'system';
+
+  /// نظام الأرقام المحفوظ (`display.numerals` — western/arabic_indic).
+  String _numerals = 'western';
 
   /// الطور الحالي.
   AppPhase get phase => _phase;
@@ -77,11 +82,23 @@ class AppController extends ChangeNotifier {
 
   DashboardRepository? get dashboard => _dashboardRepo;
 
+  /// مستودع سجل التدقيق (للإضافة فقط — عرض حصري).
+  AuditRepository? get audit => _auditRepo;
+
   /// المنشأة الحالية (بعد التأسيس).
   Company? get company => _company;
 
   /// وضع الثيم الحالي (نص خام قابل للحفظ — يُحوّله العرض إلى ThemeMode).
   String get themeMode => _themeMode;
+
+  /// نظام الأرقام الحالي (`western` / `arabic_indic`).
+  String get numerals => _numerals;
+
+  /// مدة القفل التلقائي الحالية بالدقائق.
+  int get autolockMinutes => _autolockMinutes;
+
+  /// هل الأرقام عربية شرقية الآن؟ (اختصار للعرض).
+  bool get arabicIndicNumerals => _numerals == 'arabic_indic';
 
   /// يبدأ التهيئة (يُستدعى مرة عند الإقلاع).
   Future<void> bootstrap() async {
@@ -106,6 +123,7 @@ class AppController extends ChangeNotifier {
     _userRepo = UserRepository(db.db);
     _settingsRepo = SettingsRepository(db.db);
     _dashboardRepo = DashboardRepository(db.db);
+    _auditRepo = AuditRepository(db.db);
   }
 
   Future<void> _decidePhase() async {
@@ -113,15 +131,22 @@ class AppController extends ChangeNotifier {
     _company = company;
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
     _themeMode = await _settingsRepo!.themeMode();
+    _numerals = await _settingsRepo!.numerals();
     // جلسة جديدة = مقفلة دائماً (PIN عند كل فتح — FR-12-01).
     _phase = company == null ? AppPhase.needsOnboarding : AppPhase.locked;
     notifyListeners();
   }
 
+  /// إعادة قراءة حالة الجلسة من القاعدة (اختبارات — نفس منطق الإقلاع
+  /// فوق قاعدة اختبار معتمدة عبر `forTesting`).
+  @visibleForTesting
+  Future<void> decidePhaseForTest() => _decidePhase();
+
   /// يُستدعى بعد إتمام Onboarding — تحديث المنشأة والدخول للجلسة.
   Future<void> completeOnboarding() async {
     _company = await _companyRepo!.findCompany();
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
+    _numerals = await _settingsRepo!.numerals();
     _enterSession();
   }
 
@@ -153,6 +178,46 @@ class AppController extends ChangeNotifier {
     notifyListeners();
     try {
       await _settingsRepo?.setThemeMode(mode);
+    } catch (_) {
+      // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
+    }
+  }
+
+  // ── نظام الأرقام (`display.numerals`) ──
+
+  /// يثبّت نظام الأرقام محلياً وفي القاعدة — ينعكس فوراً على كل
+  /// المبالغ والتواريخ (AmountText وخط التاريخ في الداشبورد).
+  Future<void> setNumerals(String mode) async {
+    if (mode != 'western' && mode != 'arabic_indic') return;
+    if (mode == _numerals) return;
+    _numerals = mode;
+    notifyListeners();
+    try {
+      await _settingsRepo?.setNumerals(mode);
+    } catch (_) {
+      // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
+    }
+  }
+
+  // ── مدة القفل التلقائي (FR-12-05 — `security.autolock_minutes`) ──
+
+  /// يثبّت مدة القفل التلقائي (1–60 دقيقة) — تُطبَّق فوراً على مراقب
+  /// الخمول الجاري دون قفل الجلسة، مع قيد تدقيق للتغيير الأمني.
+  Future<void> setAutolockMinutes(int minutes) async {
+    if (minutes == _autolockMinutes) return;
+    if (minutes < 1 || minutes > 60) {
+      throw ArgumentError('مدة القفل التلقائي خارج النطاق 1–60: $minutes');
+    }
+    _autolockMinutes = minutes;
+    notifyListeners();
+    try {
+      await _settingsRepo?.setAutolockMinutes(minutes);
+      // قيد تدقيق للتغييرات الأمنية (FR-12-04 — أحداث موسّعة).
+      await _userRepo?.audit(
+        'settings_change',
+        entity: 'settings',
+        details: 'security.autolock_minutes=$minutes',
+      );
     } catch (_) {
       // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
     }
@@ -207,6 +272,7 @@ class AppController extends ChangeNotifier {
     _userRepo = null;
     _settingsRepo = null;
     _dashboardRepo = null;
+    _auditRepo = null;
     _db = null;
     if (db != null) {
       await db.close();

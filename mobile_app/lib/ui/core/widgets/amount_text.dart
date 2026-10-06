@@ -5,8 +5,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
+import '../../../../domain/services/numerals.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import 'numerals_scope.dart';
 
 /// حجم عرض المبلغ.
 enum AmountSize { display, large, row }
@@ -46,6 +48,14 @@ class AmountText extends StatelessWidget {
     return NumberFormat(pattern, 'en_US').format(value);
   }
 
+  /// تنسيق المبلغ بنظام أرقام السياق (`display.numerals`).
+  static String formatFor(BuildContext context, double value, int decimals) {
+    final formatted = format(value, decimals);
+    return NumeralsScope.of(context)
+        ? Numerals.toArabicIndic(formatted)
+        : formatted;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = FinColors.of(context);
@@ -64,7 +74,10 @@ class AmountText extends StatelessWidget {
       FinSign.outgoing => showSignMarker ? '−' : '',
       FinSign.neutral => '',
     };
-    final text = '$marker${format(amount, decimals)}';
+    final text = switch (NumeralsScope.of(context)) {
+      false => '$marker${format(amount, decimals)}',
+      true => '$marker${Numerals.toArabicIndic(format(amount, decimals))}',
+    };
     // الأرقام LTR دائماً حتى لا تتبدّر داخل السياق العربي RTL (§6.2).
     return Directionality(
       textDirection: TextDirection.ltr,

@@ -211,7 +211,14 @@ class AppShell extends StatelessWidget {
                 child: Center(
                   child: GestureDetector(
                     onTap: () => _goBranch(_sellBranch),
-                    child: sellButton,
+                    // OverflowBox: يسمح للزر المركّب (دائرة + تسمية) بالارتفاع
+                    // فوق حدّ الشريط بلا انزياح — الزر البارز يعلو بحرية
+                    // بصرية بينما تبقى القيود سليمة (لا تجاوز RenderFlex).
+                    child: OverflowBox(
+                      maxHeight: 92,
+                      alignment: Alignment.bottomCenter,
+                      child: sellButton,
+                    ),
                   ),
                 ),
               ),

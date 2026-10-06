@@ -153,5 +153,31 @@
   "dbOpenErrorTitle": "تعذّر فتح قاعدة البيانات",
   "dbOpenErrorMessage": "قد يكون ملف القاعدة مشغولاً أو المساحة ممتلئة. أعد المحاولة — بياناتك لم تتأثر.",
   "genericErrorTitle": "حدث خطأ غير متوقع",
-  "loadingData": "جارٍ التحميل…"
+  "loadingData": "جارٍ التحميل…",
+
+  "settingsAutolockSheetTitle": "مدة القفل التلقائي",
+  "settingsAutolockSheetSubtitle": "يُقفل التطبيق بعد هذه المدة من الخمول — النطاق المسموح من دقيقة إلى ٦٠ دقيقة.",
+
+  "settingsNumerals": "نظام الأرقام",
+  "numeralsWestern": "غربي",
+  "numeralsArabicIndic": "عربي شرقي",
+  "settingsNumeralsNote": "ينعكس فوراً على المبالغ والتواريخ في كل التطبيق — التخزين يبقى بأرقام غربية دائماً.",
+
+  "settingsAuditLog": "سجل التدقيق",
+  "settingsAuditLogDesc": "أحداث أمنية موسّعة — للإضافة فقط",
+  "auditTitle": "سجل التدقيق",
+  "auditProtectedTitle": "سجل محمي داخل قاعدة بياناتك",
+  "auditProtectedBody": "الأحداث الأمنية الحرجة تُسجّل هنا ولا يمكن تعديلها أو حذفها من التطبيق — الحماية نفسها مبنية داخل ملف القاعدة (Triggers تمنع التعديل والحذف من أي جهة).",
+  "auditAppendOnlyBadge": "للإضافة فقط",
+  "auditEmptyTitle": "لا أحداث مسجّلة بعد",
+  "auditEmptyBody": "تظهر هنا الأحداث الأمنية الحرجة: التأسيس، تغيير الرمز، تجاوز عتبات المحاولات، والتغييرات الأمنية في الإعدادات.",
+  "auditDayToday": "اليوم",
+  "auditDayYesterday": "أمس",
+  "auditActionAppSetup": "تأسيس التطبيق",
+  "auditActionPinChange": "تغيير رمز PIN",
+  "auditActionLockoutDelay": "تجاوز حد المحاولات — تأخير مؤقت",
+  "auditActionLockoutPassphrase": "استنفاد المحاولات — طلب عبارة المرور",
+  "auditActionSettingsChange": "تغيير إعداد أمني",
+  "auditActionUnknown": "حدث: {action}",
+  "auditLoadMore": "عرض المزيد ({shown} من {total})"
 }

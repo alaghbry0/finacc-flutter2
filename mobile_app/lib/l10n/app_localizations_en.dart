@@ -492,4 +492,83 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingData => 'Loading…';
+
+  @override
+  String get settingsAutolockSheetTitle => 'Auto-lock delay';
+
+  @override
+  String get settingsAutolockSheetSubtitle =>
+      'The app locks after this idle period — allowed range is 1 to 60 minutes.';
+
+  @override
+  String get settingsNumerals => 'Numerals';
+
+  @override
+  String get numeralsWestern => 'Western';
+
+  @override
+  String get numeralsArabicIndic => 'Eastern Arabic';
+
+  @override
+  String get settingsNumeralsNote =>
+      'Applies instantly to amounts and dates across the app — storage always stays in western digits.';
+
+  @override
+  String get settingsAuditLog => 'Audit log';
+
+  @override
+  String get settingsAuditLogDesc => 'Extended security events — append-only';
+
+  @override
+  String get auditTitle => 'Audit log';
+
+  @override
+  String get auditProtectedTitle => 'Protected inside your database';
+
+  @override
+  String get auditProtectedBody =>
+      'Critical security events are recorded here and can never be edited or deleted from the app — the protection itself lives inside the database file (triggers block updates and deletes from any tool).';
+
+  @override
+  String get auditAppendOnlyBadge => 'Append-only';
+
+  @override
+  String get auditEmptyTitle => 'No events recorded yet';
+
+  @override
+  String get auditEmptyBody =>
+      'Critical security events appear here: setup, PIN changes, lockout thresholds, and security settings changes.';
+
+  @override
+  String get auditDayToday => 'Today';
+
+  @override
+  String get auditDayYesterday => 'Yesterday';
+
+  @override
+  String get auditActionAppSetup => 'App setup';
+
+  @override
+  String get auditActionPinChange => 'PIN changed';
+
+  @override
+  String get auditActionLockoutDelay =>
+      'Attempt limit exceeded — temporary delay';
+
+  @override
+  String get auditActionLockoutPassphrase =>
+      'Attempts exhausted — passphrase required';
+
+  @override
+  String get auditActionSettingsChange => 'Security setting changed';
+
+  @override
+  String auditActionUnknown(Object action) {
+    return 'Event: $action';
+  }
+
+  @override
+  String auditLoadMore(Object shown, Object total) {
+    return 'Load more ($shown of $total)';
+  }
 }

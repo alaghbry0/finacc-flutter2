@@ -89,8 +89,25 @@ class SettingsRepository {
   /// `security.autolock_minutes` — قفل التطبيق بعد الخمول (افتراضي 5).
   Future<int> autolockMinutes() => getInt('security.autolock_minutes', 5);
 
+  /// يثبّت مدة القفل التلقائي — النطاق الملزم 1–60 دقيقة (FR-12-05).
+  Future<void> setAutolockMinutes(int minutes) async {
+    if (minutes < 1 || minutes > 60) {
+      throw ArgumentError('مدة القفل التلقائي خارج النطاق 1–60: $minutes');
+    }
+    await set('security.autolock_minutes', minutes);
+  }
+
   /// `display.numerals` — western افتراضياً (قاعدة 5.4-9: عرض يمني بلا كسور).
   Future<String> numerals() => getString('display.numerals', 'western');
+
+  /// يثبّت نظام الأرقام (`western` / `arabic_indic` فقط).
+  Future<void> setNumerals(String mode) async {
+    const allowed = {'western', 'arabic_indic'};
+    if (!allowed.contains(mode)) {
+      throw ArgumentError('نظام أرقام غير معروف: $mode');
+    }
+    await set('display.numerals', mode);
+  }
 
   /// `ui.high_contrast` — وضع التباين العالي (FR-13-05).
   Future<bool> highContrast() async =>

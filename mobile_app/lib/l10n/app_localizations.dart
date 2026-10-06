@@ -937,6 +937,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading…'**
   String get loadingData;
+
+  /// No description provided for @settingsAutolockSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-lock delay'**
+  String get settingsAutolockSheetTitle;
+
+  /// No description provided for @settingsAutolockSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The app locks after this idle period — allowed range is 1 to 60 minutes.'**
+  String get settingsAutolockSheetSubtitle;
+
+  /// No description provided for @settingsNumerals.
+  ///
+  /// In en, this message translates to:
+  /// **'Numerals'**
+  String get settingsNumerals;
+
+  /// No description provided for @numeralsWestern.
+  ///
+  /// In en, this message translates to:
+  /// **'Western'**
+  String get numeralsWestern;
+
+  /// No description provided for @numeralsArabicIndic.
+  ///
+  /// In en, this message translates to:
+  /// **'Eastern Arabic'**
+  String get numeralsArabicIndic;
+
+  /// No description provided for @settingsNumeralsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies instantly to amounts and dates across the app — storage always stays in western digits.'**
+  String get settingsNumeralsNote;
+
+  /// No description provided for @settingsAuditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get settingsAuditLog;
+
+  /// No description provided for @settingsAuditLogDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Extended security events — append-only'**
+  String get settingsAuditLogDesc;
+
+  /// No description provided for @auditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get auditTitle;
+
+  /// No description provided for @auditProtectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected inside your database'**
+  String get auditProtectedTitle;
+
+  /// No description provided for @auditProtectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical security events are recorded here and can never be edited or deleted from the app — the protection itself lives inside the database file (triggers block updates and deletes from any tool).'**
+  String get auditProtectedBody;
+
+  /// No description provided for @auditAppendOnlyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Append-only'**
+  String get auditAppendOnlyBadge;
+
+  /// No description provided for @auditEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No events recorded yet'**
+  String get auditEmptyTitle;
+
+  /// No description provided for @auditEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical security events appear here: setup, PIN changes, lockout thresholds, and security settings changes.'**
+  String get auditEmptyBody;
+
+  /// No description provided for @auditDayToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get auditDayToday;
+
+  /// No description provided for @auditDayYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get auditDayYesterday;
+
+  /// No description provided for @auditActionAppSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'App setup'**
+  String get auditActionAppSetup;
+
+  /// No description provided for @auditActionPinChange.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN changed'**
+  String get auditActionPinChange;
+
+  /// No description provided for @auditActionLockoutDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempt limit exceeded — temporary delay'**
+  String get auditActionLockoutDelay;
+
+  /// No description provided for @auditActionLockoutPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempts exhausted — passphrase required'**
+  String get auditActionLockoutPassphrase;
+
+  /// No description provided for @auditActionSettingsChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Security setting changed'**
+  String get auditActionSettingsChange;
+
+  /// No description provided for @auditActionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Event: {action}'**
+  String auditActionUnknown(Object action);
+
+  /// No description provided for @auditLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more ({shown} of {total})'**
+  String auditLoadMore(Object shown, Object total);
 }
 
 class _AppLocalizationsDelegate
