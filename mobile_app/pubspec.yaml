@@ -1,0 +1,39 @@
+name: mobile_app
+description: "Integrated mobile application - clean architecture skeleton"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Localization (i18n) — ARB-based code generation, see l10n.yaml
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # Declarative routing with deep-linking support (MaterialApp.router)
+  go_router: ^18.0.2
+
+  # Dependency injection + MVVM state management (ChangeNotifier)
+  provider: ^6.1.5+1
+
+  # iOS-style icons for Cupertino widgets
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Recommended lint set activated in analysis_options.yaml
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Enables automatic generation of AppLocalizations from lib/l10n/*.arb
+  generate: true

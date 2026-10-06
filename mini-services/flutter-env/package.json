@@ -1,0 +1,9 @@
+{
+  "name": "flutter-env",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Keeper that re-provisions the Flutter SDK, Linux toolchain and Android SDK after every container reboot. One-shot: runs, restores, exits.",
+  "scripts": {
+    "dev": "bash keeper.sh"
+  }
+}

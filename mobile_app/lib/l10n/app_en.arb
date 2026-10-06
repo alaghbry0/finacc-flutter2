@@ -1,0 +1,52 @@
+{
+  "appTitle": "Mobile App",
+  "@appTitle": {
+    "description": "The application title shown in the app bar and window title"
+  },
+  "homeTitle": "Environment Ready",
+  "@homeTitle": {
+    "description": "Title of the home screen skeleton"
+  },
+  "envReadyMessage": "The clean architecture skeleton is running with localization, declarative routing and MVVM state management.",
+  "@envReadyMessage": {
+    "description": "Confirmation message shown on the home screen"
+  },
+  "architectureSectionTitle": "Architecture Layers",
+  "@architectureSectionTitle": {
+    "description": "Title of the section listing the app layers"
+  },
+  "layerUi": "UI — Views & ViewModels",
+  "@layerUi": {
+    "description": "Name of the presentation layer"
+  },
+  "layerDomain": "Domain — Models & Use Cases",
+  "@layerDomain": {
+    "description": "Name of the domain layer"
+  },
+  "layerData": "Data — Services & Repositories",
+  "@layerData": {
+    "description": "Name of the data layer"
+  },
+  "counterSectionTitle": "MVVM Counter Demo",
+  "@counterSectionTitle": {
+    "description": "Title of the counter demonstration card"
+  },
+  "counterValue": "{count, plural, =0{Ready} other{{count} taps}}",
+  "@counterValue": {
+    "description": "Pluralized counter label",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "example": "3"
+      }
+    }
+  },
+  "increment": "Increment",
+  "@increment": {
+    "description": "Label for the increment action"
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "Label for the reset action"
+  }
+}

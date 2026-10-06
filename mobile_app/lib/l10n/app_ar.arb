@@ -1,0 +1,13 @@
+{
+  "appTitle": "تطبيقي",
+  "homeTitle": "البيئة جاهزة",
+  "envReadyMessage": "يعمل الهيكل المعماري النظيف مع التوطين والتوجيه التصريحي وإدارة حالة MVVM.",
+  "architectureSectionTitle": "طبقات البنية المعمارية",
+  "layerUi": "الواجهة — العروض ونماذج العرض",
+  "layerDomain": "المجال — النماذج وحالات الاستخدام",
+  "layerData": "البيانات — الخدمات والمستودعات",
+  "counterSectionTitle": "عرض توضيحي للعداد MVVM",
+  "counterValue": "{count, plural, zero{جاهز} one{نقرة واحدة} two{نقرتان} few{{count} نقرات} many{{count} نقرة} other{{count} نقرة}}",
+  "increment": "زيادة",
+  "reset": "تصفير"
+}
