@@ -4675,6 +4675,1008 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deducted from account'**
   String get retReceiptRefundCredit;
+
+  /// No description provided for @cashHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get cashHomeTitle;
+
+  /// No description provided for @cashHomeHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Net cash'**
+  String get cashHomeHeroTitle;
+
+  /// No description provided for @cashHomeHeroHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One line per currency — currencies never mix'**
+  String get cashHomeHeroHint;
+
+  /// No description provided for @cashHomeEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No cash movements yet'**
+  String get cashHomeEmptyTitle;
+
+  /// No description provided for @cashHomeEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from the quick actions below — every movement is recorded here instantly.'**
+  String get cashHomeEmptyBody;
+
+  /// No description provided for @cashHomeBoxesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash boxes'**
+  String get cashHomeBoxesSection;
+
+  /// No description provided for @cashHomeNoBoxesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No boxes yet'**
+  String get cashHomeNoBoxesTitle;
+
+  /// No description provided for @cashHomeNoBoxesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a box from the boxes manager to start tracking cash.'**
+  String get cashHomeNoBoxesBody;
+
+  /// No description provided for @cashHomeRecentSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent movements'**
+  String get cashHomeRecentSection;
+
+  /// No description provided for @cashHomeManageBoxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage boxes'**
+  String get cashHomeManageBoxes;
+
+  /// No description provided for @cashDefaultChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get cashDefaultChip;
+
+  /// No description provided for @cashNegativeBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative balance'**
+  String get cashNegativeBalance;
+
+  /// No description provided for @cashQuickReceiptVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get cashQuickReceiptVoucher;
+
+  /// No description provided for @cashQuickPaymentVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get cashQuickPaymentVoucher;
+
+  /// No description provided for @cashQuickExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get cashQuickExpense;
+
+  /// No description provided for @cashQuickOwnerDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner draw'**
+  String get cashQuickOwnerDraw;
+
+  /// No description provided for @cashQuickCapitalIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Capital in'**
+  String get cashQuickCapitalIn;
+
+  /// No description provided for @cashQuickTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get cashQuickTransfer;
+
+  /// No description provided for @cashQuickBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get cashQuickBank;
+
+  /// No description provided for @cashQuickBoxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Boxes'**
+  String get cashQuickBoxes;
+
+  /// No description provided for @cashQuickMovements.
+  ///
+  /// In en, this message translates to:
+  /// **'Movements'**
+  String get cashQuickMovements;
+
+  /// No description provided for @cashQuickCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get cashQuickCategories;
+
+  /// No description provided for @cashQmSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash movement'**
+  String get cashQmSheetTitle;
+
+  /// No description provided for @cashQmKindExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get cashQmKindExpense;
+
+  /// No description provided for @cashQmKindOwnerDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner draw'**
+  String get cashQmKindOwnerDraw;
+
+  /// No description provided for @cashQmKindCapitalIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Capital in'**
+  String get cashQmKindCapitalIn;
+
+  /// No description provided for @cashQmKindTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get cashQmKindTransfer;
+
+  /// No description provided for @cashQmKindBankDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank deposit'**
+  String get cashQmKindBankDeposit;
+
+  /// No description provided for @cashQmKindBankWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank withdrawal'**
+  String get cashQmKindBankWithdraw;
+
+  /// No description provided for @cashQmAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get cashQmAmountLabel;
+
+  /// No description provided for @cashQmAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'In the source box currency'**
+  String get cashQmAmountHint;
+
+  /// No description provided for @cashQmSourceBoxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From box'**
+  String get cashQmSourceBoxLabel;
+
+  /// No description provided for @cashQmTargetBoxLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To box'**
+  String get cashQmTargetBoxLabel;
+
+  /// No description provided for @cashQmDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get cashQmDateLabel;
+
+  /// No description provided for @cashQmCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense category'**
+  String get cashQmCategoryLabel;
+
+  /// No description provided for @cashQmCategoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for expenses only'**
+  String get cashQmCategoryHint;
+
+  /// No description provided for @cashQmDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get cashQmDescriptionLabel;
+
+  /// No description provided for @cashQmDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — shows in the movements log'**
+  String get cashQmDescriptionHint;
+
+  /// No description provided for @cashQmProjectedSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source balance afterwards'**
+  String get cashQmProjectedSource;
+
+  /// No description provided for @cashQmNegativeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The source balance will go negative after this movement — posting is allowed, this is a heads-up only.'**
+  String get cashQmNegativeWarning;
+
+  /// No description provided for @cashQmArrivesAtTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives at “{box}”: {amount} {code}'**
+  String cashQmArrivesAtTarget(Object amount, Object box, Object code);
+
+  /// No description provided for @cashQmSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Post movement'**
+  String get cashQmSave;
+
+  /// No description provided for @cashQmReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement posted'**
+  String get cashQmReceiptTitle;
+
+  /// No description provided for @cashQmReceiptArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived at target'**
+  String get cashQmReceiptArrived;
+
+  /// No description provided for @cashQmNewMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Another movement'**
+  String get cashQmNewMovement;
+
+  /// No description provided for @cashQmNoBoxesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No boxes yet'**
+  String get cashQmNoBoxesTitle;
+
+  /// No description provided for @cashQmNoBoxesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a box first from “Boxes”, then come back.'**
+  String get cashQmNoBoxesBody;
+
+  /// No description provided for @cashVoucherReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt voucher'**
+  String get cashVoucherReceiptTitle;
+
+  /// No description provided for @cashVoucherReceiptSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect from a customer — RVT number'**
+  String get cashVoucherReceiptSubtitle;
+
+  /// No description provided for @cashVoucherPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment voucher'**
+  String get cashVoucherPaymentTitle;
+
+  /// No description provided for @cashVoucherPaymentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay a supplier — PMT number'**
+  String get cashVoucherPaymentSubtitle;
+
+  /// No description provided for @cashVoucherPartySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get cashVoucherPartySection;
+
+  /// No description provided for @cashVoucherPickParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Select party'**
+  String get cashVoucherPickParty;
+
+  /// No description provided for @cashVoucherChangeParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Change party'**
+  String get cashVoucherChangeParty;
+
+  /// No description provided for @cashVoucherPartyBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Party balance'**
+  String get cashVoucherPartyBalance;
+
+  /// No description provided for @cashVoucherAmountSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount & currency'**
+  String get cashVoucherAmountSection;
+
+  /// No description provided for @cashVoucherCurrencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher currency'**
+  String get cashVoucherCurrencyLabel;
+
+  /// No description provided for @cashVoucherBoxSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Box & date'**
+  String get cashVoucherBoxSection;
+
+  /// No description provided for @cashVoucherAllocationSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation'**
+  String get cashVoucherAllocationSection;
+
+  /// No description provided for @cashVoucherAllocFifo.
+  ///
+  /// In en, this message translates to:
+  /// **'FIFO allocation'**
+  String get cashVoucherAllocFifo;
+
+  /// No description provided for @cashVoucherAllocOnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'On account'**
+  String get cashVoucherAllocOnAccount;
+
+  /// No description provided for @cashVoucherOpenDuesTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open dues'**
+  String get cashVoucherOpenDuesTotal;
+
+  /// No description provided for @cashVoucherOpenRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get cashVoucherOpenRemaining;
+
+  /// No description provided for @cashVoucherNoOpenDues.
+  ///
+  /// In en, this message translates to:
+  /// **'No open dues in the voucher currency for this party — choose “on account” or change the currency.'**
+  String get cashVoucherNoOpenDues;
+
+  /// No description provided for @cashVoucherPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Will be allocated to'**
+  String get cashVoucherPlanTitle;
+
+  /// No description provided for @cashVoucherUnallocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Remainder on account'**
+  String get cashVoucherUnallocated;
+
+  /// No description provided for @cashVoucherLoadingInvoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading open invoices…'**
+  String get cashVoucherLoadingInvoices;
+
+  /// No description provided for @cashVoucherCrossDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposited into the box: {amount} {code}'**
+  String cashVoucherCrossDeposit(Object amount, Object code);
+
+  /// No description provided for @cashVoucherNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get cashVoucherNotesLabel;
+
+  /// No description provided for @cashVoucherNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — stored with the voucher'**
+  String get cashVoucherNotesHint;
+
+  /// No description provided for @cashVoucherPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post voucher'**
+  String get cashVoucherPost;
+
+  /// No description provided for @cashVoucherPostedSnackBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher {no} posted — {amount} {code}'**
+  String cashVoucherPostedSnackBar(Object amount, Object code, Object no);
+
+  /// No description provided for @cashVoucherPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select party'**
+  String get cashVoucherPickerTitle;
+
+  /// No description provided for @cashVoucherPickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or phone'**
+  String get cashVoucherPickerSearchHint;
+
+  /// No description provided for @cashVoucherPickerEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No parties yet'**
+  String get cashVoucherPickerEmptyTitle;
+
+  /// No description provided for @cashVoucherPickerEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Register customers or suppliers in the parties module first, then come back.'**
+  String get cashVoucherPickerEmptyBody;
+
+  /// No description provided for @cashVoucherPickerNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get cashVoucherPickerNoResultsTitle;
+
+  /// No description provided for @cashVoucherPickerNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or phone.'**
+  String get cashVoucherPickerNoResultsBody;
+
+  /// No description provided for @cashVoucherPartyOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Owes you'**
+  String get cashVoucherPartyOwesYou;
+
+  /// No description provided for @cashVoucherPartyWeOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'We owe'**
+  String get cashVoucherPartyWeOwe;
+
+  /// No description provided for @cashVoucherPartyCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit balance'**
+  String get cashVoucherPartyCredit;
+
+  /// No description provided for @cashMovementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash movements log'**
+  String get cashMovementsTitle;
+
+  /// No description provided for @cashMovementsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search description, voucher no., or party'**
+  String get cashMovementsSearchHint;
+
+  /// No description provided for @cashMovementsAllBoxes.
+  ///
+  /// In en, this message translates to:
+  /// **'All boxes'**
+  String get cashMovementsAllBoxes;
+
+  /// No description provided for @cashMovementsAllTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'All types'**
+  String get cashMovementsAllTypes;
+
+  /// No description provided for @cashMovementsPeriodAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get cashMovementsPeriodAll;
+
+  /// No description provided for @cashMovementsPeriodToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get cashMovementsPeriodToday;
+
+  /// No description provided for @cashMovementsPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get cashMovementsPeriodWeek;
+
+  /// No description provided for @cashMovementsPeriodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get cashMovementsPeriodMonth;
+
+  /// No description provided for @cashMovementsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No movements yet'**
+  String get cashMovementsEmptyTitle;
+
+  /// No description provided for @cashMovementsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every cash movement — vouchers, expenses, transfers — appears here once posted.'**
+  String get cashMovementsEmptyBody;
+
+  /// No description provided for @cashMovementsNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get cashMovementsNoResultsTitle;
+
+  /// No description provided for @cashMovementsNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the box, type, period, or search.'**
+  String get cashMovementsNoResultsBody;
+
+  /// No description provided for @cashMovementsVoidedChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Voided'**
+  String get cashMovementsVoidedChip;
+
+  /// No description provided for @cashMovementsReversalChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Reversal entry'**
+  String get cashMovementsReversalChip;
+
+  /// No description provided for @cashTypeReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get cashTypeReceipt;
+
+  /// No description provided for @cashTypePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get cashTypePayment;
+
+  /// No description provided for @cashTypeExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get cashTypeExpense;
+
+  /// No description provided for @cashTypeOwnerDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner draw'**
+  String get cashTypeOwnerDraw;
+
+  /// No description provided for @cashTypeCapitalIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Capital in'**
+  String get cashTypeCapitalIn;
+
+  /// No description provided for @cashTypeBoxTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get cashTypeBoxTransfer;
+
+  /// No description provided for @cashTypeBankDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank deposit'**
+  String get cashTypeBankDeposit;
+
+  /// No description provided for @cashTypeBankWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank withdrawal'**
+  String get cashTypeBankWithdraw;
+
+  /// No description provided for @cashTypeOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance'**
+  String get cashTypeOpening;
+
+  /// No description provided for @cashMovementDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement details'**
+  String get cashMovementDetailTitle;
+
+  /// No description provided for @cashMovementFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get cashMovementFieldDate;
+
+  /// No description provided for @cashMovementFieldBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Box'**
+  String get cashMovementFieldBox;
+
+  /// No description provided for @cashMovementFieldTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get cashMovementFieldTo;
+
+  /// No description provided for @cashMovementFieldVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher no.'**
+  String get cashMovementFieldVoucher;
+
+  /// No description provided for @cashMovementFieldParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get cashMovementFieldParty;
+
+  /// No description provided for @cashMovementFieldCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get cashMovementFieldCategory;
+
+  /// No description provided for @cashMovementFieldRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate'**
+  String get cashMovementFieldRate;
+
+  /// No description provided for @cashMovementFieldSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement rate'**
+  String get cashMovementFieldSettlement;
+
+  /// No description provided for @cashMovementFieldFx.
+  ///
+  /// In en, this message translates to:
+  /// **'FX difference'**
+  String get cashMovementFieldFx;
+
+  /// No description provided for @cashMovementFieldDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get cashMovementFieldDescription;
+
+  /// No description provided for @cashMovementAllocationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocations'**
+  String get cashMovementAllocationsTitle;
+
+  /// No description provided for @cashAllocSaleInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales invoice'**
+  String get cashAllocSaleInvoice;
+
+  /// No description provided for @cashAllocPurchaseInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase invoice'**
+  String get cashAllocPurchaseInvoice;
+
+  /// No description provided for @cashMovementVoidButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Void movement'**
+  String get cashMovementVoidButton;
+
+  /// No description provided for @cashMovementVoidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void this movement?'**
+  String get cashMovementVoidTitle;
+
+  /// No description provided for @cashMovementVoidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Voiding does not delete: a reversing entry is created in one transaction restoring every balance, and the original stays in the log marked “voided”. The voucher number is never reused.'**
+  String get cashMovementVoidBody;
+
+  /// No description provided for @cashMovementVoidReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get cashMovementVoidReasonLabel;
+
+  /// No description provided for @cashMovementVoidConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Void permanently'**
+  String get cashMovementVoidConfirm;
+
+  /// No description provided for @cashMovementVoidedSnackBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement voided — reversing entry recorded.'**
+  String get cashMovementVoidedSnackBar;
+
+  /// No description provided for @cashMovementNotVoidableNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This movement is tied to another document (invoice collection or return refund) — void it from its original document.'**
+  String get cashMovementNotVoidableNote;
+
+  /// No description provided for @cashBoxesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage cash boxes'**
+  String get cashBoxesTitle;
+
+  /// No description provided for @cashBoxesAddBox.
+  ///
+  /// In en, this message translates to:
+  /// **'New box'**
+  String get cashBoxesAddBox;
+
+  /// No description provided for @cashBoxesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No boxes yet'**
+  String get cashBoxesEmptyTitle;
+
+  /// No description provided for @cashBoxesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a box per currency or cash location you use — a bank is just a box named after the bank.'**
+  String get cashBoxesEmptyBody;
+
+  /// No description provided for @cashBoxesArchivedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived boxes'**
+  String get cashBoxesArchivedSection;
+
+  /// No description provided for @cashBoxesSetDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get cashBoxesSetDefault;
+
+  /// No description provided for @cashBoxesEditTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit box'**
+  String get cashBoxesEditTooltip;
+
+  /// No description provided for @cashBoxesArchiveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive box'**
+  String get cashBoxesArchiveTooltip;
+
+  /// No description provided for @cashBoxesUnarchiveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get cashBoxesUnarchiveTooltip;
+
+  /// No description provided for @cashBoxesArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive “{name}”?'**
+  String cashBoxesArchiveTitle(Object name);
+
+  /// No description provided for @cashBoxesArchiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The box disappears from daily screens while its full history stays in the movements log.'**
+  String get cashBoxesArchiveBody;
+
+  /// No description provided for @cashBoxesArchiveNonZeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” has a non-zero balance'**
+  String cashBoxesArchiveNonZeroTitle(Object name);
+
+  /// No description provided for @cashBoxesArchiveNonZeroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A non-zero balance keeps counting in net cash after archiving. Prefer clearing the balance first — or explicitly confirm archiving.'**
+  String get cashBoxesArchiveNonZeroBody;
+
+  /// No description provided for @cashBoxesArchiveForce.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive with balance'**
+  String get cashBoxesArchiveForce;
+
+  /// No description provided for @cashBoxesDefaultDone.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” is now the default box.'**
+  String cashBoxesDefaultDone(Object name);
+
+  /// No description provided for @cashBoxFormNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New cash box'**
+  String get cashBoxFormNewTitle;
+
+  /// No description provided for @cashBoxFormEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit cash box'**
+  String get cashBoxFormEditTitle;
+
+  /// No description provided for @cashBoxFormNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Box name'**
+  String get cashBoxFormNameLabel;
+
+  /// No description provided for @cashBoxFormNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Main drawer, Savings bank'**
+  String get cashBoxFormNameHint;
+
+  /// No description provided for @cashBoxFormCurrencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Box currency'**
+  String get cashBoxFormCurrencyLabel;
+
+  /// No description provided for @cashBoxFormCurrencyLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'A box currency is fixed at creation and never changes — edit the name or default only.'**
+  String get cashBoxFormCurrencyLocked;
+
+  /// No description provided for @cashBoxFormMakeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default box'**
+  String get cashBoxFormMakeDefault;
+
+  /// No description provided for @cashBoxFormMakeDefaultHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash forms open it automatically'**
+  String get cashBoxFormMakeDefaultHint;
+
+  /// No description provided for @cashBoxFormSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save box'**
+  String get cashBoxFormSave;
+
+  /// No description provided for @cashBoxFormSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Box saved.'**
+  String get cashBoxFormSaved;
+
+  /// No description provided for @cashBoxFormNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'The requested box does not exist.'**
+  String get cashBoxFormNotFound;
+
+  /// No description provided for @cashCategoriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense categories'**
+  String get cashCategoriesTitle;
+
+  /// No description provided for @cashCategoriesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get cashCategoriesAdd;
+
+  /// No description provided for @cashCategoriesNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name'**
+  String get cashCategoriesNameLabel;
+
+  /// No description provided for @cashCategoriesNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Electricity, Rent, Transport'**
+  String get cashCategoriesNameHint;
+
+  /// No description provided for @cashCategoriesAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get cashCategoriesAddButton;
+
+  /// No description provided for @cashCategoriesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories yet'**
+  String get cashCategoriesEmptyTitle;
+
+  /// No description provided for @cashCategoriesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories classify expenses for later reports — the “Salaries” category is system-protected.'**
+  String get cashCategoriesEmptyBody;
+
+  /// No description provided for @cashCategoriesProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected'**
+  String get cashCategoriesProtected;
+
+  /// No description provided for @cashCategoriesProtectedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'System category — cannot be archived'**
+  String get cashCategoriesProtectedTooltip;
+
+  /// No description provided for @cashCategoriesRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get cashCategoriesRename;
+
+  /// No description provided for @cashCategoriesRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename category'**
+  String get cashCategoriesRenameTitle;
+
+  /// No description provided for @cashCategoriesArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get cashCategoriesArchive;
+
+  /// No description provided for @cashCategoriesArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive “{name}”?'**
+  String cashCategoriesArchiveTitle(Object name);
+
+  /// No description provided for @cashCategoriesArchiveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It disappears from new-expense pickers while its history stays in the log.'**
+  String get cashCategoriesArchiveBody;
+
+  /// No description provided for @cashCategoriesUnarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get cashCategoriesUnarchive;
+
+  /// No description provided for @cashCategoriesArchivedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived categories'**
+  String get cashCategoriesArchivedSection;
 }
 
 class _AppLocalizationsDelegate

@@ -2710,4 +2710,536 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get retReceiptRefundCredit => 'المخصوم من الحساب';
+
+  @override
+  String get cashHomeTitle => 'النقدية';
+
+  @override
+  String get cashHomeHeroTitle => 'صافي النقدية';
+
+  @override
+  String get cashHomeHeroHint => 'سطر لكل عملة — لا تُخلط العملات';
+
+  @override
+  String get cashHomeEmptyTitle => 'لا حركات نقدية بعد';
+
+  @override
+  String get cashHomeEmptyBody =>
+      'ابدأ من أزرار الوصول السريع بالأسفل — كل حركة تُسجَّل فوراً هنا.';
+
+  @override
+  String get cashHomeBoxesSection => 'الصناديق';
+
+  @override
+  String get cashHomeNoBoxesTitle => 'لا صناديق بعد';
+
+  @override
+  String get cashHomeNoBoxesBody =>
+      'أنشئ صندوقاً من إدارة الصناديق لبدء تتبع النقدية.';
+
+  @override
+  String get cashHomeRecentSection => 'آخر الحركات';
+
+  @override
+  String get cashHomeManageBoxes => 'إدارة الصناديق';
+
+  @override
+  String get cashDefaultChip => 'افتراضي';
+
+  @override
+  String get cashNegativeBalance => 'رصيد سالب';
+
+  @override
+  String get cashQuickReceiptVoucher => 'سند قبض';
+
+  @override
+  String get cashQuickPaymentVoucher => 'سند صرف';
+
+  @override
+  String get cashQuickExpense => 'مصروف';
+
+  @override
+  String get cashQuickOwnerDraw => 'مسحوبات المالك';
+
+  @override
+  String get cashQuickCapitalIn => 'إيداع مالك';
+
+  @override
+  String get cashQuickTransfer => 'تحويل';
+
+  @override
+  String get cashQuickBank => 'بنكي';
+
+  @override
+  String get cashQuickBoxes => 'الصناديق';
+
+  @override
+  String get cashQuickMovements => 'الحركات';
+
+  @override
+  String get cashQuickCategories => 'الفئات';
+
+  @override
+  String get cashQmSheetTitle => 'حركة نقدية';
+
+  @override
+  String get cashQmKindExpense => 'مصروف';
+
+  @override
+  String get cashQmKindOwnerDraw => 'مسحوبات مالك';
+
+  @override
+  String get cashQmKindCapitalIn => 'إيداع مالك';
+
+  @override
+  String get cashQmKindTransfer => 'تحويل';
+
+  @override
+  String get cashQmKindBankDeposit => 'إيداع بنكي';
+
+  @override
+  String get cashQmKindBankWithdraw => 'سحب بنكي';
+
+  @override
+  String get cashQmAmountLabel => 'المبلغ';
+
+  @override
+  String get cashQmAmountHint => 'بعملة الصندوق المصدر';
+
+  @override
+  String get cashQmSourceBoxLabel => 'من صندوق';
+
+  @override
+  String get cashQmTargetBoxLabel => 'إلى صندوق';
+
+  @override
+  String get cashQmDateLabel => 'التاريخ';
+
+  @override
+  String get cashQmCategoryLabel => 'فئة المصروف';
+
+  @override
+  String get cashQmCategoryHint => 'إلزامية للمصروف حصراً';
+
+  @override
+  String get cashQmDescriptionLabel => 'الوصف';
+
+  @override
+  String get cashQmDescriptionHint => 'اختياري — يظهر في سجل الحركات';
+
+  @override
+  String get cashQmProjectedSource => 'رصيد المصدر بعد الحركة';
+
+  @override
+  String get cashQmNegativeWarning =>
+      'سيصبح رصيد المصدر سالباً بعد هذه الحركة — التسجيل مسموح والتنبيه للعلم فقط.';
+
+  @override
+  String cashQmArrivesAtTarget(Object amount, Object box, Object code) {
+    return 'يصل إلى «$box»: $amount $code';
+  }
+
+  @override
+  String get cashQmSave => 'ترحيل الحركة';
+
+  @override
+  String get cashQmReceiptTitle => 'تمت الحركة بنجاح';
+
+  @override
+  String get cashQmReceiptArrived => 'وصل للهدف';
+
+  @override
+  String get cashQmNewMovement => 'حركة أخرى';
+
+  @override
+  String get cashQmNoBoxesTitle => 'لا صناديق بعد';
+
+  @override
+  String get cashQmNoBoxesBody =>
+      'أنشئ صندوقاً أولاً من «الصناديق» ثم عد للحركة.';
+
+  @override
+  String get cashVoucherReceiptTitle => 'سند قبض';
+
+  @override
+  String get cashVoucherReceiptSubtitle => 'تحصيل من عميل — برقم RVT';
+
+  @override
+  String get cashVoucherPaymentTitle => 'سند صرف';
+
+  @override
+  String get cashVoucherPaymentSubtitle => 'دفع لمورد — برقم PMT';
+
+  @override
+  String get cashVoucherPartySection => 'الطرف';
+
+  @override
+  String get cashVoucherPickParty => 'اختر الطرف';
+
+  @override
+  String get cashVoucherChangeParty => 'تغيير الطرف';
+
+  @override
+  String get cashVoucherPartyBalance => 'رصيد الطرف';
+
+  @override
+  String get cashVoucherAmountSection => 'المبلغ والعملة';
+
+  @override
+  String get cashVoucherCurrencyLabel => 'عملة السند';
+
+  @override
+  String get cashVoucherBoxSection => 'الصندوق والتاريخ';
+
+  @override
+  String get cashVoucherAllocationSection => 'التخصيص';
+
+  @override
+  String get cashVoucherAllocFifo => 'تخصيص FIFO';
+
+  @override
+  String get cashVoucherAllocOnAccount => 'على الحساب';
+
+  @override
+  String get cashVoucherOpenDuesTotal => 'مديونية مفتوحة';
+
+  @override
+  String get cashVoucherOpenRemaining => 'المتبقي';
+
+  @override
+  String get cashVoucherNoOpenDues =>
+      'لا مديونية مفتوحة بعملة السند لهذا الطرف — اختر «على الحساب» أو غيّر العملة.';
+
+  @override
+  String get cashVoucherPlanTitle => 'سيُخصص على';
+
+  @override
+  String get cashVoucherUnallocated => 'الباقي على الحساب';
+
+  @override
+  String get cashVoucherLoadingInvoices => 'تحميل الفواتير المفتوحة…';
+
+  @override
+  String cashVoucherCrossDeposit(Object amount, Object code) {
+    return 'يودع في الصندوق: $amount $code';
+  }
+
+  @override
+  String get cashVoucherNotesLabel => 'ملاحظات';
+
+  @override
+  String get cashVoucherNotesHint => 'اختياري — تُحفظ مع السند';
+
+  @override
+  String get cashVoucherPost => 'ترحيل السند';
+
+  @override
+  String cashVoucherPostedSnackBar(Object amount, Object code, Object no) {
+    return 'تم ترحيل السند $no بمبلغ $amount $code';
+  }
+
+  @override
+  String get cashVoucherPickerTitle => 'اختيار الطرف';
+
+  @override
+  String get cashVoucherPickerSearchHint => 'ابحث بالاسم أو الهاتف';
+
+  @override
+  String get cashVoucherPickerEmptyTitle => 'لا أطراف بعد';
+
+  @override
+  String get cashVoucherPickerEmptyBody =>
+      'سجّل العملاء أو الموردين في وحدة الأطراف أولاً ثم عد لترحيل السند.';
+
+  @override
+  String get cashVoucherPickerNoResultsTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get cashVoucherPickerNoResultsBody => 'جرب اسماً أو هاتفاً آخر.';
+
+  @override
+  String get cashVoucherPartyOwesYou => 'مدين لك';
+
+  @override
+  String get cashVoucherPartyWeOwe => 'ندين له';
+
+  @override
+  String get cashVoucherPartyCredit => 'رصيد دائن';
+
+  @override
+  String get cashMovementsTitle => 'سجل حركات الصندوق';
+
+  @override
+  String get cashMovementsSearchHint => 'ابحث في البيان أو رقم السند أو الطرف';
+
+  @override
+  String get cashMovementsAllBoxes => 'كل الصناديق';
+
+  @override
+  String get cashMovementsAllTypes => 'كل الأنواع';
+
+  @override
+  String get cashMovementsPeriodAll => 'الكل';
+
+  @override
+  String get cashMovementsPeriodToday => 'اليوم';
+
+  @override
+  String get cashMovementsPeriodWeek => '٧ أيام';
+
+  @override
+  String get cashMovementsPeriodMonth => 'الشهر';
+
+  @override
+  String get cashMovementsEmptyTitle => 'لا حركات بعد';
+
+  @override
+  String get cashMovementsEmptyBody =>
+      'كل حركة نقدية — سنداً أو مصروفاً أو تحويلاً — تظهر هنا فور ترحيلها.';
+
+  @override
+  String get cashMovementsNoResultsTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get cashMovementsNoResultsBody =>
+      'غيّر الصندوق أو النوع أو الفترة أو البحث.';
+
+  @override
+  String get cashMovementsVoidedChip => 'ملغاة';
+
+  @override
+  String get cashMovementsReversalChip => 'سطر إبطال';
+
+  @override
+  String get cashTypeReceipt => 'قبض';
+
+  @override
+  String get cashTypePayment => 'صرف';
+
+  @override
+  String get cashTypeExpense => 'مصروف';
+
+  @override
+  String get cashTypeOwnerDraw => 'مسحوبات مالك';
+
+  @override
+  String get cashTypeCapitalIn => 'إيداع مالك';
+
+  @override
+  String get cashTypeBoxTransfer => 'تحويل';
+
+  @override
+  String get cashTypeBankDeposit => 'إيداع بنكي';
+
+  @override
+  String get cashTypeBankWithdraw => 'سحب بنكي';
+
+  @override
+  String get cashTypeOpening => 'رصيد افتتاحي';
+
+  @override
+  String get cashMovementDetailTitle => 'تفاصيل الحركة';
+
+  @override
+  String get cashMovementFieldDate => 'التاريخ';
+
+  @override
+  String get cashMovementFieldBox => 'الصندوق';
+
+  @override
+  String get cashMovementFieldTo => 'إلى';
+
+  @override
+  String get cashMovementFieldVoucher => 'رقم السند';
+
+  @override
+  String get cashMovementFieldParty => 'الطرف';
+
+  @override
+  String get cashMovementFieldCategory => 'الفئة';
+
+  @override
+  String get cashMovementFieldRate => 'سعر الصرف';
+
+  @override
+  String get cashMovementFieldSettlement => 'سعر التحويل';
+
+  @override
+  String get cashMovementFieldFx => 'فرق الصرف';
+
+  @override
+  String get cashMovementFieldDescription => 'البيان';
+
+  @override
+  String get cashMovementAllocationsTitle => 'التخصيصات';
+
+  @override
+  String get cashAllocSaleInvoice => 'فاتورة بيع';
+
+  @override
+  String get cashAllocPurchaseInvoice => 'فاتورة شراء';
+
+  @override
+  String get cashMovementVoidButton => 'إبطال الحركة';
+
+  @override
+  String get cashMovementVoidTitle => 'إبطال هذه الحركة؟';
+
+  @override
+  String get cashMovementVoidBody =>
+      'الإبطال لا يحذف السجل: تُنشأ حركة معاكسة داخل معاملة واحدة تعيد كل الأرصدة كما كانت، ويبقى الأصل في السجل بعلامة «ملغاة». الرقم المرقّم لا يُعاد استخدامه أبداً.';
+
+  @override
+  String get cashMovementVoidReasonLabel => 'سبب الإبطال (اختياري)';
+
+  @override
+  String get cashMovementVoidConfirm => 'إبطال نهائي';
+
+  @override
+  String get cashMovementVoidedSnackBar =>
+      'أُبطلت الحركة وسُجِّل السطر المعاكس.';
+
+  @override
+  String get cashMovementNotVoidableNote =>
+      'هذه الحركة مرتبطة بمستند آخر (تحصيل فاتورة أو رد مرتجع) — تُبطل من مستندها الأصلي لا من هنا.';
+
+  @override
+  String get cashBoxesTitle => 'إدارة الصناديق';
+
+  @override
+  String get cashBoxesAddBox => 'صندوق جديد';
+
+  @override
+  String get cashBoxesEmptyTitle => 'لا صناديق بعد';
+
+  @override
+  String get cashBoxesEmptyBody =>
+      'أنشئ صندوقاً لكل عملة أو وعاء نقد تتعامل معه — البنك مجرد صندوق باسم بنك.';
+
+  @override
+  String get cashBoxesArchivedSection => 'صناديق مؤرشفة';
+
+  @override
+  String get cashBoxesSetDefault => 'تعيين افتراضياً';
+
+  @override
+  String get cashBoxesEditTooltip => 'تعديل الصندوق';
+
+  @override
+  String get cashBoxesArchiveTooltip => 'أرشفة الصندوق';
+
+  @override
+  String get cashBoxesUnarchiveTooltip => 'إلغاء الأرشفة';
+
+  @override
+  String cashBoxesArchiveTitle(Object name) {
+    return 'أرشفة «$name»؟';
+  }
+
+  @override
+  String get cashBoxesArchiveBody =>
+      'يختفي الصندوق من الشاشات اليومية ويبقى تاريخه كاملاً في سجل الحركات.';
+
+  @override
+  String cashBoxesArchiveNonZeroTitle(Object name) {
+    return 'رصيد «$name» ليس صفراً';
+  }
+
+  @override
+  String get cashBoxesArchiveNonZeroBody =>
+      'رصيد الصندوق غير الصفري يبقى محسوباً في صافي النقدية بعد الأرشفة. الأفضل تصفير الرصيد أولاً — أو أكّد الأرشفة صراحةً.';
+
+  @override
+  String get cashBoxesArchiveForce => 'أرشفة مع بقاء الرصيد';
+
+  @override
+  String cashBoxesDefaultDone(Object name) {
+    return 'أصبح «$name» هو الصندوق الافتراضي.';
+  }
+
+  @override
+  String get cashBoxFormNewTitle => 'صندوق جديد';
+
+  @override
+  String get cashBoxFormEditTitle => 'تعديل الصندوق';
+
+  @override
+  String get cashBoxFormNameLabel => 'اسم الصندوق';
+
+  @override
+  String get cashBoxFormNameHint => 'مثال: الدرج الرئيسي، بنك التوفير';
+
+  @override
+  String get cashBoxFormCurrencyLabel => 'عملة الصندوق';
+
+  @override
+  String get cashBoxFormCurrencyLocked =>
+      'عملة الصندوق تُحدَّد عند الإنشاء ولا تتغير بعده — عدّل الاسم أو الافتراضية فقط.';
+
+  @override
+  String get cashBoxFormMakeDefault => 'صندوق افتراضي';
+
+  @override
+  String get cashBoxFormMakeDefaultHint => 'تفتحه نماذج النقدية تلقائياً';
+
+  @override
+  String get cashBoxFormSave => 'حفظ الصندوق';
+
+  @override
+  String get cashBoxFormSaved => 'حُفظ الصندوق بنجاح.';
+
+  @override
+  String get cashBoxFormNotFound => 'الصندوق المطلوب غير موجود.';
+
+  @override
+  String get cashCategoriesTitle => 'فئات المصاريف';
+
+  @override
+  String get cashCategoriesAdd => 'فئة جديدة';
+
+  @override
+  String get cashCategoriesNameLabel => 'اسم الفئة';
+
+  @override
+  String get cashCategoriesNameHint => 'مثال: كهرباء، إيجار، نقل';
+
+  @override
+  String get cashCategoriesAddButton => 'إضافة';
+
+  @override
+  String get cashCategoriesEmptyTitle => 'لا فئات بعد';
+
+  @override
+  String get cashCategoriesEmptyBody =>
+      'الفئات تصنّف المصاريف لتقارير لاحقة — فئة «رواتب» محمية نظامياً.';
+
+  @override
+  String get cashCategoriesProtected => 'محمية';
+
+  @override
+  String get cashCategoriesProtectedTooltip => 'فئة نظامية لا تُؤرشف';
+
+  @override
+  String get cashCategoriesRename => 'إعادة تسمية';
+
+  @override
+  String get cashCategoriesRenameTitle => 'إعادة تسمية الفئة';
+
+  @override
+  String get cashCategoriesArchive => 'أرشفة';
+
+  @override
+  String cashCategoriesArchiveTitle(Object name) {
+    return 'أرشفة «$name»؟';
+  }
+
+  @override
+  String get cashCategoriesArchiveBody =>
+      'تختفي من منتقي المصاريف الجديدة ويبقى تاريخها في سجل الحركات.';
+
+  @override
+  String get cashCategoriesUnarchive => 'إلغاء الأرشفة';
+
+  @override
+  String get cashCategoriesArchivedSection => 'فئات مؤرشفة';
 }

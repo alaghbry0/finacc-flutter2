@@ -2698,4 +2698,539 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retReceiptRefundCredit => 'Deducted from account';
+
+  @override
+  String get cashHomeTitle => 'Cash';
+
+  @override
+  String get cashHomeHeroTitle => 'Net cash';
+
+  @override
+  String get cashHomeHeroHint => 'One line per currency — currencies never mix';
+
+  @override
+  String get cashHomeEmptyTitle => 'No cash movements yet';
+
+  @override
+  String get cashHomeEmptyBody =>
+      'Start from the quick actions below — every movement is recorded here instantly.';
+
+  @override
+  String get cashHomeBoxesSection => 'Cash boxes';
+
+  @override
+  String get cashHomeNoBoxesTitle => 'No boxes yet';
+
+  @override
+  String get cashHomeNoBoxesBody =>
+      'Create a box from the boxes manager to start tracking cash.';
+
+  @override
+  String get cashHomeRecentSection => 'Recent movements';
+
+  @override
+  String get cashHomeManageBoxes => 'Manage boxes';
+
+  @override
+  String get cashDefaultChip => 'Default';
+
+  @override
+  String get cashNegativeBalance => 'Negative balance';
+
+  @override
+  String get cashQuickReceiptVoucher => 'Receipt';
+
+  @override
+  String get cashQuickPaymentVoucher => 'Payment';
+
+  @override
+  String get cashQuickExpense => 'Expense';
+
+  @override
+  String get cashQuickOwnerDraw => 'Owner draw';
+
+  @override
+  String get cashQuickCapitalIn => 'Capital in';
+
+  @override
+  String get cashQuickTransfer => 'Transfer';
+
+  @override
+  String get cashQuickBank => 'Bank';
+
+  @override
+  String get cashQuickBoxes => 'Boxes';
+
+  @override
+  String get cashQuickMovements => 'Movements';
+
+  @override
+  String get cashQuickCategories => 'Categories';
+
+  @override
+  String get cashQmSheetTitle => 'Cash movement';
+
+  @override
+  String get cashQmKindExpense => 'Expense';
+
+  @override
+  String get cashQmKindOwnerDraw => 'Owner draw';
+
+  @override
+  String get cashQmKindCapitalIn => 'Capital in';
+
+  @override
+  String get cashQmKindTransfer => 'Transfer';
+
+  @override
+  String get cashQmKindBankDeposit => 'Bank deposit';
+
+  @override
+  String get cashQmKindBankWithdraw => 'Bank withdrawal';
+
+  @override
+  String get cashQmAmountLabel => 'Amount';
+
+  @override
+  String get cashQmAmountHint => 'In the source box currency';
+
+  @override
+  String get cashQmSourceBoxLabel => 'From box';
+
+  @override
+  String get cashQmTargetBoxLabel => 'To box';
+
+  @override
+  String get cashQmDateLabel => 'Date';
+
+  @override
+  String get cashQmCategoryLabel => 'Expense category';
+
+  @override
+  String get cashQmCategoryHint => 'Required for expenses only';
+
+  @override
+  String get cashQmDescriptionLabel => 'Description';
+
+  @override
+  String get cashQmDescriptionHint => 'Optional — shows in the movements log';
+
+  @override
+  String get cashQmProjectedSource => 'Source balance afterwards';
+
+  @override
+  String get cashQmNegativeWarning =>
+      'The source balance will go negative after this movement — posting is allowed, this is a heads-up only.';
+
+  @override
+  String cashQmArrivesAtTarget(Object amount, Object box, Object code) {
+    return 'Arrives at “$box”: $amount $code';
+  }
+
+  @override
+  String get cashQmSave => 'Post movement';
+
+  @override
+  String get cashQmReceiptTitle => 'Movement posted';
+
+  @override
+  String get cashQmReceiptArrived => 'Arrived at target';
+
+  @override
+  String get cashQmNewMovement => 'Another movement';
+
+  @override
+  String get cashQmNoBoxesTitle => 'No boxes yet';
+
+  @override
+  String get cashQmNoBoxesBody =>
+      'Create a box first from “Boxes”, then come back.';
+
+  @override
+  String get cashVoucherReceiptTitle => 'Receipt voucher';
+
+  @override
+  String get cashVoucherReceiptSubtitle =>
+      'Collect from a customer — RVT number';
+
+  @override
+  String get cashVoucherPaymentTitle => 'Payment voucher';
+
+  @override
+  String get cashVoucherPaymentSubtitle => 'Pay a supplier — PMT number';
+
+  @override
+  String get cashVoucherPartySection => 'Party';
+
+  @override
+  String get cashVoucherPickParty => 'Select party';
+
+  @override
+  String get cashVoucherChangeParty => 'Change party';
+
+  @override
+  String get cashVoucherPartyBalance => 'Party balance';
+
+  @override
+  String get cashVoucherAmountSection => 'Amount & currency';
+
+  @override
+  String get cashVoucherCurrencyLabel => 'Voucher currency';
+
+  @override
+  String get cashVoucherBoxSection => 'Box & date';
+
+  @override
+  String get cashVoucherAllocationSection => 'Allocation';
+
+  @override
+  String get cashVoucherAllocFifo => 'FIFO allocation';
+
+  @override
+  String get cashVoucherAllocOnAccount => 'On account';
+
+  @override
+  String get cashVoucherOpenDuesTotal => 'Open dues';
+
+  @override
+  String get cashVoucherOpenRemaining => 'Remaining';
+
+  @override
+  String get cashVoucherNoOpenDues =>
+      'No open dues in the voucher currency for this party — choose “on account” or change the currency.';
+
+  @override
+  String get cashVoucherPlanTitle => 'Will be allocated to';
+
+  @override
+  String get cashVoucherUnallocated => 'Remainder on account';
+
+  @override
+  String get cashVoucherLoadingInvoices => 'Loading open invoices…';
+
+  @override
+  String cashVoucherCrossDeposit(Object amount, Object code) {
+    return 'Deposited into the box: $amount $code';
+  }
+
+  @override
+  String get cashVoucherNotesLabel => 'Notes';
+
+  @override
+  String get cashVoucherNotesHint => 'Optional — stored with the voucher';
+
+  @override
+  String get cashVoucherPost => 'Post voucher';
+
+  @override
+  String cashVoucherPostedSnackBar(Object amount, Object code, Object no) {
+    return 'Voucher $no posted — $amount $code';
+  }
+
+  @override
+  String get cashVoucherPickerTitle => 'Select party';
+
+  @override
+  String get cashVoucherPickerSearchHint => 'Search by name or phone';
+
+  @override
+  String get cashVoucherPickerEmptyTitle => 'No parties yet';
+
+  @override
+  String get cashVoucherPickerEmptyBody =>
+      'Register customers or suppliers in the parties module first, then come back.';
+
+  @override
+  String get cashVoucherPickerNoResultsTitle => 'No matches';
+
+  @override
+  String get cashVoucherPickerNoResultsBody => 'Try another name or phone.';
+
+  @override
+  String get cashVoucherPartyOwesYou => 'Owes you';
+
+  @override
+  String get cashVoucherPartyWeOwe => 'We owe';
+
+  @override
+  String get cashVoucherPartyCredit => 'Credit balance';
+
+  @override
+  String get cashMovementsTitle => 'Cash movements log';
+
+  @override
+  String get cashMovementsSearchHint =>
+      'Search description, voucher no., or party';
+
+  @override
+  String get cashMovementsAllBoxes => 'All boxes';
+
+  @override
+  String get cashMovementsAllTypes => 'All types';
+
+  @override
+  String get cashMovementsPeriodAll => 'All';
+
+  @override
+  String get cashMovementsPeriodToday => 'Today';
+
+  @override
+  String get cashMovementsPeriodWeek => '7 days';
+
+  @override
+  String get cashMovementsPeriodMonth => 'This month';
+
+  @override
+  String get cashMovementsEmptyTitle => 'No movements yet';
+
+  @override
+  String get cashMovementsEmptyBody =>
+      'Every cash movement — vouchers, expenses, transfers — appears here once posted.';
+
+  @override
+  String get cashMovementsNoResultsTitle => 'No matches';
+
+  @override
+  String get cashMovementsNoResultsBody =>
+      'Change the box, type, period, or search.';
+
+  @override
+  String get cashMovementsVoidedChip => 'Voided';
+
+  @override
+  String get cashMovementsReversalChip => 'Reversal entry';
+
+  @override
+  String get cashTypeReceipt => 'Receipt';
+
+  @override
+  String get cashTypePayment => 'Payment';
+
+  @override
+  String get cashTypeExpense => 'Expense';
+
+  @override
+  String get cashTypeOwnerDraw => 'Owner draw';
+
+  @override
+  String get cashTypeCapitalIn => 'Capital in';
+
+  @override
+  String get cashTypeBoxTransfer => 'Transfer';
+
+  @override
+  String get cashTypeBankDeposit => 'Bank deposit';
+
+  @override
+  String get cashTypeBankWithdraw => 'Bank withdrawal';
+
+  @override
+  String get cashTypeOpening => 'Opening balance';
+
+  @override
+  String get cashMovementDetailTitle => 'Movement details';
+
+  @override
+  String get cashMovementFieldDate => 'Date';
+
+  @override
+  String get cashMovementFieldBox => 'Box';
+
+  @override
+  String get cashMovementFieldTo => 'To';
+
+  @override
+  String get cashMovementFieldVoucher => 'Voucher no.';
+
+  @override
+  String get cashMovementFieldParty => 'Party';
+
+  @override
+  String get cashMovementFieldCategory => 'Category';
+
+  @override
+  String get cashMovementFieldRate => 'Exchange rate';
+
+  @override
+  String get cashMovementFieldSettlement => 'Settlement rate';
+
+  @override
+  String get cashMovementFieldFx => 'FX difference';
+
+  @override
+  String get cashMovementFieldDescription => 'Description';
+
+  @override
+  String get cashMovementAllocationsTitle => 'Allocations';
+
+  @override
+  String get cashAllocSaleInvoice => 'Sales invoice';
+
+  @override
+  String get cashAllocPurchaseInvoice => 'Purchase invoice';
+
+  @override
+  String get cashMovementVoidButton => 'Void movement';
+
+  @override
+  String get cashMovementVoidTitle => 'Void this movement?';
+
+  @override
+  String get cashMovementVoidBody =>
+      'Voiding does not delete: a reversing entry is created in one transaction restoring every balance, and the original stays in the log marked “voided”. The voucher number is never reused.';
+
+  @override
+  String get cashMovementVoidReasonLabel => 'Reason (optional)';
+
+  @override
+  String get cashMovementVoidConfirm => 'Void permanently';
+
+  @override
+  String get cashMovementVoidedSnackBar =>
+      'Movement voided — reversing entry recorded.';
+
+  @override
+  String get cashMovementNotVoidableNote =>
+      'This movement is tied to another document (invoice collection or return refund) — void it from its original document.';
+
+  @override
+  String get cashBoxesTitle => 'Manage cash boxes';
+
+  @override
+  String get cashBoxesAddBox => 'New box';
+
+  @override
+  String get cashBoxesEmptyTitle => 'No boxes yet';
+
+  @override
+  String get cashBoxesEmptyBody =>
+      'Create a box per currency or cash location you use — a bank is just a box named after the bank.';
+
+  @override
+  String get cashBoxesArchivedSection => 'Archived boxes';
+
+  @override
+  String get cashBoxesSetDefault => 'Set as default';
+
+  @override
+  String get cashBoxesEditTooltip => 'Edit box';
+
+  @override
+  String get cashBoxesArchiveTooltip => 'Archive box';
+
+  @override
+  String get cashBoxesUnarchiveTooltip => 'Unarchive';
+
+  @override
+  String cashBoxesArchiveTitle(Object name) {
+    return 'Archive “$name”?';
+  }
+
+  @override
+  String get cashBoxesArchiveBody =>
+      'The box disappears from daily screens while its full history stays in the movements log.';
+
+  @override
+  String cashBoxesArchiveNonZeroTitle(Object name) {
+    return '“$name” has a non-zero balance';
+  }
+
+  @override
+  String get cashBoxesArchiveNonZeroBody =>
+      'A non-zero balance keeps counting in net cash after archiving. Prefer clearing the balance first — or explicitly confirm archiving.';
+
+  @override
+  String get cashBoxesArchiveForce => 'Archive with balance';
+
+  @override
+  String cashBoxesDefaultDone(Object name) {
+    return '“$name” is now the default box.';
+  }
+
+  @override
+  String get cashBoxFormNewTitle => 'New cash box';
+
+  @override
+  String get cashBoxFormEditTitle => 'Edit cash box';
+
+  @override
+  String get cashBoxFormNameLabel => 'Box name';
+
+  @override
+  String get cashBoxFormNameHint => 'e.g. Main drawer, Savings bank';
+
+  @override
+  String get cashBoxFormCurrencyLabel => 'Box currency';
+
+  @override
+  String get cashBoxFormCurrencyLocked =>
+      'A box currency is fixed at creation and never changes — edit the name or default only.';
+
+  @override
+  String get cashBoxFormMakeDefault => 'Default box';
+
+  @override
+  String get cashBoxFormMakeDefaultHint => 'Cash forms open it automatically';
+
+  @override
+  String get cashBoxFormSave => 'Save box';
+
+  @override
+  String get cashBoxFormSaved => 'Box saved.';
+
+  @override
+  String get cashBoxFormNotFound => 'The requested box does not exist.';
+
+  @override
+  String get cashCategoriesTitle => 'Expense categories';
+
+  @override
+  String get cashCategoriesAdd => 'New category';
+
+  @override
+  String get cashCategoriesNameLabel => 'Category name';
+
+  @override
+  String get cashCategoriesNameHint => 'e.g. Electricity, Rent, Transport';
+
+  @override
+  String get cashCategoriesAddButton => 'Add';
+
+  @override
+  String get cashCategoriesEmptyTitle => 'No categories yet';
+
+  @override
+  String get cashCategoriesEmptyBody =>
+      'Categories classify expenses for later reports — the “Salaries” category is system-protected.';
+
+  @override
+  String get cashCategoriesProtected => 'Protected';
+
+  @override
+  String get cashCategoriesProtectedTooltip =>
+      'System category — cannot be archived';
+
+  @override
+  String get cashCategoriesRename => 'Rename';
+
+  @override
+  String get cashCategoriesRenameTitle => 'Rename category';
+
+  @override
+  String get cashCategoriesArchive => 'Archive';
+
+  @override
+  String cashCategoriesArchiveTitle(Object name) {
+    return 'Archive “$name”?';
+  }
+
+  @override
+  String get cashCategoriesArchiveBody =>
+      'It disappears from new-expense pickers while its history stays in the log.';
+
+  @override
+  String get cashCategoriesUnarchive => 'Unarchive';
+
+  @override
+  String get cashCategoriesArchivedSection => 'Archived categories';
 }

@@ -13,6 +13,7 @@ import '../../../core/storage/db_factory.dart';
 import '../../../domain/models/company.dart';
 import '../../../data/repositories/audit_repository.dart';
 import '../../../data/repositories/batch_repository.dart';
+import '../../../data/repositories/cash_repository.dart';
 import '../../../data/repositories/company_repository.dart';
 import '../../../data/repositories/customer_repository.dart';
 import '../../../data/repositories/dashboard_repository.dart';
@@ -69,6 +70,7 @@ class AppController extends ChangeNotifier {
   QuotationRepository? _quotationRepo;
   PurchaseRepository? _purchaseRepo;
   ReturnRepository? _returnRepo;
+  CashRepository? _cashRepo;
   Company? _company;
 
   DateTime _lastActivity = DateTime.now();
@@ -130,6 +132,9 @@ class AppController extends ChangeNotifier {
   /// مستودع المرتجعات المرتبطة (المرحلة 5 — FR-02-07/08: SRN وPRN).
   ReturnRepository? get returns => _returnRepo;
 
+  /// مستودع النقدية والصناديق (المرحلة 6 — FR-04).
+  CashRepository? get cash => _cashRepo;
+
   /// المنشأة الحالية (بعد التأسيس).
   Company? get company => _company;
 
@@ -178,6 +183,7 @@ class AppController extends ChangeNotifier {
     _quotationRepo = QuotationRepository(db.db);
     _purchaseRepo = PurchaseRepository(db.db);
     _returnRepo = ReturnRepository(db.db);
+    _cashRepo = CashRepository(db.db);
   }
 
   Future<void> _decidePhase() async {
@@ -186,6 +192,8 @@ class AppController extends ChangeNotifier {
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
     _themeMode = await _settingsRepo!.themeMode();
     _numerals = await _settingsRepo!.numerals();
+    // بذر فئة «رواتب» idempotent (FR-04-05) — قبل أي واجهة.
+    await _cashRepo!.ensureSeeded();
     // جلسة جديدة = مقفلة دائماً (PIN عند كل فتح — FR-12-01).
     _phase = company == null ? AppPhase.needsOnboarding : AppPhase.locked;
     notifyListeners();
@@ -335,6 +343,7 @@ class AppController extends ChangeNotifier {
     _quotationRepo = null;
     _purchaseRepo = null;
     _returnRepo = null;
+    _cashRepo = null;
     _db = null;
     if (db != null) {
       await db.close();

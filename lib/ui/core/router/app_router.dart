@@ -8,6 +8,12 @@ library;
 
 import 'package:go_router/go_router.dart';
 
+import '../../features/cash/views/box_form_screen.dart';
+import '../../features/cash/views/boxes_screen.dart';
+import '../../features/cash/views/cash_home_screen.dart';
+import '../../features/cash/views/categories_screen.dart';
+import '../../features/cash/views/movements_screen.dart';
+import '../../features/cash/views/voucher_screen.dart';
 import '../../features/home/views/home_screen.dart';
 import '../../features/inventory/views/batches_screen.dart';
 import '../../features/inventory/views/categories_units_screen.dart';
@@ -25,7 +31,6 @@ import '../../features/parties/views/parties_list_screen.dart';
 import '../../features/parties/views/party_balances_screen.dart';
 import '../../features/parties/views/party_detail_screen.dart';
 import '../../features/parties/views/party_form_screen.dart';
-import '../../features/placeholders/coming_soon_screen.dart';
 import '../../features/purchases/views/purchase_screen.dart';
 import '../../features/purchases/views/purchases_home_screen.dart';
 import '../../features/purchases/views/purchases_list_screen.dart';
@@ -307,12 +312,53 @@ GoRouter buildAppRouter(AppController controller) {
               ),
             ],
           ),
+          // وحدة النقدية والصناديق (الشريحة 6 — FR-04) — تبويب رابع
+          // بمسارات فرعية داخل الفرع (السجل/الصناديق/النموذج/السندات).
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/cash',
-                builder: (context, state) =>
-                    const ComingSoonScreen(feature: ComingFeature.cash),
+                builder: (context, state) => const CashHomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'boxes',
+                    builder: (context, state) => const BoxesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'box-form',
+                    builder: (context, state) => BoxFormScreen(
+                      editId: int.tryParse(
+                        state.uri.queryParameters['edit'] ?? '',
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'box-form/:id',
+                    builder: (context, state) => BoxFormScreen(
+                      editId:
+                          int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'movements',
+                    builder: (context, state) => MovementsScreen(
+                      initialBoxId: int.tryParse(
+                        state.uri.queryParameters['box'] ?? '',
+                      ),
+                    ),
+                  ),
+                  // سند قبض (receipt — RVT من عميل) / صرف (payment — PMT لمورد).
+                  GoRoute(
+                    path: 'voucher/:type',
+                    builder: (context, state) => VoucherScreen(
+                      isReceipt: state.pathParameters['type'] == 'receipt',
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'categories',
+                    builder: (context, state) => const CategoriesScreen(),
+                  ),
+                ],
               ),
             ],
           ),
