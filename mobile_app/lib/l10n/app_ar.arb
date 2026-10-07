@@ -979,6 +979,12 @@
 
   "printingPdfTooltip": "طباعة PDF",
   "printingPreviewTitle": "معاينة الطباعة",
+  "printingPreviewFileSize": "الحجم: {sizeKb} ك.ب",
+  "@printingPreviewFileSize": {
+    "placeholders": {
+      "sizeKb": {"type": "int"}
+    }
+  },
   "printingPrint": "طباعة",
   "printingShare": "مشاركة",
   "printingWhatsApp": "واتساب",
