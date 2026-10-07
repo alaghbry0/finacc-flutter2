@@ -29,6 +29,9 @@
 | `lib/ui/core/session/app_controller.dart` | **الملف المشترك**: يفتح القاعدة ويكشف المستودعات عبر getters |
 | `lib/ui/core/theme/` | ثيم Material 3 + خط Almarai + اللون 0xFF00695C |
 | `lib/l10n/app_ar.arb` + `app_en.arb` | كل نصوص الواجهة (بالأحرى العربي) |
+| `docs/finacc-srs-v1.5.md` | SRS المعتمد v1.5 — المتطلبات وقواعد العمل (المصدر الأول للحقيقة) |
+| `docs/finacc-screens-guide-v1.5.md` | مواصفات الـ 61 شاشة تصميماً وسلوكاً |
+| `sandbox/` | عدة الـ sandbox كاملة: سكربتات البناء والتحقق (`scripts/`) + حارس بيئة Flutter (`mini-services/flutter-env/`) + صفحة التسليم (`src/`) + `SETUP.md` لإعادة التجميع في جلسة جديدة |
 
 > **منهجية التحقق**: لا يوجد مجلد `test/` — حُذف بقرار صاحب المشروع (انظر §4-7).
 

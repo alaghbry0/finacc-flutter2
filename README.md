@@ -71,6 +71,7 @@ flutter build appbundle --release        # للنشر على Google Play
 | [`docs/finacc-srs-v1.5.md`](docs/finacc-srs-v1.5.md) | وثيقة المتطلبات الكاملة (القواعد المحاسبية §5.4 + خطة الشرائح §9) |
 | [`docs/finacc-screens-guide-v1.5.md`](docs/finacc-screens-guide-v1.5.md) | مواصفات 61 شاشة تصميمًا وسلوكًا |
 | `.agents/skills/` | 32 مهارة AI جاهزة (Flutter/Dart/UI-UX) — انظر `skills-lock.json` |
+| [`sandbox/SETUP.md`](sandbox/SETUP.md) | إعادة تجميع بيئة التشغيل من المستودع في sandbox جديد (سكربتات البناء والتحقق + حارس بيئة Flutter + صفحة التسليم) |
 
 ## البنية
 
@@ -84,4 +85,6 @@ lib/
 │   ├── core/                     # router + session(AppController) + theme
 │   └── features/<feature>/       # views + view_models (feature-first)
 └── l10n/                         # app_ar.arb / app_en.arb
+docs/                            # SRS v1.5 + دليل الشاشات v1.5
+sandbox/                         # عدة الـ sandbox: scripts/ + mini-services/flutter-env + src/ + SETUP.md
 ```
