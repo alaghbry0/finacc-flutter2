@@ -1017,5 +1017,17 @@
   "printingCashCustomer": "Cash customer",
   "printingShareMessageInvoice": "Invoice {docNo} — total {total}",
   "printingShareMessageVoucher": "Voucher {voucherNo} — amount {amount}",
-  "printingVoucherPdfButton": "Print voucher PDF"
+  "printingVoucherPdfButton": "Print voucher PDF",
+  "printingStatementDocTitle": "Account statement",
+  "printingLblGeneratedAt": "Issue date",
+  "printingLblPeriod": "Period",
+  "printingStatementPeriodRange": "From {from} to {to}",
+  "printingStatementDebit": "Debit",
+  "printingStatementCredit": "Credit",
+  "printingStatementBalance": "Balance",
+  "printingStatementTotalDebit": "Total debit",
+  "printingStatementTotalCredit": "Total credit",
+  "printingStatementClosing": "Closing balance",
+  "printingStatementEmpty": "No entries in this period",
+  "printingShareMessageStatement": "Account statement for {party} — closing balance {balance}"
 }

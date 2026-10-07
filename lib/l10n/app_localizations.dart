@@ -5905,6 +5905,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Print voucher PDF'**
   String get printingVoucherPdfButton;
+
+  /// No description provided for @printingStatementDocTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account statement'**
+  String get printingStatementDocTitle;
+
+  /// No description provided for @printingLblGeneratedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue date'**
+  String get printingLblGeneratedAt;
+
+  /// No description provided for @printingLblPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get printingLblPeriod;
+
+  /// No description provided for @printingStatementPeriodRange.
+  ///
+  /// In en, this message translates to:
+  /// **'From {from} to {to}'**
+  String printingStatementPeriodRange(Object from, Object to);
+
+  /// No description provided for @printingStatementDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get printingStatementDebit;
+
+  /// No description provided for @printingStatementCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get printingStatementCredit;
+
+  /// No description provided for @printingStatementBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get printingStatementBalance;
+
+  /// No description provided for @printingStatementTotalDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Total debit'**
+  String get printingStatementTotalDebit;
+
+  /// No description provided for @printingStatementTotalCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Total credit'**
+  String get printingStatementTotalCredit;
+
+  /// No description provided for @printingStatementClosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing balance'**
+  String get printingStatementClosing;
+
+  /// No description provided for @printingStatementEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries in this period'**
+  String get printingStatementEmpty;
+
+  /// No description provided for @printingShareMessageStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Account statement for {party} — closing balance {balance}'**
+  String printingShareMessageStatement(Object balance, Object party);
 }
 
 class _AppLocalizationsDelegate
