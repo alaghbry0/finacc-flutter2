@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_app/core/storage/app_database.dart';
 import 'package:mobile_app/data/repositories/company_repository.dart';
 import 'package:mobile_app/data/repositories/settings_repository.dart';
@@ -78,16 +79,29 @@ openSeededApp() async {
 }
 
 /// تغليف عنصر داخل تطبيق مترجم (عربي RTL افتراضياً) — للاختبارات البصرية.
+/// يزوّد GoRouter (الشاشات الحالية تستعمل RefreshOnActive الذي يتطلب
+/// وجود راوتر في السياق — ترقية 2026-10-07 بعد استعادة الاختبارات).
 Widget wrapWithL10n(Widget child, {bool arabic = true}) {
   final locale = arabic ? const Locale('ar') : const Locale('en');
-  return MaterialApp(
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        pageBuilder: (context, state) => NoTransitionPage<void>(
+          child: Directionality(
+            textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
+            child: Scaffold(body: child),
+          ),
+        ),
+      ),
+    ],
+  );
+  return MaterialApp.router(
     locale: locale,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: Directionality(
-      textDirection: arabic ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(body: child),
-    ),
+    routerConfig: router,
   );
 }
 
