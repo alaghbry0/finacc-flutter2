@@ -2343,4 +2343,359 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sellQuotationSentMessage => 'The quotation was marked as sent.';
+
+  @override
+  String get purHomeTitle => 'Purchases';
+
+  @override
+  String get purHubSubtitle => 'Buy, return, and WAC engine';
+
+  @override
+  String get purHomeHeroTitle => 'Purchasing & intake';
+
+  @override
+  String get purHomeTodayCount => 'Today\'s purchase invoices';
+
+  @override
+  String get purHomeTodayTotal => 'Today\'s purchases value';
+
+  @override
+  String get purHomeNewInvoice => 'New purchase invoice';
+
+  @override
+  String get purHomeNewInvoiceHint =>
+      'Enter stock at cost with batch expiry — posting updates the average cost';
+
+  @override
+  String get purHomeRecent => 'Recent purchases';
+
+  @override
+  String get purInvoicesTitle => 'Purchase invoices';
+
+  @override
+  String get purInvoicesSubtitle => 'Posted PUR register';
+
+  @override
+  String get purInvoicesSearchHint => 'Search by number or supplier';
+
+  @override
+  String get purInvoicesEmptyTitle => 'No purchases yet';
+
+  @override
+  String get purInvoicesEmptyBody =>
+      'Post your first purchase invoice to add stock and update costs.';
+
+  @override
+  String get purInvoicesNoResultsTitle => 'No matches';
+
+  @override
+  String get purInvoicesNoResultsBody => 'Try another number or supplier name.';
+
+  @override
+  String get purInvoicesPaidLabel => 'Paid';
+
+  @override
+  String get purInvoicesDueLabel => 'Remaining';
+
+  @override
+  String get purInvoicesTotalLabel => 'Total';
+
+  @override
+  String get purDetailTitle => 'Purchase invoice details';
+
+  @override
+  String get purDetailNotFoundTitle => 'Invoice not found';
+
+  @override
+  String get purDetailNotFoundBody =>
+      'It may have been removed or the link is wrong.';
+
+  @override
+  String get purDetailSupplier => 'Supplier';
+
+  @override
+  String get purDetailStockValue => 'Intake value at cost';
+
+  @override
+  String get purDetailStockValueNote =>
+      'In base currency — the weighted-average cost basis';
+
+  @override
+  String get purDetailReturnAction => 'Return to supplier (purchase return)';
+
+  @override
+  String get purSupplierRequired => 'Select a supplier';
+
+  @override
+  String get purSupplierOwes => 'We owe';
+
+  @override
+  String get purSupplierCredit => 'Credit with us';
+
+  @override
+  String get purSupplierPickerTitle => 'Invoice supplier';
+
+  @override
+  String get purSupplierPickerSearchHint => 'Search by name or phone';
+
+  @override
+  String get purSupplierPickerEmptyTitle => 'No suppliers yet';
+
+  @override
+  String get purSupplierPickerEmptyBody =>
+      'Register suppliers in the parties module to buy from them.';
+
+  @override
+  String get purSupplierPickerNoResultsTitle => 'No matches';
+
+  @override
+  String get purSupplierPickerNoResultsBody => 'Try another name or phone.';
+
+  @override
+  String get purScreenTitle => 'New purchase invoice';
+
+  @override
+  String get purNewInvoiceLabel => 'Next PUR number';
+
+  @override
+  String get purPickSupplier => 'Select supplier';
+
+  @override
+  String get purClearCartTooltip => 'Clear invoice';
+
+  @override
+  String get purClearCartTitle => 'Clear the purchase invoice?';
+
+  @override
+  String get purClearCartBody =>
+      'Unposted lines will be removed — nothing is written to the database.';
+
+  @override
+  String get purEmptyCartTitle => 'Invoice is empty';
+
+  @override
+  String get purEmptyCartBody =>
+      'Add intake items at purchase cost — batches are created per tracked line with its expiry.';
+
+  @override
+  String get purAddItem => 'Add item';
+
+  @override
+  String purLineStock(Object qty) {
+    return 'In stock now: $qty';
+  }
+
+  @override
+  String get purUnitCostLabel => 'Cost';
+
+  @override
+  String purEditCostTitle(Object name) {
+    return 'Unit cost: $name';
+  }
+
+  @override
+  String get purIncomingBatchTitle => 'Incoming batch';
+
+  @override
+  String get purBatchNoHint => 'Supplier batch number';
+
+  @override
+  String get purExpiryPick => 'Pick expiry date';
+
+  @override
+  String purExpiryValue(Object date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get purExpiryQuickMonth => '+30 days';
+
+  @override
+  String get purExpiryQuick3Months => '+90 days';
+
+  @override
+  String get purExpiryQuick6Months => '+180 days';
+
+  @override
+  String get purExpiryQuickYear => '+1 year';
+
+  @override
+  String get purExpiryDialogTitle => 'Expiry date';
+
+  @override
+  String get purInvoiceDiscountButton => 'Invoice discount';
+
+  @override
+  String get purInvoiceDiscountTitle => 'Purchase invoice discount';
+
+  @override
+  String get purPayButton => 'Post purchase';
+
+  @override
+  String purPayButtonWithTotal(Object total) {
+    return 'Pay · $total';
+  }
+
+  @override
+  String get purPayCashFieldLabel => 'Cash paid to supplier';
+
+  @override
+  String get purPayCashFieldHelper =>
+      'Leaves the cashbox — never above the net';
+
+  @override
+  String purPayCashShort(Object total) {
+    return 'Cash is below the net ($total) — choose mixed or credit.';
+  }
+
+  @override
+  String purPayMixedRange(Object total) {
+    return 'In mixed payment enter an amount strictly between zero and the net ($total).';
+  }
+
+  @override
+  String get purPayConfirm => 'Confirm posting';
+
+  @override
+  String get purReceiptSuccessTitle => 'Purchase invoice posted';
+
+  @override
+  String get purReceiptSupplierCredit => 'Remaining on credit (supplier debt)';
+
+  @override
+  String get purReceiptNewInvoice => 'New purchase';
+
+  @override
+  String get purPickerTitle => 'Pick item to purchase';
+
+  @override
+  String get purPickerSearchHint => 'Search by name or barcode';
+
+  @override
+  String get purPickerEmptyTitle => 'No items yet';
+
+  @override
+  String get purPickerEmptyBody =>
+      'Add items in the inventory module then buy their stock here.';
+
+  @override
+  String purPickerAvailable(Object qty) {
+    return 'In stock: $qty';
+  }
+
+  @override
+  String purPickerLastCost(Object cost) {
+    return 'Last cost: $cost';
+  }
+
+  @override
+  String get retSaleTitle => 'Sale return';
+
+  @override
+  String get retSaleSubtitle => 'Return sales with an SRN';
+
+  @override
+  String get retPurchaseTitle => 'Purchase return';
+
+  @override
+  String get retPurchaseSubtitle => 'Return intake to supplier with a PRN';
+
+  @override
+  String get retPickInvoiceSearchHint => 'Search by invoice number or customer';
+
+  @override
+  String get retPickPurchaseSearchHint => 'Search by PUR number or supplier';
+
+  @override
+  String get retPickInvoiceEmptyTitle => 'No completed invoices';
+
+  @override
+  String get retPickInvoiceEmptyBody =>
+      'Returns are strictly linked to a completed original invoice.';
+
+  @override
+  String get retPickInvoiceNoResultsTitle => 'No matches';
+
+  @override
+  String get retPickInvoiceNoResultsBody => 'Try another number or name.';
+
+  @override
+  String get retChangeInvoice => 'Change invoice';
+
+  @override
+  String get retLinesTitle => 'Returnable lines';
+
+  @override
+  String get retNoLinesTitle => 'No returnable lines';
+
+  @override
+  String get retNoLinesBody =>
+      'All quantities of this invoice may have been returned already.';
+
+  @override
+  String retOriginalQty(Object qty) {
+    return 'Original: $qty';
+  }
+
+  @override
+  String retReturnedQty(Object qty) {
+    return 'Returned before: $qty';
+  }
+
+  @override
+  String retAvailableQty(Object qty) {
+    return 'Available to return: $qty';
+  }
+
+  @override
+  String get retQtyLabel => 'Return qty';
+
+  @override
+  String get retLineRefundLabel => 'Refund';
+
+  @override
+  String get retRefundTotalLabel => 'Return value';
+
+  @override
+  String get retRefundCash => 'Cash refund';
+
+  @override
+  String get retRefundCredit => 'Deduct from account';
+
+  @override
+  String get retRefundCashOnlyNote =>
+      'Original invoice has an anonymous cash customer — refund in cash only.';
+
+  @override
+  String get retRefundCashFieldLabel => 'Cash refunded now';
+
+  @override
+  String retRefundCashShort(Object total) {
+    return 'Cash is below the return value ($total) — choose deduction or mixed.';
+  }
+
+  @override
+  String retRefundMixedRange(Object total) {
+    return 'In a mixed refund enter an amount strictly between zero and the return value ($total).';
+  }
+
+  @override
+  String get retPostButton => 'Post return';
+
+  @override
+  String get retNewReturn => 'New return';
+
+  @override
+  String get retReceiptSuccessTitle => 'Return posted';
+
+  @override
+  String retReceiptOriginal(Object no) {
+    return 'Against original invoice $no';
+  }
+
+  @override
+  String get retReceiptRefundCash => 'Cash refunded';
+
+  @override
+  String get retReceiptRefundCredit => 'Deducted from account';
 }

@@ -26,6 +26,10 @@ import '../../features/parties/views/party_balances_screen.dart';
 import '../../features/parties/views/party_detail_screen.dart';
 import '../../features/parties/views/party_form_screen.dart';
 import '../../features/placeholders/coming_soon_screen.dart';
+import '../../features/purchases/views/purchase_screen.dart';
+import '../../features/purchases/views/purchases_home_screen.dart';
+import '../../features/purchases/views/purchases_list_screen.dart';
+import '../../features/purchases/views/returns_screen.dart';
 import '../../features/sell/views/quotation_detail_screen.dart';
 import '../../features/sell/views/quotations_screen.dart';
 import '../../features/sell/views/sales_invoices_screen.dart';
@@ -150,6 +154,49 @@ GoRouter buildAppRouter(AppController controller) {
           GoRoute(
             path: 'rates',
             builder: (context, state) => const ExchangeRatesScreen(),
+          ),
+        ],
+      ),
+      // وحدة المشتريات والمرتجعات (المرحلة 5) — مسارات علوية خارج الهيكل
+      // (نمط الأطراف): شاشة كاملة بزر رجوع، والتنقل بينها بـ go().
+      GoRoute(
+        path: '/purchases',
+        builder: (context, state) => const PurchasesHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const PurchaseScreen(),
+          ),
+          GoRoute(
+            path: 'invoices',
+            builder: (context, state) => const PurchasesListScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => PurchaseDetailScreen(
+                  invoiceId:
+                      int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                ),
+              ),
+            ],
+          ),
+          // مرتجع بيع SRN عن فاتورة بيع أصلية (FR-02-07).
+          GoRoute(
+            path: 'returns/sale',
+            builder: (context, state) => SaleReturnScreen(
+              preselectedInvoiceId: int.tryParse(
+                state.uri.queryParameters['invoice'] ?? '',
+              ),
+            ),
+          ),
+          // مرتجع شراء PRN عن فاتورة شراء أصلية (FR-02-08).
+          GoRoute(
+            path: 'returns/purchase',
+            builder: (context, state) => PurchaseReturnScreen(
+              preselectedInvoiceId: int.tryParse(
+                state.uri.queryParameters['purchase'] ?? '',
+              ),
+            ),
           ),
         ],
       ),

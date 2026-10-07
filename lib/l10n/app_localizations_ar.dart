@@ -2358,4 +2358,356 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sellQuotationSentMessage => 'عُلِّم العرض كمُرسَل.';
+
+  @override
+  String get purHomeTitle => 'المشتريات';
+
+  @override
+  String get purHubSubtitle => 'شراء جديد ومرتجعات ومحرك WAC';
+
+  @override
+  String get purHomeHeroTitle => 'الشراء والوارد';
+
+  @override
+  String get purHomeTodayCount => 'فواتير شراء اليوم';
+
+  @override
+  String get purHomeTodayTotal => 'قيمة مشتريات اليوم';
+
+  @override
+  String get purHomeNewInvoice => 'فاتورة شراء جديدة';
+
+  @override
+  String get purHomeNewInvoiceHint =>
+      'أدخل الوارد بتكلفته ودفعة صلاحيته — الترحيل يحدّث متوسط التكلفة';
+
+  @override
+  String get purHomeRecent => 'آخر المشتريات';
+
+  @override
+  String get purInvoicesTitle => 'فواتير المشتريات';
+
+  @override
+  String get purInvoicesSubtitle => 'سجل فواتير PUR المُرحَّلة';
+
+  @override
+  String get purInvoicesSearchHint => 'ابحث برقم الفاتورة أو اسم المورد';
+
+  @override
+  String get purInvoicesEmptyTitle => 'لا مشتريات بعد';
+
+  @override
+  String get purInvoicesEmptyBody =>
+      'رحّل أول فاتورة شراء ليظهر الوارد في المخزون وتتحدث التكلفة.';
+
+  @override
+  String get purInvoicesNoResultsTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get purInvoicesNoResultsBody => 'جرّب رقماً أو اسم مورد آخر.';
+
+  @override
+  String get purInvoicesPaidLabel => 'المدفوع';
+
+  @override
+  String get purInvoicesDueLabel => 'المتبقي';
+
+  @override
+  String get purInvoicesTotalLabel => 'الإجمالي';
+
+  @override
+  String get purDetailTitle => 'تفاصيل فاتورة الشراء';
+
+  @override
+  String get purDetailNotFoundTitle => 'الفاتورة غير موجودة';
+
+  @override
+  String get purDetailNotFoundBody => 'ربما حُذفت أو الرابط غير صحيح.';
+
+  @override
+  String get purDetailSupplier => 'المورد';
+
+  @override
+  String get purDetailStockValue => 'قيمة الوارد بالتكلفة';
+
+  @override
+  String get purDetailStockValueNote =>
+      'بالعملة الأساسية — أساس متوسط التكلفة المرجّح';
+
+  @override
+  String get purDetailReturnAction => 'إرجاع للمورد (مرتجع شراء)';
+
+  @override
+  String get purSupplierRequired => 'اختر المورد';
+
+  @override
+  String get purSupplierOwes => 'مستحق له';
+
+  @override
+  String get purSupplierCredit => 'رصيد لنا لديه';
+
+  @override
+  String get purSupplierPickerTitle => 'مورد الفاتورة';
+
+  @override
+  String get purSupplierPickerSearchHint => 'ابحث بالاسم أو الهاتف';
+
+  @override
+  String get purSupplierPickerEmptyTitle => 'لا موردين بعد';
+
+  @override
+  String get purSupplierPickerEmptyBody =>
+      'سجّل مورديك من وحدة الأطراف لتشتري منهم.';
+
+  @override
+  String get purSupplierPickerNoResultsTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get purSupplierPickerNoResultsBody => 'جرّب اسماً أو هاتفاً آخر.';
+
+  @override
+  String get purScreenTitle => 'فاتورة شراء جديدة';
+
+  @override
+  String get purNewInvoiceLabel => 'رقم PUR القادم';
+
+  @override
+  String get purPickSupplier => 'اختيار المورد';
+
+  @override
+  String get purClearCartTooltip => 'تفريغ الفاتورة';
+
+  @override
+  String get purClearCartTitle => 'تفريغ فاتورة الشراء؟';
+
+  @override
+  String get purClearCartBody =>
+      'ستُحذف البنود غير المُرحَّلة ولن يُكتب شيء في القاعدة.';
+
+  @override
+  String get purEmptyCartTitle => 'الفاتورة فارغة';
+
+  @override
+  String get purEmptyCartBody =>
+      'أضف أصناف الوارد بتكلفة الشراء — الدفعات تُنشأ لكل بند متتبع بصلاحيته.';
+
+  @override
+  String get purAddItem => 'إضافة صنف';
+
+  @override
+  String purLineStock(Object qty) {
+    return 'المتوفر حالياً: $qty';
+  }
+
+  @override
+  String get purUnitCostLabel => 'التكلفة';
+
+  @override
+  String purEditCostTitle(Object name) {
+    return 'تكلفة الوحدة: $name';
+  }
+
+  @override
+  String get purIncomingBatchTitle => 'الدفعة الواردة';
+
+  @override
+  String get purBatchNoHint => 'رقم دفعة المورد';
+
+  @override
+  String get purExpiryPick => 'حدد تاريخ الصلاحية';
+
+  @override
+  String purExpiryValue(Object date) {
+    return 'تنتهي $date';
+  }
+
+  @override
+  String get purExpiryQuickMonth => '+30 يوماً';
+
+  @override
+  String get purExpiryQuick3Months => '+90 يوماً';
+
+  @override
+  String get purExpiryQuick6Months => '+180 يوماً';
+
+  @override
+  String get purExpiryQuickYear => '+سنة';
+
+  @override
+  String get purExpiryDialogTitle => 'تاريخ انتهاء الصلاحية';
+
+  @override
+  String get purInvoiceDiscountButton => 'خصم الفاتورة';
+
+  @override
+  String get purInvoiceDiscountTitle => 'خصم رأس فاتورة الشراء';
+
+  @override
+  String get purPayButton => 'ترحيل الشراء';
+
+  @override
+  String purPayButtonWithTotal(Object total) {
+    return 'الدفع · $total';
+  }
+
+  @override
+  String get purPayCashFieldLabel => 'المبلغ المدفوع للمورد نقداً';
+
+  @override
+  String get purPayCashFieldHelper => 'يخرج من الصندوق — لا يزيد عن الصافي';
+
+  @override
+  String purPayCashShort(Object total) {
+    return 'النقدي أقل من الصافي ($total) — اختر المختلط أو الآجل.';
+  }
+
+  @override
+  String purPayMixedRange(Object total) {
+    return 'في الدفع المختلط أدخل مبلغاً بين صفر والصافي ($total) حصراً.';
+  }
+
+  @override
+  String get purPayConfirm => 'تأكيد ترحيل الشراء';
+
+  @override
+  String get purReceiptSuccessTitle => 'تم ترحيل فاتورة الشراء';
+
+  @override
+  String get purReceiptSupplierCredit => 'المتبقي آجلاً (دين للمورد)';
+
+  @override
+  String get purReceiptNewInvoice => 'شراء جديد';
+
+  @override
+  String get purPickerTitle => 'اختر الصنف للشراء';
+
+  @override
+  String get purPickerSearchHint => 'ابحث بالاسم أو الباركود';
+
+  @override
+  String get purPickerEmptyTitle => 'لا أصناف بعد';
+
+  @override
+  String get purPickerEmptyBody =>
+      'أضف أصنافك من وحدة المخزن ثم اشترِ الوارد هنا.';
+
+  @override
+  String purPickerAvailable(Object qty) {
+    return 'المتوفر: $qty';
+  }
+
+  @override
+  String purPickerLastCost(Object cost) {
+    return 'آخر تكلفة: $cost';
+  }
+
+  @override
+  String get retSaleTitle => 'مرتجع بيع';
+
+  @override
+  String get retSaleSubtitle => 'إرجاع مبيعات بمرتجع SRN';
+
+  @override
+  String get retPurchaseTitle => 'مرتجع شراء';
+
+  @override
+  String get retPurchaseSubtitle => 'إرجاع وارد للمورد بمرتجع PRN';
+
+  @override
+  String get retPickInvoiceSearchHint => 'ابحث برقم الفاتورة أو اسم العميل';
+
+  @override
+  String get retPickPurchaseSearchHint => 'ابحث برقم PUR أو اسم المورد';
+
+  @override
+  String get retPickInvoiceEmptyTitle => 'لا فواتير مكتملة';
+
+  @override
+  String get retPickInvoiceEmptyBody =>
+      'المرتجع يرتبط بفاتورة أصلية مكتملة حصراً — لا مرتجع حر.';
+
+  @override
+  String get retPickInvoiceNoResultsTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get retPickInvoiceNoResultsBody => 'جرّب رقماً أو اسماً آخر.';
+
+  @override
+  String get retChangeInvoice => 'تغيير الفاتورة';
+
+  @override
+  String get retLinesTitle => 'البنود القابلة للإرجاع';
+
+  @override
+  String get retNoLinesTitle => 'لا بنود قابلة للإرجاع';
+
+  @override
+  String get retNoLinesBody => 'ربما أُرجعت كل كميات هذه الفاتورة سابقاً.';
+
+  @override
+  String retOriginalQty(Object qty) {
+    return 'الأصلية: $qty';
+  }
+
+  @override
+  String retReturnedQty(Object qty) {
+    return 'أُرجع سابقاً: $qty';
+  }
+
+  @override
+  String retAvailableQty(Object qty) {
+    return 'المتاح للإرجاع: $qty';
+  }
+
+  @override
+  String get retQtyLabel => 'كمية الإرجاع';
+
+  @override
+  String get retLineRefundLabel => 'قيمة الرد';
+
+  @override
+  String get retRefundTotalLabel => 'قيمة المرتجع';
+
+  @override
+  String get retRefundCash => 'رد نقدي';
+
+  @override
+  String get retRefundCredit => 'خصم من الحساب';
+
+  @override
+  String get retRefundCashOnlyNote =>
+      'الفاتورة الأصلية بعميل نقدي مجهول — الرد نقداً من الصندوق حصراً.';
+
+  @override
+  String get retRefundCashFieldLabel => 'المبلغ المردود نقداً';
+
+  @override
+  String retRefundCashShort(Object total) {
+    return 'النقدي أقل من قيمة المرتجع ($total) — اختر الخصم من الحساب أو المختلط.';
+  }
+
+  @override
+  String retRefundMixedRange(Object total) {
+    return 'في الرد المختلط أدخل مبلغاً بين صفر وقيمة المرتجع ($total) حصراً.';
+  }
+
+  @override
+  String get retPostButton => 'ترحيل المرتجع';
+
+  @override
+  String get retNewReturn => 'مرتجع جديد';
+
+  @override
+  String get retReceiptSuccessTitle => 'تم ترحيل المرتجع';
+
+  @override
+  String retReceiptOriginal(Object no) {
+    return 'عن الفاتورة الأصلية $no';
+  }
+
+  @override
+  String get retReceiptRefundCash => 'المردود نقداً';
+
+  @override
+  String get retReceiptRefundCredit => 'المخصوم من الحساب';
 }

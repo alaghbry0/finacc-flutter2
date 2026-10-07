@@ -4045,6 +4045,636 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The quotation was marked as sent.'**
   String get sellQuotationSentMessage;
+
+  /// No description provided for @purHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases'**
+  String get purHomeTitle;
+
+  /// No description provided for @purHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy, return, and WAC engine'**
+  String get purHubSubtitle;
+
+  /// No description provided for @purHomeHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchasing & intake'**
+  String get purHomeHeroTitle;
+
+  /// No description provided for @purHomeTodayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s purchase invoices'**
+  String get purHomeTodayCount;
+
+  /// No description provided for @purHomeTodayTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s purchases value'**
+  String get purHomeTodayTotal;
+
+  /// No description provided for @purHomeNewInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'New purchase invoice'**
+  String get purHomeNewInvoice;
+
+  /// No description provided for @purHomeNewInvoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter stock at cost with batch expiry — posting updates the average cost'**
+  String get purHomeNewInvoiceHint;
+
+  /// No description provided for @purHomeRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent purchases'**
+  String get purHomeRecent;
+
+  /// No description provided for @purInvoicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase invoices'**
+  String get purInvoicesTitle;
+
+  /// No description provided for @purInvoicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted PUR register'**
+  String get purInvoicesSubtitle;
+
+  /// No description provided for @purInvoicesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by number or supplier'**
+  String get purInvoicesSearchHint;
+
+  /// No description provided for @purInvoicesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases yet'**
+  String get purInvoicesEmptyTitle;
+
+  /// No description provided for @purInvoicesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Post your first purchase invoice to add stock and update costs.'**
+  String get purInvoicesEmptyBody;
+
+  /// No description provided for @purInvoicesNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get purInvoicesNoResultsTitle;
+
+  /// No description provided for @purInvoicesNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another number or supplier name.'**
+  String get purInvoicesNoResultsBody;
+
+  /// No description provided for @purInvoicesPaidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get purInvoicesPaidLabel;
+
+  /// No description provided for @purInvoicesDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get purInvoicesDueLabel;
+
+  /// No description provided for @purInvoicesTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get purInvoicesTotalLabel;
+
+  /// No description provided for @purDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase invoice details'**
+  String get purDetailTitle;
+
+  /// No description provided for @purDetailNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice not found'**
+  String get purDetailNotFoundTitle;
+
+  /// No description provided for @purDetailNotFoundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may have been removed or the link is wrong.'**
+  String get purDetailNotFoundBody;
+
+  /// No description provided for @purDetailSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier'**
+  String get purDetailSupplier;
+
+  /// No description provided for @purDetailStockValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Intake value at cost'**
+  String get purDetailStockValue;
+
+  /// No description provided for @purDetailStockValueNote.
+  ///
+  /// In en, this message translates to:
+  /// **'In base currency — the weighted-average cost basis'**
+  String get purDetailStockValueNote;
+
+  /// No description provided for @purDetailReturnAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to supplier (purchase return)'**
+  String get purDetailReturnAction;
+
+  /// No description provided for @purSupplierRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a supplier'**
+  String get purSupplierRequired;
+
+  /// No description provided for @purSupplierOwes.
+  ///
+  /// In en, this message translates to:
+  /// **'We owe'**
+  String get purSupplierOwes;
+
+  /// No description provided for @purSupplierCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit with us'**
+  String get purSupplierCredit;
+
+  /// No description provided for @purSupplierPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice supplier'**
+  String get purSupplierPickerTitle;
+
+  /// No description provided for @purSupplierPickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or phone'**
+  String get purSupplierPickerSearchHint;
+
+  /// No description provided for @purSupplierPickerEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No suppliers yet'**
+  String get purSupplierPickerEmptyTitle;
+
+  /// No description provided for @purSupplierPickerEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Register suppliers in the parties module to buy from them.'**
+  String get purSupplierPickerEmptyBody;
+
+  /// No description provided for @purSupplierPickerNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get purSupplierPickerNoResultsTitle;
+
+  /// No description provided for @purSupplierPickerNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or phone.'**
+  String get purSupplierPickerNoResultsBody;
+
+  /// No description provided for @purScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New purchase invoice'**
+  String get purScreenTitle;
+
+  /// No description provided for @purNewInvoiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next PUR number'**
+  String get purNewInvoiceLabel;
+
+  /// No description provided for @purPickSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Select supplier'**
+  String get purPickSupplier;
+
+  /// No description provided for @purClearCartTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear invoice'**
+  String get purClearCartTooltip;
+
+  /// No description provided for @purClearCartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the purchase invoice?'**
+  String get purClearCartTitle;
+
+  /// No description provided for @purClearCartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposted lines will be removed — nothing is written to the database.'**
+  String get purClearCartBody;
+
+  /// No description provided for @purEmptyCartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice is empty'**
+  String get purEmptyCartTitle;
+
+  /// No description provided for @purEmptyCartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add intake items at purchase cost — batches are created per tracked line with its expiry.'**
+  String get purEmptyCartBody;
+
+  /// No description provided for @purAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get purAddItem;
+
+  /// No description provided for @purLineStock.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock now: {qty}'**
+  String purLineStock(Object qty);
+
+  /// No description provided for @purUnitCostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get purUnitCostLabel;
+
+  /// No description provided for @purEditCostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost: {name}'**
+  String purEditCostTitle(Object name);
+
+  /// No description provided for @purIncomingBatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming batch'**
+  String get purIncomingBatchTitle;
+
+  /// No description provided for @purBatchNoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier batch number'**
+  String get purBatchNoHint;
+
+  /// No description provided for @purExpiryPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick expiry date'**
+  String get purExpiryPick;
+
+  /// No description provided for @purExpiryValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String purExpiryValue(Object date);
+
+  /// No description provided for @purExpiryQuickMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'+30 days'**
+  String get purExpiryQuickMonth;
+
+  /// No description provided for @purExpiryQuick3Months.
+  ///
+  /// In en, this message translates to:
+  /// **'+90 days'**
+  String get purExpiryQuick3Months;
+
+  /// No description provided for @purExpiryQuick6Months.
+  ///
+  /// In en, this message translates to:
+  /// **'+180 days'**
+  String get purExpiryQuick6Months;
+
+  /// No description provided for @purExpiryQuickYear.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 year'**
+  String get purExpiryQuickYear;
+
+  /// No description provided for @purExpiryDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry date'**
+  String get purExpiryDialogTitle;
+
+  /// No description provided for @purInvoiceDiscountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice discount'**
+  String get purInvoiceDiscountButton;
+
+  /// No description provided for @purInvoiceDiscountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase invoice discount'**
+  String get purInvoiceDiscountTitle;
+
+  /// No description provided for @purPayButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Post purchase'**
+  String get purPayButton;
+
+  /// No description provided for @purPayButtonWithTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay · {total}'**
+  String purPayButtonWithTotal(Object total);
+
+  /// No description provided for @purPayCashFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash paid to supplier'**
+  String get purPayCashFieldLabel;
+
+  /// No description provided for @purPayCashFieldHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaves the cashbox — never above the net'**
+  String get purPayCashFieldHelper;
+
+  /// No description provided for @purPayCashShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash is below the net ({total}) — choose mixed or credit.'**
+  String purPayCashShort(Object total);
+
+  /// No description provided for @purPayMixedRange.
+  ///
+  /// In en, this message translates to:
+  /// **'In mixed payment enter an amount strictly between zero and the net ({total}).'**
+  String purPayMixedRange(Object total);
+
+  /// No description provided for @purPayConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm posting'**
+  String get purPayConfirm;
+
+  /// No description provided for @purReceiptSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase invoice posted'**
+  String get purReceiptSuccessTitle;
+
+  /// No description provided for @purReceiptSupplierCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining on credit (supplier debt)'**
+  String get purReceiptSupplierCredit;
+
+  /// No description provided for @purReceiptNewInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'New purchase'**
+  String get purReceiptNewInvoice;
+
+  /// No description provided for @purPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick item to purchase'**
+  String get purPickerTitle;
+
+  /// No description provided for @purPickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or barcode'**
+  String get purPickerSearchHint;
+
+  /// No description provided for @purPickerEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No items yet'**
+  String get purPickerEmptyTitle;
+
+  /// No description provided for @purPickerEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add items in the inventory module then buy their stock here.'**
+  String get purPickerEmptyBody;
+
+  /// No description provided for @purPickerAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock: {qty}'**
+  String purPickerAvailable(Object qty);
+
+  /// No description provided for @purPickerLastCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Last cost: {cost}'**
+  String purPickerLastCost(Object cost);
+
+  /// No description provided for @retSaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale return'**
+  String get retSaleTitle;
+
+  /// No description provided for @retSaleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return sales with an SRN'**
+  String get retSaleSubtitle;
+
+  /// No description provided for @retPurchaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase return'**
+  String get retPurchaseTitle;
+
+  /// No description provided for @retPurchaseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return intake to supplier with a PRN'**
+  String get retPurchaseSubtitle;
+
+  /// No description provided for @retPickInvoiceSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by invoice number or customer'**
+  String get retPickInvoiceSearchHint;
+
+  /// No description provided for @retPickPurchaseSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by PUR number or supplier'**
+  String get retPickPurchaseSearchHint;
+
+  /// No description provided for @retPickInvoiceEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed invoices'**
+  String get retPickInvoiceEmptyTitle;
+
+  /// No description provided for @retPickInvoiceEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns are strictly linked to a completed original invoice.'**
+  String get retPickInvoiceEmptyBody;
+
+  /// No description provided for @retPickInvoiceNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get retPickInvoiceNoResultsTitle;
+
+  /// No description provided for @retPickInvoiceNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another number or name.'**
+  String get retPickInvoiceNoResultsBody;
+
+  /// No description provided for @retChangeInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Change invoice'**
+  String get retChangeInvoice;
+
+  /// No description provided for @retLinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Returnable lines'**
+  String get retLinesTitle;
+
+  /// No description provided for @retNoLinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No returnable lines'**
+  String get retNoLinesTitle;
+
+  /// No description provided for @retNoLinesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'All quantities of this invoice may have been returned already.'**
+  String get retNoLinesBody;
+
+  /// No description provided for @retOriginalQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Original: {qty}'**
+  String retOriginalQty(Object qty);
+
+  /// No description provided for @retReturnedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned before: {qty}'**
+  String retReturnedQty(Object qty);
+
+  /// No description provided for @retAvailableQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Available to return: {qty}'**
+  String retAvailableQty(Object qty);
+
+  /// No description provided for @retQtyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Return qty'**
+  String get retQtyLabel;
+
+  /// No description provided for @retLineRefundLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get retLineRefundLabel;
+
+  /// No description provided for @retRefundTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Return value'**
+  String get retRefundTotalLabel;
+
+  /// No description provided for @retRefundCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash refund'**
+  String get retRefundCash;
+
+  /// No description provided for @retRefundCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduct from account'**
+  String get retRefundCredit;
+
+  /// No description provided for @retRefundCashOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Original invoice has an anonymous cash customer — refund in cash only.'**
+  String get retRefundCashOnlyNote;
+
+  /// No description provided for @retRefundCashFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash refunded now'**
+  String get retRefundCashFieldLabel;
+
+  /// No description provided for @retRefundCashShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash is below the return value ({total}) — choose deduction or mixed.'**
+  String retRefundCashShort(Object total);
+
+  /// No description provided for @retRefundMixedRange.
+  ///
+  /// In en, this message translates to:
+  /// **'In a mixed refund enter an amount strictly between zero and the return value ({total}).'**
+  String retRefundMixedRange(Object total);
+
+  /// No description provided for @retPostButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Post return'**
+  String get retPostButton;
+
+  /// No description provided for @retNewReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'New return'**
+  String get retNewReturn;
+
+  /// No description provided for @retReceiptSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return posted'**
+  String get retReceiptSuccessTitle;
+
+  /// No description provided for @retReceiptOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Against original invoice {no}'**
+  String retReceiptOriginal(Object no);
+
+  /// No description provided for @retReceiptRefundCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash refunded'**
+  String get retReceiptRefundCash;
+
+  /// No description provided for @retReceiptRefundCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deducted from account'**
+  String get retReceiptRefundCredit;
 }
 
 class _AppLocalizationsDelegate

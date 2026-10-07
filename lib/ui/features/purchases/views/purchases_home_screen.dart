@@ -1,7 +1,7 @@
-/// محور البيع (تبويب /sell) — البوابة اليومية للكاشير: بطاقة بطلة بمبيعات
-/// اليوم وصافي الصندوق (DashboardRepository بعملة الأساس) + بطاقتا وصول
-/// كبيرتان («فاتورة بيع جديدة» و«عروض الأسعار») + آخر الفواتير للوصول
-/// السريع لقائمة فواتير المبيعات.
+/// محور المشتريات (مسار /purchases — المرحلة 5): بطاقة بطلة + إحصاءات
+/// مشتريات اليوم + بطاقة «فاتورة شراء جديدة» الكبيرة + بطاقات وصول
+/// (قائمة المشتريات / مرتجع بيع / مرتجع شراء / قائمة المشتريات) + آخر
+/// المشتريات للوصول السريع. مرآة محور البيع بالنمط والبنية.
 library;
 
 import 'dart:async';
@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../domain/models/sale.dart';
+import '../../../../domain/models/purchase.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -20,61 +20,54 @@ import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
-import '../view_models/sell_home_view_model.dart';
-import 'widgets/sell_widgets.dart';
+import '../view_models/purchases_home_view_model.dart';
+import 'widgets/purchase_widgets.dart';
 
-/// محور البيع داخل هيكل التبويبات (مسار `/sell`).
-class SellHomeScreen extends StatelessWidget {
-  const SellHomeScreen({super.key, this.viewModel});
-
-  /// Seam اختبار: نموذج محمّل مسبقاً — عند غيابه تُنشئ الشاشة نموذجها.
-  final SellHomeViewModel? viewModel;
+/// محور المشتريات — مسار علوي خارج هيكل التبويبات (نمط الأطراف).
+class PurchasesHomeScreen extends StatelessWidget {
+  const PurchasesHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppController>();
-    late final SellHomeViewModel vm;
-    if (viewModel != null) {
-      vm = viewModel!;
-    } else {
-      vm = SellHomeViewModel(
-        dashboardRepo: app.dashboard!,
-        saleRepo: app.sales!,
-      );
-      unawaited(vm.load());
-    }
-    return ChangeNotifierProvider<SellHomeViewModel>.value(
+    late final PurchasesHomeViewModel vm;
+    vm = PurchasesHomeViewModel(
+      purchaseRepo: app.purchases!,
+      companyRepo: app.companies!,
+    );
+    unawaited(vm.load());
+    return ChangeNotifierProvider<PurchasesHomeViewModel>.value(
       value: vm,
-      // تحديث حي عند تبديل التبويب/الرجوع: «مبيعات اليوم» تتغير بترحيل
-      // فاتورة من الكاشير والفرع يُستعاد من IndexedStack بلا rebuild
-      // (اكتُشف بالتحقق الحي 2026-10-07).
+      // تحديث حي عند العودة من الشراء/المرتجعات: إحصاءات اليوم وآخر
+      // المشتريات تتغير بترحيل PUR من أي شاشة (قاعدة §10).
       child: RefreshOnActive(
-        routePattern: RegExp(r'^/sell$'),
+        routePattern: RegExp(r'^/purchases$'),
         onActivate: vm.load,
-        child: const _SellHomeBody(),
+        child: const _PurchasesHomeBody(),
       ),
     );
   }
 }
 
-class _SellHomeBody extends StatelessWidget {
-  const _SellHomeBody();
+class _PurchasesHomeBody extends StatelessWidget {
+  const _PurchasesHomeBody();
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<SellHomeViewModel>();
+    final vm = context.watch<PurchasesHomeViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.sellHomeTitle),
+        leading: BackButton(onPressed: () => context.go('/sell')),
+        title: Text(l10n.purHomeTitle),
         actions: [
           IconButton(
-            tooltip: l10n.sellInvoicesTitle,
+            tooltip: l10n.purInvoicesTitle,
             icon: const Icon(Icons.receipt_long_rounded),
-            onPressed: () => context.go('/sell/invoices'),
+            onPressed: () => context.go('/purchases/invoices'),
           ),
         ],
       ),
@@ -97,16 +90,14 @@ class _SellHomeBody extends StatelessWidget {
           else ...[
             const _TodayStatsRow(),
             const SizedBox(height: 16),
-            const _NewSaleCard(),
+            const _NewPurchaseCard(),
             const SizedBox(height: 12),
-            const _SecondaryAccessRow(),
+            const _AccessRowOne(),
             const SizedBox(height: 12),
-            // بوابة المشتريات والمرتجعات (المرحلة 5) — من محور البيع
-            // إلى وحدة /purchases الكاملة (شراء/مرتجع بيع وشراء).
-            const _PurchasesAccessRow(),
-            if (state.recentInvoices.isNotEmpty) ...[
+            const _AccessRowTwo(),
+            if (state.recent.isNotEmpty) ...[
               const SizedBox(height: 20),
-              _RecentInvoicesCard(invoices: state.recentInvoices),
+              _RecentPurchasesCard(purchases: state.recent),
             ],
           ],
         ],
@@ -115,7 +106,7 @@ class _SellHomeBody extends StatelessWidget {
   }
 }
 
-/// البطاقة البطلة — دعوة يومية سريعة للكاشير بلمسة ذهبية.
+/// البطاقة البطلة — دعوة يومية لفواتير الشراء بلون الهوية.
 class _HeroCard extends StatelessWidget {
   const _HeroCard();
 
@@ -145,7 +136,7 @@ class _HeroCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
             ),
             child: Icon(
-              Icons.point_of_sale_rounded,
+              Icons.local_shipping_rounded,
               color: scheme.onPrimary,
               size: 26,
             ),
@@ -156,13 +147,13 @@ class _HeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.sellHomeHeroTitle,
+                  l10n.purHomeHeroTitle,
                   style: Theme.of(context).textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${sellFormatDate(now)} · ${sellFormatTime(now)}',
+                  '${purFormatDate(now)} · ${purFormatTime(now)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontFeatures: FinText.tabularNums,
@@ -177,38 +168,36 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-/// بلاطات اليوم — المبيعات والصافي (بعملة الأساس — total_base).
+/// بلاطات اليوم — عدد فواتير الشراء + قيمتها بعملة الأساس (فواتير
+/// العملة الأساسية حصراً — فصل العملات 5.4-7).
 class _TodayStatsRow extends StatelessWidget {
   const _TodayStatsRow();
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<SellHomeViewModel>();
+    final vm = context.watch<PurchasesHomeViewModel>();
     final l10n = AppLocalizations.of(context)!;
-    final stats = vm.state.stats;
+    final stats = vm.state;
     return Row(
       children: [
         Expanded(
           child: StatTile(
-            label: l10n.sellHomeTodaySales,
-            value: stats?.sales ?? 0,
-            icon: Icons.trending_up_rounded,
-            sign: FinSign.incoming,
-            decimals: 2,
-            onTap: () => context.go('/sell/invoices'),
+            label: l10n.purHomeTodayCount,
+            value: stats.todayCount.toDouble(),
+            icon: Icons.receipt_long_rounded,
+            isCount: true,
+            onTap: () => context.go('/purchases/invoices'),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: StatTile(
-            label: l10n.sellHomeTodayCash,
-            value: stats?.netCash ?? 0,
-            icon: Icons.account_balance_wallet_rounded,
-            sign: stats != null && stats.netCash < 0
-                ? FinSign.outgoing
-                : FinSign.neutral,
+            label: l10n.purHomeTodayTotal,
+            value: stats.todayTotalBase,
+            icon: Icons.local_shipping_rounded,
+            sign: FinSign.outgoing,
             decimals: 2,
-            onTap: () => context.go('/sell/invoices'),
+            onTap: () => context.go('/purchases/invoices'),
           ),
         ),
       ],
@@ -216,9 +205,9 @@ class _TodayStatsRow extends StatelessWidget {
   }
 }
 
-/// بطاقة «فاتورة بيع جديدة» — أهم فعل يومي، بحركة دخول.
-class _NewSaleCard extends StatelessWidget {
-  const _NewSaleCard();
+/// بطاقة «فاتورة شراء جديدة» — أهم فعل في الوحدة، بحركة دخول.
+class _NewPurchaseCard extends StatelessWidget {
+  const _NewPurchaseCard();
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +229,8 @@ class _NewSaleCard extends StatelessWidget {
       child: FinCard(
         padding: EdgeInsets.zero,
         child: InkWell(
-          onTap: () => context.go('/sell/new'),
+          key: const Key('pur_new_purchase_card'),
+          onTap: () => context.go('/purchases/new'),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.all(18),
@@ -275,7 +265,7 @@ class _NewSaleCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.sellHomeNewInvoice,
+                        l10n.purHomeNewInvoice,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: scheme.onPrimary,
                           fontWeight: FontWeight.w800,
@@ -283,10 +273,12 @@ class _NewSaleCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        l10n.sellHomeNewInvoiceHint,
+                        l10n.purHomeNewInvoiceHint,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: scheme.onPrimary.withValues(alpha: 0.85),
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -305,9 +297,9 @@ class _NewSaleCard extends StatelessWidget {
   }
 }
 
-/// بطاقتا الوصول الثانوية — عروض الأسعار + فواتير المبيعات.
-class _SecondaryAccessRow extends StatelessWidget {
-  const _SecondaryAccessRow();
+/// صف الوصول الأول — قائمة المشتريات + مرتجع البيع (SRN).
+class _AccessRowOne extends StatelessWidget {
+  const _AccessRowOne();
 
   @override
   Widget build(BuildContext context) {
@@ -316,48 +308,13 @@ class _SecondaryAccessRow extends StatelessWidget {
     final colors = FinColors.of(context);
     return Row(
       children: [
-        Expanded(
-          child: _AccessCard(
-            icon: Icons.request_quote_rounded,
-            title: l10n.sellQuotationsTitle,
-            subtitle: l10n.sellQuotationsSubtitle,
-            color: colors.gold,
-            onTap: () => context.go('/sell/quotations'),
-          ),
-        ),
-        const SizedBox(width: 12),
         Expanded(
           child: _AccessCard(
             icon: Icons.receipt_long_rounded,
-            title: l10n.sellInvoicesTitle,
-            subtitle: l10n.sellInvoicesSubtitle,
+            title: l10n.purInvoicesTitle,
+            subtitle: l10n.purInvoicesSubtitle,
             color: scheme.tertiary,
-            onTap: () => context.go('/sell/invoices'),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// صف الوصول للمشتريات والمرتجعات — بوابة الوحدة الخامسة (/purchases).
-class _PurchasesAccessRow extends StatelessWidget {
-  const _PurchasesAccessRow();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: _AccessCard(
-            icon: Icons.local_shipping_rounded,
-            title: l10n.purHomeTitle,
-            subtitle: l10n.purHubSubtitle,
-            color: scheme.primary,
-            onTap: () => context.go('/purchases'),
+            onTap: () => context.go('/purchases/invoices'),
           ),
         ),
         const SizedBox(width: 12),
@@ -368,6 +325,30 @@ class _PurchasesAccessRow extends StatelessWidget {
             subtitle: l10n.retSaleSubtitle,
             color: colors.gold,
             onTap: () => context.go('/purchases/returns/sale'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// صف الوصول الثاني — مرتجع الشراء (PRN).
+class _AccessRowTwo extends StatelessWidget {
+  const _AccessRowTwo();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: _AccessCard(
+            icon: Icons.assignment_return_rounded,
+            title: l10n.retPurchaseTitle,
+            subtitle: l10n.retPurchaseSubtitle,
+            color: scheme.primary,
+            onTap: () => context.go('/purchases/returns/purchase'),
           ),
         ),
       ],
@@ -433,11 +414,11 @@ class _AccessCard extends StatelessWidget {
   }
 }
 
-/// آخر الفواتير — وصول سريع لقائمة فواتير المبيعات.
-class _RecentInvoicesCard extends StatelessWidget {
-  const _RecentInvoicesCard({required this.invoices});
+/// آخر المشتريات — وصول سريع لقائمة فواتير الشراء.
+class _RecentPurchasesCard extends StatelessWidget {
+  const _RecentPurchasesCard({required this.purchases});
 
-  final List<SaleInvoiceSummary> invoices;
+  final List<PurchaseInvoiceSummary> purchases;
 
   @override
   Widget build(BuildContext context) {
@@ -451,18 +432,18 @@ class _RecentInvoicesCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  l10n.sellHomeRecentInvoices,
+                  l10n.purHomeRecent,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
               TextButton(
-                onPressed: () => context.go('/sell/invoices'),
+                onPressed: () => context.go('/purchases/invoices'),
                 child: Text(l10n.commonViewAll),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          for (final invoice in invoices.take(3))
+          for (final purchase in purchases.take(3))
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
@@ -472,7 +453,7 @@ class _RecentInvoicesCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          invoice.invoiceNo,
+                          purchase.invoiceNo,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w800,
@@ -480,7 +461,7 @@ class _RecentInvoicesCard extends StatelessWidget {
                               ),
                         ),
                         Text(
-                          invoice.customerName ?? l10n.sellCashCustomer,
+                          purchase.supplierName ?? l10n.purSupplierRequired,
                           style: Theme.of(context).textTheme.labelSmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -489,7 +470,7 @@ class _RecentInvoicesCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  PayStatusChip(method: invoice.payStatus),
+                  PurchasePayStatusChip(method: purchase.payStatus),
                 ],
               ),
             ),

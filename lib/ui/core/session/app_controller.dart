@@ -18,7 +18,9 @@ import '../../../data/repositories/customer_repository.dart';
 import '../../../data/repositories/dashboard_repository.dart';
 import '../../../data/repositories/exchange_rate_repository.dart';
 import '../../../data/repositories/item_repository.dart';
+import '../../../data/repositories/purchase_repository.dart';
 import '../../../data/repositories/quotation_repository.dart';
+import '../../../data/repositories/return_repository.dart';
 import '../../../data/repositories/sale_repository.dart';
 import '../../../data/repositories/settings_repository.dart';
 import '../../../data/repositories/supplier_repository.dart';
@@ -65,6 +67,8 @@ class AppController extends ChangeNotifier {
   ExchangeRateRepository? _fxRepo;
   SaleRepository? _saleRepo;
   QuotationRepository? _quotationRepo;
+  PurchaseRepository? _purchaseRepo;
+  ReturnRepository? _returnRepo;
   Company? _company;
 
   DateTime _lastActivity = DateTime.now();
@@ -120,6 +124,12 @@ class AppController extends ChangeNotifier {
   /// مستودع عروض الأسعار وتحويلها (المرحلة 4 — FR-02).
   QuotationRepository? get quotations => _quotationRepo;
 
+  /// مستودع المشتريات (المرحلة 5 — FR-02-08: PUR + WAC + الدفعات الواردة).
+  PurchaseRepository? get purchases => _purchaseRepo;
+
+  /// مستودع المرتجعات المرتبطة (المرحلة 5 — FR-02-07/08: SRN وPRN).
+  ReturnRepository? get returns => _returnRepo;
+
   /// المنشأة الحالية (بعد التأسيس).
   Company? get company => _company;
 
@@ -166,6 +176,8 @@ class AppController extends ChangeNotifier {
     _fxRepo = ExchangeRateRepository(db.db);
     _saleRepo = SaleRepository(db.db);
     _quotationRepo = QuotationRepository(db.db);
+    _purchaseRepo = PurchaseRepository(db.db);
+    _returnRepo = ReturnRepository(db.db);
   }
 
   Future<void> _decidePhase() async {
@@ -319,6 +331,10 @@ class AppController extends ChangeNotifier {
     _settingsRepo = null;
     _dashboardRepo = null;
     _auditRepo = null;
+    _saleRepo = null;
+    _quotationRepo = null;
+    _purchaseRepo = null;
+    _returnRepo = null;
     _db = null;
     if (db != null) {
       await db.close();
