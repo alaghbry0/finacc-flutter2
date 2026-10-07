@@ -24,7 +24,6 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../data/repositories/return_repository.dart';
 import '../../../../domain/core/result.dart';
-import '../../../../domain/models/purchase.dart';
 import '../../../../domain/services/purchase_pricing.dart';
 
 /// نوع المرتجع — يحدد المصدر والمسودة والتسميات.

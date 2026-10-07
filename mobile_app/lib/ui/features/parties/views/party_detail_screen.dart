@@ -21,6 +21,9 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../../printing/services/statement_pdf_builder.dart';
+import '../../printing/statement_print_doc.dart';
+import '../../printing/views/pdf_preview_dialog.dart';
 import '../view_models/party_detail_view_model.dart';
 import '../view_models/party_kind.dart';
 import '../view_models/party_lookup.dart';
@@ -116,6 +119,18 @@ class _PartyDetailBody extends StatelessWidget {
       appBar: AppBar(
         title: Text(record?.name ?? ''),
         actions: [
+          // طباعة/مشاركة كشف الحساب PDF (الشريحة 7 — مستند #3) — متاح
+          // فور اكتمال الكشف المعروض (بعملته وفترته كما اختيرا أعلاه).
+          IconButton(
+            tooltip: l10n.printingPdfTooltip,
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            onPressed:
+                record == null ||
+                    state.statement == null ||
+                    state.loadingStatement
+                ? null
+                : () => _openStatementPdf(context, state),
+          ),
           // تعديل الطرف — يفتح النموذج بنفس المعرّف (مسار :id/edit).
           IconButton(
             tooltip: l10n.partyDetailEditAction,
@@ -984,4 +999,43 @@ class _StatementEntryRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// ─────────────────────────────────────────────────────────────────────
+/// طباعة كشف الحساب PDF (الشريحة 7 — مستند #3) — إسقاط + معاينة
+/// ─────────────────────────────────────────────────────────────────────
+
+/// يفتح نافذة معاينة طباعة كشف حساب الطرف — القيم كلها تُلتقط قبل أي
+/// await (لا سياق عبر فجوة غير متزامنة). يطبع الكشف **كما هو معروض**:
+/// بعملته المحددة وفترته المختارة (افتراضياً من أول حركة حتى اليوم)،
+/// والرصيد الافتتاحي/«رصيد ماضٍ» يظهر كأول سطر داخل الجدول كما في
+/// الشاشة. واتساب = واتساب المنشأة وإلا واتساب الطرف فهاتفه، ورسالة
+/// المشاركة تحمل اسم الطرف ورصيده الختامي.
+void _openStatementPdf(BuildContext context, PartyDetailState state) {
+  final l10n = AppLocalizations.of(context)!;
+  final company = context.read<AppController>().company;
+  final record = state.record!;
+  final statement = state.statement!;
+  final doc = buildStatementPrintDoc(
+    l10n: l10n,
+    statement: statement,
+    partyName: record.name,
+    partyPhone: record.phone,
+    company: company,
+    decimals: state.statementDecimals,
+    from: state.from,
+    to: state.to,
+  );
+  unawaited(
+    showPdfPreviewDialog(
+      context,
+      title: '${l10n.printingStatementDocTitle} - ${record.name}',
+      build: () => const StatementPdfBuilder().build(doc),
+      whatsappPhone: company?.whatsapp ?? record.whatsapp ?? record.phone,
+      shareMessage: l10n.printingShareMessageStatement(
+        record.name,
+        AmountText.format(statement.finalBalance, state.statementDecimals),
+      ),
+    ),
+  );
 }
