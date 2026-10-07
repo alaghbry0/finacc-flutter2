@@ -40,12 +40,21 @@ class AuditEvent {
   final String? userName;
 
   /// التصنيف العرضي المشتق من رمز الحدث.
+  ///
+  /// أحداث الأصناف (المرحلة 2): `item_create` / `item_update` /
+  /// `item_archive` / `items_import` — تُدرج صراحة تحت «أخرى» الآن؛
+  /// ترقيتها إلى تصنيف مستقل (مخزون) مؤجلة حتى فتح ملفات الواجهة
+  /// (switchات مكتملة هناك على قيم التعداد تمنع إضافة قيمة جديدة).
   AuditCategory get category => switch (action) {
     'app_setup' => AuditCategory.setup,
     'pin_change' ||
     'pin_lockout_delay' ||
     'pin_lockout_passphrase' => AuditCategory.security,
     'settings_change' => AuditCategory.settings,
+    'item_create' ||
+    'item_update' ||
+    'item_archive' ||
+    'items_import' => AuditCategory.other,
     _ => AuditCategory.other,
   };
 

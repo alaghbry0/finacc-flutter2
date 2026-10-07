@@ -152,6 +152,48 @@ class CompanyRepository {
       );
     });
   }
+
+  /// معرّف المخزن الافتراضي (أنشأه التأسيس — FR-13-01).
+  ///
+  /// واجهات V1 تشغّل مستودعاً واحداً فاعلياً؛ هذه القراءة هي المدخل
+  /// الموحّد له (بنية تعدد المخازن باقية في البيانات لـ V1.1).
+  Future<int?> findDefaultWarehouseId() async {
+    final rows = await _db.query(
+      'warehouse',
+      columns: ['id'],
+      where: 'is_default = 1 AND is_archived = 0',
+      orderBy: 'id ASC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as int;
+  }
+
+  /// معرّف الصندوق الافتراضي (أنشأه التأسيس بالعملة الأساسية).
+  Future<int?> findDefaultCashboxId() async {
+    final rows = await _db.query(
+      'cashbox',
+      columns: ['id'],
+      where: 'is_default = 1 AND is_archived = 0',
+      orderBy: 'id ASC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as int;
+  }
+
+  /// مستخدم المدير الوحيد (V1 — FR-12-01) لربط قيود التدقيق بالمنفّذ.
+  Future<int?> findAdminUserId() async {
+    final rows = await _db.query(
+      'app_user',
+      columns: ['id'],
+      where: "role = 'admin' AND is_active = 1",
+      orderBy: 'id ASC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as int;
+  }
 }
 
 String _dateOnly(DateTime d) =>

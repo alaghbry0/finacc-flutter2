@@ -1,0 +1,821 @@
+     1→/// سجل حركات الصندوق (FR-04-08) — مسار `/cash/movements?box={id}`:
+     2→/// مرشحات (صندوق/نوع/فترة/بحث نصي) تحفظ قيمها عند إعادة التحميل +
+     3→/// صفوف بأيقونة نوع ومبلغ موقّع ملون (وارد أخضر/صادر أحمر) + رقم السند
+     4→/// إن وُجد + فتح تفاصيل (مع التخصيصات) + **إبطال بتأكيد خطير** (حركة
+     5→/// معاكسة لا حذف). الجسم مغلّف بـ RefreshOnActive بنمط `^/cash/movements$`.
+     6→library;
+     7→
+     8→import 'dart:async';
+     9→
+    10→import 'package:flutter/material.dart';
+    11→import 'package:go_router/go_router.dart';
+    12→import 'package:provider/provider.dart';
+    13→
+    14→import '../../../../domain/models/cash.dart';
+    15→import '../../../../l10n/app_localizations.dart';
+    16→import '../../../core/session/app_controller.dart';
+    17→import '../../../core/theme/app_colors.dart';
+    18→import '../../../core/theme/app_typography.dart';
+    19→import '../../../core/widgets/amount_text.dart';
+    20→import '../../../core/widgets/empty_state.dart';
+    21→import '../../../core/widgets/error_state.dart';
+    22→import '../../../core/widgets/fin_card.dart';
+    23→import '../../../core/widgets/loading_state.dart';
+    24→import '../../../core/widgets/refresh_on_active.dart';
+    25→import '../view_models/movements_view_model.dart';
+    26→import 'widgets/cash_widgets.dart';
+    27→
+    28→/// سجل الحركات — [initialBoxId] من `?box=` (نقر بطاقة صندوق في المحور).
+    29→class MovementsScreen extends StatefulWidget {
+    30→  const MovementsScreen({super.key, this.initialBoxId});
+    31→
+    32→  final int? initialBoxId;
+    33→
+    34→  @override
+    35→  State<MovementsScreen> createState() => _MovementsScreenState();
+    36→}
+    37→
+    38→class _MovementsScreenState extends State<MovementsScreen> {
+    39→  MovementsViewModel? _vm;
+    40→  List<CashboxWithBalance> _boxes = const <CashboxWithBalance>[];
+    41→  Object? _boxesError;
+    42→
+    43→  @override
+    44→  void initState() {
+    45→    super.initState();
+    46→    final app = context.read<AppController>();
+    47→    final vm = MovementsViewModel(
+    48→      cashRepo: app.cash!,
+    49→      companyRepo: app.companies!,
+    50→    );
+    51→    _vm = vm;
+    52→    if (widget.initialBoxId != null) {
+    53→      vm.setBoxFilter(widget.initialBoxId);
+    54→    }
+    55→    unawaited(vm.load());
+    56→    // قائمة الصناديق لمرشح الصندوق — تحميل مساعد في الشاشة (النموذج
+    57→    // يكشف setBoxFilter فقط) عبر مستودع AppController؛ موثق في سجل
+    58→    // العمل 12.
+    59→    unawaited(_loadBoxes(app));
+    60→  }
+    61→
+    62→  Future<void> _loadBoxes(AppController app) async {
+    63→    try {
+    64→      final boxes = await app.cash!.listBoxes();
+    65→      if (!mounted) return;
+    66→      setState(() {
+    67→        _boxes = boxes;
+    68→        _boxesError = null;
+    69→      });
+    70→    } catch (error) {
+    71→      if (!mounted) return;
+    72→      setState(() => _boxesError = error);
+    73→    }
+    74→  }
+    75→
+    76→  @override
+    77→  Widget build(BuildContext context) {
+    78→    final vm = _vm;
+    79→    if (vm == null) {
+    80→      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    81→    }
+    82→    return ChangeNotifierProvider<MovementsViewModel>.value(
+    83→      value: vm,
+    84→      // تحديث حي عند تبديل التبويب/الرجوع (درس §10) — المرشحات محفوظة
+    85→      // في النموذج فتُطبَّق عند إعادة التحميل.
+    86→      child: RefreshOnActive(
+    87→        routePattern: RegExp(r'^/cash/movements$'),
+    88→        onActivate: vm.load,
+    89→        child: _MovementsBody(boxes: _boxes, boxesError: _boxesError),
+    90→      ),
+    91→    );
+    92→  }
+    93→}
+    94→
+    95→class _MovementsBody extends StatefulWidget {
+    96→  const _MovementsBody({required this.boxes, required this.boxesError});
+    97→
+    98→  final List<CashboxWithBalance> boxes;
+    99→  final Object? boxesError;
+   100→
+   101→  @override
+   102→  State<_MovementsBody> createState() => _MovementsBodyState();
+   103→}
+   104→
+   105→class _MovementsBodyState extends State<_MovementsBody> {
+   106→  final TextEditingController _searchController = TextEditingController();
+   107→  Timer? _debounce;
+   108→
+   109→  @override
+   110→  void dispose() {
+   111→    _debounce?.cancel();
+   112→    _searchController.dispose();
+   113→    super.dispose();
+   114→  }
+   115→
+   116→  void _onSearchChanged(String value) {
+   117→    final vm = context.read<MovementsViewModel>();
+   118→    vm.onSearchChanged(value);
+   119→    _debounce?.cancel();
+   120→    _debounce = Timer(const Duration(milliseconds: 400), () {
+   121→      unawaited(vm.load());
+   122→    });
+   123→  }
+   124→
+   125→  @override
+   126→  Widget build(BuildContext context) {
+   127→    final vm = context.watch<MovementsViewModel>();
+   128→    final l10n = AppLocalizations.of(context)!;
+   129→
+   130→    return Scaffold(
+   131→      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+   132→      appBar: AppBar(
+   133→        leading: BackButton(onPressed: () => context.go('/cash')),
+   134→        title: Text(l10n.cashMovementsTitle),
+   135→      ),
+   136→      body: Column(
+   137→        children: [
+   138→          Padding(
+   139→            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+   140→            child: TextField(
+   141→              controller: _searchController,
+   142→              onChanged: _onSearchChanged,
+   143→              textInputAction: TextInputAction.search,
+   144→              decoration: InputDecoration(
+   145→                hintText: l10n.cashMovementsSearchHint,
+   146→                prefixIcon: const Icon(Icons.search_rounded),
+   147→                suffixIcon: _searchController.text.isEmpty
+   148→                    ? null
+   149→                    : IconButton(
+   150→                        icon: const Icon(Icons.close_rounded, size: 20),
+   151→                        onPressed: () {
+   152→                          _searchController.clear();
+   153→                          final vm = context.read<MovementsViewModel>();
+   154→                          vm.onSearchChanged('');
+   155→                          unawaited(vm.load());
+   156→                        },
+   157→                      ),
+   158→              ),
+   159→            ),
+   160→          ),
+   161→          const SizedBox(height: 10),
+   162→          Padding(
+   163→            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+   164→            child: Row(
+   165→              children: [
+   166→                Expanded(child: _buildBoxFilter(context, vm)),
+   167→                const SizedBox(width: 10),
+   168→                Expanded(child: _buildTypeFilter(context, vm)),
+   169→              ],
+   170→            ),
+   171→          ),
+   172→          const SizedBox(height: 10),
+   173→          Padding(
+   174→            padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+   175→            child: SizedBox(
+   176→              width: double.infinity,
+   177→              child: SegmentedButton<CashPeriodFilter>(
+   178→                segments: [
+   179→                  ButtonSegment(
+   180→                    value: CashPeriodFilter.all,
+   181→                    label: Text(l10n.cashMovementsPeriodAll),
+   182→                  ),
+   183→                  ButtonSegment(
+   184→                    value: CashPeriodFilter.today,
+   185→                    label: Text(l10n.cashMovementsPeriodToday),
+   186→                  ),
+   187→                  ButtonSegment(
+   188→                    value: CashPeriodFilter.week,
+   189→                    label: Text(l10n.cashMovementsPeriodWeek),
+   190→                  ),
+   191→                  ButtonSegment(
+   192→                    value: CashPeriodFilter.month,
+   193→                    label: Text(l10n.cashMovementsPeriodMonth),
+   194→                  ),
+   195→                ],
+   196→                selected: {vm.period},
+   197→                showSelectedIcon: false,
+   198→                onSelectionChanged: (selection) {
+   199→                  vm.setPeriod(selection.first);
+   200→                  unawaited(vm.load());
+   201→                },
+   202→              ),
+   203→            ),
+   204→          ),
+   205→          const SizedBox(height: 8),
+   206→          Expanded(child: _buildContent(context, vm)),
+   207→        ],
+   208→      ),
+   209→    );
+   210→  }
+   211→
+   212→  Widget _buildBoxFilter(BuildContext context, MovementsViewModel vm) {
+   213→    final l10n = AppLocalizations.of(context)!;
+   214→    if (widget.boxesError != null) {
+   215→      return TextFormField(
+   216→        enabled: false,
+   217→        decoration: InputDecoration(
+   218→          labelText: l10n.cashMovementsAllBoxes,
+   219→          prefixIcon: const Icon(Icons.account_balance_wallet_rounded),
+   220→        ),
+   221→      );
+   222→    }
+   223→    return DropdownButtonFormField<int?>(
+   224→      initialValue: vm.boxFilter,
+   225→      onChanged: (boxId) {
+   226→        vm.setBoxFilter(boxId);
+   227→        unawaited(vm.load());
+   228→      },
+   229→      decoration: InputDecoration(
+   230→        labelText: l10n.cashMovementsAllBoxes,
+   231→        prefixIcon: const Icon(Icons.account_balance_wallet_rounded),
+   232→      ),
+   233→      items: [
+   234→        DropdownMenuItem<int?>(
+   235→          value: null,
+   236→          child: Text(l10n.cashMovementsAllBoxes),
+   237→        ),
+   238→        for (final box in widget.boxes)
+   239→          DropdownMenuItem<int?>(
+   240→            value: box.box.id,
+   241→            child: Text(
+   242→              '${box.box.name} · ${box.box.currencyCode}',
+   243→              maxLines: 1,
+   244→              overflow: TextOverflow.ellipsis,
+   245→            ),
+   246→          ),
+   247→      ],
+   248→    );
+   249→  }
+   250→
+   251→  Widget _buildTypeFilter(BuildContext context, MovementsViewModel vm) {
+   252→    final l10n = AppLocalizations.of(context)!;
+   253→    return DropdownButtonFormField<String?>(
+   254→      initialValue: vm.typeFilter,
+   255→      onChanged: (type) {
+   256→        vm.setTypeFilter(type);
+   257→        unawaited(vm.load());
+   258→      },
+   259→      decoration: InputDecoration(
+   260→        labelText: l10n.cashMovementsAllTypes,
+   261→        prefixIcon: const Icon(Icons.filter_alt_rounded),
+   262→      ),
+   263→      items: [
+   264→        DropdownMenuItem<String?>(
+   265→          value: null,
+   266→          child: Text(l10n.cashMovementsAllTypes),
+   267→        ),
+   268→        for (final type in CashTxType.values)
+   269→          DropdownMenuItem<String?>(
+   270→            value: type.code,
+   271→            child: Text(cashTxLabel(l10n, type)),
+   272→          ),
+   273→      ],
+   274→    );
+   275→  }
+   276→
+   277→  Widget _buildContent(BuildContext context, MovementsViewModel vm) {
+   278→    final l10n = AppLocalizations.of(context)!;
+   279→    final state = vm.state;
+   280→    if (state.loading) {
+   281→      return ListView(
+   282→        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+   283→        children: const [ListSkeleton(rows: 7)],
+   284→      );
+   285→    }
+   286→    if (state.error != null) {
+   287→      return ListView(
+   288→        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+   289→        children: [
+   290→          ErrorState(
+   291→            title: l10n.genericErrorTitle,
+   292→            message: l10n.dbOpenErrorMessage,
+   293→            technicalDetails: state.error.toString(),
+   294→            retryLabel: l10n.commonRetry,
+   295→            onRetry: vm.load,
+   296→            compact: true,
+   297→          ),
+   298→        ],
+   299→      );
+   300→    }
+   301→    final filtered =
+   302→        vm.search.trim().isNotEmpty ||
+   303→        vm.boxFilter != null ||
+   304→        vm.typeFilter != null ||
+   305→        vm.period != CashPeriodFilter.all;
+   306→    if (state.movements.isEmpty) {
+   307→      return ListView(
+   308→        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+   309→        children: [
+   310→          EmptyState(
+   311→            icon: Icons.receipt_long_rounded,
+   312→            title: filtered
+   313→                ? l10n.cashMovementsNoResultsTitle
+   314→                : l10n.cashMovementsEmptyTitle,
+   315→            message: filtered
+   316→                ? l10n.cashMovementsNoResultsBody
+   317→                : l10n.cashMovementsEmptyBody,
+   318→            compact: true,
+   319→          ),
+   320→        ],
+   321→      );
+   322→    }
+   323→    return ListView.builder(
+   324→      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+   325→      itemCount: state.movements.length,
+   326→      itemBuilder: (context, index) {
+   327→        final movement = state.movements[index];
+   328→        return Padding(
+   329→          padding: const EdgeInsets.only(bottom: 10),
+   330→          child: FinCard(
+   331→            padding: const EdgeInsets.all(12),
+   332→            onTap: () => unawaited(
+   333→              showMovementDetailSheet(context, vm: vm, movementId: movement.id),
+   334→            ),
+   335→            child: CashMovementTile(
+   336→              movement: movement,
+   337→              dimmed: movement.isVoided,
+   338→            ),
+   339→          ),
+   340→        );
+   341→      },
+   342→    );
+   343→  }
+   344→}
+   345→
+   346→/// ─────────────────────────────────────────────────────────────────────
+   347→/// نافذة تفاصيل الحركة + الإبطال (FR-04-08 — معاكسة لا حذف)
+   348→/// ─────────────────────────────────────────────────────────────────────
+   349→
+   350→/// يفتح نافذة التفاصيل؛ بعد إغلاقها يُعاد تحميل السجل إن تغيّر (الإبطال
+   351→/// يعيد التحميل من النموذج أصلاً — هذا للأمان العام).
+   352→Future<void> showMovementDetailSheet(
+   353→  BuildContext context, {
+   354→  required MovementsViewModel vm,
+   355→  required int movementId,
+   356→}) async {
+   357→  await showModalBottomSheet<void>(
+   358→    context: context,
+   359→    isScrollControlled: true,
+   360→    useSafeArea: true,
+   361→    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
+   362→    useRootNavigator: false,
+   363→    builder: (_) => _MovementDetailSheet(vm: vm, movementId: movementId),
+   364→  );
+   365→}
+   366→
+   367→class _MovementDetailSheet extends StatefulWidget {
+   368→  const _MovementDetailSheet({required this.vm, required this.movementId});
+   369→
+   370→  final MovementsViewModel vm;
+   371→  final int movementId;
+   372→
+   373→  @override
+   374→  State<_MovementDetailSheet> createState() => _MovementDetailSheetState();
+   375→}
+   376→
+   377→class _MovementDetailSheetState extends State<_MovementDetailSheet> {
+   378→  CashMovementDetail? _detail;
+   379→  bool _loading = true;
+   380→  Object? _error;
+   381→
+   382→  @override
+   383→  void initState() {
+   384→    super.initState();
+   385→    unawaited(_load());
+   386→  }
+   387→
+   388→  Future<void> _load() async {
+   389→    try {
+   390→      final detail = await widget.vm.movementDetail(widget.movementId);
+   391→      if (!mounted) return;
+   392→      setState(() {
+   393→        _detail = detail;
+   394→        _loading = false;
+   395→        _error = null;
+   396→      });
+   397→    } catch (error) {
+   398→      if (!mounted) return;
+   399→      setState(() {
+   400→        _loading = false;
+   401→        _error = error;
+   402→      });
+   403→    }
+   404→  }
+   405→
+   406→  Future<void> _confirmVoid(CashMovementRow movement) async {
+   407→    final l10n = AppLocalizations.of(context)!;
+   408→    final reasonController = TextEditingController();
+   409→    final confirmed = await showDialog<bool>(
+   410→      context: context,
+   411→      builder: (dialogContext) => AlertDialog(
+   412→        title: Text(l10n.cashMovementVoidTitle),
+   413→        content: Column(
+   414→          mainAxisSize: MainAxisSize.min,
+   415→          crossAxisAlignment: CrossAxisAlignment.stretch,
+   416→          children: [
+   417→            Text(l10n.cashMovementVoidBody),
+   418→            const SizedBox(height: 12),
+   419→            TextField(
+   420→              controller: reasonController,
+   421→              maxLines: 2,
+   422→              maxLength: 120,
+   423→              decoration: InputDecoration(
+   424→                labelText: l10n.cashMovementVoidReasonLabel,
+   425→              ),
+   426→            ),
+   427→          ],
+   428→        ),
+   429→        actions: [
+   430→          TextButton(
+   431→            onPressed: () => Navigator.of(dialogContext).pop(false),
+   432→            child: Text(l10n.commonCancel),
+   433→          ),
+   434→          FilledButton(
+   435→            style: FilledButton.styleFrom(
+   436→              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+   437→              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+   438→            ),
+   439→            onPressed: () => Navigator.of(dialogContext).pop(true),
+   440→            child: Text(l10n.cashMovementVoidConfirm),
+   441→          ),
+   442→        ],
+   443→      ),
+   444→    );
+   445→    if (confirmed ?? false) {
+   446→      final result = await widget.vm.voidMovement(
+   447→        movement.id,
+   448→        reason: reasonController.text.trim().isEmpty
+   449→            ? null
+   450→            : reasonController.text.trim(),
+   451→      );
+   452→      reasonController.dispose();
+   453→      if (!mounted) return;
+   454→      final messenger = ScaffoldMessenger.of(context);
+   455→      if (result.isOk) {
+   456→        messenger
+   457→          ..hideCurrentSnackBar()
+   458→          ..showSnackBar(
+   459→            SnackBar(content: Text(l10n.cashMovementVoidedSnackBar)),
+   460→          );
+   461→        Navigator.of(context).pop();
+   462→      } else {
+   463→        // رفض المستودع برسالة عربية — تُعرض كما هي.
+   464→        messenger
+   465→          ..hideCurrentSnackBar()
+   466→          ..showSnackBar(
+   467→            SnackBar(
+   468→              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+   469→              content: Text(
+   470→                result.errorOrNull!,
+   471→                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+   472→                  color: Theme.of(context).colorScheme.onErrorContainer,
+   473→                ),
+   474→              ),
+   475→            ),
+   476→          );
+   477→      }
+   478→    } else {
+   479→      reasonController.dispose();
+   480→    }
+   481→  }
+   482→
+   483→  @override
+   484→  Widget build(BuildContext context) {
+   485→    final l10n = AppLocalizations.of(context)!;
+   486→    final scheme = Theme.of(context).colorScheme;
+   487→    final colors = FinColors.of(context);
+   488→
+   489→    return Padding(
+   490→      padding: EdgeInsets.only(
+   491→        bottom: MediaQuery.of(context).viewInsets.bottom,
+   492→      ),
+   493→      child: SingleChildScrollView(
+   494→        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+   495→        child: Column(
+   496→          mainAxisSize: MainAxisSize.min,
+   497→          crossAxisAlignment: CrossAxisAlignment.stretch,
+   498→          children: [
+   499→            const CashSheetDragHandle(),
+   500→            const SizedBox(height: 14),
+   501→            Text(
+   502→              l10n.cashMovementDetailTitle,
+   503→              style: Theme.of(context).textTheme.titleLarge,
+   504→            ),
+   505→            const SizedBox(height: 12),
+   506→            if (_loading)
+   507→              const Padding(
+   508→                padding: EdgeInsets.all(24),
+   509→                child: Center(
+   510→                  child: CircularProgressIndicator(strokeWidth: 2.4),
+   511→                ),
+   512→              )
+   513→            else if (_error != null)
+   514→              ErrorState(
+   515→                title: l10n.genericErrorTitle,
+   516→                message: l10n.dbOpenErrorMessage,
+   517→                technicalDetails: _error.toString(),
+   518→                retryLabel: l10n.commonRetry,
+   519→                onRetry: _load,
+   520→                compact: true,
+   521→              )
+   522→            else if (_detail == null)
+   523→              EmptyState(
+   524→                icon: Icons.search_off_rounded,
+   525→                title: l10n.cashMovementsNoResultsTitle,
+   526→                message: l10n.cashMovementsNoResultsBody,
+   527→                compact: true,
+   528→              )
+   529→            else ...[
+   530→              FinCard(
+   531→                padding: const EdgeInsets.all(14),
+   532→                child: CashMovementTile(
+   533→                  movement: _detail!.movement,
+   534→                  dimmed: _detail!.movement.isVoided,
+   535→                ),
+   536→              ),
+   537→              const SizedBox(height: 12),
+   538→              FinCard(
+   539→                padding: const EdgeInsets.all(14),
+   540→                child: Column(
+   541→                  crossAxisAlignment: CrossAxisAlignment.stretch,
+   542→                  children: [
+   543→                    _DetailRow(
+   544→                      label: l10n.cashMovementFieldDate,
+   545→                      value: cashFormatDate(_detail!.movement.txDate),
+   546→                    ),
+   547→                    _DetailRow(
+   548→                      label: l10n.cashMovementFieldBox,
+   549→                      value:
+   550→                          '${_detail!.movement.cashboxName} '
+   551→                          '(${_detail!.movement.currencyCode})',
+   552→                    ),
+   553→                    if (_detail!.movement.toCashboxName != null)
+   554→                      _DetailRow(
+   555→                        label: l10n.cashMovementFieldTo,
+   556→                        value: _detail!.movement.toCashboxName!,
+   557→                      ),
+   558→                    if (_detail!.movement.voucherNo != null)
+   559→                      _DetailRow(
+   560→                        label: l10n.cashMovementFieldVoucher,
+   561→                        value: _detail!.movement.voucherNo!,
+   562→                      ),
+   563→                    if (_detail!.movement.customerName != null)
+   564→                      _DetailRow(
+   565→                        label: l10n.cashMovementFieldParty,
+   566→                        value: _detail!.movement.customerName!,
+   567→                      ),
+   568→                    if (_detail!.movement.supplierName != null)
+   569→                      _DetailRow(
+   570→                        label: l10n.cashMovementFieldParty,
+   571→                        value: _detail!.movement.supplierName!,
+   572→                      ),
+   573→                    if (_detail!.movement.expenseCategoryName != null)
+   574→                      _DetailRow(
+   575→                        label: l10n.cashMovementFieldCategory,
+   576→                        value: _detail!.movement.expenseCategoryName!,
+   577→                      ),
+   578→                    _RateRow(
+   579→                      label: l10n.cashMovementFieldRate,
+   580→                      value: _detail!.movement.exchangeRate,
+   581→                    ),
+   582→                    if (_detail!.movement.settlementRate != null)
+   583→                      _RateRow(
+   584→                        label: l10n.cashMovementFieldSettlement,
+   585→                        value: _detail!.movement.settlementRate!,
+   586→                      ),
+   587→                    if ((_detail!.movement.fxGainLoss.abs()) > 0.005)
+   588→                      Padding(
+   589→                        padding: const EdgeInsets.symmetric(vertical: 4),
+   590→                        child: Row(
+   591→                          children: [
+   592→                            Expanded(
+   593→                              child: Text(
+   594→                                l10n.cashMovementFieldFx,
+   595→                                style: Theme.of(context).textTheme.bodyMedium
+   596→                                    ?.copyWith(color: scheme.onSurfaceVariant),
+   597→                              ),
+   598→                            ),
+   599→                            AmountText(
+   600→                              amount: _detail!.movement.fxGainLoss,
+   601→                              decimals: 2,
+   602→                              sign: _detail!.movement.fxGainLoss > 0
+   603→                                  ? FinSign.incoming
+   604→                                  : FinSign.outgoing,
+   605→                            ),
+   606→                          ],
+   607→                        ),
+   608→                      ),
+   609→                    if (_detail!.movement.description != null &&
+   610→                        _detail!.movement.description!.trim().isNotEmpty)
+   611→                      Padding(
+   612→                        padding: const EdgeInsets.only(top: 8),
+   613→                        child: Column(
+   614→                          crossAxisAlignment: CrossAxisAlignment.start,
+   615→                          children: [
+   616→                            Text(
+   617→                              l10n.cashMovementFieldDescription,
+   618→                              style: Theme.of(context).textTheme.bodyMedium
+   619→                                  ?.copyWith(color: scheme.onSurfaceVariant),
+   620→                            ),
+   621→                            const SizedBox(height: 2),
+   622→                            Text(
+   623→                              _detail!.movement.description!,
+   624→                              style: Theme.of(context).textTheme.bodyMedium
+   625→                                  ?.copyWith(fontWeight: FontWeight.w700),
+   626→                            ),
+   627→                          ],
+   628→                        ),
+   629→                      ),
+   630→                  ],
+   631→                ),
+   632→              ),
+   633→              if (_detail!.allocations.isNotEmpty) ...[
+   634→                const SizedBox(height: 12),
+   635→                FinCard(
+   636→                  padding: const EdgeInsets.all(14),
+   637→                  child: Column(
+   638→                    crossAxisAlignment: CrossAxisAlignment.stretch,
+   639→                    children: [
+   640→                      Text(
+   641→                        l10n.cashMovementAllocationsTitle,
+   642→                        style: Theme.of(context).textTheme.titleMedium,
+   643→                      ),
+   644→                      const SizedBox(height: 6),
+   645→                      for (final allocation in _detail!.allocations)
+   646→                        Padding(
+   647→                          padding: const EdgeInsets.symmetric(vertical: 4),
+   648→                          child: Row(
+   649→                            children: [
+   650→                              Expanded(
+   651→                                child: Column(
+   652→                                  crossAxisAlignment: CrossAxisAlignment.start,
+   653→                                  children: [
+   654→                                    Text(
+   655→                                      allocation.invoiceNo,
+   656→                                      style: Theme.of(context)
+   657→                                          .textTheme
+   658→                                          .labelMedium
+   659→                                          ?.copyWith(
+   660→                                            fontWeight: FontWeight.w800,
+   661→                                            fontFeatures: FinText.tabularNums,
+   662→                                          ),
+   663→                                    ),
+   664→                                    Text(
+   665→                                      allocation.invoiceTypeCode == 'sale'
+   666→                                          ? l10n.cashAllocSaleInvoice
+   667→                                          : l10n.cashAllocPurchaseInvoice,
+   668→                                      style: Theme.of(context)
+   669→                                          .textTheme
+   670→                                          .labelSmall,
+   671→                                    ),
+   672→                                  ],
+   673→                                ),
+   674→                              ),
+   675→                              AmountText(
+   676→                                amount: allocation.allocatedAmount,
+   677→                                decimals: 2,
+   678→                                showSignMarker: false,
+   679→                              ),
+   680→                              const SizedBox(width: 4),
+   681→                              Text(
+   682→                                allocation.currencyCode,
+   683→                                style: Theme.of(context).textTheme.labelSmall
+   684→                                    ?.copyWith(
+   685→                                      color: colors.gold,
+   686→                                      fontWeight: FontWeight.w800,
+   687→                                    ),
+   688→                              ),
+   689→                            ],
+   690→                          ),
+   691→                        ),
+   692→                    ],
+   693→                  ),
+   694→                ),
+   695→              ],
+   696→              const SizedBox(height: 16),
+   697→              if (_detail!.movement.isVoidable)
+   698→                FilledButton.icon(
+   699→                  style: FilledButton.styleFrom(
+   700→                    backgroundColor: colors.negative,
+   701→                    foregroundColor: colors.onNegative,
+   702→                    minimumSize: const Size.fromHeight(52),
+   703→                  ),
+   704→                  onPressed: widget.vm.state.voidingId == _detail!.movement.id
+   705→                      ? null
+   706→                      : () => unawaited(_confirmVoid(_detail!.movement)),
+   707→                  icon: widget.vm.state.voidingId == _detail!.movement.id
+   708→                      ? const SizedBox(
+   709→                          width: 20,
+   710→                          height: 20,
+   711→                          child: CircularProgressIndicator(strokeWidth: 2.4),
+   712→                        )
+   713→                      : const Icon(Icons.block_rounded, size: 20),
+   714→                  label: Text(l10n.cashMovementVoidButton),
+   715→                )
+   716→              else if (!_detail!.movement.isVoided)
+   717→                Padding(
+   718→                  padding: const EdgeInsets.all(8),
+   719→                  child: Row(
+   720→                    crossAxisAlignment: CrossAxisAlignment.start,
+   721→                    children: [
+   722→                      Icon(
+   723→                        Icons.info_outline_rounded,
+   724→                        size: 18,
+   725→                        color: scheme.onSurfaceVariant,
+   726→                      ),
+   727→                      const SizedBox(width: 8),
+   728→                      Expanded(
+   729→                        child: Text(
+   730→                          l10n.cashMovementNotVoidableNote,
+   731→                          style: Theme.of(context).textTheme.labelSmall
+   732→                              ?.copyWith(color: scheme.onSurfaceVariant),
+   733→                        ),
+   734→                      ),
+   735→                    ],
+   736→                  ),
+   737→                ),
+   738→              const SizedBox(height: 8),
+   739→              TextButton(
+   740→                onPressed: () => Navigator.of(context).pop(),
+   741→                child: Text(l10n.commonDone),
+   742→              ),
+   743→            ],
+   744→          ],
+   745→        ),
+   746→      ),
+   747→    );
+   748→  }
+   749→}
+   750→
+   751→class _DetailRow extends StatelessWidget {
+   752→  const _DetailRow({required this.label, required this.value});
+   753→
+   754→  final String label;
+   755→  final String value;
+   756→
+   757→  @override
+   758→  Widget build(BuildContext context) {
+   759→    final scheme = Theme.of(context).colorScheme;
+   760→    return Padding(
+   761→      padding: const EdgeInsets.symmetric(vertical: 4),
+   762→      child: Row(
+   763→        children: [
+   764→          Expanded(
+   765→            child: Text(
+   766→              label,
+   767→              style: Theme.of(context).textTheme.bodyMedium
+   768→                  ?.copyWith(color: scheme.onSurfaceVariant),
+   769→            ),
+   770→          ),
+   771→          Flexible(
+   772→            child: Text(
+   773→              value,
+   774→              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+   775→                fontWeight: FontWeight.w700,
+   776→                fontFeatures: FinText.tabularNums,
+   777→              ),
+   778→              textAlign: TextAlign.end,
+   779→              maxLines: 1,
+   780→              overflow: TextOverflow.ellipsis,
+   781→            ),
+   782→          ),
+   783→        ],
+   784→      ),
+   785→    );
+   786→  }
+   787→}
+   788→
+   789→class _RateRow extends StatelessWidget {
+   790→  const _RateRow({required this.label, required this.value});
+   791→
+   792→  final String label;
+   793→  final double value;
+   794→
+   795→  @override
+   796→  Widget build(BuildContext context) {
+   797→    final scheme = Theme.of(context).colorScheme;
+   798→    return Padding(
+   799→      padding: const EdgeInsets.symmetric(vertical: 4),
+   800→      child: Row(
+   801→        children: [
+   802→          Expanded(
+   803→            child: Text(
+   804→              label,
+   805→              style: Theme.of(context).textTheme.bodyMedium
+   806→                  ?.copyWith(color: scheme.onSurfaceVariant),
+   807→            ),
+   808→          ),
+   809→          Text(
+   810→            AmountText.format(value, 4),
+   811→            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+   812→              fontWeight: FontWeight.w700,
+   813→              fontFeatures: FinText.tabularNums,
+   814→            ),
+   815→          ),
+   816→        ],
+   817→      ),
+   818→    );
+   819→  }
+   820→}
+   821→
