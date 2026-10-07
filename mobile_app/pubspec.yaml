@@ -35,14 +35,23 @@ dependencies:
   # Database file location on Android.
   path_provider: ^2.1.5
   path: ^1.9.1
+  barcode: ^2.2.9
+  barcode_widget: ^2.0.4
+  excel: ^4.0.6
+  file_picker: ^13.1.0
 
+  # ── الطباعة والمشاركة (الشريحة 7 — SRS §5.4/وحدة 10) ──
+  # توليد PDF (pdf) + المعاينة/الطباعة/المشاركة (printing) + روابط واتساب
+  # wa.me عبر url_launcher — كله يعمل أوفلاين بلا سيرفر.
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  url_launcher: ^6.3.3
+
+# ── منهجية التحقق (قرار صاحب المشروع) ──
+# لا اختبارات وحدات في هذا المستودع: البوابة الوحيدة للجودة أثناء التطوير
+# هي analyze 0/0 + بناء المعاينة + التحقق الحي من المتصفح (انظر AGENTS.md §4-7).
+# flutter_test وsqflite_common_ffi أُزيلت مع مجلد test/ (قابلة للاستعادة من git).
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
-  # FFI driver (native SQLite) for unit tests on the host machine.
-  sqflite_common_ffi: ^2.3.6
-
   # Recommended lint set activated in analysis_options.yaml
   flutter_lints: ^6.0.0
 

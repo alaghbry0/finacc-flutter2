@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +27,7 @@ import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/mini_sales_chart.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/numerals_scope.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../view_models/home_view_model.dart';
 
@@ -42,7 +44,14 @@ class HomeScreen extends StatelessWidget {
     unawaited(vm.load(companyName: app.company?.name));
     return ChangeNotifierProvider<DashboardViewModel>.value(
       value: vm,
-      child: const _DashboardBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع — إحصاءات اليوم تتغير بترحيل
+      // فواتير من فرع البيع والداشبورد يُستعاد من IndexedStack بلا rebuild
+      // (اكتُشف بالتحقق الحي 2026-10-07).
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/home$'),
+        onActivate: () => vm.load(companyName: app.company?.name),
+        child: const _DashboardBody(),
+      ),
     );
   }
 }
@@ -55,6 +64,7 @@ class _DashboardBody extends StatelessWidget {
     final vm = context.watch<DashboardViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
     final state = vm.state;
 
     return Scaffold(
@@ -134,6 +144,61 @@ class _DashboardBody extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      SectionHeader(title: l10n.dashboardQuickAccess),
+                      const SizedBox(height: 10),
+                      // أربعة بلاطات مباشرة (طلب صاحب المشروع): العملاء
+                      // والموردون من الواجهة الأولى — لا يضطر الباحث عن
+                      // «صفحات العملاء» لمعرفة أن الأطراف تعنيهم.
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _QuickAccessTile(
+                              icon: Icons.inventory_2_rounded,
+                              label: l10n.tabInventory,
+                              color: scheme.primary,
+                              onTap: () => context.go('/inventory'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _QuickAccessTile(
+                              icon: Icons.person_rounded,
+                              label: l10n.partiesHubCustomers,
+                              color: scheme.primary,
+                              onTap: () => context.go('/parties/customers'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _QuickAccessTile(
+                              icon: Icons.local_shipping_rounded,
+                              label: l10n.partiesHubSuppliers,
+                              color: scheme.tertiary,
+                              onTap: () => context.go('/parties/suppliers'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _QuickAccessTile(
+                              icon: Icons.currency_exchange_rounded,
+                              label: l10n.dashboardQuickRates,
+                              color: colors.gold,
+                              onTap: () => context.go('/parties/rates'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              _StaggeredEntrance(
+                index: 3,
+                child: FinCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
                         children: [
                           Expanded(
@@ -156,7 +221,7 @@ class _DashboardBody extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               _StaggeredEntrance(
-                index: 3,
+                index: 4,
                 child: FinCard(
                   child: Column(
                     children: [
@@ -236,6 +301,60 @@ class _StaggeredEntrance extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+
+/// بلاطة وصول سريع — أيقونة داخل حلقة ملوّنة + تسمية، تفتح الوحدة.
+class _QuickAccessTile extends StatelessWidget {
+  const _QuickAccessTile({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Column(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.16),
+                  border: Border.all(color: color.withValues(alpha: 0.35)),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -447,6 +566,8 @@ Future<void> _showDateDetails(BuildContext context) {
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
+    // فوق شريط التبويبات (متصفح الفرع) — تنزلق من فوق الشريط السفلي.
+    useRootNavigator: false,
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     builder: (context) => const _DateDetailSheet(),
   );

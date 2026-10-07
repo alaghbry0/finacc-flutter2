@@ -1,12 +1,12 @@
 /// مستودع لوحة التحكم — تجميعات SQL أوفلاين لبطاقات الداشبورد (FR-09-01).
 ///
-/// المرحلة 1 تؤسس السباكة الكاملة بالقاعدة الحقيقية؛ الأرقام صفرية حتى
-/// تشغيل شرائح البيع/الشراء، وتتحقق لحظياً بعدها دون تعديل هنا.
-///
-/// ملاحظة تجميع «صافي الصندوق» (مبدئية — تُكمل بجدول الترحيل الكامل في
-/// شريحة النقدية 6): الوارد (+) = receipt, capital_in؛ الصادر (−) =
-/// payment, expense, owner_draw؛ التحويلات والعمليات البنكية والتزامات
-/// V1.1/V2 مستثناة حتى اكتمال خريطة الترحيل (ملحق و).
+/// «صافي الصندوق» اليوم يعمل الآن **بخريطة الترحيل الكاملة (ملحق و)**
+/// منذ الشريحة 6: الوارد (+) = receipt/capital_in/opening؛ الصادر (−) =
+/// payment/expense/owner_draw؛ التحويلات والعمليات البنكية **متعادلة
+/// في القيمة الأساس** (ساقان: مصدر − وهدف +) ويظهر فرقها في
+/// `fx_gain_loss` فقط؛ الحركات الملغاة (`is_voided`) **والمعاكسة**
+/// (`reversal_of`) مستبعدتان دائماً. كل شيء **بالقيمة الأساسية**
+/// (`amount × exchange_rate`) — لا خلط عملات في رقم واحد (5.4-7).
 library;
 
 import 'package:sqflite/sqflite.dart';
@@ -61,16 +61,25 @@ class DashboardRepository {
       [today],
     );
     final cashRows = await _db.rawQuery(
+      // ملحق و — القيمة الأساسية لكل ساق؛ الساقان متعادلتان للتحويلات
+      // فيبقى أثرها fx_gain_loss حصراً (انظر رأس الملف).
       "SELECT COALESCE("
-      " (SELECT SUM(amount) FROM cash_tx "
-      "   WHERE tx_type IN ('receipt','capital_in') "
-      "   AND is_voided = 0 AND date(tx_date) = ?), 0) "
+      " (SELECT SUM(amount * exchange_rate) FROM cash_tx "
+      "   WHERE tx_type IN ('receipt','capital_in','opening') "
+      "   AND is_voided = 0 AND reversal_of IS NULL "
+      "   AND date(tx_date) = ?), 0) "
       " - COALESCE("
-      " (SELECT SUM(amount) FROM cash_tx "
+      " (SELECT SUM(amount * exchange_rate) FROM cash_tx "
       "   WHERE tx_type IN ('payment','expense','owner_draw') "
-      "   AND is_voided = 0 AND date(tx_date) = ?), 0) "
+      "   AND is_voided = 0 AND reversal_of IS NULL "
+      "   AND date(tx_date) = ?), 0) "
+      " + COALESCE("
+      " (SELECT SUM(fx_gain_loss) FROM cash_tx "
+      "   WHERE tx_type IN ('box_transfer','bank_deposit','bank_withdraw') "
+      "   AND is_voided = 0 AND reversal_of IS NULL "
+      "   AND date(tx_date) = ?), 0) "
       "AS net",
-      [today, today],
+      [today, today, today],
     );
     final sales = (salesRows.first['s'] as num?)?.toDouble() ?? 0;
     final cost = (salesRows.first['c'] as num?)?.toDouble() ?? 0;

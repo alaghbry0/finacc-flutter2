@@ -223,6 +223,8 @@ class _AutolockRow extends StatelessWidget {
   Future<void> _openAutolockSheet(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
+      // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
+      useRootNavigator: false,
       // لوحة كاملة العرض بحواف علوية مستديرة ومقبض.
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

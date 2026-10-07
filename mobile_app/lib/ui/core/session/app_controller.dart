@@ -12,9 +12,19 @@ import '../../../core/storage/app_database.dart';
 import '../../../core/storage/db_factory.dart';
 import '../../../domain/models/company.dart';
 import '../../../data/repositories/audit_repository.dart';
+import '../../../data/repositories/batch_repository.dart';
+import '../../../data/repositories/cash_repository.dart';
 import '../../../data/repositories/company_repository.dart';
+import '../../../data/repositories/customer_repository.dart';
 import '../../../data/repositories/dashboard_repository.dart';
+import '../../../data/repositories/exchange_rate_repository.dart';
+import '../../../data/repositories/item_repository.dart';
+import '../../../data/repositories/purchase_repository.dart';
+import '../../../data/repositories/quotation_repository.dart';
+import '../../../data/repositories/return_repository.dart';
+import '../../../data/repositories/sale_repository.dart';
 import '../../../data/repositories/settings_repository.dart';
+import '../../../data/repositories/supplier_repository.dart';
 import '../../../data/repositories/user_repository.dart';
 
 /// أطوار التطبيق المرئية.
@@ -51,6 +61,16 @@ class AppController extends ChangeNotifier {
   SettingsRepository? _settingsRepo;
   DashboardRepository? _dashboardRepo;
   AuditRepository? _auditRepo;
+  ItemRepository? _itemRepo;
+  BatchRepository? _batchRepo;
+  CustomerRepository? _customerRepo;
+  SupplierRepository? _supplierRepo;
+  ExchangeRateRepository? _fxRepo;
+  SaleRepository? _saleRepo;
+  QuotationRepository? _quotationRepo;
+  PurchaseRepository? _purchaseRepo;
+  ReturnRepository? _returnRepo;
+  CashRepository? _cashRepo;
   Company? _company;
 
   DateTime _lastActivity = DateTime.now();
@@ -84,6 +104,36 @@ class AppController extends ChangeNotifier {
 
   /// مستودع سجل التدقيق (للإضافة فقط — عرض حصري).
   AuditRepository? get audit => _auditRepo;
+
+  /// مستودع الأصناف (المرحلة 2 — FR-01).
+  ItemRepository? get items => _itemRepo;
+
+  /// مستودع الدفعات وتواريخ الصلاحية (FEFO — FR-01-10).
+  BatchRepository? get batches => _batchRepo;
+
+  /// مستودع العملاء (المرحلة 3 — FR-03).
+  CustomerRepository? get customers => _customerRepo;
+
+  /// مستودع الموردين (المرحلة 3 — FR-03-03).
+  SupplierRepository? get suppliers => _supplierRepo;
+
+  /// مستودع أسعار الصرف اليومية (FR-08-03).
+  ExchangeRateRepository? get fxRates => _fxRepo;
+
+  /// مستودع ترحيل فواتير البيع (المرحلة 4 — FR-02).
+  SaleRepository? get sales => _saleRepo;
+
+  /// مستودع عروض الأسعار وتحويلها (المرحلة 4 — FR-02).
+  QuotationRepository? get quotations => _quotationRepo;
+
+  /// مستودع المشتريات (المرحلة 5 — FR-02-08: PUR + WAC + الدفعات الواردة).
+  PurchaseRepository? get purchases => _purchaseRepo;
+
+  /// مستودع المرتجعات المرتبطة (المرحلة 5 — FR-02-07/08: SRN وPRN).
+  ReturnRepository? get returns => _returnRepo;
+
+  /// مستودع النقدية والصناديق (المرحلة 6 — FR-04).
+  CashRepository? get cash => _cashRepo;
 
   /// المنشأة الحالية (بعد التأسيس).
   Company? get company => _company;
@@ -124,6 +174,16 @@ class AppController extends ChangeNotifier {
     _settingsRepo = SettingsRepository(db.db);
     _dashboardRepo = DashboardRepository(db.db);
     _auditRepo = AuditRepository(db.db);
+    _itemRepo = ItemRepository(db.db);
+    _batchRepo = BatchRepository(db.db);
+    _customerRepo = CustomerRepository(db.db);
+    _supplierRepo = SupplierRepository(db.db);
+    _fxRepo = ExchangeRateRepository(db.db);
+    _saleRepo = SaleRepository(db.db);
+    _quotationRepo = QuotationRepository(db.db);
+    _purchaseRepo = PurchaseRepository(db.db);
+    _returnRepo = ReturnRepository(db.db);
+    _cashRepo = CashRepository(db.db);
   }
 
   Future<void> _decidePhase() async {
@@ -132,6 +192,8 @@ class AppController extends ChangeNotifier {
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
     _themeMode = await _settingsRepo!.themeMode();
     _numerals = await _settingsRepo!.numerals();
+    // بذر فئة «رواتب» idempotent (FR-04-05) — قبل أي واجهة.
+    await _cashRepo!.ensureSeeded();
     // جلسة جديدة = مقفلة دائماً (PIN عند كل فتح — FR-12-01).
     _phase = company == null ? AppPhase.needsOnboarding : AppPhase.locked;
     notifyListeners();
@@ -277,6 +339,11 @@ class AppController extends ChangeNotifier {
     _settingsRepo = null;
     _dashboardRepo = null;
     _auditRepo = null;
+    _saleRepo = null;
+    _quotationRepo = null;
+    _purchaseRepo = null;
+    _returnRepo = null;
+    _cashRepo = null;
     _db = null;
     if (db != null) {
       await db.close();

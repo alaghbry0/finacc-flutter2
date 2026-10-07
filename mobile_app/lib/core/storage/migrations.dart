@@ -35,9 +35,49 @@ int get currentSchemaVersion => migrations.last.version;
 /// سجل الهجرات المعتمدة.
 ///
 /// **الإصدار 1** = المخطط الكامل المجمّد في SRS v1.5 §5.3.
+///
+/// **الإصدار 2** = إصلاح بيانات (لا DDL): الأصناف المتتبعة للدفعات التي
+/// سُجّل لها رصيد افتتاحي في `stock_level` دون أي صف `batch` (خلل الموجة 4)
+/// كانت تُرفض في البيع بمتاح = 0 رغم رصيد كتابي كبير. تُنشأ لكل
+/// (صنف × مخزن) دفعة افتتاحية بالفرق المتبقي بصلاحية بعيدة 9999-12-31 —
+/// العبارة **idempotent** (إعادة تشغيلها لا تكرر: الفرق يصبح صفراً).
 const List<DbMigration> migrations = <DbMigration>[
   DbMigration(version: 1, statements: schemaV1Ddl, seeds: _seedStatements),
+  DbMigration(version: 2, statements: <String>[repairOpeningBatchesV2]),
 ];
+
+/// عبارة إصلاح الإصدار 2 — انظر [migrations]. (علنية لتُختبر مباشرة.)
+///
+/// الفرق = `stock_level.qty − مجموع الدفعات النشطة (غير المؤرشفة)`؛
+/// يُدرَج فقط حين يكون الفرق موجباً (الدفعات المنتهية تبقى محجوزة
+/// لرصيدها الكتابي ولا تُعوَّض — المنطق المحاسبي الصحيح).
+const String repairOpeningBatchesV2 = '''
+INSERT INTO batch(product_id, warehouse_id, batch_number, expiry_date,
+                  cost_price, qty, created_at, updated_at)
+SELECT sl.product_id, sl.warehouse_id,
+       'افتتاحي-' || sl.product_id || '-' || sl.warehouse_id,
+       '9999-12-31',
+       COALESCE(p.cost_price, 0),
+       sl.qty - COALESCE((
+         SELECT SUM(b.qty) FROM batch b
+         WHERE b.product_id = sl.product_id
+           AND b.warehouse_id = sl.warehouse_id
+           AND b.is_archived = 0
+       ), 0),
+       strftime('%Y-%m-%dT%H:%M:%SZ','now'),
+       strftime('%Y-%m-%dT%H:%M:%SZ','now')
+FROM stock_level sl
+JOIN product p ON p.id = sl.product_id
+WHERE p.track_batches = 1
+  AND p.is_service = 0
+  AND sl.qty > 0
+  AND sl.qty > COALESCE((
+    SELECT SUM(b.qty) FROM batch b
+    WHERE b.product_id = sl.product_id
+      AND b.warehouse_id = sl.warehouse_id
+      AND b.is_archived = 0
+  ), 0)
+''';
 
 /// بذور الإصدار 1 — العملات + فئة الرواتب + الإعدادات الافتراضية (ملحق هـ).
 const List<String> _seedStatements = <String>[

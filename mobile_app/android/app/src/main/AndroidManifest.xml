@@ -8,7 +8,10 @@
     <application
         android:label="المحاسب الشخصي FinAcc"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -47,5 +50,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- واتساب (FR-10-02): رؤية حزمة WhatsApp على أندرويد 11+ حتى تحلّ
+             url_launcher روابط wa.me وتفتح التطبيق (لا أثر له على الويب). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="whatsapp"/>
+        </intent>
+        <package android:name="com.whatsapp"/>
     </queries>
 </manifest>
