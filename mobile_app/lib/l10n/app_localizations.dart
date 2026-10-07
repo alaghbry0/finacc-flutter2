@@ -5690,6 +5690,12 @@ abstract class AppLocalizations {
   /// **'Print preview'**
   String get printingPreviewTitle;
 
+  /// No description provided for @printingPreviewFileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {sizeKb} KB'**
+  String printingPreviewFileSize(int sizeKb);
+
   /// No description provided for @printingPrint.
   ///
   /// In en, this message translates to:

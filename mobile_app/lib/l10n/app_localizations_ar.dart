@@ -3250,6 +3250,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get printingPreviewTitle => 'معاينة الطباعة';
 
   @override
+  String printingPreviewFileSize(int sizeKb) {
+    return 'الحجم: $sizeKb ك.ب';
+  }
+
+  @override
   String get printingPrint => 'طباعة';
 
   @override
