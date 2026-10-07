@@ -1,0 +1,294 @@
+/// هيكل التنقل — go_router (SRS §6.4).
+///
+/// الحراسة المركزية عبر أطوار الجلسة:
+/// initializing → Splash، needsOnboarding → Onboarding، locked → Lock،
+/// ready → الهيكل الرئيسي بخمسة تبويبات (الرئيسية/المخزون/البيع/النقدية/
+/// المزيد) مع زر البيع البارز في الوسط.
+library;
+
+import 'package:go_router/go_router.dart';
+
+import '../../features/home/views/home_screen.dart';
+import '../../features/inventory/views/batches_screen.dart';
+import '../../features/inventory/views/categories_units_screen.dart';
+import '../../features/inventory/views/import_screen.dart';
+import '../../features/inventory/views/inventory_home_screen.dart';
+import '../../features/inventory/views/item_detail_screen.dart';
+import '../../features/inventory/views/item_form_screen.dart';
+import '../../features/inventory/views/items_list_screen.dart';
+import '../../features/inventory/views/low_stock_screen.dart';
+import '../../features/onboarding_auth/views/lock_screen.dart';
+import '../../features/onboarding_auth/views/onboarding_screen.dart';
+import '../../features/parties/views/exchange_rates_screen.dart';
+import '../../features/parties/views/parties_home_screen.dart';
+import '../../features/parties/views/parties_list_screen.dart';
+import '../../features/parties/views/party_balances_screen.dart';
+import '../../features/parties/views/party_detail_screen.dart';
+import '../../features/parties/views/party_form_screen.dart';
+import '../../features/placeholders/coming_soon_screen.dart';
+import '../../features/sell/views/quotation_detail_screen.dart';
+import '../../features/sell/views/quotations_screen.dart';
+import '../../features/sell/views/sales_invoices_screen.dart';
+import '../../features/sell/views/sell_home_screen.dart';
+import '../../features/sell/views/sell_screen.dart';
+import '../../features/settings/views/audit_log_screen.dart';
+import '../../features/settings/views/change_pin_screen.dart';
+import '../../features/settings/views/settings_screen.dart';
+import '../../features/splash/views/splash_screen.dart';
+import '../session/app_controller.dart';
+import '../widgets/app_shell.dart';
+import '../widgets/refresh_on_return.dart';
+
+/// يبني الموجّه فوق متحكم الجلسة (refreshListenable = تغيّر الطور).
+GoRouter buildAppRouter(AppController controller) {
+  return GoRouter(
+    initialLocation: '/splash',
+    refreshListenable: controller,
+    // إشعارات didPopNext للشاشات ذات المسارات الفرعية (نموذج/تعديل)
+    // — تفعيل RefreshOnReturn (إصلاح ثبات القوائم بعد الحفظ).
+    observers: [routeObserver],
+    redirect: (context, state) {
+      final phase = controller.phase;
+      final location = state.matchedLocation;
+      switch (phase) {
+        case AppPhase.initializing:
+        case AppPhase.error:
+          return location == '/splash' ? null : '/splash';
+        case AppPhase.needsOnboarding:
+          return location == '/onboarding' ? null : '/onboarding';
+        case AppPhase.locked:
+          return location == '/lock' ? null : '/lock';
+        case AppPhase.ready:
+          if (location == '/splash' ||
+              location == '/onboarding' ||
+              location == '/lock') {
+            return '/home';
+          }
+          return null;
+      }
+    },
+    routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
+      // وحدة الأطراف (المرحلة 3) — مسارات علوية بخارج الهيكل (شاشة كاملة
+      // بزر رجوع)؛ التنقل بينها بـ go() يبني المكدس فيظهر زر الرجوع تلقائياً.
+      GoRoute(
+        path: '/parties',
+        builder: (context, state) => const PartiesHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'customers',
+            builder: (context, state) => const CustomersListScreen(),
+            routes: [
+              GoRoute(
+                path: 'form',
+                builder: (context, state) => CustomerFormScreen(
+                  editId: int.tryParse(state.uri.queryParameters['edit'] ?? ''),
+                ),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => CustomerDetailScreen(
+                  customerId:
+                      int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => CustomerFormScreen(
+                      editId:
+                          int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'suppliers',
+            builder: (context, state) => const SuppliersListScreen(),
+            routes: [
+              GoRoute(
+                path: 'form',
+                builder: (context, state) => SupplierFormScreen(
+                  editId: int.tryParse(state.uri.queryParameters['edit'] ?? ''),
+                ),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => SupplierDetailScreen(
+                  supplierId:
+                      int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) => SupplierFormScreen(
+                      editId:
+                          int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'receivables',
+            builder: (context, state) => const ReceivablesScreen(),
+          ),
+          GoRoute(
+            path: 'payables',
+            builder: (context, state) => const PayablesScreen(),
+          ),
+          GoRoute(
+            path: 'rates',
+            builder: (context, state) => const ExchangeRatesScreen(),
+          ),
+        ],
+      ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/inventory',
+                builder: (context, state) => const InventoryHomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'items',
+                    builder: (context, state) => const ItemsListScreen(),
+                  ),
+                  GoRoute(
+                    path: 'item-form',
+                    builder: (context, state) => const ItemFormScreen(),
+                  ),
+                  GoRoute(
+                    path: 'item/:id',
+                    builder: (context, state) => ItemDetailScreen(
+                      itemId:
+                          int.tryParse(state.pathParameters['id'] ?? '') ?? -1,
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) => ItemFormScreen(
+                          editId:
+                              int.tryParse(state.pathParameters['id'] ?? '') ??
+                              -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'low-stock',
+                    builder: (context, state) => const LowStockScreen(),
+                  ),
+                  GoRoute(
+                    path: 'batches',
+                    builder: (context, state) => const BatchesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'import',
+                    builder: (context, state) => const ImportScreen(),
+                  ),
+                  GoRoute(
+                    path: 'categories-units',
+                    builder: (context, state) => const CategoriesUnitsScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/sell',
+                builder: (context, state) => const SellHomeScreen(),
+                routes: [
+                  // الكاشير — السلة محفوظة بجلسة تطبيقية (SellCartSession)
+                  // فتنجو من التنقل بين الشاشات (FR-02-13).
+                  GoRoute(
+                    path: 'new',
+                    builder: (context, state) => const SellScreen(),
+                  ),
+                  GoRoute(
+                    path: 'invoices',
+                    builder: (context, state) => const SalesInvoicesScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (context, state) => SaleInvoiceDetailScreen(
+                          invoiceId:
+                              int.tryParse(state.pathParameters['id'] ?? '') ??
+                              -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'quotations',
+                    builder: (context, state) => const QuotationsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (context, state) => QuotationDetailScreen(
+                          quotationId:
+                              int.tryParse(state.pathParameters['id'] ?? '') ??
+                              -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/cash',
+                builder: (context, state) =>
+                    const ComingSoonScreen(feature: ComingFeature.cash),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/more',
+                builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'change-pin',
+                    builder: (context, state) => const ChangePinScreen(),
+                  ),
+                  GoRoute(
+                    path: 'audit-log',
+                    builder: (context, state) => const AuditLogScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+}
