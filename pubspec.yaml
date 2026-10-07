@@ -52,6 +52,8 @@ dependencies:
 # هي analyze 0/0 + بناء المعاينة + التحقق الحي من المتصفح (انظر AGENTS.md §4-7).
 # flutter_test وsqflite_common_ffi أُزيلت مع مجلد test/ (قابلة للاستعادة من git).
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   # Recommended lint set activated in analysis_options.yaml
   flutter_lints: ^6.0.0
 

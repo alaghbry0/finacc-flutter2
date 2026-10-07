@@ -273,29 +273,43 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
       return const SizedBox(height: 8);
     }
     // صورة الصفحة بعرض كامل، قابلة للتمرير، داخل بطاقة بظل ورقي.
+    // تحتها شريط حجم الملف (ميزة مستعادة من جولة مفقودة — 2026-10-07).
+    final sizeKb = (data.bytes.length / 1024).round();
     return SingleChildScrollView(
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.memory(
-              data.pagePng,
-              fit: BoxFit.fitWidth,
-              filterQuality: FilterQuality.medium,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  data.pagePng,
+                  fit: BoxFit.fitWidth,
+                  filterQuality: FilterQuality.medium,
+                ),
+              ),
             ),
           ),
-        ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.printingPreviewFileSize(sizeKb),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: Theme.of(context).colorScheme.outline),
+          ),
+        ],
       ),
     );
   }

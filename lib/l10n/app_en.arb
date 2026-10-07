@@ -977,6 +977,12 @@
 
   "printingPdfTooltip": "Print PDF",
   "printingPreviewTitle": "Print preview",
+  "printingPreviewFileSize": "Size: {sizeKb} KB",
+  "@printingPreviewFileSize": {
+    "placeholders": {
+      "sizeKb": {"type": "int"}
+    }
+  },
   "printingPrint": "Print",
   "printingShare": "Share",
   "printingWhatsApp": "WhatsApp",
