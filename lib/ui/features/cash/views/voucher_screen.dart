@@ -681,7 +681,8 @@ class _AllocationCard extends StatelessWidget {
                         AmountText(
                           amount: entry.amount,
                           decimals: 2,
-                          showSignMarker: false,
+                          // DS-18: علامة + غير لونية إلزامية للتخصيصات
+                          // (إشارة واردة للفاتورة) — إصلاح جولة 13.
                           sign: FinSign.incoming,
                         ),
                       ],

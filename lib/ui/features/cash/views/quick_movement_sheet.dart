@@ -25,7 +25,10 @@ import '../view_models/quick_movement_view_model.dart';
 import 'widgets/cash_widgets.dart';
 
 /// يفتح نافذة الحركة السريعة بنوع ابتدائي — تُغلق بنفسها عند «تم».
-Future<void> showQuickMovementSheet(
+///
+/// يعيد `true` إذا رُحّلت حركة فعلاً — ليُعيد المنادي تحميل أرصدته
+/// (النافذة لا تغيّر المسار فلا يفعّل RefreshOnActive — إصلاح جولة 13).
+Future<bool> showQuickMovementSheet(
   BuildContext context, {
   required QuickMovementKind initialKind,
 }) async {
@@ -37,6 +40,7 @@ Future<void> showQuickMovementSheet(
     initialKind: initialKind,
   );
   unawaited(vm.load());
+  var posted = false;
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -45,13 +49,18 @@ Future<void> showQuickMovementSheet(
     useRootNavigator: false,
     builder: (_) => ChangeNotifierProvider<QuickMovementViewModel>.value(
       value: vm,
-      child: const _QuickMovementSheet(),
+      child: _QuickMovementSheet(onPosted: () => posted = true),
     ),
   );
+  return posted;
 }
 
 class _QuickMovementSheet extends StatefulWidget {
-  const _QuickMovementSheet();
+  const _QuickMovementSheet({required this.onPosted});
+
+  /// تُستدعى مرة واحدة عند أول ترحيل ناجح (لا عند الإغلاق) — علامة
+  /// «رُحّلت حركة» التي يقرؤها المنادي بعد إغلاق النافذة بأي طريق.
+  final VoidCallback onPosted;
 
   @override
   State<_QuickMovementSheet> createState() => _QuickMovementSheetState();
@@ -117,6 +126,7 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
     final result = await vm.save();
     if (!mounted) return;
     if (result.isOk) {
+      widget.onPosted();
       setState(() => _receipt = result.valueOrNull);
     }
     // الرفض → vm.saveError تُعرضها البطاقة الحمراء في النموذج.
@@ -527,7 +537,8 @@ class _MovementPreview extends StatelessWidget {
                 AmountText(
                   amount: projected!.abs(),
                   decimals: 2,
-                  showSignMarker: false,
+                  // DS-18: علامة غير لونية إلزامية — رصيد متوقع سالب يظهر
+                  // «−2,500.00» لا «2,500.00» بحمراء فقط (إصلاح جولة 13).
                   sign: projected! < 0 ? FinSign.outgoing : FinSign.neutral,
                 ),
                 const SizedBox(width: 4),

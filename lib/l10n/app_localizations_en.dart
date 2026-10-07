@@ -3233,4 +3233,120 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashCategoriesArchivedSection => 'Archived categories';
+
+  @override
+  String get printingPdfTooltip => 'Print PDF';
+
+  @override
+  String get printingPreviewTitle => 'Print preview';
+
+  @override
+  String get printingPrint => 'Print';
+
+  @override
+  String get printingShare => 'Share';
+
+  @override
+  String get printingWhatsApp => 'WhatsApp';
+
+  @override
+  String get printingClose => 'Close';
+
+  @override
+  String get printingBuildError => 'Couldn’t prepare the document';
+
+  @override
+  String get printingBuildErrorBody =>
+      'The PDF file didn’t finish generating. Retry, or close this window and open the document again.';
+
+  @override
+  String get printingPrintFailed => 'Couldn’t open the print dialog';
+
+  @override
+  String get printingShareFailed => 'Couldn’t open sharing';
+
+  @override
+  String get printingWhatsAppFailed => 'Couldn’t open WhatsApp';
+
+  @override
+  String get printingInvoiceDocTitle => 'Sales invoice';
+
+  @override
+  String get printingVoucherReceiptTitle => 'Receipt voucher';
+
+  @override
+  String get printingVoucherPaymentTitle => 'Payment voucher';
+
+  @override
+  String get printingLblCustomer => 'Customer';
+
+  @override
+  String get printingLblParty => 'Party';
+
+  @override
+  String get printingLblAmount => 'Amount';
+
+  @override
+  String get printingLblDate => 'Date';
+
+  @override
+  String get printingLblCurrency => 'Currency';
+
+  @override
+  String get printingLblItem => 'Item';
+
+  @override
+  String get printingLblQty => 'Qty';
+
+  @override
+  String get printingLblPrice => 'Price';
+
+  @override
+  String get printingLblDiscount => 'Discount';
+
+  @override
+  String get printingLblSubtotal => 'Subtotal';
+
+  @override
+  String get printingLblTotalDiscount => 'Total discount';
+
+  @override
+  String get printingLblGrandTotal => 'Total';
+
+  @override
+  String get printingLblPaid => 'Paid';
+
+  @override
+  String get printingLblDue => 'Due';
+
+  @override
+  String get printingLblItemsSection => 'Items';
+
+  @override
+  String get printingLblDescription => 'Description';
+
+  @override
+  String get printingLblBox => 'Cash box';
+
+  @override
+  String get printingLblSignature => 'Signature';
+
+  @override
+  String get printingFooterThanks => 'Thank you for your business';
+
+  @override
+  String get printingCashCustomer => 'Cash customer';
+
+  @override
+  String printingShareMessageInvoice(Object docNo, Object total) {
+    return 'Invoice $docNo — total $total';
+  }
+
+  @override
+  String printingShareMessageVoucher(Object amount, Object voucherNo) {
+    return 'Voucher $voucherNo — amount $amount';
+  }
+
+  @override
+  String get printingVoucherPdfButton => 'Print voucher PDF';
 }

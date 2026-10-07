@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/models/company.dart';
 import '../../../../domain/models/sale.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
@@ -19,6 +20,9 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
+import '../../printing/print_docs.dart';
+import '../../printing/services/invoice_pdf_builder.dart';
+import '../../printing/views/pdf_preview_dialog.dart';
 import '../view_models/sales_invoices_view_model.dart';
 import 'widgets/sell_widgets.dart';
 
@@ -339,6 +343,15 @@ class _InvoiceDetailBody extends StatelessWidget {
         title: Text(
           state.detail?.invoice.invoiceNo ?? l10n.sellInvoiceDetailTitle,
         ),
+        actions: [
+          // طباعة/مشاركة PDF (الشريحة 7) — متاح فور اكتمال التفاصيل.
+          if (state.detail != null)
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf_rounded),
+              tooltip: l10n.printingPdfTooltip,
+              onPressed: () => _openInvoicePdf(context, state.detail!, l10n),
+            ),
+        ],
       ),
       body: state.loading
           ? ListView(
@@ -652,4 +665,98 @@ class _AmountRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ─────────────────────────────────────────────────────────────────────
+/// طباعة الفاتورة PDF (الشريحة 7) — إسقاط البيانات + فتح المعاينة
+/// ─────────────────────────────────────────────────────────────────────
+
+/// منازل العملة للطباعة — قرار المستدعي: YER = 0 (قاعدة 5.4-9) والباقي 2.
+int _invoiceDecimals(SaleInvoiceDetail detail) =>
+    detail.currencyCode == 'YER' ? 0 : 2;
+
+/// يبني إسقاط الطباعة من تفاصيل الفاتورة + رأس المنشأة — كل تسمية داخل
+/// المستند مسبقة التعريب من l10n، وكل رقم عبر `AmountText.format`
+/// (غربي بفواصل آلاف) فيبقى القالب نفسه بلا أي نص.
+InvoicePrintDoc _invoicePrintDoc(
+  AppLocalizations l10n,
+  SaleInvoiceDetail detail,
+  Company? company,
+) {
+  final decimals = _invoiceDecimals(detail);
+  final invoice = detail.invoice;
+  return InvoicePrintDoc(
+    header: PrintHeader(
+      name: company?.name ?? '',
+      phone: company?.phone,
+      address: company?.address,
+      footerText: company?.footerText,
+    ),
+    docNo: invoice.invoiceNo,
+    dateLabel: sellFormatDate(invoice.issuedAt.toLocal()),
+    partyName: detail.customerName ?? l10n.printingCashCustomer,
+    partyPhone: detail.customerPhone,
+    currencyCode: detail.currencyCode ?? '',
+    decimals: decimals,
+    items: [
+      for (final item in detail.items)
+        InvoicePrintLine(
+          desc: item.lineDesc ?? l10n.sellDetailUnknownItem,
+          qtyLabel: sellQtyText(item.qty),
+          priceLabel: AmountText.format(item.unitPrice, decimals),
+          discountLabel: item.discountAmount > 0.005
+              ? AmountText.format(item.discountAmount, 2)
+              : '—',
+          totalLabel: AmountText.format(item.lineTotal, decimals),
+        ),
+    ],
+    subtotal: invoice.subtotal,
+    discountAmount: invoice.discountAmount,
+    total: invoice.total,
+    paidAmount: invoice.paidAmount,
+    dueAmount: invoice.dueAmount,
+    labels: InvoiceLabels(
+      title: l10n.printingInvoiceDocTitle,
+      customer: l10n.printingLblCustomer,
+      date: l10n.printingLblDate,
+      currency: l10n.printingLblCurrency,
+      item: l10n.printingLblItem,
+      qty: l10n.printingLblQty,
+      price: l10n.printingLblPrice,
+      discount: l10n.printingLblDiscount,
+      subtotal: l10n.printingLblSubtotal,
+      totalDiscount: l10n.printingLblTotalDiscount,
+      grandTotal: l10n.printingLblGrandTotal,
+      paid: l10n.printingLblPaid,
+      due: l10n.printingLblDue,
+      itemsSection: l10n.printingLblItemsSection,
+      footerThanks: l10n.printingFooterThanks,
+    ),
+  );
+}
+
+/// يفتح نافذة معاينة الطباعة لفاتورة محمّلة — القيم تُلتقط قبل أي await
+/// (لا سياق عبر فجوة غير متزامنة)، وواتساب = واتساب المنشأة وإلا هاتف
+/// العميل، ورسالة المشاركة = رقم الفاتورة + إجمالها.
+void _openInvoicePdf(
+  BuildContext context,
+  SaleInvoiceDetail detail,
+  AppLocalizations l10n,
+) {
+  final company = context.read<AppController>().company;
+  final invoice = detail.invoice;
+  unawaited(
+    showPdfPreviewDialog(
+      context,
+      title: invoice.invoiceNo,
+      build: () => const InvoicePdfBuilder().build(
+        _invoicePrintDoc(l10n, detail, company),
+      ),
+      whatsappPhone: company?.whatsapp ?? detail.customerPhone,
+      shareMessage: l10n.printingShareMessageInvoice(
+        invoice.invoiceNo,
+        AmountText.format(invoice.total, _invoiceDecimals(detail)),
+      ),
+    ),
+  );
 }

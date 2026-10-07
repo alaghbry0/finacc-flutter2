@@ -5677,6 +5677,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Archived categories'**
   String get cashCategoriesArchivedSection;
+
+  /// No description provided for @printingPdfTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Print PDF'**
+  String get printingPdfTooltip;
+
+  /// No description provided for @printingPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Print preview'**
+  String get printingPreviewTitle;
+
+  /// No description provided for @printingPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get printingPrint;
+
+  /// No description provided for @printingShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get printingShare;
+
+  /// No description provided for @printingWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get printingWhatsApp;
+
+  /// No description provided for @printingClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get printingClose;
+
+  /// No description provided for @printingBuildError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t prepare the document'**
+  String get printingBuildError;
+
+  /// No description provided for @printingBuildErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The PDF file didn’t finish generating. Retry, or close this window and open the document again.'**
+  String get printingBuildErrorBody;
+
+  /// No description provided for @printingPrintFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open the print dialog'**
+  String get printingPrintFailed;
+
+  /// No description provided for @printingShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open sharing'**
+  String get printingShareFailed;
+
+  /// No description provided for @printingWhatsAppFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open WhatsApp'**
+  String get printingWhatsAppFailed;
+
+  /// No description provided for @printingInvoiceDocTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales invoice'**
+  String get printingInvoiceDocTitle;
+
+  /// No description provided for @printingVoucherReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt voucher'**
+  String get printingVoucherReceiptTitle;
+
+  /// No description provided for @printingVoucherPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment voucher'**
+  String get printingVoucherPaymentTitle;
+
+  /// No description provided for @printingLblCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get printingLblCustomer;
+
+  /// No description provided for @printingLblParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get printingLblParty;
+
+  /// No description provided for @printingLblAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get printingLblAmount;
+
+  /// No description provided for @printingLblDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get printingLblDate;
+
+  /// No description provided for @printingLblCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get printingLblCurrency;
+
+  /// No description provided for @printingLblItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get printingLblItem;
+
+  /// No description provided for @printingLblQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get printingLblQty;
+
+  /// No description provided for @printingLblPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get printingLblPrice;
+
+  /// No description provided for @printingLblDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get printingLblDiscount;
+
+  /// No description provided for @printingLblSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get printingLblSubtotal;
+
+  /// No description provided for @printingLblTotalDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total discount'**
+  String get printingLblTotalDiscount;
+
+  /// No description provided for @printingLblGrandTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get printingLblGrandTotal;
+
+  /// No description provided for @printingLblPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get printingLblPaid;
+
+  /// No description provided for @printingLblDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get printingLblDue;
+
+  /// No description provided for @printingLblItemsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get printingLblItemsSection;
+
+  /// No description provided for @printingLblDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get printingLblDescription;
+
+  /// No description provided for @printingLblBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box'**
+  String get printingLblBox;
+
+  /// No description provided for @printingLblSignature.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature'**
+  String get printingLblSignature;
+
+  /// No description provided for @printingFooterThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your business'**
+  String get printingFooterThanks;
+
+  /// No description provided for @printingCashCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash customer'**
+  String get printingCashCustomer;
+
+  /// No description provided for @printingShareMessageInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice {docNo} — total {total}'**
+  String printingShareMessageInvoice(Object docNo, Object total);
+
+  /// No description provided for @printingShareMessageVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher {voucherNo} — amount {amount}'**
+  String printingShareMessageVoucher(Object amount, Object voucherNo);
+
+  /// No description provided for @printingVoucherPdfButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Print voucher PDF'**
+  String get printingVoucherPdfButton;
 }
 
 class _AppLocalizationsDelegate

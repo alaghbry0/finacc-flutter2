@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/models/cash.dart';
+import '../../../../domain/models/company.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -22,6 +23,9 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
+import '../../printing/print_docs.dart';
+import '../../printing/services/voucher_pdf_builder.dart';
+import '../../printing/views/pdf_preview_dialog.dart';
 import '../view_models/movements_view_model.dart';
 import 'widgets/cash_widgets.dart';
 
@@ -480,6 +484,27 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
     }
   }
 
+  /// يفتح نافذة معاينة طباعة سند القبض/الصرف (الشريحة 7) — كل القيم
+  /// تُلتقط قبل أي await (لا سياق عبر فجوة غير متزامنة). واتساب من
+  /// المنشأة حصراً: هاتف الطرف غير متوفر على صف الحركة.
+  Future<void> _openVoucherPdf(CashMovementRow movement) async {
+    final l10n = AppLocalizations.of(context)!;
+    final company = context.read<AppController>().company;
+    final voucherNo = movement.voucherNo!;
+    await showPdfPreviewDialog(
+      context,
+      title: voucherNo,
+      build: () => const VoucherPdfBuilder().build(
+        _voucherPrintDoc(l10n, movement, company),
+      ),
+      whatsappPhone: company?.whatsapp,
+      shareMessage: l10n.printingShareMessageVoucher(
+        AmountText.format(movement.amount, _voucherDecimals(movement)),
+        voucherNo,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -630,6 +655,19 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
                   ],
                 ),
               ),
+              // طباعة سند PDF (الشريحة 7) — لسندات RVT/PMT المرقّمة فقط.
+              if (_isPrintableVoucher(_detail!.movement)) ...[
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  onPressed: () =>
+                      unawaited(_openVoucherPdf(_detail!.movement)),
+                  icon: const Icon(Icons.picture_as_pdf_rounded, size: 20),
+                  label: Text(l10n.printingVoucherPdfButton),
+                ),
+              ],
               if (_detail!.allocations.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 FinCard(
@@ -817,4 +855,53 @@ class _RateRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ─────────────────────────────────────────────────────────────────────
+/// طباعة سند PDF (الشريحة 7) — إسقاط البيانات من صف الحركة
+/// ─────────────────────────────────────────────────────────────────────
+
+/// هل يجوز طباعة هذه الحركة كسند؟ — سندات RVT/PMT المرقّمة حصراً.
+bool _isPrintableVoucher(CashMovementRow movement) =>
+    (movement.voucherNo ?? '').isNotEmpty &&
+    (movement.txTypeCode == 'RVT' || movement.txTypeCode == 'PMT');
+
+/// منازل العملة للطباعة — قرار المستدعي: YER = 0 (قاعدة 5.4-9) والباقي 2.
+int _voucherDecimals(CashMovementRow movement) =>
+    movement.currencyCode == 'YER' ? 0 : 2;
+
+/// يبني إسقاط السند من صف الحركة + رأس المنشأة — كل تسمية مسبقة التعريب
+/// من l10n، والمبلغ عبر `AmountText.format` (غربي بفواصل آلاف).
+VoucherPrintDoc _voucherPrintDoc(
+  AppLocalizations l10n,
+  CashMovementRow movement,
+  Company? company,
+) {
+  return VoucherPrintDoc(
+    header: PrintHeader(
+      name: company?.name ?? '',
+      phone: company?.phone,
+      address: company?.address,
+      footerText: company?.footerText,
+    ),
+    isReceipt: movement.txTypeCode == 'RVT',
+    voucherNo: movement.voucherNo!,
+    dateLabel: cashFormatDate(movement.txDate),
+    partyName: movement.customerName ?? movement.supplierName,
+    amountLabel: AmountText.format(movement.amount, _voucherDecimals(movement)),
+    currencyCode: movement.currencyCode,
+    description: movement.description,
+    boxName: movement.cashboxName,
+    labels: VoucherLabels(
+      titleReceipt: l10n.printingVoucherReceiptTitle,
+      titlePayment: l10n.printingVoucherPaymentTitle,
+      party: l10n.printingLblParty,
+      date: l10n.printingLblDate,
+      amount: l10n.printingLblAmount,
+      description: l10n.printingLblDescription,
+      box: l10n.printingLblBox,
+      signature: l10n.printingLblSignature,
+      footerThanks: l10n.printingFooterThanks,
+    ),
+  );
 }

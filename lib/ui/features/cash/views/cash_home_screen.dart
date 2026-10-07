@@ -266,6 +266,18 @@ class _NetCashHeroCard extends StatelessWidget {
 class _QuickAccessGrid extends StatelessWidget {
   const _QuickAccessGrid();
 
+  /// إصلاح جولة 13: النافذة السريعة لا تغيّر المسار فلا يفعّل
+  /// RefreshOnActive — بعد أي ترحيل ناجح أعد تحميل أرصدة المحور فوراً.
+  void _openQuickSheet(BuildContext context, QuickMovementKind kind) {
+    // خذ الـ VM قبل الفجوة غير المتزامنة (بوابة التحليل).
+    final vm = context.read<CashHomeViewModel>();
+    unawaited(
+      showQuickMovementSheet(context, initialKind: kind).then((posted) {
+        if (posted) unawaited(vm.load());
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -296,56 +308,31 @@ class _QuickAccessGrid extends StatelessWidget {
           icon: Icons.receipt_long_rounded,
           label: l10n.cashQuickExpense,
           color: colors.warning,
-          onTap: () => unawaited(
-            showQuickMovementSheet(
-              context,
-              initialKind: QuickMovementKind.expense,
-            ),
-          ),
+          onTap: () => _openQuickSheet(context, QuickMovementKind.expense),
         ),
         CashQuickTile(
           icon: Icons.person_remove_rounded,
           label: l10n.cashQuickOwnerDraw,
           color: scheme.tertiary,
-          onTap: () => unawaited(
-            showQuickMovementSheet(
-              context,
-              initialKind: QuickMovementKind.ownerDraw,
-            ),
-          ),
+          onTap: () => _openQuickSheet(context, QuickMovementKind.ownerDraw),
         ),
         CashQuickTile(
           icon: Icons.person_add_rounded,
           label: l10n.cashQuickCapitalIn,
           color: colors.positive,
-          onTap: () => unawaited(
-            showQuickMovementSheet(
-              context,
-              initialKind: QuickMovementKind.capitalIn,
-            ),
-          ),
+          onTap: () => _openQuickSheet(context, QuickMovementKind.capitalIn),
         ),
         CashQuickTile(
           icon: Icons.swap_horiz_rounded,
           label: l10n.cashQuickTransfer,
           color: scheme.primary,
-          onTap: () => unawaited(
-            showQuickMovementSheet(
-              context,
-              initialKind: QuickMovementKind.boxTransfer,
-            ),
-          ),
+          onTap: () => _openQuickSheet(context, QuickMovementKind.boxTransfer),
         ),
         CashQuickTile(
           icon: Icons.account_balance_rounded,
           label: l10n.cashQuickBank,
           color: colors.gold,
-          onTap: () => unawaited(
-            showQuickMovementSheet(
-              context,
-              initialKind: QuickMovementKind.bankDeposit,
-            ),
-          ),
+          onTap: () => _openQuickSheet(context, QuickMovementKind.bankDeposit),
         ),
         CashQuickTile(
           icon: Icons.account_balance_wallet_rounded,

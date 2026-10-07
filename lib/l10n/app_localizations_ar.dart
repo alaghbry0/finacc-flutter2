@@ -3242,4 +3242,120 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashCategoriesArchivedSection => 'فئات مؤرشفة';
+
+  @override
+  String get printingPdfTooltip => 'طباعة PDF';
+
+  @override
+  String get printingPreviewTitle => 'معاينة الطباعة';
+
+  @override
+  String get printingPrint => 'طباعة';
+
+  @override
+  String get printingShare => 'مشاركة';
+
+  @override
+  String get printingWhatsApp => 'واتساب';
+
+  @override
+  String get printingClose => 'إغلاق';
+
+  @override
+  String get printingBuildError => 'تعذّر تجهيز المستند';
+
+  @override
+  String get printingBuildErrorBody =>
+      'لم يكتمل توليد ملف PDF. أعد المحاولة أو أغلق النافذة وافتح المستند من جديد.';
+
+  @override
+  String get printingPrintFailed => 'تعذّر فتح حوار الطباعة';
+
+  @override
+  String get printingShareFailed => 'تعذّر فتح المشاركة';
+
+  @override
+  String get printingWhatsAppFailed => 'تعذّر فتح واتساب';
+
+  @override
+  String get printingInvoiceDocTitle => 'فاتورة مبيعات';
+
+  @override
+  String get printingVoucherReceiptTitle => 'سند قبض';
+
+  @override
+  String get printingVoucherPaymentTitle => 'سند صرف';
+
+  @override
+  String get printingLblCustomer => 'العميل';
+
+  @override
+  String get printingLblParty => 'الطرف';
+
+  @override
+  String get printingLblAmount => 'المبلغ';
+
+  @override
+  String get printingLblDate => 'التاريخ';
+
+  @override
+  String get printingLblCurrency => 'العملة';
+
+  @override
+  String get printingLblItem => 'الصنف';
+
+  @override
+  String get printingLblQty => 'كمية';
+
+  @override
+  String get printingLblPrice => 'السعر';
+
+  @override
+  String get printingLblDiscount => 'خصم';
+
+  @override
+  String get printingLblSubtotal => 'الإجمالي قبل الخصم';
+
+  @override
+  String get printingLblTotalDiscount => 'إجمالي الخصم';
+
+  @override
+  String get printingLblGrandTotal => 'الإجمالي';
+
+  @override
+  String get printingLblPaid => 'المدفوع';
+
+  @override
+  String get printingLblDue => 'المتبقي';
+
+  @override
+  String get printingLblItemsSection => 'البنود';
+
+  @override
+  String get printingLblDescription => 'البيان';
+
+  @override
+  String get printingLblBox => 'الصندوق';
+
+  @override
+  String get printingLblSignature => 'التوقيع';
+
+  @override
+  String get printingFooterThanks => 'شكراً لتعاملكم معنا';
+
+  @override
+  String get printingCashCustomer => 'عميل نقدي';
+
+  @override
+  String printingShareMessageInvoice(Object docNo, Object total) {
+    return 'فاتورة $docNo بإجمالي $total';
+  }
+
+  @override
+  String printingShareMessageVoucher(Object amount, Object voucherNo) {
+    return 'سند $voucherNo بمبلغ $amount';
+  }
+
+  @override
+  String get printingVoucherPdfButton => 'طباعة السند PDF';
 }

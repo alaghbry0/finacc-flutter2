@@ -50,5 +50,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- واتساب (FR-10-02): رؤية حزمة WhatsApp على أندرويد 11+ حتى تحلّ
+             url_launcher روابط wa.me وتفتح التطبيق (لا أثر له على الويب). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="whatsapp"/>
+        </intent>
+        <package android:name="com.whatsapp"/>
     </queries>
 </manifest>
