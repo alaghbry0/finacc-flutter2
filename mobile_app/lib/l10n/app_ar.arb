@@ -1019,5 +1019,17 @@
   "printingCashCustomer": "عميل نقدي",
   "printingShareMessageInvoice": "فاتورة {docNo} بإجمالي {total}",
   "printingShareMessageVoucher": "سند {voucherNo} بمبلغ {amount}",
-  "printingVoucherPdfButton": "طباعة السند PDF"
+  "printingVoucherPdfButton": "طباعة السند PDF",
+  "printingStatementDocTitle": "كشف حساب",
+  "printingLblGeneratedAt": "تاريخ الإصدار",
+  "printingLblPeriod": "الفترة",
+  "printingStatementPeriodRange": "من {from} إلى {to}",
+  "printingStatementDebit": "مدين",
+  "printingStatementCredit": "دائن",
+  "printingStatementBalance": "الرصيد",
+  "printingStatementTotalDebit": "إجمالي المدين",
+  "printingStatementTotalCredit": "إجمالي الدائن",
+  "printingStatementClosing": "الرصيد الختامي",
+  "printingStatementEmpty": "لا قيود في هذه الفترة",
+  "printingShareMessageStatement": "كشف حساب {party} — الرصيد الختامي {balance}"
 }

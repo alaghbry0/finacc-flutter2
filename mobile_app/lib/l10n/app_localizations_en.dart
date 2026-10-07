@@ -3354,4 +3354,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get printingVoucherPdfButton => 'Print voucher PDF';
+
+  @override
+  String get printingStatementDocTitle => 'Account statement';
+
+  @override
+  String get printingLblGeneratedAt => 'Issue date';
+
+  @override
+  String get printingLblPeriod => 'Period';
+
+  @override
+  String printingStatementPeriodRange(Object from, Object to) {
+    return 'From $from to $to';
+  }
+
+  @override
+  String get printingStatementDebit => 'Debit';
+
+  @override
+  String get printingStatementCredit => 'Credit';
+
+  @override
+  String get printingStatementBalance => 'Balance';
+
+  @override
+  String get printingStatementTotalDebit => 'Total debit';
+
+  @override
+  String get printingStatementTotalCredit => 'Total credit';
+
+  @override
+  String get printingStatementClosing => 'Closing balance';
+
+  @override
+  String get printingStatementEmpty => 'No entries in this period';
+
+  @override
+  String printingShareMessageStatement(Object balance, Object party) {
+    return 'Account statement for $party — closing balance $balance';
+  }
 }

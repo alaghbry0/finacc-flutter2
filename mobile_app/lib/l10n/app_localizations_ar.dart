@@ -3363,4 +3363,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get printingVoucherPdfButton => 'طباعة السند PDF';
+
+  @override
+  String get printingStatementDocTitle => 'كشف حساب';
+
+  @override
+  String get printingLblGeneratedAt => 'تاريخ الإصدار';
+
+  @override
+  String get printingLblPeriod => 'الفترة';
+
+  @override
+  String printingStatementPeriodRange(Object from, Object to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String get printingStatementDebit => 'مدين';
+
+  @override
+  String get printingStatementCredit => 'دائن';
+
+  @override
+  String get printingStatementBalance => 'الرصيد';
+
+  @override
+  String get printingStatementTotalDebit => 'إجمالي المدين';
+
+  @override
+  String get printingStatementTotalCredit => 'إجمالي الدائن';
+
+  @override
+  String get printingStatementClosing => 'الرصيد الختامي';
+
+  @override
+  String get printingStatementEmpty => 'لا قيود في هذه الفترة';
+
+  @override
+  String printingShareMessageStatement(Object balance, Object party) {
+    return 'كشف حساب $party — الرصيد الختامي $balance';
+  }
 }
