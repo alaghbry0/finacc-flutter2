@@ -357,10 +357,7 @@ class ReturnRepository {
       }
 
       // (7) سياسة FX بعملة الفاتورة الأصلية بتاريخ المرتجع (القرار 5).
-      final fx = await _resolveRate(
-        orig.row['currency_id'] as int,
-        issuedAt,
-      );
+      final fx = await _resolveRate(orig.row['currency_id'] as int, issuedAt);
       if (fx.error != null) return Err(fx.error!);
 
       // (8) الصندوق الافتراضي — للجزء النقدي فقط.
@@ -480,7 +477,9 @@ class ReturnRepository {
 
           final batchSummary = entries.isEmpty
               ? null
-              : entries.map((e) => '${e.batchNumber}×${_num(e.qty)}').join('، ');
+              : entries
+                    .map((e) => '${e.batchNumber}×${_num(e.qty)}')
+                    .join('، ');
           final lineNotes = [
             'أصل البند #${input.invoiceItemId}',
             if (batchSummary != null) 'دفعة: $batchSummary',
@@ -690,10 +689,7 @@ class ReturnRepository {
       }
 
       // (7) سياسة FX بعملة الفاتورة الأصلية بتاريخ المرتجع (القرار 5).
-      final fx = await _resolveRate(
-        orig.row['currency_id'] as int,
-        issuedAt,
-      );
+      final fx = await _resolveRate(orig.row['currency_id'] as int, issuedAt);
       if (fx.error != null) return Err(fx.error!);
 
       // (8) الصندوق الافتراضي — للجزء النقدي فقط.
@@ -785,7 +781,8 @@ class ReturnRepository {
           final lineCost = roundCost(lineQty * snapshotUnit);
 
           // WAC قبل الخصم: يُقرأ المخزون الكلي والتكلفة داخل المعاملة.
-          final wacBefore = (info == null || info.isService || productId == null)
+          final wacBefore =
+              (info == null || info.isService || productId == null)
               ? null
               : await _readWacState(txn, productId);
 
@@ -1140,7 +1137,8 @@ class ReturnRepository {
       final label = expectedType == 'sale' ? 'بيع' : 'شراء';
       return (
         row: row,
-        error: 'الفاتورة رقم #$invoiceId ليست فاتورة $label (نوعها '
+        error:
+            'الفاتورة رقم #$invoiceId ليست فاتورة $label (نوعها '
             '«$docType») — لا يُنشأ مرتجع إلا عن النوع المطابق.',
       );
     }
@@ -1148,14 +1146,16 @@ class ReturnRepository {
     if (status == 'void') {
       return (
         row: row,
-        error: 'الفاتورة ${row['invoice_no']} ملغاة — لا يُنشأ مرتجع عن '
+        error:
+            'الفاتورة ${row['invoice_no']} ملغاة — لا يُنشأ مرتجع عن '
             'فاتورة ملغاة (FR-02-07).',
       );
     }
     if (status != 'completed') {
       return (
         row: row,
-        error: 'الفاتورة ${row['invoice_no']} ليست مكتملة (حالتها '
+        error:
+            'الفاتورة ${row['invoice_no']} ليست مكتملة (حالتها '
             '«$status») — لا يُنشأ مرتجع إلا عن فاتورة مكتملة.',
       );
     }
@@ -1184,7 +1184,8 @@ class ReturnRepository {
       if (item == null) {
         return (
           items: items,
-          error: 'البند رقم #${line.invoiceItemId} لا ينتمي إلى الفاتورة '
+          error:
+              'البند رقم #${line.invoiceItemId} لا ينتمي إلى الفاتورة '
               'الأصلية — اختر بنوداً من الفاتورة نفسها.',
         );
       }
@@ -1199,7 +1200,8 @@ class ReturnRepository {
       if (entry.value > available + _qtyEpsilon) {
         return (
           items: items,
-          error: 'الكمية المطلوب إرجاعها من البند '
+          error:
+              'الكمية المطلوب إرجاعها من البند '
               '«${item['line_desc'] ?? entry.key}» (${_num(entry.value)}) '
               'تتجاوز المتاح للإرجاع (${_num(available)}) — الأصلي '
               '${_num(origQty)} والمرتجع سابقاً ${_num(alreadyReturned)}.',
@@ -1227,8 +1229,7 @@ class ReturnRepository {
         row['id'] as int: (row['qty'] as num?)?.toDouble() ?? 0,
     };
     final names = {
-      for (final row in itemRows)
-        row['id'] as int: row['line_desc'] as String?,
+      for (final row in itemRows) row['id'] as int: row['line_desc'] as String?,
     };
     final returned = await _returnedByLineInside(
       txn,
@@ -1278,9 +1279,7 @@ class ReturnRepository {
       final gross = roundMoney(line.qty * unitPrice);
       final discount = roundMoney(line.qty * origDiscount / origQty);
       final lineTotal = roundMoney(gross - discount);
-      final lineCost = roundCost(
-        line.qty * roundCost(origLineCost / origQty),
-      );
+      final lineCost = roundCost(line.qty * roundCost(origLineCost / origQty));
 
       lineTotals.add(lineTotal);
       discounts.add(discount);
@@ -1368,11 +1367,7 @@ class ReturnRepository {
       limit: 1,
     );
     if (currencyRows.isEmpty) {
-      return (
-        rate: 1.0,
-        isFallback: false,
-        error: 'عملة الفاتورة غير موجودة.',
-      );
+      return (rate: 1.0, isFallback: false, error: 'عملة الفاتورة غير موجودة.');
     }
     if ((currencyRows.first['is_base'] as int? ?? 0) == 1) {
       return (rate: 1.0, isFallback: false, error: null);
@@ -1388,7 +1383,8 @@ class ReturnRepository {
       return (
         rate: 1.0,
         isFallback: false,
-        error: 'لا يوجد سعر صرف لعملة $code بتاريخ اليوم — أدخل سعر اليوم '
+        error:
+            'لا يوجد سعر صرف لعملة $code بتاريخ اليوم — أدخل سعر اليوم '
             'أولاً ثم احفظ (لا يُحفظ بسعر افتراضي).',
       );
     }
@@ -1397,7 +1393,8 @@ class ReturnRepository {
       return (
         rate: 1.0,
         isFallback: false,
-        error: 'لا يوجد أي سعر صرف معروف لعملة $code — أدخل سعراً واحداً '
+        error:
+            'لا يوجد أي سعر صرف معروف لعملة $code — أدخل سعراً واحداً '
             'على الأقل قبل الحفظ بها.',
       );
     }

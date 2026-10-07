@@ -15,6 +15,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../view_models/inventory_home_view_model.dart';
 import 'widgets/inventory_widgets.dart';
 
@@ -39,7 +40,13 @@ class InventoryHomeScreen extends StatelessWidget {
     }
     return ChangeNotifierProvider<InventoryHomeViewModel>.value(
       value: vm,
-      child: const _InventoryHomeBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع — عدّادات التنبيه تتغير ببيع/
+      // شراء يغيّر المخزون (IndexedStack يستعيد الفرع بلا rebuild).
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/inventory$'),
+        onActivate: vm.load,
+        child: const _InventoryHomeBody(),
+      ),
     );
   }
 }

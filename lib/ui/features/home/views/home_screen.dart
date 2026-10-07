@@ -27,6 +27,7 @@ import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/mini_sales_chart.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/numerals_scope.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../view_models/home_view_model.dart';
 
@@ -43,7 +44,14 @@ class HomeScreen extends StatelessWidget {
     unawaited(vm.load(companyName: app.company?.name));
     return ChangeNotifierProvider<DashboardViewModel>.value(
       value: vm,
-      child: const _DashboardBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع — إحصاءات اليوم تتغير بترحيل
+      // فواتير من فرع البيع والداشبورد يُستعاد من IndexedStack بلا rebuild
+      // (اكتُشف بالتحقق الحي 2026-10-07).
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/home$'),
+        onActivate: () => vm.load(companyName: app.company?.name),
+        child: const _DashboardBody(),
+      ),
     );
   }
 }

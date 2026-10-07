@@ -175,9 +175,7 @@ class PurchasePricing {
     PurchasePaymentMethod payStatus,
   })
   settlePayment(double grandTotal, double paidCash) {
-    final netPaid = roundMoney(
-      paidCash < grandTotal ? paidCash : grandTotal,
-    );
+    final netPaid = roundMoney(paidCash < grandTotal ? paidCash : grandTotal);
     final remainingCredit = roundMoney(grandTotal - netPaid);
     return (
       netPaid: netPaid,

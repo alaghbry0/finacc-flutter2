@@ -21,6 +21,7 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../view_models/item_list_view_model.dart';
 import 'widgets/inventory_widgets.dart';
@@ -43,7 +44,14 @@ class ItemsListScreen extends StatelessWidget {
     }
     return ChangeNotifierProvider<ItemListViewModel>.value(
       value: vm,
-      child: const _ItemsListBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع: ترحيل فاتورة بيع في فرع آخر
+      // يغيّر «المتوفر» — والفرع يُستعاد من IndexedStack بلا rebuild
+      // (اكتُشف بالتحقق الحي 2026-10-07).
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/inventory/items$'),
+        onActivate: vm.load,
+        child: const _ItemsListBody(),
+      ),
     );
   }
 }

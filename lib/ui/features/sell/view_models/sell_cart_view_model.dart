@@ -295,8 +295,9 @@ class SellCartViewModel extends ChangeNotifier {
   // التسعير الحي (نقي — بلا قاعدة)
   // ───────────────────────────────────────────────────────────────────
 
-  List<CartLine> get cartLines =>
-      [for (final line in _state.lines) line.toCartLine()];
+  List<CartLine> get cartLines => [
+    for (final line in _state.lines) line.toCartLine(),
+  ];
 
   /// السلة المُسعَّرة الآن — null عند الفراغ أو عدم قابلية التسعير.
   PricedCart? get pricedCart {
@@ -758,9 +759,8 @@ class SellCartViewModel extends ChangeNotifier {
   Future<String?> _nextInvoicePreview() async {
     try {
       final year = _clock().year;
-      final last = await DocSequenceService(
-        _db,
-      ).lastIssuedNumber(DocSequenceType.invoice, year);
+      final last = await DocSequenceService(_db)
+          .lastIssuedNumber(DocSequenceType.invoice, year);
       return formatDocNumber(DocSequenceType.invoice, year, last + 1);
     } catch (_) {
       return null;

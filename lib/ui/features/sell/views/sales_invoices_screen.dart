@@ -18,6 +18,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../view_models/sales_invoices_view_model.dart';
 import 'widgets/sell_widgets.dart';
 
@@ -40,7 +41,13 @@ class SalesInvoicesScreen extends StatelessWidget {
     }
     return ChangeNotifierProvider<SalesInvoicesViewModel>.value(
       value: vm,
-      child: const _SalesInvoicesBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع: فاتورة جديدة تُرحَّل في الكاشير
+      // (نفس فرع التبويب أو غيره) والقائمة تُستعاد من IndexedStack بلا rebuild.
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/sell/invoices$'),
+        onActivate: vm.load,
+        child: const _SalesInvoicesBody(),
+      ),
     );
   }
 }
@@ -448,7 +455,10 @@ class _InvoiceDetailContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.sellDetailItemsSection, style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                l10n.sellDetailItemsSection,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               for (final item in detail.items) _ItemRow(item: item),
             ],
@@ -480,11 +490,8 @@ class _InvoiceDetailContent extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n.sellTotalsGrandTotal,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                   ),
                   AmountText(
@@ -530,14 +537,15 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const Spacer(),
-          Text(value, style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          )),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
@@ -566,9 +574,8 @@ class _ItemRow extends StatelessWidget {
               children: [
                 Text(
                   item.lineDesc ?? l10n.sellDetailUnknownItem,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -585,9 +592,8 @@ class _ItemRow extends StatelessWidget {
                 if ((item.notes ?? '').isNotEmpty)
                   Text(
                     item.notes!,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colors.gold,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: colors.gold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -633,9 +639,8 @@ class _AmountRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
           AmountText(

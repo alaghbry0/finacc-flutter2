@@ -64,9 +64,7 @@ class _QuotationDetailBody extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.go('/sell/quotations')),
-        title: Text(
-          quotation?.quotationNo ?? l10n.sellQuotationDetailTitle,
-        ),
+        title: Text(quotation?.quotationNo ?? l10n.sellQuotationDetailTitle),
       ),
       body: state.loading
           ? ListView(
@@ -100,8 +98,8 @@ class _QuotationDetailBody extends StatelessWidget {
               ],
             )
           : _QuotationDetailContent(vm: vm),
-      bottomNavigationBar: (state.detail != null &&
-              quotation!.status.convertible)
+      bottomNavigationBar:
+          (state.detail != null && quotation!.status.convertible)
           ? _ActionsBar(vm: vm)
           : null,
     );
@@ -134,11 +132,10 @@ class _QuotationDetailContent extends StatelessWidget {
                   Expanded(
                     child: Text(
                       quotation.quotationNo,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontFeatures: FinText.tabularNums,
-                          ),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: FinText.tabularNums,
+                      ),
                     ),
                   ),
                   QuotationStatusChip(status: quotation.status),
@@ -213,8 +210,7 @@ class _QuotationDetailContent extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item.lineDesc ??
-                                  l10n.sellDetailUnknownItem,
+                              item.lineDesc ?? l10n.sellDetailUnknownItem,
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.w700),
                               maxLines: 2,
@@ -226,12 +222,11 @@ class _QuotationDetailContent extends StatelessWidget {
                               '${sellQtyText(item.qty)} × '
                               '${AmountText.format(item.unitPrice, item.unitPrice == item.unitPrice.truncateToDouble() ? 0 : 2)}'
                               '${item.discountAmount > 0 ? ' · ${l10n.sellDetailDiscountLabel} ${AmountText.format(item.discountAmount, 2)}' : ''}',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.labelSmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                                fontFeatures: FinText.tabularNums,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    fontFeatures: FinText.tabularNums,
+                                  ),
                             ),
                           ],
                         ),
@@ -241,7 +236,8 @@ class _QuotationDetailContent extends StatelessWidget {
                           alignment: AlignmentDirectional.centerEnd,
                           child: AmountText(
                             amount: item.lineTotal,
-                            decimals: item.lineTotal ==
+                            decimals:
+                                item.lineTotal ==
                                     item.lineTotal.truncateToDouble()
                                 ? 0
                                 : 2,
@@ -286,7 +282,8 @@ class _QuotationDetailContent extends StatelessWidget {
                   AmountText(
                     amount: quotation.total,
                     size: AmountSize.large,
-                    decimals: quotation.total == quotation.total.truncateToDouble()
+                    decimals:
+                        quotation.total == quotation.total.truncateToDouble()
                         ? 0
                         : 2,
                   ),
@@ -334,10 +331,7 @@ class _ActionsBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          top: BorderSide(
-            color: FinColors.of(context).cardBorder,
-            width: 1,
-          ),
+          top: BorderSide(color: FinColors.of(context).cardBorder, width: 1),
         ),
       ),
       child: SafeArea(
@@ -391,7 +385,10 @@ class _ActionsBar extends StatelessWidget {
     );
   }
 
-  Future<void> _convert(BuildContext context, QuotationDetailViewModel vm) async {
+  Future<void> _convert(
+    BuildContext context,
+    QuotationDetailViewModel vm,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final quotation = vm.quotation!;
     final posted = await showPaymentSheet(
@@ -412,16 +409,17 @@ class _ActionsBar extends StatelessWidget {
     }
   }
 
-  Future<void> _markSent(BuildContext context, QuotationDetailViewModel vm) async {
+  Future<void> _markSent(
+    BuildContext context,
+    QuotationDetailViewModel vm,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final result = await vm.markSent();
     if (!context.mounted) return;
     if (result.isOk) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(l10n.sellQuotationSentMessage)),
-        );
+        ..showSnackBar(SnackBar(content: Text(l10n.sellQuotationSentMessage)));
       unawaited(vm.load());
     } else {
       ScaffoldMessenger.of(context)
@@ -430,7 +428,10 @@ class _ActionsBar extends StatelessWidget {
     }
   }
 
-  Future<void> _cancel(BuildContext context, QuotationDetailViewModel vm) async {
+  Future<void> _cancel(
+    BuildContext context,
+    QuotationDetailViewModel vm,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -480,16 +481,14 @@ class _InfoRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -518,9 +517,8 @@ class _AmountRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
           AmountText(

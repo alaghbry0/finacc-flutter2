@@ -51,6 +51,22 @@
     #splash-brand .title { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
     #splash-brand .sub { font-size: 13px; opacity: .72; }
     #splash-brand.hidden { opacity: 0; pointer-events: none; }
+
+    /* ── إصلاح انزياح شجرة الوصولية في RTL (خلل محرك Flutter Web) ──
+       المحرك يضع flt-semantics-host بمحاذاة حافة RTL مع direction:rtl
+       الموروثة من <html dir="rtl">، فتنزاح عقد الوصولية عن مواضعها
+       البصرية وتخطف نقرات عناصر خاطئة (اكتُشف بالتحقق الحي 2026-10-07:
+       النقر على زر «الرئيسية» كان يفتح «المزيد»). التثبيت أدناه يعيد
+       العقد لمواضعها الصحيحة — ويب فقط (لا أثر على أندرويد/APK). */
+    flt-semantics-host {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      direction: ltr !important;
+    }
   </style>
 </head>
 <body>

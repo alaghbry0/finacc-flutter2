@@ -40,7 +40,8 @@ class SalesInvoicesState {
 }
 
 class SalesInvoicesViewModel extends ChangeNotifier {
-  SalesInvoicesViewModel({required SaleRepository saleRepo}) : _sales = saleRepo;
+  SalesInvoicesViewModel({required SaleRepository saleRepo})
+    : _sales = saleRepo;
 
   final SaleRepository _sales;
 
@@ -106,8 +107,10 @@ class SaleInvoiceDetailState {
 }
 
 class SaleInvoiceDetailViewModel extends ChangeNotifier {
-  SaleInvoiceDetailViewModel({required SaleRepository saleRepo, required this.invoiceId})
-    : _sales = saleRepo;
+  SaleInvoiceDetailViewModel({
+    required SaleRepository saleRepo,
+    required this.invoiceId,
+  }) : _sales = saleRepo;
 
   final SaleRepository _sales;
   final int invoiceId;

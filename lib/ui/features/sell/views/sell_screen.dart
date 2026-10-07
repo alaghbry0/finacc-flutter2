@@ -102,9 +102,7 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
           final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(content: Text(l10n.sellFxSavedAndResumed)),
-            );
+            ..showSnackBar(SnackBar(content: Text(l10n.sellFxSavedAndResumed)));
         });
       } else {
         vm.clearFxGate();
@@ -132,11 +130,8 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
     await showCustomerPickerSheet(
       context,
       customerRepo: app.customers!,
-      onPick: (pick) => vm.setCustomer(
-        id: pick.partyId,
-        name: pick.name,
-        phone: pick.phone,
-      ),
+      onPick: (pick) =>
+          vm.setCustomer(id: pick.partyId, name: pick.name, phone: pick.phone),
       onCashCustomer: vm.setCashCustomer,
     );
   }
@@ -290,8 +285,9 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
                       children: [
                         _TargetsStrip(
                           expanded: _headerExpanded,
-                          onToggle: () =>
-                              setState(() => _headerExpanded = !_headerExpanded),
+                          onToggle: () => setState(
+                            () => _headerExpanded = !_headerExpanded,
+                          ),
                           onPickCustomer: _openCustomerPicker,
                           onPickCash: () => context
                               .read<SellCartViewModel>()
@@ -388,9 +384,8 @@ class _TargetsStrip extends StatelessWidget {
                 Expanded(
                   child: Text(
                     customerLabel,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w800),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -447,10 +442,7 @@ class _TargetsStrip extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: onPickCash,
-                          icon: const Icon(
-                            Icons.person_off_outlined,
-                            size: 18,
-                          ),
+                          icon: const Icon(Icons.person_off_outlined, size: 18),
                           label: Text(l10n.sellCashCustomer),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
@@ -506,9 +498,8 @@ class _PostErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           SizedBox(
@@ -579,10 +570,7 @@ class _CartLineCard extends StatelessWidget {
           color: colors.negativeContainer,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Icon(
-          Icons.delete_rounded,
-          color: colors.onNegativeContainer,
-        ),
+        child: Icon(Icons.delete_rounded, color: colors.onNegativeContainer),
       ),
       child: FinCard(
         padding: const EdgeInsets.all(12),
@@ -732,9 +720,8 @@ class _PriceButton extends StatelessWidget {
             ),
             Text(
               l10n.sellUnitPriceLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -820,7 +807,8 @@ class _BottomBar extends StatelessWidget {
     final colors = FinColors.of(context);
     final priced = vm.pricedCart;
     final hasError = vm.cartError != null;
-    final canPay = !state.posting &&
+    final canPay =
+        !state.posting &&
         state.lines.isNotEmpty &&
         !hasError &&
         state.warehouseId != null;
@@ -828,9 +816,7 @@ class _BottomBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        border: Border(
-          top: BorderSide(color: colors.cardBorder, width: 1),
-        ),
+        border: Border(top: BorderSide(color: colors.cardBorder, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -846,7 +832,10 @@ class _BottomBar extends StatelessWidget {
                     height: 48,
                     child: OutlinedButton.icon(
                       onPressed: onAddItem,
-                      icon: const Icon(Icons.add_shopping_cart_rounded, size: 20),
+                      icon: const Icon(
+                        Icons.add_shopping_cart_rounded,
+                        size: 20,
+                      ),
                       label: Text(l10n.sellAddItem),
                     ),
                   ),
@@ -867,7 +856,7 @@ class _BottomBar extends StatelessWidget {
                       label: Text(
                         state.invoiceDiscountValue > 0
                             ? (state.invoiceDiscountType ==
-                                  SaleDiscountType.percent
+                                      SaleDiscountType.percent
                                   ? l10n.sellInvoiceDiscountPercent(
                                       state.invoiceDiscountValue
                                           .toStringAsFixed(0),
@@ -920,9 +909,7 @@ class _BottomBar extends StatelessWidget {
                                   context,
                                   priced.totals.grandTotal,
                                   priced.totals.grandTotal ==
-                                          priced
-                                              .totals
-                                              .grandTotal
+                                          priced.totals.grandTotal
                                               .truncateToDouble()
                                       ? 0
                                       : 2,
@@ -934,7 +921,8 @@ class _BottomBar extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: state.lines.isEmpty || hasError || state.posting
+                      onPressed:
+                          state.lines.isEmpty || hasError || state.posting
                           ? null
                           : onSaveQuotation,
                       style: OutlinedButton.styleFrom(

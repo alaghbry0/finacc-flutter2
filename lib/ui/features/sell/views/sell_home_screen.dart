@@ -18,6 +18,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
 import '../view_models/sell_home_view_model.dart';
 import 'widgets/sell_widgets.dart';
@@ -44,7 +45,14 @@ class SellHomeScreen extends StatelessWidget {
     }
     return ChangeNotifierProvider<SellHomeViewModel>.value(
       value: vm,
-      child: const _SellHomeBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع: «مبيعات اليوم» تتغير بترحيل
+      // فاتورة من الكاشير والفرع يُستعاد من IndexedStack بلا rebuild
+      // (اكتُشف بالتحقق الحي 2026-10-07).
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/sell$'),
+        onActivate: vm.load,
+        child: const _SellHomeBody(),
+      ),
     );
   }
 }
@@ -145,9 +153,8 @@ class _HeroCard extends StatelessWidget {
               children: [
                 Text(
                   l10n.sellHomeHeroTitle,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -265,11 +272,10 @@ class _NewSaleCard extends StatelessWidget {
                     children: [
                       Text(
                         l10n.sellHomeNewInvoice,
-                        style: Theme.of(context).textTheme.titleLarge
-                            ?.copyWith(
-                              color: scheme.onPrimary,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: scheme.onPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -367,9 +373,8 @@ class _AccessCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w800),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -429,12 +434,11 @@ class _RecentInvoicesCard extends StatelessWidget {
                       children: [
                         Text(
                           invoice.invoiceNo,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontFeatures: FinText.tabularNums,
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontFeatures: FinText.tabularNums,
+                              ),
                         ),
                         Text(
                           invoice.customerName ?? l10n.sellCashCustomer,

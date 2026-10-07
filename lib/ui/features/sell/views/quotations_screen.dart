@@ -19,6 +19,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../view_models/quotations_view_model.dart';
 import 'widgets/sell_widgets.dart';
@@ -42,7 +43,13 @@ class QuotationsScreen extends StatelessWidget {
     }
     return ChangeNotifierProvider<QuotationsViewModel>.value(
       value: vm,
-      child: const _QuotationsBody(),
+      // تحديث حي عند تبديل التبويب/الرجوع — تحويل عرض لفاتورة يغيّر الحالة
+      // والقائمة تُستعاد من IndexedStack بلا rebuild.
+      child: RefreshOnActive(
+        routePattern: RegExp(r'^/sell/quotations$'),
+        onActivate: vm.load,
+        child: const _QuotationsBody(),
+      ),
     );
   }
 }
@@ -189,10 +196,7 @@ class _StatusFilterBar extends StatelessWidget {
           chip(l10n.sellQuotationFilterAll, null),
           chip(l10n.sellQuotationStatusDraft, QuotationStatus.draft),
           chip(l10n.sellQuotationStatusSent, QuotationStatus.sent),
-          chip(
-            l10n.sellQuotationStatusConverted,
-            QuotationStatus.converted,
-          ),
+          chip(l10n.sellQuotationStatusConverted, QuotationStatus.converted),
           chip(l10n.sellQuotationStatusCancelled, QuotationStatus.rejected),
         ],
       ),
@@ -301,9 +305,8 @@ class _QuotationCard extends StatelessWidget {
               l10n.sellQuotationValidUntil(
                 sellFormatDate(quotation.validUntil!.toLocal()),
               ),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.warning,
-              ),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: colors.warning),
             ),
           ],
           const SizedBox(height: 10),
@@ -405,9 +408,8 @@ class _QuotationCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       quotation.currencyCode!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colors.gold,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: colors.gold),
                     ),
                   ],
                 ],
@@ -465,10 +467,8 @@ class _QuickAction extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: effective,
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: effective, fontWeight: FontWeight.w800),
             ),
           ],
         ),

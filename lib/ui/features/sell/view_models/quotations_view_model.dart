@@ -90,10 +90,8 @@ class QuotationsViewModel extends ChangeNotifier {
       _runAction(id, () => _quotations.markSent(id, userId: userId));
 
   /// إلغاء العرض (draft/sent فقط).
-  Future<Result<Quotation, String>> cancel(
-    int id, {
-    required int userId,
-  }) => _runAction(id, () => _quotations.cancelQuotation(id, userId: userId));
+  Future<Result<Quotation, String>> cancel(int id, {required int userId}) =>
+      _runAction(id, () => _quotations.cancelQuotation(id, userId: userId));
 
   Future<Result<Quotation, String>> _runAction(
     int id,

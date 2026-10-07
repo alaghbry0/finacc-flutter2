@@ -323,8 +323,13 @@ class PurchaseRepository {
 
           // WAC (5.4-3): يُقرأ ويُحدَّث داخل المعاملة — قلب الشراء.
           if (!info.isService) {
-            await _applyWac(txn, productId: info.id, qtyNew: lineQty,
-                costNew: unitCostBase, now: at);
+            await _applyWac(
+              txn,
+              productId: info.id,
+              qtyNew: lineQty,
+              costNew: unitCostBase,
+              now: at,
+            );
           }
 
           // الدفعة الواردة (القرار 4): متتبع + رقم + صلاحية → صف batch
@@ -507,9 +512,7 @@ class PurchaseRepository {
     );
     return PurchaseInvoiceDetail(
       invoice: PurchaseInvoice.fromRow(rows.first),
-      items: [
-        for (final row in itemRows) PurchaseInvoiceItemLine.fromRow(row),
-      ],
+      items: [for (final row in itemRows) PurchaseInvoiceItemLine.fromRow(row)],
       supplierName: rows.first['supplier_name'] as String?,
       supplierPhone: rows.first['supplier_phone'] as String?,
       currencyCode: rows.first['currency_code'] as String?,
@@ -602,10 +605,7 @@ class PurchaseRepository {
     if (newCost < 0) newCost = 0; // حارس نظري (لا تكلفة سالبة).
     await txn.update(
       'product',
-      {
-        'cost_price': newCost,
-        'updated_at': now.toUtc().toIso8601String(),
-      },
+      {'cost_price': newCost, 'updated_at': now.toUtc().toIso8601String()},
       where: 'id = ?',
       whereArgs: [productId],
     );
