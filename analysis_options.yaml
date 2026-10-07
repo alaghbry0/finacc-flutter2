@@ -1,0 +1,28 @@
+# Strict analyzer configuration — Quality Gate 0.5 (SRS):
+# `dart analyze` must report ZERO errors and ZERO warnings.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - l10n/**
+
+linter:
+  rules:
+    # Keep code documentation honest and maintenance cheap.
+    public_member_api_docs: false
+    # Enforce explicit types on public APIs of the domain layer.
+    always_declare_return_types: true
+    prefer_final_locals: true
+    unawaited_futures: true
+    discarded_futures: true
+    avoid_slow_async_io: true
+    cancel_subscriptions: true
+    use_super_parameters: true
