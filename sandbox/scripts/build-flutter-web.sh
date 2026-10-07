@@ -30,9 +30,22 @@ if [ "${1:-}" = "--debug" ]; then
   BUILD_MODE="debug"
 fi
 
+# dart2js O4 gets SIGKILLed (OOM) on the 4GB sandbox — O2 is the sweet spot
+# (full minification, a third of the peak memory). --debug builds ignore it.
+D2JS_FLAG=""
+if [ "$BUILD_MODE" = "release" ]; then
+  D2JS_FLAG="--dart2js-optimization O2"
+fi
+
+# use_arabic=true — the `pdf` package ships Arabic glyph-shaping DISABLED by
+# default (use_arabic = !use_bidi); without this flag PDF text renders with
+# disconnected letters (verified live in the 2026-10-07 round).
+ARABIC_FLAG="--dart-define=use_arabic=true"
+
 echo "[build-flutter-web] building mobile_app for web ($BUILD_MODE)..."
 cd "$APP_DIR"
-flutter build web "--${BUILD_MODE}" --base-href /mobile_app/
+# shellcheck disable=SC2086
+flutter build web "--${BUILD_MODE}" --base-href /mobile_app/ $D2JS_FLAG $ARABIC_FLAG
 
 echo "[build-flutter-web] deploying to $PUBLIC_DIR..."
 rm -rf "$PUBLIC_DIR"

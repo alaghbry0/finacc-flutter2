@@ -207,6 +207,36 @@ const slice1Items: React.ReactNode[] = [
   </>,
 ];
 
+const slices2to7Items: React.ReactNode[] = [
+  <>
+    <b>الشريحة 2–3</b> — المخزون الكامل: الأصناف والباركود (EAN-13/Code128
+    بمعاينة حية) والدفعات <Mono>FEFO</Mono> واستيراد Excel/CSV + الأطراف
+    (عملاء/موردون بحد ائتمان وأرصدة متعددة العملات) وأسعار الصرف اليومية
+    مع بوابة <Mono>FR-08-09</Mono>
+  </>,
+  <>
+    <b>الشريحة 4</b> — الكاشير الكامل: سلة بجلسة تنجو من القفل، خصومات سطر
+    وفاتورة <Mono>pro-rata</Mono>، دفع نقدي/آجل/مختلط، وعروض أسعار قابلة
+    للتحويل — محرك ترحيل ذري (<Mono>INV/QTE</Mono> + <Mono>WAC</Mono> لحظة البيع)
+  </>,
+  <>
+    <b>الشريحة 5</b> — المشتريات والمرتجعات: فواتير <Mono>PUR</Mono> بدفعات
+    واردة برقم مورد وصلاحية + مرتجعات <Mono>SRN/PRN</Mono> المرتبطة
+    بالفواتير الأصلية
+  </>,
+  <>
+    <b>الشريحة 6</b> — النقدية والصناديق: أرصدة حية لكل صندوق وعملة، سندات
+    <Mono>RVT/PMT</Mono> بتخصيص <Mono>FIFO</Mono> أو على الحساب، مصروف بفئات،
+    مسحوبات وإيداع مالك، تحويل بعملتين، وإبطال بحركة معاكسة
+  </>,
+  <>
+    <b>الشريحة 7 (بدء)</b> — وحدة <Mono>PDF/الطباعة</Mono>: فاتورة المبيعات
+    <Mono>A4</Mono> بعربية مصيّرة كاملة (خط Almarai داخل المستند) + معاينة
+    حية بدقة <Mono>150dpi</Mono> + طباعة/مشاركة/واتساب دفاعية — وسندات
+    القبض والصرف <Mono>A5</Mono> (تحققها الحي للجولة القادمة)
+  </>,
+];
+
 const qualityGates = [
   {
     icon: Terminal,
@@ -281,7 +311,7 @@ export default function FinAccStage1DeliveryPanel() {
               <p className="truncate text-sm font-extrabold leading-tight text-[#E8F0EC] sm:text-base">
                 FinAcc — المُحاسِب الشخصي
               </p>
-              <p className="truncate text-[11px] text-[#9DB5AC]">لوحة تسليم المرحلة الأولى</p>
+              <p className="truncate text-[11px] text-[#9DB5AC]">لوحة تسليم FinAcc — تتبع الجولات حياً</p>
             </div>
           </div>
 
@@ -289,7 +319,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                المرحلة الأولى — الشريحة 0 + الشريحة 1
+                v0.6.0 — الشرائح 0–6 كاملة + بدء 7 (PDF)
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -315,7 +345,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            المرحلة الأولى — الشريحة 0 + الشريحة 1
+            v0.6.0 — الشرائح 0–6 + بدء 7 (PDF)
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -480,13 +510,13 @@ export default function FinAccStage1DeliveryPanel() {
           </div>
         </section>
 
-        {/* ================= ما تم إنجازه — المرحلة الأولى ================= */}
+        {/* ================= ما تم إنجازه — حتى الشريحة 7 ================= */}
         <section className="mb-12">
           <SectionHeading
             icon={Database}
-            kicker="حصاد المرحلة"
-            title="ما تم إنجازه — المرحلة الأولى"
-            subtitle="شريحتان مكتملتان: أساس التخزين الذرّي، ثم تجربة الهوية والدخول حتى لوحة التحكم"
+            kicker="حصاد الجولات"
+            title="ما تم إنجازه — حتى الشريحة 7 (بدء PDF)"
+            subtitle="سبع شريحات مكتملة أو جارية: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية وبدء الطباعة — كلها متحقق منها حياً من المتصفح"
           />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -536,6 +566,32 @@ export default function FinAccStage1DeliveryPanel() {
               <CardContent className="px-6">
                 <ul className="space-y-2.5">
                   {slice1Items.map((item, i) => (
+                    <DoneItem key={i}>{item}</DoneItem>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* ---------- الشرائح 2–7 ---------- */}
+            <Card className="gap-5 border-[#1E332D] bg-[#0F1D19]/90 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04] lg:col-span-2">
+              <CardHeader className="px-6">
+                <CardTitle className="flex flex-wrap items-center gap-2.5 text-base font-extrabold">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  الشرائح 2–7 — النواة التشغيلية الكاملة
+                  <Badge className="ml-auto gap-1 border-[#C9A96A]/30 bg-[#C9A96A]/10 text-[10px] font-bold text-[#E3C88F]">
+                    <BadgeCheck className="h-3 w-3" aria-hidden="true" />
+                    v0.4.0 + v0.5.0 + بدء 7
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-sm text-[#9DB5AC]">
+                  المخزون والدفعات والأطراف والكاشير والمشتريات والمرتجعات والنقدية والسندات — ثم بدء الطباعة
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6">
+                <ul className="space-y-2.5">
+                  {slices2to7Items.map((item, i) => (
                     <DoneItem key={i}>{item}</DoneItem>
                   ))}
                 </ul>
