@@ -1,4 +1,4 @@
-/// خطوط الطباعة (الشريحة 7) — تحميل وجهي Almarai مرة واحدة لكل عزل.
+/// خطوط الطباعة (الشريحة 7) — تحميل أوجه Almarai مرة واحدة لكل عزل.
 ///
 /// الخطوط من أصول التطبيق المحلية (`assets/fonts/almarai/`) — الطباعة
 /// أوفلاين حصراً: لا يجوز أبداً جلب خط من الشبكة هنا (قاعدة SRS §0.3).
@@ -13,6 +13,7 @@ class PrintFonts {
 
   static pw.Font? _regular;
   static pw.Font? _bold;
+  static pw.Font? _extraBold;
 
   /// Almarai Regular (نص الجسم والأرقام).
   static pw.Font get regular {
@@ -36,8 +37,21 @@ class PrintFonts {
     return font;
   }
 
+  /// Almarai ExtraBold (عناوين المستندات الكبيرة — إصلاح UX-audit:
+  /// الوجه مصرَّح به في pubspec وموجود في الأصول لكنه كان غير مستغل).
+  static pw.Font get extraBold {
+    final font = _extraBold;
+    if (font == null) {
+      throw StateError(
+        'PrintFonts.load() must be awaited before building a PDF',
+      );
+    }
+    return font;
+  }
+
   /// هل نجح التحميل من قبل؟ (لإعادة التحميل بعد hot restart).
-  static bool get loaded => _regular != null && _bold != null;
+  static bool get loaded =>
+      _regular != null && _bold != null && _extraBold != null;
 
   /// يحمّل ملفات TTF — **idempotent**: آمن استدعاؤه قبل كل بناء.
   static Future<void> load() async {
@@ -48,7 +62,11 @@ class PrintFonts {
     final bold = pw.Font.ttf(
       await rootBundle.load('assets/fonts/almarai/Almarai-Bold.ttf'),
     );
+    final extraBold = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/almarai/Almarai-ExtraBold.ttf'),
+    );
     _regular = regular;
     _bold = bold;
+    _extraBold = extraBold;
   }
 }

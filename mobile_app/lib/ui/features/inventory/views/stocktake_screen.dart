@@ -24,6 +24,7 @@ import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../view_models/stocktake_session.dart';
 import '../view_models/stocktake_view_model.dart';
 
 /// تفاوت عشري مقارنات الكميات (نفس تعريف المستودع).
@@ -48,12 +49,13 @@ String stocktakeQty(double value) {
 DateTime? _tryParseIso(String? iso) =>
     iso == null ? null : DateTime.tryParse(iso);
 
-/// شاشة الجرد الفعلي — تُركَّب على مسار الجرد (يصلها المنسق).
+/// شاشة الجرد الفعلي — تُركَّب على مسار الجرد.
 class StocktakeScreen extends StatelessWidget {
   const StocktakeScreen({super.key, this.viewModel});
 
-  /// Seam اختبار: نموذج محمّل مسبقاً — عند غيابه تُنشئ الشاشة نموذجها
-  /// فوق مستودعات المتحكم (لم يُوصَل المسار بعد — التوصيل على المنسق).
+  /// Seam اختبار: نموذج محمّل مسبقاً — عند غيابه تتصل الشاشة بجلسة
+  /// الجرد التطبيقية (نمط SellCartSession — P0-1a) فتنجو مسودة العدّ من
+  /// التنقل والقفل التلقائي وتبديل التبويبات.
   final StocktakeViewModel? viewModel;
 
   @override
@@ -63,9 +65,11 @@ class StocktakeScreen extends StatelessWidget {
     if (provided != null) {
       vm = provided;
     } else {
-      // المتحكم يُقرأ هنا حصراً (المسار لم يُوصَل بعد — التوصيل على المنسق).
+      // المتحكم يُقرأ هنا حصراً — الجلسة تعيد النموذج الحي فوق القاعدة
+      // الحالية (مسودة جديدة تلقائياً بعد مسح/استعادة يبدّلان القاعدة).
       final app = context.read<AppController>();
-      vm = StocktakeViewModel(
+      vm = stocktakeSession.attach(
+        database: app.database!,
         stocktakeRepo: StocktakeRepository(app.database!.db),
         userRepo: app.users!,
         companyRepo: app.companies!,
@@ -76,6 +80,8 @@ class StocktakeScreen extends StatelessWidget {
       value: vm,
       child: RefreshOnActive(
         routePattern: RegExp(r'^/inventory/stocktake$'),
+        // إعادة التحميل عند التنشيط تحفظ المسودة (تحديث مرجعي فقط —
+        // الأعداد المُدخلة تُرحّل داخل load() لنفس المخزن).
         onActivate: vm.load,
         child: const _StocktakeBody(),
       ),

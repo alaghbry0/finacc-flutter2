@@ -4,6 +4,10 @@
 /// initializing → Splash، needsOnboarding → Onboarding، locked → Lock،
 /// ready → الهيكل الرئيسي بخمسة تبويبات (الرئيسية/المخزون/البيع/النقدية/
 /// المزيد) مع زر البيع البارز في الوسط.
+///
+/// **استعادة موقع القفل (P0-1b)**: redirect القفل يسجّل المسار المقصود
+/// (المسار فقط — بلا بيانات حساسة) قبل تحويله إلى `/lock`، وبعد الفتح
+/// الناجح يعود المستخدم إلى موقعه الأصلي بدل إسقاطه على `/home`.
 library;
 
 import 'package:go_router/go_router.dart';
@@ -57,9 +61,33 @@ import '../session/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/refresh_on_return.dart';
 
+/// يتتبع آخر مسار **خارج** وحدة المشتريات — يغذّي زر رجوع محور
+/// المشتريات بوجهة «الأصل» التي دخل منها المستخدم (P2-7) بدل التصلّب
+/// على مسار واحد مهما كان مدخل الوحدة (الرئيسية/البيع/عمق آخر).
+class PurchasesOriginTracker {
+  String? _origin;
+
+  /// يُستدعى عند كل تغيّر للموقع — مسارات الوحدة نفسها ومسارات
+  /// الحراسة (قفل/إقلاع/تأسيس) لا تُسجّل وجهاً.
+  void track(String location) {
+    if (location.startsWith('/purchases')) return;
+    if (location == '/lock' ||
+        location == '/splash' ||
+        location == '/onboarding') {
+      return;
+    }
+    _origin = location;
+  }
+
+  /// وجهة الرجوع (null = مجهول — المتصل يقرر البديل).
+  String? get origin => _origin;
+}
+
 /// يبني الموجّه فوق متحكم الجلسة (refreshListenable = تغيّر الطور).
 GoRouter buildAppRouter(AppController controller) {
-  return GoRouter(
+  // متتبع أصل دخول محور المشتريات (رجوع ذكي — P2-7).
+  final purchasesOrigin = PurchasesOriginTracker();
+  final router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: controller,
     // إشعارات didPopNext للشاشات ذات المسارات الفرعية (نموذج/تعديل)
@@ -75,12 +103,16 @@ GoRouter buildAppRouter(AppController controller) {
         case AppPhase.needsOnboarding:
           return location == '/onboarding' ? null : '/onboarding';
         case AppPhase.locked:
+          // سجّل الموقع المقصود قبل القفل — يُستعاد بعد الفتح (P0-1b).
+          // المسار فقط؛ `/lock` نفسه لا يُسجّل (منع الحلقات).
+          controller.noteLockedFrom(state.uri.path);
           return location == '/lock' ? null : '/lock';
         case AppPhase.ready:
           if (location == '/splash' ||
               location == '/onboarding' ||
               location == '/lock') {
-            return '/home';
+            // فتح ناجح: العودة لموقع ما قبل القفل إن وُجد (مرة واحدة).
+            return controller.consumeUnlockDestination() ?? '/home';
           }
           return null;
       }
@@ -175,7 +207,8 @@ GoRouter buildAppRouter(AppController controller) {
       // (نمط الأطراف): شاشة كاملة بزر رجوع، والتنقل بينها بـ go().
       GoRoute(
         path: '/purchases',
-        builder: (context, state) => const PurchasesHomeScreen(),
+        builder: (context, state) =>
+            PurchasesHomeScreen(origin: purchasesOrigin.origin),
         routes: [
           GoRoute(
             path: 'new',
@@ -442,4 +475,9 @@ GoRouter buildAppRouter(AppController controller) {
       ),
     ],
   );
+  // تغذية متتبع أصل المشتريات بكل تغيّر موقع (رجوع حسب الأصل — P2-7).
+  router.routerDelegate.addListener(() {
+    purchasesOrigin.track(router.routerDelegate.currentConfiguration.uri.path);
+  });
+  return router;
 }

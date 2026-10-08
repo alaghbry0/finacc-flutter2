@@ -71,7 +71,8 @@ void main() {
       await tester.tap(find.text('متابعة'));
       await tester.pumpAndSettle();
 
-      // الخطوة 2: إدخال PIN ثم متابعة، ثم التأكيد ثم متابعة.
+      // الخطوة 2: إدخال PIN — الإرسال التلقائي عند 6 خانات (P2-9، توحيداً
+      // مع لوحة شاشة القفل): كل إدخال مكتمل ينتقل للخطوة التالية بلا زر.
       Future<void> enterPin() async {
         for (final digit in ['4', '5', '6', '7', '8', '9']) {
           await tester.tap(find.text(digit).last);
@@ -81,10 +82,14 @@ void main() {
       }
 
       await enterPin();
-      await tester.tap(find.text('متابعة'));
-      await tester.pumpAndSettle();
+      // الإرسال التلقائي نقلنا لوضع التأكيد (لا زر «متابعة» بعد الآن).
+      expect(
+        find.text('تأكيد الرمز'),
+        findsOneWidget,
+        reason: 'الإرسال التلقائي عند 6 خانات انتقل للتأكيد (P2-9)',
+      );
       await enterPin();
-      await tester.tap(find.text('تأكيد'));
+      // التطابق نقلنا تلقائياً لقسم عبارة المرور.
       await tester.pumpAndSettle();
 
       // شاشة عبارة المرور — التحقق الهيكلي الحاسم.

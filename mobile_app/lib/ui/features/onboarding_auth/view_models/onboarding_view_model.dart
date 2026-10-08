@@ -183,11 +183,12 @@ class OnboardingViewModel extends ChangeNotifier {
     return true;
   }
 
-  /// العودة من قسم عبارة المرور إلى إعادة إدخال PIN.
+  /// العودة من قسم عبارة المرور إلى تأكيد PIN — **الـ PIN الأول محفوظ**
+  /// (كان يُصفَّر كاملاً فَيُضطر المستخدم لإدخاله مرتين من جديد — P2-10)؛
+  /// يُعاد التأكيد فقط (إدخال واحد).
   void backToPin() {
     _passphraseMode = false;
-    _confirmingPin = false;
-    _pin = '';
+    _confirmingPin = true;
     _confirmedPin = '';
     _error = null;
     notifyListeners();

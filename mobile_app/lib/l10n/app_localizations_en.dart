@@ -4526,4 +4526,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reportsSalesByDesc =>
       'Customer/category/item/day with change vs previous period';
+
+  @override
+  String get sellFixPrintInvoice => 'Print invoice';
+
+  @override
+  String get sellFixShareInvoice => 'Share / WhatsApp';
+
+  @override
+  String get sellFixPrintAndNewInvoice => 'Print + new invoice';
+
+  @override
+  String get sellFixClose => 'Close';
+
+  @override
+  String get sellFixPrintLoadFailed =>
+      'Couldn\'t load the invoice for printing — try again from the invoices list.';
+
+  @override
+  String get sellFixDetailReturnAction => 'Return against this invoice';
+
+  @override
+  String get sellFixNewCustomer => 'New customer';
+
+  @override
+  String get sellFixNewCustomerTitle => 'Quick new customer';
+
+  @override
+  String get sellFixNewCustomerNameLabel => 'Customer name';
+
+  @override
+  String get sellFixNewCustomerPhoneLabel => 'Phone (optional)';
+
+  @override
+  String get sellFixNewCustomerNameRequired => 'Customer name is required.';
+
+  @override
+  String get sellFixNewCustomerSave => 'Add & select';
+
+  @override
+  String get appFixUnsavedTitle => 'Unsaved changes';
+
+  @override
+  String get appFixUnsavedBody =>
+      'You have unsaved changes — leaving now will discard them. Leave without saving?';
+
+  @override
+  String get appFixUnsavedLeave => 'Leave';
+
+  @override
+  String get appFixUnsavedStay => 'Stay';
+
+  @override
+  String get appFixWipeBackupFailedTitle => 'Safety backup failed';
+
+  @override
+  String get appFixWipeBackupFailedBody =>
+      'The automatic pre-wipe backup failed, so no data was wiped. Try again, or continue without a final backup if you are sure.';
+
+  @override
+  String get appFixWipeProceedNoBackup => 'Continue without backup';
+
+  @override
+  String appFixWipeSafetyBackupAt(Object fileName) {
+    return 'An automatic safety backup was created before wiping: $fileName';
+  }
+
+  @override
+  String pdfFixPageIndicator(int page, int total) {
+    return 'Page $page of $total';
+  }
 }

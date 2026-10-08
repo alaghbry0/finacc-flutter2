@@ -1,8 +1,10 @@
 /// نافذة معاينة الطباعة (الشريحة 7 — FR-10-01/02/09): تُبنى الوثيقة،
-/// تُحوَّل بايتات PDF إلى صورة صفحة أولى (raster بدقة 150dpi لمعاينة
-/// حادة)، وتُعرض داخل بطاقة بظل قابلة للتمرير، مع صف إجراءات:
-/// **طباعة** (حوار الطباعة الأصلي) + **مشاركة** PDF + **واتساب** (رابط
-/// wa.me) — كل إجراء دفاعي: أي فشل يظهر SnackBar عربي ولا يكسر النافذة.
+/// تُحوَّل بايتات PDF إلى صور **لكل الصفحات** (raster بدقة 150dpi
+/// لمعاينة حادة — إصلاح UX-audit A8: كانت الصفحة الأولى وحدها تُعرض)،
+/// وتُعرض الصفحات عمودياً بتمرير واحد مع مؤشر «صفحة X من الكلي»
+/// تحت كل صفحة عند التعدد، مع صف إجراءات: **طباعة** (حوار الطباعة
+/// الأصلي) + **مشاركة** PDF + **واتساب** (رابط wa.me) — كل إجراء
+/// دفاعي: أي فشل يظهر SnackBar عربي ولا يكسر النافذة.
 library;
 
 import 'dart:async';
@@ -56,12 +58,12 @@ class _PdfPreviewDialog extends StatefulWidget {
   State<_PdfPreviewDialog> createState() => _PdfPreviewDialogState();
 }
 
-/// ناتج البناء: بايتات PDF (للطباعة/المشاركة) + PNG الصفحة الأولى.
+/// ناتج البناء: بايتات PDF (للطباعة/المشاركة) + صور PNG **لكل الصفحات**.
 class _PdfPreviewData {
-  const _PdfPreviewData({required this.bytes, required this.pagePng});
+  const _PdfPreviewData({required this.bytes, required this.pagePngs});
 
   final Uint8List bytes;
-  final Uint8List pagePng;
+  final List<Uint8List> pagePngs;
 }
 
 class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
@@ -85,12 +87,16 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
     try {
       final doc = await widget.build();
       final bytes = await doc.save();
-      // الصفحة الأولى تكفي للمعاينة (raster بدقة 150 لمعاينة حادة).
-      final page = await Printing.raster(bytes, dpi: 150).first;
-      final png = await page.toPng();
+      // **كل** الصفحات — الكشوف والفواتير الطويلة تُعاين كاملة
+      // (إصلاح UX-audit A8)، بدقة 150 لمعاينة حادة.
+      final pages = await Printing.raster(bytes, dpi: 150).toList();
+      final pngs = <Uint8List>[];
+      for (final page in pages) {
+        pngs.add(await page.toPng());
+      }
       if (!mounted) return;
       setState(() {
-        _data = _PdfPreviewData(bytes: bytes, pagePng: png);
+        _data = _PdfPreviewData(bytes: bytes, pagePngs: pngs);
         _loading = false;
       });
     } catch (error) {
@@ -272,13 +278,15 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
     if (data == null) {
       return const SizedBox(height: 8);
     }
-    // صورة الصفحة بعرض كامل، قابلة للتمرير، داخل بطاقة بظل ورقي.
+    // كل صفحة بعرض كامل داخل بطاقة بظل ورقي، بتمرير عمودي واحد —
+    // ومؤشر «صفحة X من الكلي» تحت كل صفحة عند التعدد (إصلاح A8).
     // تحتها شريط حجم الملف (ميزة مستعادة من جولة مفقودة — 2026-10-07).
     final sizeKb = (data.bytes.length / 1024).round();
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      children: [
+        for (var i = 0; i < data.pagePngs.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: Container(
@@ -295,22 +303,32 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.memory(
-                  data.pagePng,
+                  data.pagePngs[i],
                   fit: BoxFit.fitWidth,
                   filterQuality: FilterQuality.medium,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.printingPreviewFileSize(sizeKb),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: Theme.of(context).colorScheme.outline),
-          ),
+          if (data.pagePngs.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                l10n.pdfFixPageIndicator(i + 1, data.pagePngs.length),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.outline),
+              ),
+            ),
         ],
-      ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.printingPreviewFileSize(sizeKb),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: Theme.of(context).colorScheme.outline),
+        ),
+      ],
     );
   }
 

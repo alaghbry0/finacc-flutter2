@@ -524,21 +524,32 @@ Future<(SaleDiscountType, double)?> showDiscountEditSheet(
 }
 
 /// إيصال النجاح بعد الترحيل — INV/الإجمالي/المدفوع/الباقي/المتبقي آجلاً
-/// + شارة السعر التقديري عند fallback (FR-02-20).
+/// + شارة السعر التقديري عند fallback (FR-02-20) + زرا «طباعة الفاتورة»
+/// و«مشاركة/واتساب» الفوريان (P0-2 — يفتحان معاينة PDF للفاتورة
+/// المرحّلة؛ يخفيان عند off أو غياب المستدعي).
 class PostedReceiptCard extends StatelessWidget {
   const PostedReceiptCard({
     super.key,
     required this.receipt,
     this.currencyCode,
+    this.onPrint,
+    this.onShare,
   });
 
   final SalePostedReceipt receipt;
   final String? currencyCode;
 
+  /// فتح معاينة الطباعة (زر الطباعة) — null = إخفاء الزرين.
+  final VoidCallback? onPrint;
+
+  /// فتح معاينة المشاركة/واتساب — null = إخفاء الزرين.
+  final VoidCallback? onShare;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = FinColors.of(context);
+    final showPrintActions = onPrint != null && onShare != null;
     return FinCard(
       accent: colors.positive,
       child: Column(
@@ -610,6 +621,32 @@ class PostedReceiptCard extends StatelessWidget {
               sign: FinSign.outgoing,
               highlight: colors.warning,
             ),
+          // P0-2: أزرار الطباعة/المشاركة الفورية داخل بطاقة الإيصال —
+          // أقصر مسار للطباعة (كان 5-6 خطوات عبر قائمة الفواتير).
+          if (showPrintActions) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('sell_receipt_print_button'),
+                    onPressed: onPrint,
+                    icon: const Icon(Icons.print_rounded, size: 18),
+                    label: Text(l10n.sellFixPrintInvoice),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('sell_receipt_share_button'),
+                    onPressed: onShare,
+                    icon: const Icon(Icons.ios_share_rounded, size: 18),
+                    label: Text(l10n.sellFixShareInvoice),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

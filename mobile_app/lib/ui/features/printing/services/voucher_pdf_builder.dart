@@ -128,12 +128,13 @@ class VoucherPdfBuilder {
     );
   }
 
-  /// عنوان السند الكبير: سند قبض / سند صرف (حسب [VoucherPrintDoc.isReceipt]).
+  /// عنوان السند الكبير: سند قبض / سند صرف (حسب [VoucherPrintDoc.isReceipt])
+  /// — ExtraBold (إصلاح UX-audit ExtraBold).
   pw.Widget _titleText(VoucherPrintDoc doc) {
     return pw.Center(
       child: pw.Text(
         doc.isReceipt ? doc.labels.titleReceipt : doc.labels.titlePayment,
-        style: PrintText.head(color: PrintPalette.brandDeep, size: 20),
+        style: PrintText.extraHead(color: PrintPalette.brandDeep, size: 20),
         textDirection: pw.TextDirection.rtl,
       ),
     );
@@ -275,6 +276,10 @@ class VoucherPdfBuilder {
   // -------------------------------------------------------------------
 
   /// سطر «تسمية يميناً : قيمة يساراً» — النمط العربي الأساسي للمعلومات.
+  ///
+  /// القيمة تُرسم RTL **دائماً** (إصلاح UX-audit A3): بلا `textDirection`
+  /// ترسم حزمة pdf العربيةَ (الطرف/الصندوق) بلا تشكيل معكوسةً مفككةً،
+  /// وقد ينهار subsetter الخط حين يجتمع عربي غير مشكل بعربي مشكل.
   pw.Widget _kvLine(String label, String value, {double size = 9.5}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 2),
@@ -289,6 +294,7 @@ class VoucherPdfBuilder {
                   color: PrintPalette.brandDeep,
                   size: size,
                 ),
+                textDirection: pw.TextDirection.rtl,
               ),
             ),
           ),

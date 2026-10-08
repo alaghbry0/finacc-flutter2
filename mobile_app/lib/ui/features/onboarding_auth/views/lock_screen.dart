@@ -5,7 +5,6 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +14,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/brand_mark.dart';
+import '../../../core/widgets/confirm_word_dialog.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/pin_pad.dart';
 import '../view_models/lock_view_model.dart';
@@ -231,7 +231,7 @@ class _LockBodyState extends State<_LockBody> {
           Padding(
             padding: const EdgeInsets.only(top: 14),
             child: OutlinedButton.icon(
-              onPressed: () => _confirmWipe(context, vm, l10n),
+              onPressed: () => _confirmWipe(context),
               style: OutlinedButton.styleFrom(
                 foregroundColor: scheme.error,
                 side: BorderSide(color: scheme.error.withValues(alpha: 0.5)),
@@ -244,84 +244,11 @@ class _LockBodyState extends State<_LockBody> {
     );
   }
 
-  Future<void> _confirmWipe(
-    BuildContext context,
-    LockViewModel vm,
-    AppLocalizations l10n,
-  ) async {
-    final app = context.read<AppController>();
-    // تأكيد مزدوج (AC-15): حوار ثم كتابة كلمة التأكيد.
-    final firstConfirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.wipeDialogTitle),
-        content: Text(l10n.wipeDialogBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.commonConfirm),
-          ),
-        ],
-      ),
-    );
-    if (firstConfirmed != true || !context.mounted) return;
-
-    final word = await _askConfirmWord(context, l10n);
-    if (word == null || !context.mounted) return;
-    if (word.trim() != l10n.wipeConfirmWord) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.wipeFinalTitle)));
-      return;
-    }
-    unawaited(HapticFeedback.heavyImpact());
-    await vm.wipeAll(app);
-  }
-
-  Future<String?> _askConfirmWord(BuildContext context, AppLocalizations l10n) {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.wipeFinalTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.wipeFinalBody),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: '«${l10n.wipeConfirmWord}»',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(null),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: Text(l10n.wipeConfirmWord),
-          ),
-        ],
-      ),
-    );
+  /// مسار المسح المحروس الموحد (AC-15 — P1-5): حوار ← كتابة الكلمة ←
+  /// **نسخة أمان إجبارية قبل المسح** ← حوار نجاح يذكر ملف النسخة
+  /// الأخيرة (نفس مسار الإعدادات — مساعد واحد للاثنين).
+  Future<void> _confirmWipe(BuildContext context) async {
+    await runGuardedWipeFlow(context, context.read<AppController>());
   }
 
   String? _messageText(

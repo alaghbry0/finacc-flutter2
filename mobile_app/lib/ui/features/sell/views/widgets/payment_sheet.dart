@@ -1,12 +1,15 @@
 /// PaymentSheet (DS-40 / §6.5) — نافذة الدفع السفلية الملزمة:
 /// الصافي كبير أعلى + الطرق (نقدي كامل / آجل كامل / مختلط) + المدفوع
-/// نقداً والباقي للعميل بوضوح + رفض الآجل لعميل نقدي مجهول + تأكيد
-/// الترحيل + إيصال نجاح مبسط بشارة «سعر صرف تقديري» عند fallback.
+/// نقداً والباقي للعميل بوضوح + رفض الآجل لعميل نقدي مجهول (بإيقاف
+/// زرّي آجل/مختلط لا برفض بعد الضغط) + تأكيد الترحيل + إيصال نجاح
+/// بأزرار طباعة/مشاركة فورية (P0-2 — `invoicing.print_on_save`).
 ///
 /// **17-c / FR-03-05**: بوابة حد الائتمان عند التأكيد — [creditGate]
 /// (اختياري) يُستدعى قبل الترحيل بالجزء الآجل حصراً؛ عند التجاوز:
 /// warn → حوار «متابعة على أي حال / إلغاء»، block → «رجوع» حصراً.
 library;
+
+import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +22,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/fin_card.dart';
+import '../../view_models/print_on_save.dart';
 import 'sell_widgets.dart';
 
 /// أنماط الدفع في النافذة.
@@ -34,6 +38,14 @@ enum _PayMode { fullCash, fullCredit, mixed }
 /// وجود جزء آجل ليجلب (الحد + الرصيد الجاري بعملة الفاتورة + سلوك
 /// الإعداد `parties.credit_limit_action`)؛ قد يعيد null (لا عميل/
 /// فشل قراءة) فتمر الفاتورة بلا فحص — المستودع يبقى الحارس الأخير.
+///
+/// [printOnSave] (P0-2 — إعداد `invoicing.print_on_save`): ask = زرا
+/// الطباعة/المشاركة داخل بطاقة الإيصال؛ always = فتح المعاينة تلقائياً
+/// بعد الترحيل؛ off = إخفاء الأزرار كلياً.
+///
+/// [openInvoicePreview] (اختياري): يفتح معاينة PDF للفاتورة المرحّلة
+/// — المستدعي يمرر نمط الزر القائم (openInvoicePdfPreview من
+/// invoice_pdf_preview.dart). غيابه يعني سلوك off للأزرار.
 Future<bool> showPaymentSheet(
   BuildContext context, {
   required double grandTotal,
@@ -46,6 +58,8 @@ Future<bool> showPaymentSheet(
   )
   onConfirm,
   Future<CreditLimitGate?> Function()? creditGate,
+  PrintOnSaveMode printOnSave = PrintOnSaveMode.ask,
+  Future<void> Function(SalePostedReceipt receipt)? openInvoicePreview,
 }) async {
   final posted = await showModalBottomSheet<bool>(
     context: context,
@@ -60,6 +74,8 @@ Future<bool> showPaymentSheet(
       customerName: customerName,
       onConfirm: onConfirm,
       creditGate: creditGate,
+      printOnSave: printOnSave,
+      openInvoicePreview: openInvoicePreview,
     ),
   );
   return posted ?? false;
@@ -73,6 +89,8 @@ class _PaymentSheet extends StatefulWidget {
     required this.customerName,
     required this.onConfirm,
     this.creditGate,
+    this.printOnSave = PrintOnSaveMode.ask,
+    this.openInvoicePreview,
   });
 
   final double grandTotal;
@@ -88,6 +106,12 @@ class _PaymentSheet extends StatefulWidget {
   /// بوابة حد الائتمان (FR-03-05) — null بلا فحص (نقدي محض أو بلا عميل).
   final Future<CreditLimitGate?> Function()? creditGate;
 
+  /// وضع الطباعة عند الحفظ (P0-2 — invoicing.print_on_save).
+  final PrintOnSaveMode printOnSave;
+
+  /// يفتح معاينة PDF للفاتورة المرحّلة (null = بلا طباعة).
+  final Future<void> Function(SalePostedReceipt receipt)? openInvoicePreview;
+
   @override
   State<_PaymentSheet> createState() => _PaymentSheetState();
 }
@@ -99,7 +123,15 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   String? _error;
   SalePostedReceipt? _receipt;
 
+  /// منع فتح المعاينة تلقائياً أكثر من مرة (always — P0-2).
+  bool _autoPreviewOpened = false;
+
   bool get _hasCustomer => widget.customerName != null;
+
+  /// هل الطباعة متاحة أصلاً؟ (الوضع off أو غياب فاتح المعاينة = لا).
+  bool get _printAvailable =>
+      widget.printOnSave != PrintOnSaveMode.off &&
+      widget.openInvoicePreview != null;
 
   @override
   void initState() {
@@ -187,12 +219,35 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         _posting = false;
         _receipt = result.valueOrNull!;
       });
+      _maybeAutoOpenPreview();
     } else {
       setState(() {
         _posting = false;
         _error = result.errorOrNull!;
       });
     }
+  }
+
+  /// always (P0-2): فتح معاينة PDF تلقائياً فور نجاح الترحيل — مرة
+  /// واحدة لكل إيصال (الضغط اللاحق على الأزرار يعيد فتحها يدوياً).
+  void _maybeAutoOpenPreview() {
+    if (widget.printOnSave != PrintOnSaveMode.always) return;
+    final opener = widget.openInvoicePreview;
+    final receipt = _receipt;
+    if (opener == null || receipt == null || _autoPreviewOpened) return;
+    _autoPreviewOpened = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(opener(receipt));
+    });
+  }
+
+  /// يفتح معاينة PDF للإيصال الحالي (زرّا البطاقة + الزر الأساسي).
+  Future<void> _openPreview() async {
+    final opener = widget.openInvoicePreview;
+    final receipt = _receipt;
+    if (opener == null || receipt == null) return;
+    await opener(receipt);
   }
 
   /// يشغّل بوابة الائتمان عند وجود جزء آجل — يعيد false إذا ألغى
@@ -280,15 +335,19 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               label: Text(l10n.sellPayMethodCash),
               icon: const Icon(Icons.payments_rounded),
             ),
+            // P2-3: آجل/مختلط معطّلان بلا عميل (النقدي المجهول يسدد
+            // كاملاً حصراً) — التحذير القائم يبقى معروضاً تحتهما.
             ButtonSegment(
               value: _PayMode.fullCredit,
               label: Text(l10n.sellPayMethodCredit),
               icon: const Icon(Icons.schedule_rounded),
+              enabled: _hasCustomer,
             ),
             ButtonSegment(
               value: _PayMode.mixed,
               label: Text(l10n.sellPayMethodMixed),
               icon: const Icon(Icons.call_split_rounded),
+              enabled: _hasCustomer,
             ),
           ],
           selected: {_mode},
@@ -299,7 +358,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               if (_mode == _PayMode.fullCash) {
                 _cashController.text = _fmt(widget.grandTotal);
               } else if (_mode == _PayMode.mixed) {
-                _cashController.text = _fmt(widget.grandTotal / 2);
+                // P2-2: المختلط يبدأ من صفر لا من «نصف الصافي» الاعتباطي —
+                // الكاشير يدخل المدفوع نقداً بنفسه والمعاينة الحية تتحدث معه.
+                _cashController.text = '0';
               }
             });
           },
@@ -401,18 +462,34 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         PostedReceiptCard(
           receipt: _receipt!,
           currencyCode: widget.currencyCode,
+          // P0-2: زرا الطباعة/المشاركة داخل البطاقة (وضعا ask/always).
+          onPrint: _printAvailable ? _openPreview : null,
+          onShare: _printAvailable ? _openPreview : null,
         ),
         const SizedBox(height: 18),
+        // P2-1: الزران متمايزان — الأساسي «طباعة + فاتورة جديدة» عند
+        // توافر الطباعة (يفتح المعاينة ثم يغلق)، وإلا «فاتورة جديدة» فقط؛
+        // والثانوي «إغلاق» (ينهي بلا طباعة).
         FilledButton.icon(
-          onPressed: () => Navigator.of(context).pop(true),
+          key: const Key('sell_receipt_primary_action'),
+          onPressed: () async {
+            if (_printAvailable) await _openPreview();
+            if (!context.mounted) return;
+            Navigator.of(context).pop(true);
+          },
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
-          icon: const Icon(Icons.post_add_rounded),
-          label: Text(l10n.sellReceiptNewInvoice),
+          icon: Icon(_printAvailable ? Icons.print_rounded : Icons.post_add),
+          label: Text(
+            _printAvailable
+                ? l10n.sellFixPrintAndNewInvoice
+                : l10n.sellReceiptNewInvoice,
+          ),
         ),
         const SizedBox(height: 8),
         TextButton(
+          key: const Key('sell_receipt_close_action'),
           onPressed: () => Navigator.of(context).pop(true),
-          child: Text(l10n.commonDone),
+          child: Text(l10n.sellFixClose),
         ),
       ],
     );

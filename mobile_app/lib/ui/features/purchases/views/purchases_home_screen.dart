@@ -25,7 +25,11 @@ import 'widgets/purchase_widgets.dart';
 
 /// محور المشتريات — مسار علوي خارج هيكل التبويبات (نمط الأطراف).
 class PurchasesHomeScreen extends StatelessWidget {
-  const PurchasesHomeScreen({super.key});
+  const PurchasesHomeScreen({super.key, this.origin});
+
+  /// مسار الأصل الذي دخل منه المستخدم الوحدة (P2-7) — يموّنه الموجّه من
+  /// متتبع المواقع؛ null = مجهول فيرجع الجسم إلى «المزيد».
+  final String? origin;
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +47,22 @@ class PurchasesHomeScreen extends StatelessWidget {
       child: RefreshOnActive(
         routePattern: RegExp(r'^/purchases$'),
         onActivate: vm.load,
-        child: const _PurchasesHomeBody(),
+        child: _PurchasesHomeBody(origin: origin),
       ),
     );
   }
 }
 
 class _PurchasesHomeBody extends StatelessWidget {
-  const _PurchasesHomeBody();
+  const _PurchasesHomeBody({this.origin});
+
+  /// مسار الأصل الذي دخل منه المستخدم الوحدة (P2-7) — يرجع إليه زر
+  /// الرجوع؛ null = مجهول فيرجع إلى «المزيد».
+  final String? origin;
+
+  /// وجهة زر الرجوع — الأصل إن عُرف، وإلا «المزيد» (فك ارتباط الوحدة
+  /// عن تصلّب مسار واحد مهما كان مدخل المستخدم).
+  String get _backDestination => origin ?? '/more';
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +73,7 @@ class _PurchasesHomeBody extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go('/sell')),
+        leading: BackButton(onPressed: () => context.go(_backDestination)),
         title: Text(l10n.purHomeTitle),
         actions: [
           IconButton(

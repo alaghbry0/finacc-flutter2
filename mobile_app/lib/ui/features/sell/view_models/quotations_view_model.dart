@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/quotation_repository.dart';
+import '../../../../data/repositories/sale_repository.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/quotation.dart';
@@ -124,6 +125,7 @@ class QuotationDetailState {
     this.detail,
     this.error,
     this.converting = false,
+    this.convertedInvoiceNo,
   });
 
   final bool loading;
@@ -132,6 +134,10 @@ class QuotationDetailState {
 
   /// تحويل إلى فاتورة جارٍ الآن.
   final bool converting;
+
+  /// رقم الفاتورة الحقيقي `INV-YYYY-NNNNN` للعرض المحوَّل (P2-5) —
+  /// null قبل التحويل أو عند تعذّر جلبه (الشريحة تعود للمعرّف الداخلي).
+  final String? convertedInvoiceNo;
 
   static const QuotationDetailState initial = QuotationDetailState(
     loading: true,
@@ -144,13 +150,19 @@ class QuotationDetailViewModel extends ChangeNotifier {
     required QuotationRepository quotationRepo,
     required CompanyRepository companyRepo,
     required this.quotationId,
+    SaleRepository? saleRepo,
     int initialUserId = 1,
   }) : _quotations = quotationRepo,
        _companies = companyRepo,
+       _sales = saleRepo,
        _userId = initialUserId;
 
   final QuotationRepository _quotations;
   final CompanyRepository _companies;
+
+  /// لجلب رقم الفاتورة المحوَّل إليها (P2-5) — null = الشريحة بالمعرّف
+  /// الداخلي كما كان (سلوك متسق عند غياب المستودع).
+  final SaleRepository? _sales;
   final int quotationId;
 
   int _userId;
@@ -185,14 +197,29 @@ class QuotationDetailViewModel extends ChangeNotifier {
         _companies.listActiveCurrencies(),
       ]);
       _currencies = results[1] as List<Currency>?;
+      final detail = results[0] as QuotationDetail?;
       _state = QuotationDetailState(
         loading: false,
-        detail: results[0] as QuotationDetail?,
+        detail: detail,
+        convertedInvoiceNo: await _convertedInvoiceNo(detail),
       );
     } catch (error) {
       _state = QuotationDetailState(loading: false, error: error);
     }
     notifyListeners();
+  }
+
+  /// يجلب رقم INV الحقيقي للفاتورة المرتبطة بالعرض المحوَّل (P2-5) —
+  /// null عند عدم التحويل أو تعذّر الجلب (لا يفشل التحميل أبداً).
+  Future<String?> _convertedInvoiceNo(QuotationDetail? detail) async {
+    final invoiceId = detail?.quotation.convertedInvoiceId;
+    final sales = _sales;
+    if (invoiceId == null || sales == null) return null;
+    try {
+      return (await sales.invoiceDetail(invoiceId))?.invoice.invoiceNo;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// **تحويل العرض إلى فاتورة** (PaymentSheet يمرر المبلغ والطريقة) —
@@ -234,5 +261,6 @@ class QuotationDetailViewModel extends ChangeNotifier {
     detail: _state.detail,
     error: _state.error,
     converting: converting ?? _state.converting,
+    convertedInvoiceNo: _state.convertedInvoiceNo,
   );
 }

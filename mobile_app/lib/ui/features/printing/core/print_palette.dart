@@ -52,4 +52,10 @@ abstract final class PrintText {
     pw.PdfColor color = PrintPalette.ink,
     double size = 11,
   }) => pw.TextStyle(font: PrintFonts.bold, color: color, fontSize: size);
+
+  /// نص ExtraBold (عناوين المستندات الكبيرة — «فاتورة مبيعات»/«سند قبض»).
+  static pw.TextStyle extraHead({
+    pw.PdfColor color = PrintPalette.ink,
+    double size = 20,
+  }) => pw.TextStyle(font: PrintFonts.extraBold, color: color, fontSize: size);
 }

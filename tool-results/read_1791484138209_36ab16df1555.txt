@@ -1,0 +1,795 @@
+     1→/// مكونات مشتركة لواجهات البيع — منتقي العملة، مدرّج الكمية، محرر الخصم،
+     2→/// شارة سعر الصرف التقديري (FR-02-20)، رقائق حالة الدفع، وإيصال النجاح.
+     3→library;
+     4→
+     5→import 'package:flutter/material.dart';
+     6→import 'package:flutter/services.dart';
+     7→
+     8→import '../../../../../domain/models/sale.dart';
+     9→import '../../../../../domain/services/sale_pricing.dart';
+    10→import '../../../../../l10n/app_localizations.dart';
+    11→import '../../../../core/theme/app_colors.dart';
+    12→import '../../../../core/theme/app_typography.dart';
+    13→import '../../../../core/widgets/amount_text.dart';
+    14→import '../../../../core/widgets/fin_card.dart';
+    15→import '../../../../core/widgets/status_chip.dart';
+    16→
+    17→/// رقاقة حالة الدفع (نقدي/آجل/مختلط) بنص واضح دائماً.
+    18→class PayStatusChip extends StatelessWidget {
+    19→  const PayStatusChip({super.key, required this.method, this.dense = true});
+    20→
+    21→  final SalePaymentMethod method;
+    22→  final bool dense;
+    23→
+    24→  @override
+    25→  Widget build(BuildContext context) {
+    26→    final l10n = AppLocalizations.of(context)!;
+    27→    final (label, tone, icon) = switch (method) {
+    28→      SalePaymentMethod.cash => (
+    29→        l10n.sellPayMethodCash,
+    30→        ChipTone.positive,
+    31→        Icons.payments_rounded,
+    32→      ),
+    33→      SalePaymentMethod.credit => (
+    34→        l10n.sellPayMethodCredit,
+    35→        ChipTone.warning,
+    36→        Icons.schedule_rounded,
+    37→      ),
+    38→      SalePaymentMethod.mixed => (
+    39→        l10n.sellPayMethodMixed,
+    40→        ChipTone.brand,
+    41→        Icons.call_split_rounded,
+    42→      ),
+    43→    };
+    44→    return StatusChip(label: label, tone: tone, icon: icon, dense: dense);
+    45→  }
+    46→}
+    47→
+    48→/// شارة «سعر صرف تقديري» (FR-02-20) — تحذيرية بنص لا لون فقط.
+    49→class FallbackRateBadge extends StatelessWidget {
+    50→  const FallbackRateBadge({super.key, this.dense = true});
+    51→
+    52→  final bool dense;
+    53→
+    54→  @override
+    55→  Widget build(BuildContext context) {
+    56→    final l10n = AppLocalizations.of(context)!;
+    57→    return StatusChip(
+    58→      label: l10n.sellFallbackRateBadge,
+    59→      tone: ChipTone.warning,
+    60→      icon: Icons.price_change_rounded,
+    61→      dense: dense,
+    62→    );
+    63→  }
+    64→}
+    65→
+    66→/// منتقي عملة الفاتورة — رقائق أفقية (الأساس أولاً) مع سعر اليوم.
+    67→class CurrencyPickerRow extends StatelessWidget {
+    68→  const CurrencyPickerRow({
+    69→    super.key,
+    70→    required this.currencies,
+    71→    required this.selectedId,
+    72→    required this.todayRate,
+    73→    required this.onSelect,
+    74→  });
+    75→
+    76→  final List<CurrencyOption> currencies;
+    77→  final int? selectedId;
+    78→  final double? todayRate;
+    79→  final ValueChanged<int> onSelect;
+    80→
+    81→  @override
+    82→  Widget build(BuildContext context) {
+    83→    final l10n = AppLocalizations.of(context)!;
+    84→    return SizedBox(
+    85→      height: 40,
+    86→      child: ListView(
+    87→        scrollDirection: Axis.horizontal,
+    88→        clipBehavior: Clip.none,
+    89→        children: [
+    90→          for (var i = 0; i < currencies.length; i++) ...[
+    91→            if (i > 0) const SizedBox(width: 8),
+    92→            _CurrencyChip(
+    93→              option: currencies[i],
+    94→              selected: currencies[i].id == selectedId,
+    95→              rate: currencies[i].id == selectedId ? todayRate : null,
+    96→              baseLabel: l10n.sellCurrencyBaseTag,
+    97→              missingLabel: l10n.sellCurrencyNoRate,
+    98→              onTap: () => onSelect(currencies[i].id),
+    99→            ),
+   100→          ],
+   101→        ],
+   102→      ),
+   103→    );
+   104→  }
+   105→}
+   106→
+   107→/// خيار عملة للمنتقي.
+   108→class CurrencyOption {
+   109→  const CurrencyOption({
+   110→    required this.id,
+   111→    required this.code,
+   112→    required this.isBase,
+   113→    required this.rateKnown,
+   114→  });
+   115→
+   116→  final int id;
+   117→  final String code;
+   118→  final bool isBase;
+   119→  final bool rateKnown;
+   120→}
+   121→
+   122→class _CurrencyChip extends StatelessWidget {
+   123→  const _CurrencyChip({
+   124→    required this.option,
+   125→    required this.selected,
+   126→    required this.rate,
+   127→    required this.baseLabel,
+   128→    required this.missingLabel,
+   129→    required this.onTap,
+   130→  });
+   131→
+   132→  final CurrencyOption option;
+   133→  final bool selected;
+   134→  final double? rate;
+   135→  final String baseLabel;
+   136→  final String missingLabel;
+   137→  final VoidCallback onTap;
+   138→
+   139→  @override
+   140→  Widget build(BuildContext context) {
+   141→    final scheme = Theme.of(context).colorScheme;
+   142→    final colors = FinColors.of(context);
+   143→    final borderColor = !option.isBase && !option.rateKnown
+   144→        ? colors.warning.withValues(alpha: 0.8)
+   145→        : selected
+   146→        ? scheme.primary.withValues(alpha: 0.55)
+   147→        : scheme.outlineVariant.withValues(alpha: 0.5);
+   148→    return Material(
+   149→      color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
+   150→      shape: RoundedRectangleBorder(
+   151→        borderRadius: BorderRadius.circular(12),
+   152→        side: BorderSide(color: borderColor, width: selected ? 1.4 : 1),
+   153→      ),
+   154→      child: InkWell(
+   155→        onTap: onTap,
+   156→        borderRadius: BorderRadius.circular(12),
+   157→        child: Padding(
+   158→          padding: const EdgeInsets.symmetric(horizontal: 12),
+   159→          child: Row(
+   160→            children: [
+   161→              Text(
+   162→                option.code,
+   163→                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+   164→                  fontWeight: FontWeight.w800,
+   165→                  color: selected
+   166→                      ? scheme.onPrimaryContainer
+   167→                      : scheme.onSurface,
+   168→                ),
+   169→              ),
+   170→              if (option.isBase) ...[
+   171→                const SizedBox(width: 6),
+   172→                Text(
+   173→                  baseLabel,
+   174→                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   175→                    color: selected
+   176→                        ? scheme.onPrimaryContainer
+   177→                        : scheme.onSurfaceVariant,
+   178→                  ),
+   179→                ),
+   180→              ] else if (rate != null && rate! > 0) ...[
+   181→                const SizedBox(width: 6),
+   182→                Text(
+   183→                  AmountText.format(rate!, 4),
+   184→                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   185→                    fontFeatures: FinText.tabularNums,
+   186→                    color: selected
+   187→                        ? scheme.onPrimaryContainer
+   188→                        : scheme.onSurfaceVariant,
+   189→                  ),
+   190→                ),
+   191→              ] else if (selected && !option.rateKnown) ...[
+   192→                const SizedBox(width: 6),
+   193→                Icon(
+   194→                  Icons.warning_amber_rounded,
+   195→                  size: 14,
+   196→                  color: colors.warning,
+   197→                ),
+   198→                const SizedBox(width: 3),
+   199→                Text(
+   200→                  missingLabel,
+   201→                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   202→                    color: colors.warning,
+   203→                    fontWeight: FontWeight.w800,
+   204→                  ),
+   205→                ),
+   206→              ],
+   207→            ],
+   208→          ),
+   209→        ),
+   210→      ),
+   211→    );
+   212→  }
+   213→}
+   214→
+   215→/// مدرّج الكمية — أزرار ± بأهداف لمس ≥ 48 (DS-29) وقيمة بأرقام جدولية.
+   216→class QtyStepper extends StatelessWidget {
+   217→  const QtyStepper({
+   218→    super.key,
+   219→    required this.qty,
+   220→    required this.onChanged,
+   221→    this.enabled = true,
+   222→  });
+   223→
+   224→  final double qty;
+   225→  final ValueChanged<double> onChanged;
+   226→  final bool enabled;
+   227→
+   228→  @override
+   229→  Widget build(BuildContext context) {
+   230→    final scheme = Theme.of(context).colorScheme;
+   231→    final colors = FinColors.of(context);
+   232→    final decimals = qty == qty.truncateToDouble() ? 0 : 3;
+   233→    return Row(
+   234→      mainAxisSize: MainAxisSize.min,
+   235→      children: [
+   236→        _RoundStepButton(
+   237→          icon: Icons.remove_rounded,
+   238→          color: colors.negative,
+   239→          onPressed: enabled && qty > 1 ? () => onChanged(qty - 1) : null,
+   240→        ),
+   241→        Container(
+   242→          constraints: const BoxConstraints(minWidth: 52),
+   243→          alignment: Alignment.center,
+   244→          padding: const EdgeInsets.symmetric(horizontal: 8),
+   245→          child: Text(
+   246→            AmountText.format(qty, decimals),
+   247→            style: FinText.amountRow(scheme.onSurface),
+   248→          ),
+   249→        ),
+   250→        _RoundStepButton(
+   251→          icon: Icons.add_rounded,
+   252→          color: colors.positive,
+   253→          onPressed: enabled ? () => onChanged(qty + 1) : null,
+   254→        ),
+   255→      ],
+   256→    );
+   257→  }
+   258→}
+   259→
+   260→class _RoundStepButton extends StatelessWidget {
+   261→  const _RoundStepButton({
+   262→    required this.icon,
+   263→    required this.color,
+   264→    required this.onPressed,
+   265→  });
+   266→
+   267→  final IconData icon;
+   268→  final Color color;
+   269→  final VoidCallback? onPressed;
+   270→
+   271→  @override
+   272→  Widget build(BuildContext context) {
+   273→    return SizedBox(
+   274→      width: 48,
+   275→      height: 48,
+   276→      child: IconButton(
+   277→        onPressed: onPressed,
+   278→        icon: Icon(icon, size: 20),
+   279→        style: IconButton.styleFrom(
+   280→          backgroundColor: color.withValues(alpha: 0.12),
+   281→          foregroundColor: color,
+   282→          shape: RoundedRectangleBorder(
+   283→            borderRadius: BorderRadius.circular(14),
+   284→          ),
+   285→        ),
+   286→      ),
+   287→    );
+   288→  }
+   289→}
+   290→
+   291→/// محرر رقم عشري بنافذة سفلية — للسعر/الكمية/الخصم/المبلغ النقدي.
+   292→Future<double?> showNumberEditSheet(
+   293→  BuildContext context, {
+   294→  required String title,
+   295→  required double initial,
+   296→  required String confirmLabel,
+   297→  String? hint,
+   298→  bool allowZero = true,
+   299→  int decimals = 2,
+   300→  IconData? icon,
+   301→}) {
+   302→  final controller = TextEditingController(
+   303→    text: initial == initial.truncateToDouble()
+   304→        ? initial.truncate().toString()
+   305→        : initial.toStringAsFixed(decimals),
+   306→  );
+   307→  String? error;
+   308→  return showModalBottomSheet<double>(
+   309→    context: context,
+   310→    isScrollControlled: true,
+   311→    // فوق شريط التبويبات: تُفتح على متصفح الفرع لا الجذر — تنزلق
+   312→    // من فوق الشريط السفلي بدل أن تغطيه من أسفل الشاشة.
+   313→    useRootNavigator: false,
+   314→    builder: (sheetContext) {
+   315→      final l10n = AppLocalizations.of(sheetContext)!;
+   316→      final scheme = Theme.of(sheetContext).colorScheme;
+   317→      return StatefulBuilder(
+   318→        builder: (sheetContext, setSheetState) {
+   319→          return Padding(
+   320→            padding: EdgeInsets.only(
+   321→              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+   322→            ),
+   323→            child: Padding(
+   324→              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+   325→              child: Column(
+   326→                mainAxisSize: MainAxisSize.min,
+   327→                crossAxisAlignment: CrossAxisAlignment.stretch,
+   328→                children: [
+   329→                  Row(
+   330→                    children: [
+   331→                      if (icon != null) ...[
+   332→                        Icon(icon, color: scheme.primary, size: 22),
+   333→                        const SizedBox(width: 10),
+   334→                      ],
+   335→                      Expanded(
+   336→                        child: Text(
+   337→                          title,
+   338→                          style: Theme.of(sheetContext).textTheme.titleMedium,
+   339→                        ),
+   340→                      ),
+   341→                    ],
+   342→                  ),
+   343→                  const SizedBox(height: 16),
+   344→                  TextField(
+   345→                    controller: controller,
+   346→                    autofocus: true,
+   347→                    keyboardType: const TextInputType.numberWithOptions(
+   348→                      decimal: true,
+   349→                      signed: false,
+   350→                    ),
+   351→                    inputFormatters: [
+   352→                      FilteringTextInputFormatter.allow(
+   353→                        RegExp(r'^\d*[\.,]?\d{0,4}'),
+   354→                      ),
+   355→                    ],
+   356→                    onChanged: (_) {
+   357→                      if (error != null) {
+   358→                        setSheetState(() => error = null);
+   359→                      }
+   360→                    },
+   361→                    onSubmitted: (_) =>
+   362→                        Navigator.of(sheetContext).pop(_parse(controller.text)),
+   363→                    decoration: InputDecoration(
+   364→                      hintText: hint,
+   365→                      errorText: error == null ? null : l10n.sellInvalidNumber,
+   366→                    ),
+   367→                  ),
+   368→                  const SizedBox(height: 18),
+   369→                  FilledButton(
+   370→                    onPressed: () {
+   371→                      final value = _parse(controller.text);
+   372→                      if (value == null || value.isNaN || value.isInfinite) {
+   373→                        setSheetState(() => error = 'invalid');
+   374→                        return;
+   375→                      }
+   376→                      if (value < 0 || (!allowZero && value == 0)) {
+   377→                        setSheetState(() => error = 'invalid');
+   378→                        return;
+   379→                      }
+   380→                      Navigator.of(sheetContext).pop(value);
+   381→                    },
+   382→                    style: FilledButton.styleFrom(
+   383→                      minimumSize: const Size.fromHeight(52),
+   384→                    ),
+   385→                    child: Text(confirmLabel),
+   386→                  ),
+   387→                  const SizedBox(height: 8),
+   388→                  TextButton(
+   389→                    onPressed: () => Navigator.of(sheetContext).pop(),
+   390→                    child: Text(l10n.commonCancel),
+   391→                  ),
+   392→                ],
+   393→              ),
+   394→            ),
+   395→          );
+   396→        },
+   397→      );
+   398→    },
+   399→  ).whenComplete(controller.dispose);
+   400→}
+   401→
+   402→double? _parse(String text) {
+   403→  final normalized = text.trim().replaceAll(',', '.');
+   404→  if (normalized.isEmpty) return null;
+   405→  return double.tryParse(normalized);
+   406→}
+   407→
+   408→/// محرر خصم (سطر أو رأس) — تبديل نسبة/مبلغ + قيمة، بنتيجة (نوع، قيمة).
+   409→Future<(SaleDiscountType, double)?> showDiscountEditSheet(
+   410→  BuildContext context, {
+   411→  required String title,
+   412→  required SaleDiscountType initialType,
+   413→  required double initialValue,
+   414→}) async {
+   415→  var type = initialType;
+   416→  final controller = TextEditingController(
+   417→    text: initialValue == 0
+   418→        ? ''
+   419→        : initialValue == initialValue.truncateToDouble()
+   420→        ? initialValue.truncate().toString()
+   421→        : initialValue.toString(),
+   422→  );
+   423→  String? error;
+   424→  final result = await showModalBottomSheet<(SaleDiscountType, double)>(
+   425→    context: context,
+   426→    isScrollControlled: true,
+   427→    // فوق شريط التبويبات (نفس قرار بقية نوافذ الكاشير).
+   428→    useRootNavigator: false,
+   429→    builder: (sheetContext) {
+   430→      final l10n = AppLocalizations.of(sheetContext)!;
+   431→      return StatefulBuilder(
+   432→        builder: (sheetContext, setSheetState) {
+   433→          return Padding(
+   434→            padding: EdgeInsets.only(
+   435→              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+   436→            ),
+   437→            child: Padding(
+   438→              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+   439→              child: Column(
+   440→                mainAxisSize: MainAxisSize.min,
+   441→                crossAxisAlignment: CrossAxisAlignment.stretch,
+   442→                children: [
+   443→                  Text(
+   444→                    title,
+   445→                    style: Theme.of(sheetContext).textTheme.titleMedium,
+   446→                  ),
+   447→                  const SizedBox(height: 16),
+   448→                  SegmentedButton<SaleDiscountType>(
+   449→                    segments: [
+   450→                      ButtonSegment(
+   451→                        value: SaleDiscountType.amount,
+   452→                        label: Text(l10n.sellDiscountAmount),
+   453→                        icon: const Icon(Icons.sell_outlined),
+   454→                      ),
+   455→                      ButtonSegment(
+   456→                        value: SaleDiscountType.percent,
+   457→                        label: Text(l10n.sellDiscountPercent),
+   458→                        icon: const Icon(Icons.percent_rounded),
+   459→                      ),
+   460→                    ],
+   461→                    selected: {type},
+   462→                    onSelectionChanged: (selection) {
+   463→                      setSheetState(() => type = selection.first);
+   464→                    },
+   465→                  ),
+   466→                  const SizedBox(height: 16),
+   467→                  TextField(
+   468→                    controller: controller,
+   469→                    autofocus: true,
+   470→                    keyboardType: const TextInputType.numberWithOptions(
+   471→                      decimal: true,
+   472→                    ),
+   473→                    onChanged: (_) {
+   474→                      if (error != null) {
+   475→                        setSheetState(() => error = null);
+   476→                      }
+   477→                    },
+   478→                    decoration: InputDecoration(
+   479→                      suffixText: type == SaleDiscountType.percent ? '%' : null,
+   480→                      errorText: error,
+   481→                      hintText: type == SaleDiscountType.percent
+   482→                          ? l10n.sellDiscountPercentHint
+   483→                          : l10n.sellDiscountAmountHint,
+   484→                    ),
+   485→                  ),
+   486→                  const SizedBox(height: 18),
+   487→                  FilledButton(
+   488→                    onPressed: () {
+   489→                      final raw = controller.text.trim().replaceAll(',', '.');
+   490→                      final value = raw.isEmpty ? 0.0 : double.tryParse(raw);
+   491→                      if (value == null ||
+   492→                          value.isNaN ||
+   493→                          value < 0 ||
+   494→                          (type == SaleDiscountType.percent && value > 100)) {
+   495→                        setSheetState(
+   496→                          () => error = type == SaleDiscountType.percent
+   497→                              ? l10n.sellDiscountPercentError
+   498→                              : l10n.sellDiscountAmountError,
+   499→                        );
+   500→                        return;
+   501→                      }
+   502→                      Navigator.of(sheetContext).pop((type, value));
+   503→                    },
+   504→                    style: FilledButton.styleFrom(
+   505→                      minimumSize: const Size.fromHeight(52),
+   506→                    ),
+   507→                    child: Text(l10n.sellDiscountApply),
+   508→                  ),
+   509→                  const SizedBox(height: 8),
+   510→                  TextButton(
+   511→                    onPressed: () => Navigator.of(sheetContext).pop(),
+   512→                    child: Text(l10n.commonCancel),
+   513→                  ),
+   514→                ],
+   515→              ),
+   516→            ),
+   517→          );
+   518→        },
+   519→      );
+   520→    },
+   521→  );
+   522→  controller.dispose();
+   523→  return result;
+   524→}
+   525→
+   526→/// إيصال النجاح بعد الترحيل — INV/الإجمالي/المدفوع/الباقي/المتبقي آجلاً
+   527→/// + شارة السعر التقديري عند fallback (FR-02-20).
+   528→class PostedReceiptCard extends StatelessWidget {
+   529→  const PostedReceiptCard({
+   530→    super.key,
+   531→    required this.receipt,
+   532→    this.currencyCode,
+   533→  });
+   534→
+   535→  final SalePostedReceipt receipt;
+   536→  final String? currencyCode;
+   537→
+   538→  @override
+   539→  Widget build(BuildContext context) {
+   540→    final l10n = AppLocalizations.of(context)!;
+   541→    final colors = FinColors.of(context);
+   542→    return FinCard(
+   543→      accent: colors.positive,
+   544→      child: Column(
+   545→        crossAxisAlignment: CrossAxisAlignment.stretch,
+   546→        children: [
+   547→          Row(
+   548→            children: [
+   549→              Container(
+   550→                width: 46,
+   551→                height: 46,
+   552→                decoration: BoxDecoration(
+   553→                  color: colors.positiveContainer,
+   554→                  shape: BoxShape.circle,
+   555→                ),
+   556→                child: Icon(
+   557→                  Icons.check_circle_rounded,
+   558→                  color: colors.onPositiveContainer,
+   559→                  size: 26,
+   560→                ),
+   561→              ),
+   562→              const SizedBox(width: 12),
+   563→              Expanded(
+   564→                child: Column(
+   565→                  crossAxisAlignment: CrossAxisAlignment.start,
+   566→                  children: [
+   567→                    Text(
+   568→                      l10n.sellReceiptSuccessTitle,
+   569→                      style: Theme.of(context).textTheme.titleMedium
+   570→                          ?.copyWith(fontWeight: FontWeight.w800),
+   571→                    ),
+   572→                    Text(
+   573→                      receipt.invoiceNo,
+   574→                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   575→                        fontFeatures: FinText.tabularNums,
+   576→                        fontWeight: FontWeight.w700,
+   577→                      ),
+   578→                    ),
+   579→                  ],
+   580→                ),
+   581→              ),
+   582→              PayStatusChip(method: receipt.payStatus, dense: false),
+   583→            ],
+   584→          ),
+   585→          if (receipt.rateIsFallback) ...[
+   586→            const SizedBox(height: 12),
+   587→            FallbackRateBadge(dense: false),
+   588→          ],
+   589→          const SizedBox(height: 14),
+   590→          _ReceiptRow(
+   591→            label: l10n.sellReceiptTotal,
+   592→            value: receipt.totals.grandTotal,
+   593→          ),
+   594→          _ReceiptRow(
+   595→            label: l10n.sellReceiptPaidCash,
+   596→            value: receipt.totals.grandTotal - receipt.remainingCredit,
+   597→            sign: FinSign.incoming,
+   598→          ),
+   599→          if (receipt.changeDue > 0)
+   600→            _ReceiptRow(
+   601→              label: l10n.sellReceiptChangeDue,
+   602→              value: receipt.changeDue,
+   603→              sign: FinSign.outgoing,
+   604→              highlight: colors.warning,
+   605→            ),
+   606→          if (receipt.remainingCredit > 0)
+   607→            _ReceiptRow(
+   608→              label: l10n.sellReceiptRemainingCredit,
+   609→              value: receipt.remainingCredit,
+   610→              sign: FinSign.outgoing,
+   611→              highlight: colors.warning,
+   612→            ),
+   613→        ],
+   614→      ),
+   615→    );
+   616→  }
+   617→}
+   618→
+   619→class _ReceiptRow extends StatelessWidget {
+   620→  const _ReceiptRow({
+   621→    required this.label,
+   622→    required this.value,
+   623→    this.sign = FinSign.neutral,
+   624→    this.highlight,
+   625→  });
+   626→
+   627→  final String label;
+   628→  final double value;
+   629→  final FinSign sign;
+   630→  final Color? highlight;
+   631→
+   632→  @override
+   633→  Widget build(BuildContext context) {
+   634→    final scheme = Theme.of(context).colorScheme;
+   635→    return Padding(
+   636→      padding: const EdgeInsets.symmetric(vertical: 3),
+   637→      child: Row(
+   638→        children: [
+   639→          Expanded(
+   640→            child: Text(
+   641→              label,
+   642→              style: Theme.of(context).textTheme.bodyMedium
+   643→                  ?.copyWith(color: scheme.onSurfaceVariant),
+   644→            ),
+   645→          ),
+   646→          AmountText(
+   647→            amount: value,
+   648→            sign: sign,
+   649→            decimals: value == value.truncateToDouble() ? 0 : 2,
+   650→          ),
+   651→        ],
+   652→      ),
+   653→    );
+   654→  }
+   655→}
+   656→
+   657→/// نص كمية معروض بأرقام جدولية (المتاح: N).
+   658→String sellQtyText(double qty) =>
+   659→    AmountText.format(qty, qty == qty.truncateToDouble() ? 0 : 3);
+   660→
+   661→/// خط الإجماليات الحي — المجموع/خصم الأسطر/خصم الرأس/الصافي (§6.5).
+   662→class CartTotalsPanel extends StatelessWidget {
+   663→  const CartTotalsPanel({
+   664→    super.key,
+   665→    required this.totals,
+   666→    required this.currencyCode,
+   667→  });
+   668→
+   669→  final CartTotals totals;
+   670→  final String? currencyCode;
+   671→
+   672→  @override
+   673→  Widget build(BuildContext context) {
+   674→    final l10n = AppLocalizations.of(context)!;
+   675→    final scheme = Theme.of(context).colorScheme;
+   676→    final colors = FinColors.of(context);
+   677→    final decimals = totals.grandTotal == totals.grandTotal.truncateToDouble()
+   678→        ? 0
+   679→        : 2;
+   680→    return Column(
+   681→      crossAxisAlignment: CrossAxisAlignment.stretch,
+   682→      children: [
+   683→        _TotalsRow(
+   684→          label: l10n.sellTotalsSubtotal,
+   685→          value: totals.subtotal,
+   686→          decimals: decimals,
+   687→        ),
+   688→        if (totals.lineDiscountsTotal > 0)
+   689→          _TotalsRow(
+   690→            label: l10n.sellTotalsLineDiscounts,
+   691→            value: totals.lineDiscountsTotal,
+   692→            decimals: decimals,
+   693→            color: colors.negative,
+   694→            sign: FinSign.outgoing,
+   695→          ),
+   696→        if (totals.invoiceDiscount > 0)
+   697→          _TotalsRow(
+   698→            label: l10n.sellTotalsInvoiceDiscount,
+   699→            value: totals.invoiceDiscount,
+   700→            decimals: decimals,
+   701→            color: colors.negative,
+   702→            sign: FinSign.outgoing,
+   703→          ),
+   704→        Divider(
+   705→          height: 18,
+   706→          color: scheme.outlineVariant.withValues(alpha: 0.4),
+   707→        ),
+   708→        Row(
+   709→          children: [
+   710→            Expanded(
+   711→              child: Text(
+   712→                l10n.sellTotalsGrandTotal,
+   713→                style: Theme.of(context).textTheme.titleMedium
+   714→                    ?.copyWith(fontWeight: FontWeight.w800),
+   715→              ),
+   716→            ),
+   717→            AmountText(
+   718→              amount: totals.grandTotal,
+   719→              size: AmountSize.large,
+   720→              decimals: decimals,
+   721→            ),
+   722→          ],
+   723→        ),
+   724→      ],
+   725→    );
+   726→  }
+   727→}
+   728→
+   729→class _TotalsRow extends StatelessWidget {
+   730→  const _TotalsRow({
+   731→    required this.label,
+   732→    required this.value,
+   733→    required this.decimals,
+   734→    this.color,
+   735→    this.sign = FinSign.neutral,
+   736→  });
+   737→
+   738→  final String label;
+   739→  final double value;
+   740→  final int decimals;
+   741→  final Color? color;
+   742→  final FinSign sign;
+   743→
+   744→  @override
+   745→  Widget build(BuildContext context) {
+   746→    final scheme = Theme.of(context).colorScheme;
+   747→    return Padding(
+   748→      padding: const EdgeInsets.symmetric(vertical: 2),
+   749→      child: Row(
+   750→        children: [
+   751→          Expanded(
+   752→            child: Text(
+   753→              label,
+   754→              style: Theme.of(context).textTheme.bodyMedium
+   755→                  ?.copyWith(color: scheme.onSurfaceVariant),
+   756→            ),
+   757→          ),
+   758→          AmountText(amount: value, sign: sign, decimals: decimals),
+   759→        ],
+   760→      ),
+   761→    );
+   762→  }
+   763→}
+   764→
+   765→/// ينسّق تاريخاً للعرض `يوم/شهر/سنة` بأرقام جدولية بسيطة.
+   766→String sellFormatDate(DateTime date) =>
+   767→    '${date.day.toString().padLeft(2, '0')}/'
+   768→    '${date.month.toString().padLeft(2, '0')}/'
+   769→    '${date.year}';
+   770→
+   771→/// ينسّق وقتاً 12 ساعة مع ص/م.
+   772→String sellFormatTime(DateTime date) {
+   773→  final hour = date.hour == 0
+   774→      ? 12
+   775→      : date.hour > 12
+   776→      ? date.hour - 12
+   777→      : date.hour;
+   778→  final period = date.hour < 12 ? 'ص' : 'م';
+   779→  return '${hour.toString().padLeft(2, '0')}:'
+   780→      '${date.minute.toString().padLeft(2, '0')} $period';
+   781→}
+   782→
+   783→/// فاصل قيمة تسوية الدفع (للعرض المتكرر في PaymentSheet).
+   784→({double netPaid, double changeDue, double remainingCredit}) settlePreview(
+   785→  double grandTotal,
+   786→  double paidCash,
+   787→) {
+   788→  final settlement = SalePricing.settlePayment(grandTotal, paidCash);
+   789→  return (
+   790→    netPaid: settlement.netPaid,
+   791→    changeDue: settlement.changeDue,
+   792→    remainingCredit: settlement.remainingCredit,
+   793→  );
+   794→}
+   795→

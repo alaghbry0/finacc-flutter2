@@ -20,9 +20,10 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/status_chip.dart';
+import '../view_models/print_on_save.dart';
 import '../view_models/quotations_view_model.dart';
 import 'quotations_screen.dart' show QuotationStatusChip;
+import 'widgets/invoice_pdf_preview.dart';
 import 'widgets/payment_sheet.dart';
 import 'widgets/sell_widgets.dart';
 
@@ -39,6 +40,8 @@ class QuotationDetailScreen extends StatelessWidget {
       quotationRepo: app.quotations!,
       companyRepo: app.companies!,
       quotationId: quotationId,
+      // P2-5: لجلب رقم INV الحقيقي للفاتورة المحوَّل إليها.
+      saleRepo: app.sales,
     );
     unawaited(() async {
       vm.setUserId((await app.companies!.findAdminUserId()) ?? 1);
@@ -161,12 +164,15 @@ class _QuotationDetailContent extends StatelessWidget {
                   label: l10n.sellDetailPhone,
                   value: detail.customerPhone!,
                 ),
+              // العملة والسعر صفّان مستقلان — الدمج في قيمة واحدة فاض
+              // العرض 116px على 390dp (فحص P2-5).
               _InfoRow(
                 label: l10n.sellDetailCurrency,
-                value:
-                    '${detail.currencyCode ?? ''} · '
-                    '${l10n.sellQuotationRateLabel} '
-                    '${AmountText.format(quotation.exchangeRate, 4)}',
+                value: detail.currencyCode ?? '',
+              ),
+              _InfoRow(
+                label: l10n.sellQuotationRateLabel,
+                value: AmountText.format(quotation.exchangeRate, 4),
               ),
               if (quotation.validUntil != null)
                 _InfoRow(
@@ -176,13 +182,16 @@ class _QuotationDetailContent extends StatelessWidget {
               if (quotation.convertedInvoiceId != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: StatusChip(
-                    label: l10n.sellQuotationConvertedTo(
-                      '${quotation.convertedInvoiceId}',
+                  // P2-5: رقم الفاتورة الحقيقي INV-… (لا المعرّف الداخلي)
+                  // + شريحة قابلة للنقر تفتح تفاصيل الفاتورة.
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: _ConvertedInvoiceChip(
+                      invoiceId: quotation.convertedInvoiceId!,
+                      invoiceNo:
+                          vm.state.convertedInvoiceNo ??
+                          '#${quotation.convertedInvoiceId}',
                     ),
-                    tone: ChipTone.positive,
-                    icon: Icons.check_circle_rounded,
-                    dense: false,
                   ),
                 ),
             ],
@@ -392,6 +401,11 @@ class _ActionsBar extends StatelessWidget {
   ) async {
     final l10n = AppLocalizations.of(context)!;
     final quotation = vm.quotation!;
+    final app = context.read<AppController>();
+    // P0-2: نفس سلوك الكاشير — print_on_save يحكم أزرار الإيصال هنا.
+    final printMode = await resolvePrintOnSave(app.settings);
+    if (!context.mounted) return;
+    final sales = app.sales;
     final posted = await showPaymentSheet(
       context,
       grandTotal: quotation.total,
@@ -401,8 +415,16 @@ class _ActionsBar extends StatelessWidget {
       onConfirm: (paidCash, method) =>
           vm.convertToInvoice(paidCash: paidCash, paymentMethod: method),
       // FR-03-05 (17-c): بوابة حد الائتمان عند تحويل عرض السعر لفاتورة.
-      creditGate: () =>
-          _resolveCreditGate(context.read<AppController>(), quotation),
+      creditGate: () => _resolveCreditGate(app, quotation),
+      // P0-2: معاينة PDF للفاتورة الناتجة عن التحويل.
+      printOnSave: printMode,
+      openInvoicePreview: sales == null
+          ? null
+          : (receipt) => openInvoicePdfPreview(
+              context,
+              saleRepo: sales,
+              invoiceId: receipt.invoiceId,
+            ),
     );
     if (posted && context.mounted) {
       ScaffoldMessenger.of(context)
@@ -497,6 +519,66 @@ class _ActionsBar extends StatelessWidget {
   }
 }
 
+/// شريحة «حوّل إلى فاتورة رقم INV-…» (P2-5) — قابلة للنقر وتفتح تفاصيل
+/// الفاتورة المحوَّلة إليها (context.go للمسار القائم).
+class _ConvertedInvoiceChip extends StatelessWidget {
+  const _ConvertedInvoiceChip({
+    required this.invoiceId,
+    required this.invoiceNo,
+  });
+
+  final int invoiceId;
+  final String invoiceNo;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = FinColors.of(context);
+    return Material(
+      color: colors.positiveContainer,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: Key('quotation_converted_invoice_chip'),
+        onTap: () => context.go('/sell/invoices/$invoiceId'),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_rounded,
+                size: 18,
+                color: colors.onPositiveContainer,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  l10n.sellQuotationConvertedTo(invoiceNo),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: colors.onPositiveContainer,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: FinText.tabularNums,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 14,
+                color: colors.onPositiveContainer,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
 
@@ -516,10 +598,15 @@ class _InfoRow extends StatelessWidget {
                 ?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(fontWeight: FontWeight.w700),
+          // درع الفيض: القيمة الطويلة تُقتطع بلطف بدل فيض الصف.
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

@@ -7854,6 +7854,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customer/category/item/day with change vs previous period'**
   String get reportsSalesByDesc;
+
+  /// No description provided for @sellFixPrintInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Print invoice'**
+  String get sellFixPrintInvoice;
+
+  /// No description provided for @sellFixShareInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Share / WhatsApp'**
+  String get sellFixShareInvoice;
+
+  /// No description provided for @sellFixPrintAndNewInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Print + new invoice'**
+  String get sellFixPrintAndNewInvoice;
+
+  /// No description provided for @sellFixClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get sellFixClose;
+
+  /// No description provided for @sellFixPrintLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the invoice for printing — try again from the invoices list.'**
+  String get sellFixPrintLoadFailed;
+
+  /// No description provided for @sellFixDetailReturnAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Return against this invoice'**
+  String get sellFixDetailReturnAction;
+
+  /// No description provided for @sellFixNewCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'New customer'**
+  String get sellFixNewCustomer;
+
+  /// No description provided for @sellFixNewCustomerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick new customer'**
+  String get sellFixNewCustomerTitle;
+
+  /// No description provided for @sellFixNewCustomerNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer name'**
+  String get sellFixNewCustomerNameLabel;
+
+  /// No description provided for @sellFixNewCustomerPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone (optional)'**
+  String get sellFixNewCustomerPhoneLabel;
+
+  /// No description provided for @sellFixNewCustomerNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer name is required.'**
+  String get sellFixNewCustomerNameRequired;
+
+  /// No description provided for @sellFixNewCustomerSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Add & select'**
+  String get sellFixNewCustomerSave;
+
+  /// No description provided for @appFixUnsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get appFixUnsavedTitle;
+
+  /// No description provided for @appFixUnsavedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes — leaving now will discard them. Leave without saving?'**
+  String get appFixUnsavedBody;
+
+  /// No description provided for @appFixUnsavedLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get appFixUnsavedLeave;
+
+  /// No description provided for @appFixUnsavedStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get appFixUnsavedStay;
+
+  /// No description provided for @appFixWipeBackupFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety backup failed'**
+  String get appFixWipeBackupFailedTitle;
+
+  /// No description provided for @appFixWipeBackupFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The automatic pre-wipe backup failed, so no data was wiped. Try again, or continue without a final backup if you are sure.'**
+  String get appFixWipeBackupFailedBody;
+
+  /// No description provided for @appFixWipeProceedNoBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without backup'**
+  String get appFixWipeProceedNoBackup;
+
+  /// No description provided for @appFixWipeSafetyBackupAt.
+  ///
+  /// In en, this message translates to:
+  /// **'An automatic safety backup was created before wiping: {fileName}'**
+  String appFixWipeSafetyBackupAt(Object fileName);
+
+  /// No description provided for @pdfFixPageIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {total}'**
+  String pdfFixPageIndicator(int page, int total);
 }
 
 class _AppLocalizationsDelegate

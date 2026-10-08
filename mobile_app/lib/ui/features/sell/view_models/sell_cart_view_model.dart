@@ -648,9 +648,18 @@ class SellCartViewModel extends ChangeNotifier {
   // عرض السعر (FR-02-11)
   // ───────────────────────────────────────────────────────────────────
 
+  /// مدة الصلاحية الافتراضية لعرض السعر المحفوظ من السلة (P2-5) —
+  /// +30 يوماً إن لم يمرّر المستدعي صلاحية صريحة.
+  static const Duration quotationDefaultValidity = Duration(days: 30);
+
   /// حفظ السلة الحالية كعرض سعر QTE — بلا أي حركة مخزون/صندوق.
   /// السلة تبقى كما هي (يمكن المتابعة في البيع أو التفريغ من الشاشة).
-  Future<Result<Quotation, String>> saveAsQuotation() async {
+  ///
+  /// [validUntil] (P2-5): صلاحية صريحة — والافتراضي +30 يوماً من لحظة
+  /// الحفظ (مسار الحفظ لا يمرّ بنموذج إدخال في هذه الجولة).
+  Future<Result<Quotation, String>> saveAsQuotation({
+    DateTime? validUntil,
+  }) async {
     if (_state.lines.isEmpty) {
       return const Err<Quotation, String>(
         'أضف بنداً واحداً على الأقل قبل حفظ عرض السعر.',
@@ -684,6 +693,8 @@ class SellCartViewModel extends ChangeNotifier {
         ],
         invoiceDiscountType: _state.invoiceDiscountType,
         invoiceDiscountValue: _state.invoiceDiscountValue,
+        // P2-5: الصلاحية الافتراضية +30 يوماً عند غياب صلاحية صريحة.
+        validUntil: validUntil ?? _clock().add(quotationDefaultValidity),
         issuedAt: _clock(),
       ),
       userId: _userId ?? 1,

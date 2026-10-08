@@ -1312,5 +1312,37 @@
   "reportsSectionFlows": "حركة المخزون والمبيعات",
   "reportsItemMovementDesc": "بطاقة الصنف الكاملة بالباقي التراكمي لكل حركة",
   "reportsStockSummaryDesc": "وارد/صادر/مرتجع/تسوية لكل صنف مع قيمة المخزون",
-  "reportsSalesByDesc": "العميل/الفئة/الصنف/اليوم مع نسب التغير عن الفترة السابقة"
+  "reportsSalesByDesc": "العميل/الفئة/الصنف/اليوم مع نسب التغير عن الفترة السابقة",
+  "sellFixPrintInvoice": "طباعة الفاتورة",
+  "sellFixShareInvoice": "مشاركة / واتساب",
+  "sellFixPrintAndNewInvoice": "طباعة + فاتورة جديدة",
+  "sellFixClose": "إغلاق",
+  "sellFixPrintLoadFailed": "تعذّر تحميل الفاتورة للطباعة — جرّب من قائمة الفواتير.",
+  "sellFixDetailReturnAction": "مرتجع على هذه الفاتورة",
+  "sellFixNewCustomer": "عميل جديد",
+  "sellFixNewCustomerTitle": "عميل جديد سريع",
+  "sellFixNewCustomerNameLabel": "اسم العميل",
+  "sellFixNewCustomerPhoneLabel": "الهاتف (اختياري)",
+  "sellFixNewCustomerNameRequired": "اسم العميل مطلوب.",
+  "sellFixNewCustomerSave": "إضافة وتحديد"
+,
+  "appFixUnsavedTitle": "تغييرات غير محفوظة",
+  "appFixUnsavedBody": "هناك تغييرات لم تُحفظ بعد — المغادرة الآن تضيعها. هل تريد المغادرة دون حفظ؟",
+  "appFixUnsavedLeave": "مغادرة",
+  "appFixUnsavedStay": "بقاء",
+  "appFixWipeBackupFailedTitle": "تعذّر إنشاء نسخة الأمان",
+  "appFixWipeBackupFailedBody": "فشل إنشاء النسخة الاحتياطية التلقائية قبل المسح، لذلك لم تُمسَح أي بيانات. أعد المحاولة، أو تابع المسح دون نسخة نهائية إن كنت متأكداً.",
+  "appFixWipeProceedNoBackup": "متابعة بلا نسخة",
+  "appFixWipeSafetyBackupAt": "أُنشئت نسخة أمان تلقائية قبل المسح باسم: {fileName}",
+  "pdfFixPageIndicator": "صفحة {page} من {total}",
+  "@pdfFixPageIndicator": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }
