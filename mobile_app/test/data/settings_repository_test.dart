@@ -145,4 +145,81 @@ void main() {
     expect(await reopened.autolockMinutes(), 30);
     await second.close();
   });
+
+  // ── موصّلات موجة UX-2a (التخصيص الشامل) ──
+
+  test(
+    'UX-2a: الافتراضيات — دفع نقدي، خصومات ظاهرة، خط عادي، تباين مكتوم',
+    () async {
+      final app = await openUniqueFileApp();
+      addTearDown(app.close);
+      final settings = SettingsRepository(app.db);
+
+      expect(await settings.defaultPayment(), 'cash');
+      expect(await settings.showDiscounts(), isTrue);
+      expect(await settings.fontScale(), 'normal');
+      expect(await settings.highContrast(), isFalse);
+      expect(await settings.overAvailPolicy(), 'warn');
+      expect(await settings.creditLimitAction(), 'warn');
+      expect(await settings.discountBelowMargin(), isFalse);
+      expect(await settings.maxBackdateDays(), 30);
+    },
+  );
+
+  test('UX-2a: كتابة/قراءة جولة كاملة للموصّلات الجديدة', () async {
+    final app = await openUniqueFileApp();
+    addTearDown(app.close);
+    final settings = SettingsRepository(app.db);
+
+    await settings.setDefaultPayment('credit');
+    await settings.setShowDiscounts(false);
+    await settings.setFontScale('xlarge');
+    await settings.setHighContrast(true);
+    await settings.set('sale.over_avail_policy', 'block');
+    await settings.set('parties.credit_limit_action', 'block');
+    await settings.set('invoicing.discount_below_margin', 'on');
+
+    expect(await settings.defaultPayment(), 'credit');
+    expect(await settings.showDiscounts(), isFalse);
+    expect(await settings.fontScale(), 'xlarge');
+    expect(await settings.highContrast(), isTrue);
+    expect(await settings.overAvailPolicy(), 'block');
+    expect(await settings.creditLimitAction(), 'block');
+    expect(await settings.discountBelowMargin(), isTrue);
+
+    // رجوع للقيم الافتراضية.
+    await settings.setDefaultPayment('mixed');
+    await settings.setShowDiscounts(true);
+    await settings.setFontScale('large');
+    await settings.setHighContrast(false);
+    expect(await settings.defaultPayment(), 'mixed');
+    expect(await settings.showDiscounts(), isTrue);
+    expect(await settings.fontScale(), 'large');
+    expect(await settings.highContrast(), isFalse);
+  });
+
+  test('UX-2a: حراسة القيم — الوضع غير المعروف يرفض', () async {
+    final app = await openUniqueFileApp();
+    addTearDown(app.close);
+    final settings = SettingsRepository(app.db);
+
+    expect(() => settings.setDefaultPayment('barter'), throwsArgumentError);
+    expect(() => settings.setFontScale('huge'), throwsArgumentError);
+  });
+
+  test('UX-2a: سجل المفاتيح يضم مفاتيح التخصيص الجديدة (FR-13-09)', () async {
+    expect(
+      SettingsRepository.knownKeys,
+      containsAll(<String>[
+        'sale.default_payment',
+        'sale.show_discounts',
+        'display.font_scale',
+        'sale.over_avail_policy',
+        'parties.credit_limit_action',
+        'invoicing.discount_below_margin',
+        'dating.max_backdate_days',
+        'ui.high_contrast',
+      ]),
+    );
+  });
 }

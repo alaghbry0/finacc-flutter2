@@ -434,12 +434,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsWipeDesc => 'إعادة التطبيق لحالة التثبيت الأول — لا تراجع';
 
   @override
-  String get settingsAboutPhase1 => 'المرحلة الأولى مكتملة';
-
-  @override
-  String get settingsAboutVersion => 'الإصدار 1.0.0 — الشريحة 0 + الشريحة 1';
-
-  @override
   String get settingsAboutSrs => 'وفق وثيقة المتطلبات SRS v1.5 المعتمدة';
 
   @override
@@ -4615,4 +4609,192 @@ class AppLocalizationsAr extends AppLocalizations {
   String pdfFixPageIndicator(int page, int total) {
     return 'صفحة $page من $total';
   }
+
+  @override
+  String get settings2CustomizationTitle => 'التخصيص';
+
+  @override
+  String get settings2CompanyTitle => 'بيانات المنشأة';
+
+  @override
+  String get settings2CompanySubtitle =>
+      'الاسم والهاتف والواتساب والعنوان والشعار والتذييل';
+
+  @override
+  String get settings2CompanyNameLabel => 'اسم المنشأة';
+
+  @override
+  String get settings2CompanyPhoneLabel => 'الهاتف';
+
+  @override
+  String get settings2CompanyWhatsappLabel => 'واتساب';
+
+  @override
+  String get settings2CompanyAddressLabel => 'العنوان';
+
+  @override
+  String get settings2CompanyTaxNumberLabel => 'الرقم الضريبي';
+
+  @override
+  String get settings2CompanyTaxRateLabel => 'نسبة الضريبة ٪';
+
+  @override
+  String get settings2CompanyFooterLabel => 'نص تذييل الفاتورة';
+
+  @override
+  String get settings2CompanyFooterHint =>
+      'يُطبع أسفل الفواتير — عبارة شكر أو بيانات التواصل';
+
+  @override
+  String get settings2CompanyLogoSection => 'الشعار';
+
+  @override
+  String get settings2CompanyLogoPick => 'اختيار شعار';
+
+  @override
+  String get settings2CompanyLogoChange => 'تغيير الشعار';
+
+  @override
+  String get settings2CompanyLogoRemove => 'إزالة الشعار';
+
+  @override
+  String get settings2CompanyLogoHint =>
+      'صورة من المعرض تُخزَّن داخل قاعدة بياناتك وتنجو مع النسخة الاحتياطية';
+
+  @override
+  String get settings2CompanyLogoTooLarge =>
+      'حجم الشعار كبير جداً — اختر صورة أصغر (الحد ميجابايت واحد).';
+
+  @override
+  String get settings2CompanySave => 'حفظ التعديلات';
+
+  @override
+  String get settings2CompanySaved => 'حُفظت بيانات المنشأة';
+
+  @override
+  String get settings2CompanyNameRequired => 'اسم المنشأة مطلوب.';
+
+  @override
+  String get settings2CompanyInvalidTaxRate =>
+      'نسبة الضريبة يجب أن تكون رقماً بين 0 و100.';
+
+  @override
+  String get settings2CompanySaveFailed =>
+      'تعذّر حفظ بيانات المنشأة — أعد المحاولة.';
+
+  @override
+  String settings2CompanyCurrencyNote(String code) {
+    return 'العملة الأساسية: $code — تُثبَّت من التأسيس ولا تُغيَّر هنا.';
+  }
+
+  @override
+  String get settings2SalePrefsTitle => 'تفضيلات البيع';
+
+  @override
+  String get settings2SalePrefsSubtitle =>
+      'طريقة الدفع الافتراضية والخصومات وسياسات الحرس';
+
+  @override
+  String get settings2SalePrefsNote =>
+      'كل تغيير يُطبَّق فوراً ويُحفَظ في قاعدتك المحلية.';
+
+  @override
+  String get settings2SaleDefaultPayment => 'طريقة الدفع الافتراضية';
+
+  @override
+  String get settings2SaleDefaultPaymentDesc =>
+      'تُفتح نافذة الدفع على هذا الوضع';
+
+  @override
+  String get settings2SalePayCash => 'نقدي كامل';
+
+  @override
+  String get settings2SalePayCredit => 'آجل كامل';
+
+  @override
+  String get settings2SalePayMixed => 'مختلط';
+
+  @override
+  String get settings2SaleShowDiscounts => 'إظهار الخصومات في الكاشير';
+
+  @override
+  String get settings2SaleShowDiscountsDesc =>
+      'إخفاؤها يبسّط شاشة البيع للمتاجر بلا خصومات';
+
+  @override
+  String get settings2SaleCreditLimitPolicy => 'سياسة حد الائتمان';
+
+  @override
+  String get settings2SaleCreditLimitPolicyDesc =>
+      'سلوك التطبيق عند تجاوز عميلٍ حدَّه بالبيع الآجل';
+
+  @override
+  String get settings2SaleOverAvailPolicy => 'البيع فوق المتاح';
+
+  @override
+  String get settings2SaleOverAvailPolicyDesc =>
+      '«منع» يوقف ترحيل أي فاتورة فيها كمية تتجاوز رصيد المخزون';
+
+  @override
+  String get settings2SaleBelowMarginPolicy => 'تحذير البيع تحت التكلفة';
+
+  @override
+  String get settings2SaleBelowMarginPolicyDesc =>
+      'لافتة تحذير بالكاشير عند بيع صنف أدنى من تكلفته';
+
+  @override
+  String get settings2SalePolicyWarn => 'تحذير ومتابعة';
+
+  @override
+  String get settings2SalePolicyBlock => 'منع';
+
+  @override
+  String get settings2SaleWriteFailed =>
+      'تعذّر حفظ التفضيل — القيمة الحالية بلا تغيير.';
+
+  @override
+  String get settings2AppearanceTitle => 'العرض والمظهر';
+
+  @override
+  String get settings2FontScale => 'حجم الخط';
+
+  @override
+  String get settings2FontScaleDesc =>
+      'يُطبَّق على كامل التطبيق فوراً — عادي للرؤية المريحة وأكبر لضعاف البصر';
+
+  @override
+  String get settings2FontScaleNormal => 'عادي';
+
+  @override
+  String get settings2FontScaleLarge => 'كبير';
+
+  @override
+  String get settings2FontScaleXlarge => 'أكبر';
+
+  @override
+  String get settings2FontScaleSample => 'نص عيّنة';
+
+  @override
+  String get settings2HighContrast => 'التباين العالي';
+
+  @override
+  String get settings2HighContrastDesc =>
+      'أسطح صافية ونصوص بأقصى تباين وحدود أوضح';
+
+  @override
+  String get settings2HighContrastNote =>
+      'مخصص لضعاف البصر — يغلّف الألوان الناعمة بحدود قصوى.';
+
+  @override
+  String settings2BelowCostWarning(String names) {
+    return 'تحذير: $names يُباع تحت التكلفة بعد الخصومات — راجع السعر.';
+  }
+
+  @override
+  String settings2AboutVersion(String version) {
+    return 'الإصدار $version';
+  }
+
+  @override
+  String get settings2AboutPhase => 'ما قبل v1.0.0 — الموجة 2';
 }

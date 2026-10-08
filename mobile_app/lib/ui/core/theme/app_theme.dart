@@ -20,13 +20,18 @@ class FinTheme {
   static const Color seed = Color(0xFF00695C);
 
   /// الثيم الفاتح.
-  static ThemeData light() => _build(Brightness.light);
+  ///
+  /// [highContrast] (UX-2a — `ui.high_contrast`): أسطح صافية (أبيض/أسود
+  /// خالص) ونصوص بأقصى تباين وحدود أقوى — إتاحة FR-13-05 لضعاف البصر.
+  static ThemeData light({bool highContrast = false}) =>
+      _build(Brightness.light, highContrast: highContrast);
 
   /// الثيم الداكن (المريح لجلسات العمل الطويلة — §6.1).
-  static ThemeData dark() => _build(Brightness.dark);
+  static ThemeData dark({bool highContrast = false}) =>
+      _build(Brightness.dark, highContrast: highContrast);
 
-  static ThemeData _build(Brightness brightness) {
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness)
+  static ThemeData _build(Brightness brightness, {bool highContrast = false}) {
+    var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness)
         .copyWith(
           // أسطح فاخرة: ورقة بلمسة نعناعية في الفاتح، وأخضر عميق في الداكن.
           surface: brightness == Brightness.light
@@ -56,6 +61,31 @@ class FinTheme {
           // الخلفية العامة.
         );
 
+    // التباين العالي (UX-2a): نصوص قصوى على أسطح صافية وحدود مؤكدة —
+    // بلا تغيير للألوان الدلالية (FinColors تبقى موفّرة ≥4.5:1 أصلاً).
+    if (highContrast) {
+      final ink = brightness == Brightness.light
+          ? const Color(0xFF000000)
+          : const Color(0xFFFFFFFF);
+      final pureSurface = brightness == Brightness.light
+          ? const Color(0xFFFFFFFF)
+          : const Color(0xFF000000);
+      scheme = scheme.copyWith(
+        surface: pureSurface,
+        surfaceContainerLowest: pureSurface,
+        surfaceContainerLow: pureSurface,
+        surfaceContainer: pureSurface,
+        surfaceContainerHigh: pureSurface,
+        surfaceContainerHighest: pureSurface,
+        surfaceDim: pureSurface,
+        surfaceBright: pureSurface,
+        onSurface: ink,
+        onSurfaceVariant: ink,
+        outline: ink,
+        outlineVariant: ink,
+      );
+    }
+
     final isDark = brightness == Brightness.dark;
     final text = FinText.build(scheme);
 
@@ -63,7 +93,9 @@ class FinTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: isDark
+      scaffoldBackgroundColor: highContrast
+          ? (isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF))
+          : isDark
           ? const Color(0xFF0A1310)
           : const Color(0xFFF4F8F6),
       fontFamily: FinText.fontFamily,
@@ -86,7 +118,8 @@ class FinTheme {
             : SystemUiOverlayStyle.dark,
       ),
 
-      // بطاقات 16dp (§0.3) بظل ناعم متعدد الطبقات.
+      // بطاقات 16dp (§0.3) بظل ناعم متعدد الطبقات — وفي التباين العالي
+      // حدّ مؤكد (حبر خالص) بدل الحد الملطّف.
       cardTheme: CardThemeData(
         color: scheme.surface,
         surfaceTintColor: Colors.transparent,
@@ -94,9 +127,12 @@ class FinTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: isDark
+            color: highContrast
+                ? scheme.outlineVariant
+                : isDark
                 ? FinColors.dark.cardBorder
                 : FinColors.light.cardBorder,
+            width: highContrast ? 1.6 : 1,
           ),
         ),
       ),
@@ -141,10 +177,15 @@ class FinTheme {
         ),
       ),
 
-      // حقول الإدخال: تعبئة ناعمة وحواف 12dp.
+      // حقول الإدخال: تعبئة ناعمة وحواف 12dp — والتباين العالي أسطح
+      // صافية بحدّ مؤكد وتركيز أثخن.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? const Color(0xFF142220) : const Color(0xFFEFF5F2),
+        fillColor: highContrast
+            ? scheme.surface
+            : isDark
+            ? const Color(0xFF142220)
+            : const Color(0xFFEFF5F2),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
@@ -152,13 +193,19 @@ class FinTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
+            color: scheme.outlineVariant.withValues(
+              alpha: highContrast ? 1 : 0.6,
+            ),
+            width: highContrast ? 1.6 : 1,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
+            color: scheme.outlineVariant.withValues(
+              alpha: highContrast ? 1 : 0.6,
+            ),
+            width: highContrast ? 1.6 : 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(

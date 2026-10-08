@@ -54,6 +54,8 @@ class SellScreen extends StatelessWidget {
       saleRepo: app.sales!,
       quotationRepo: app.quotations!,
       database: app.database!.db,
+      // UX-2a: سياسات الكاشير الحية من تفضيلات البيع.
+      settingsRepo: app.settings,
     );
     unawaited(vm.load());
     return ChangeNotifierProvider<SellCartViewModel>.value(
@@ -210,6 +212,18 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
     // لحظة فتح نافذة الدفع): ask = أزرار، always = معاينة تلقائية، off = إخفاء.
     final printMode = await resolvePrintOnSave(app.settings);
     if (!mounted) return;
+    // UX-2a — `sale.default_payment`: الوضع الذي تُفتح عليه نافذة الدفع
+    // (نقدي/آجل/مختلط)؛ آجل/مختلط بلا عميل يسقطان إلى نقدي (P2-3).
+    final defaultPay = app.settings == null
+        ? 'cash'
+        : await app.settings!.defaultPayment();
+    if (!mounted) return;
+    final hasCustomer = state.customer?.id != null;
+    final initialPayMode = switch (defaultPay) {
+      'credit' => hasCustomer ? 'credit' : 'cash',
+      'mixed' => hasCustomer ? 'mixed' : 'cash',
+      _ => 'cash',
+    };
     final sales = app.sales;
     final posted = await showPaymentSheet(
       context,
@@ -224,6 +238,8 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       creditGate: () => _resolveCreditGate(app, vm),
       // P0-2: فتح معاينة PDF للفاتورة المرحّلة (نمط زر PDF القائم).
       printOnSave: printMode,
+      // UX-2a: وضع الدفع الافتراضي من تفضيلات البيع.
+      initialPayMode: initialPayMode,
       openInvoicePreview: sales == null
           ? null
           : (receipt) => openInvoicePdfPreview(
@@ -320,6 +336,8 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
     final vm = context.watch<SellCartViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
+    // UX-2a — أسماء أسطر البيع تحت التكلفة (فارغة عند إيقاف التحذير).
+    final belowCostNames = vm.belowCostLineNames;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -393,6 +411,12 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
                         const SizedBox(height: 12),
                         if (state.postError != null) ...[
                           _PostErrorBanner(message: state.postError!),
+                          const SizedBox(height: 12),
+                        ],
+                        // UX-2a — `invoicing.discount_below_margin`: لافتة
+                        // تحذير عند بيع أسطر تحت التكلفة (تحذير لا منع).
+                        if (belowCostNames.isNotEmpty) ...[
+                          _BelowCostBanner(lineNames: belowCostNames),
                           const SizedBox(height: 12),
                         ],
                         if (state.lines.isEmpty)
@@ -612,6 +636,40 @@ class _PostErrorBanner extends StatelessWidget {
   }
 }
 
+/// لافتة تحذير البيع تحت التكلفة (UX-2a —
+/// `invoicing.discount_below_margin` = on): صافي السطر بعد كل الخصومات
+/// أدنى من تكلفته — تحذير ذهبي للمستخدم لا منع للترحيل.
+class _BelowCostBanner extends StatelessWidget {
+  const _BelowCostBanner({required this.lineNames});
+
+  final List<String> lineNames;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = FinColors.of(context);
+    final names = lineNames.take(3).join(' · ');
+    return FinCard(
+      padding: const EdgeInsets.all(14),
+      accent: colors.warning,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.trending_down_rounded, color: colors.warning, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.settings2BelowCostWarning(names),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// حالة السلة الفارغة — CTA واحد كبير لإضافة أول صنف.
 class _EmptyCart extends StatelessWidget {
   const _EmptyCart({required this.onAdd});
@@ -762,22 +820,26 @@ class _CartLineCard extends StatelessWidget {
                     }
                   },
                 ),
-                const SizedBox(width: 8),
-                _LineDiscountChip(
-                  type: line.discountType,
-                  value: line.discountValue,
-                  onTap: () async {
-                    final result = await showDiscountEditSheet(
-                      context,
-                      title: l10n.sellLineDiscountTitle(line.name),
-                      initialType: line.discountType,
-                      initialValue: line.discountValue,
-                    );
-                    if (result != null) {
-                      vm.setLineDiscount(index, result.$1, result.$2);
-                    }
-                  },
-                ),
+                // UX-2a — `sale.show_discounts` = off: خصم السطر يختفي
+                // (الكاشير المبسّط بلا خصومات) والحسابات مستمرة كالمعتاد.
+                if (state.showDiscounts) ...[
+                  const SizedBox(width: 8),
+                  _LineDiscountChip(
+                    type: line.discountType,
+                    value: line.discountValue,
+                    onTap: () async {
+                      final result = await showDiscountEditSheet(
+                        context,
+                        title: l10n.sellLineDiscountTitle(line.name),
+                        initialType: line.discountType,
+                        initialValue: line.discountValue,
+                      );
+                      if (result != null) {
+                        vm.setLineDiscount(index, result.$1, result.$2);
+                      }
+                    },
+                  ),
+                ],
               ],
             ),
           ],
@@ -922,6 +984,9 @@ class _BottomBar extends StatelessWidget {
             children: [
               // Wrap لا Row: زرا «إضافة صنف/خصم الفاتورة» يلتفان لسطر ثانٍ
               // عند الشاشات الضيقة أو خطوط أعرض بدل فيض أفقي.
+              //
+              // UX-2a — `sale.show_discounts` = off: زر خصم الفاتورة يختفي
+              // (نفس إخفاء خصم السطر أعلاه).
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -937,35 +1002,36 @@ class _BottomBar extends StatelessWidget {
                       label: Text(l10n.sellAddItem),
                     ),
                   ),
-                  SizedBox(
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: onInvoiceDiscount,
-                      icon: Icon(
-                        state.invoiceDiscountValue > 0
-                            ? Icons.discount_rounded
-                            : Icons.percent_rounded,
-                        size: 20,
-                        color: state.invoiceDiscountValue > 0
-                            ? colors.negative
-                            : null,
-                      ),
-                      label: Text(
-                        state.invoiceDiscountValue > 0
-                            ? (state.invoiceDiscountType ==
-                                      SaleDiscountType.percent
-                                  ? l10n.sellInvoiceDiscountPercent(
-                                      state.invoiceDiscountValue
-                                          .toStringAsFixed(0),
-                                    )
-                                  : l10n.sellInvoiceDiscountAmount(
-                                      state.invoiceDiscountValue
-                                          .toStringAsFixed(2),
-                                    ))
-                            : l10n.sellInvoiceDiscountButton,
+                  if (state.showDiscounts)
+                    SizedBox(
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: onInvoiceDiscount,
+                        icon: Icon(
+                          state.invoiceDiscountValue > 0
+                              ? Icons.discount_rounded
+                              : Icons.percent_rounded,
+                          size: 20,
+                          color: state.invoiceDiscountValue > 0
+                              ? colors.negative
+                              : null,
+                        ),
+                        label: Text(
+                          state.invoiceDiscountValue > 0
+                              ? (state.invoiceDiscountType ==
+                                        SaleDiscountType.percent
+                                    ? l10n.sellInvoiceDiscountPercent(
+                                        state.invoiceDiscountValue
+                                            .toStringAsFixed(0),
+                                      )
+                                    : l10n.sellInvoiceDiscountAmount(
+                                        state.invoiceDiscountValue
+                                            .toStringAsFixed(2),
+                                      ))
+                              : l10n.sellInvoiceDiscountButton,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               if (priced != null) ...[

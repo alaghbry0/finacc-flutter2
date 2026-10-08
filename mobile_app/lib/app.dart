@@ -64,7 +64,7 @@ class _FinAccAppState extends State<FinAccApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final controller = widget.controller;
     return ListenableBuilder(
-      // إعادة بناء الجذر عند تغيّر وضع الثيم (ومرحلة الجلسة).
+      // إعادة بناء الجذر عند تغيّر وضع الثيم وحجم الخط والتباين (ومرحلة الجلسة).
       listenable: controller,
       builder: (context, _) {
         return ChangeNotifierProvider<AppController>.value(
@@ -73,8 +73,10 @@ class _FinAccAppState extends State<FinAccApp> with WidgetsBindingObserver {
             onGenerateTitle: (context) =>
                 '${AppLocalizations.of(context)!.appBrand} — '
                 '${AppLocalizations.of(context)!.appTitle}',
-            theme: FinTheme.light(),
-            darkTheme: FinTheme.dark(),
+            // التباين العالي (`ui.high_contrast` — UX-2a): أسطح صافية
+            // ونصوص قصوى فوق الثيمين معاً.
+            theme: FinTheme.light(highContrast: controller.highContrast),
+            darkTheme: FinTheme.dark(highContrast: controller.highContrast),
             // وضع الثيم المحفوظ (نظام/فاتح/داكن) — يتغير فورياً من
             // شاشة الإعدادات ويُقرأ من القاعدة عند كل إقلاع.
             themeMode: switch (controller.themeMode) {
@@ -94,6 +96,16 @@ class _FinAccAppState extends State<FinAccApp> with WidgetsBindingObserver {
             ],
             routerConfig: _router,
             builder: (context, child) {
+              // حجم الخط (`display.font_scale` — UX-2a): معامل تكبير على
+              // كامل التطبيق عبر textScaler (normal = 1 بلا تجاوز إطلاقاً).
+              final scale = controller.fontScaleFactor;
+              final scaled = scale == 1.0
+                  ? child ?? const SizedBox.shrink()
+                  : MediaQuery(
+                      data: MediaQuery.of(context)
+                          .copyWith(textScaler: TextScaler.linear(scale)),
+                      child: child ?? const SizedBox.shrink(),
+                    );
               // تجديد نشاط الجلسة عند أي لمس (القفل التلقائي — FR-12-05).
               return NumeralsScope(
                 // نظام الأرقام (`display.numerals`) — يبثّ لكل المبالغ
@@ -101,7 +113,7 @@ class _FinAccAppState extends State<FinAccApp> with WidgetsBindingObserver {
                 arabicIndic: controller.arabicIndicNumerals,
                 child: Listener(
                   onPointerDown: (_) => widget.controller.touch(),
-                  child: child,
+                  child: scaled,
                 ),
               );
             },

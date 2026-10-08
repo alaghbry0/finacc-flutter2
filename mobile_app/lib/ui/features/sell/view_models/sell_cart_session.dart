@@ -17,6 +17,7 @@ import '../../../../data/repositories/exchange_rate_repository.dart';
 import '../../../../data/repositories/item_repository.dart';
 import '../../../../data/repositories/quotation_repository.dart';
 import '../../../../data/repositories/sale_repository.dart';
+import '../../../../data/repositories/settings_repository.dart';
 import 'sell_cart_view_model.dart';
 
 /// جلسة سلة واحدة لكل تشغيل تطبيق.
@@ -25,6 +26,9 @@ class SellCartSession {
 
   /// يعيد نموذج السلة الحي — ينشئه عند أول طلب ثم يعيد نفس الكائن
   /// مهما تنقّل المستخدم بين الشاشات.
+  ///
+  /// [settingsRepo] (UX-2a): سياسات الكاشير الحية (البيع فوق المتاح /
+  /// إظهار الخصومات / تحذير الهامش) — اختياري لتوافق الاستدعاءات القائمة.
   SellCartViewModel attach({
     required ItemRepository itemRepo,
     required CompanyRepository companyRepo,
@@ -32,6 +36,7 @@ class SellCartSession {
     required SaleRepository saleRepo,
     required QuotationRepository quotationRepo,
     required Database database,
+    SettingsRepository? settingsRepo,
   }) {
     return _viewModel ??= SellCartViewModel(
       itemRepo: itemRepo,
@@ -40,6 +45,7 @@ class SellCartSession {
       saleRepo: saleRepo,
       quotationRepo: quotationRepo,
       database: database,
+      settingsRepo: settingsRepo,
     );
   }
 

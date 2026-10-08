@@ -1,8 +1,9 @@
-/// شاشة «المزيد» — مركز الإعدادات (ضمن نطاق المرحلة الأولى: الهوية
-/// والجلسة والأمان — لا وحدات أعمال): بطاقة المنشأة (مع مدة القفل
-/// التلقائي القابلة للضبط — FR-12-05)، الأمان (تغيير PIN، سجل التدقيق،
-/// القفل الفوري)، المظهر (وضع الثيم + نظام الأرقام — `display.numerals`)،
-/// البيانات (المسح الكامل بتأكيد مزدوج)، وحول التطبيق.
+/// شاشة «المزيد» — **مركز أقسام الإعدادات** (UX-2a): بطاقات أقسام بنمط
+/// التطبيق (FinCard) تفتح شاشات فرعية متخصصة:
+/// بطاقة المنشأة (شعار + مدة القفل التلقائي القابلة للضبط — FR-12-05)
+/// → بيانات المنشأة `/more/company` · تفضيلات البيع `/more/sale-prefs` ·
+/// العرض والمظهر `/more/appearance` · الأمان (تغيير PIN/سجل التدقيق/
+/// القفل الفوري) · البيانات (النسخ/المسح المحروس) · مركز التقارير · حول.
 library;
 
 import 'dart:async';
@@ -12,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/app_version.dart';
 import '../../../../domain/services/numerals.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -83,9 +85,9 @@ class _SettingsBody extends StatelessWidget {
             // مركز التقارير (الشريحة 10) — بوابة الأرباح والرقابة اليومية.
             const _ReportsSection(),
             const SizedBox(height: 16),
-            _SecuritySection(),
+            _CustomizationSection(state: state),
             const SizedBox(height: 16),
-            const _AppearanceSection(),
+            _SecuritySection(),
             const SizedBox(height: 16),
             _DataSection(),
             const SizedBox(height: 16),
@@ -141,8 +143,83 @@ class _ReportsSection extends StatelessWidget {
   }
 }
 
-/// بطاقة المنشأة: الاسم + العملة الأساسية + المدير (للقراءة فقط —
-/// تعديل بيانات المنشأة وحدة لاحقة).
+/// قسم التخصيص (UX-2a) — بوابتا «بيانات المنشأة» و«تفضيلات البيع»
+/// و«العرض والمظهر» (شاشات فرعية متخصصة بلا ازدحام بالمركز).
+class _CustomizationSection extends StatelessWidget {
+  const _CustomizationSection({required this.state});
+
+  final SettingsData state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final app = context.watch<AppController>();
+    final colors = FinColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          icon: Icons.tune_rounded,
+          title: l10n.settings2CustomizationTitle,
+        ),
+        const SizedBox(height: 8),
+        FinCard(
+          child: Column(
+            children: [
+              _ActionRow(
+                icon: Icons.storefront_rounded,
+                iconColor: scheme.primary,
+                title: l10n.settings2CompanyTitle,
+                subtitle: l10n.settings2CompanySubtitle,
+                trailing: const Icon(Icons.chevron_left_rounded),
+                onTap: () => context.go('/more/company'),
+              ),
+              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+              _ActionRow(
+                icon: Icons.shopping_cart_checkout_rounded,
+                iconColor: colors.warning,
+                title: l10n.settings2SalePrefsTitle,
+                subtitle: l10n.settings2SalePrefsSubtitle,
+                trailing: const Icon(Icons.chevron_left_rounded),
+                onTap: () => context.go('/more/sale-prefs'),
+              ),
+              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+              _ActionRow(
+                icon: Icons.palette_rounded,
+                iconColor: colors.gold,
+                title: l10n.settings2AppearanceTitle,
+                subtitle: _appearanceSummary(context, app),
+                trailing: const Icon(Icons.chevron_left_rounded),
+                onTap: () => context.go('/more/appearance'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// ملخص حي لخيارات المظهر بصف البوابة (ثيم · أرقام · خط · تباين).
+  String _appearanceSummary(BuildContext context, AppController app) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = switch (app.themeMode) {
+      'light' => l10n.themeLight,
+      'dark' => l10n.themeDark,
+      _ => l10n.themeSystem,
+    };
+    final scale = switch (app.fontScale) {
+      'large' => l10n.settings2FontScaleLarge,
+      'xlarge' => l10n.settings2FontScaleXlarge,
+      _ => l10n.settings2FontScaleNormal,
+    };
+    return '$theme · $scale'
+        '${app.highContrast ? ' · ${l10n.settings2HighContrast}' : ''}';
+  }
+}
+
+/// بطاقة المنشأة: الشعار (BLOB إن وُجد — UX-2a) + الاسم + العملة
+/// الأساسية + المدير + مدة القفل التلقائي + بوابة التحرير الكامل.
 class _CompanyCard extends StatelessWidget {
   const _CompanyCard({required this.state});
 
@@ -153,32 +230,44 @@ class _CompanyCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     final company = state.company;
+    final logo = company?.logoPng;
     return FinCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      scheme.primary,
-                      Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                    ],
-                  ),
+              if (logo != null)
+                ClipRRect(
                   borderRadius: BorderRadius.circular(13),
+                  child: Image.memory(
+                    logo,
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              else
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        scheme.primary,
+                        Color.lerp(scheme.primary, Colors.black, 0.25)!,
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(
+                    Icons.storefront_rounded,
+                    color: scheme.onPrimary,
+                    size: 22,
+                  ),
                 ),
-                child: Icon(
-                  Icons.storefront_rounded,
-                  color: scheme.onPrimary,
-                  size: 22,
-                ),
-              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -532,232 +621,6 @@ class _SecuritySection extends StatelessWidget {
   }
 }
 
-/// قسم المظهر: وضع الثيم (نظام/فاتح/داكن) + نظام الأرقام
-/// (`display.numerals` — غربي/عربي شرقي بمعاينة حيّة).
-class _AppearanceSection extends StatelessWidget {
-  const _AppearanceSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    // المراقبة الحيّة للمتحكم: التحديد يتحرك فور التبديل (ثيم/أرقام).
-    final app = context.watch<AppController>();
-    final themeMode = app.themeMode;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionTitle(icon: Icons.palette_rounded, title: l10n.settingsTheme),
-        const SizedBox(height: 8),
-        FinCard(
-          child: Column(
-            children: [
-              for (final (mode, icon, label) in [
-                ('system', Icons.brightness_auto_rounded, l10n.themeSystem),
-                ('light', Icons.light_mode_rounded, l10n.themeLight),
-                ('dark', Icons.dark_mode_rounded, l10n.themeDark),
-              ])
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: _ThemeOptionRow(
-                    mode: mode,
-                    icon: icon,
-                    label: label,
-                    selected: themeMode == mode,
-                    onTap: () => app.setThemeMode(mode),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 8, right: 4),
-          child: Text(
-            l10n.settingsThemeNote,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _SectionTitle(icon: Icons.pin_rounded, title: l10n.settingsNumerals),
-        const SizedBox(height: 8),
-        // نظام الأرقام: بطاقتان بمعاينة حيّة للأرقام بكل نظام.
-        Row(
-          children: [
-            Expanded(
-              child: _NumeralsOption(
-                mode: 'western',
-                title: l10n.numeralsWestern,
-                sample: '1,234.50',
-                selected: app.numerals == 'western',
-                onTap: () => app.setNumerals('western'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _NumeralsOption(
-                mode: 'arabic_indic',
-                title: l10n.numeralsArabicIndic,
-                sample: '١٬٢٣٤٫٥٠',
-                selected: app.numerals == 'arabic_indic',
-                onTap: () => app.setNumerals('arabic_indic'),
-              ),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 8, right: 4),
-          child: Text(
-            l10n.settingsNumeralsNote,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// بطاقة خيار نظام الأرقام — معاينة المبلغ بخط المبالغ نفسه.
-class _NumeralsOption extends StatelessWidget {
-  const _NumeralsOption({
-    required this.mode,
-    required this.title,
-    required this.sample,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String mode;
-  final String title;
-  final String sample;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected
-              ? scheme.primaryContainer
-              : scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected ? scheme.primary : scheme.outlineVariant,
-            width: selected ? 1.6 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: selected ? scheme.onPrimaryContainer : null,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    maxLines: 1,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 220),
-                  scale: selected ? 1 : 0,
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    color: scheme.primary,
-                    size: 17,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Directionality(
-              textDirection: TextDirection.ltr,
-              child: Text(
-                sample,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: selected
-                      ? scheme.onPrimaryContainer
-                      : scheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ThemeOptionRow extends StatelessWidget {
-  const _ThemeOptionRow({
-    required this.mode,
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String mode;
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? scheme.primaryContainer : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 22, color: scheme.onSurfaceVariant),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: selected ? scheme.onPrimaryContainer : null,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                ),
-              ),
-            ),
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 220),
-              opacity: selected ? 1 : 0,
-              child: Icon(
-                Icons.check_circle_rounded,
-                color: scheme.primary,
-                size: 22,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// قسم البيانات: النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11) +
 /// المسح الكامل (AC-15) — بوابة الحذر الأحمر.
 class _DataSection extends StatelessWidget {
@@ -806,7 +669,9 @@ class _DataSection extends StatelessWidget {
   }
 }
 
-/// بطاقة «حول»: الاسم والإصدار ووثيقة المتطلبات ومرحلة التسليم.
+/// بطاقة «حول»: الاسم والإصدار (من المصدر الوحيد `appVersion` — UX-2a
+/// توحيد الإصدار: بلا تضارب بين نص القالب والإصدار الفعلي) ووثيقة
+/// المتطلبات وحجم القاعدة.
 class _AboutCard extends StatelessWidget {
   const _AboutCard({required this.state});
 
@@ -820,17 +685,22 @@ class _AboutCard extends StatelessWidget {
     return FinCard(
       child: Column(
         children: [
+          // شارة الطور: وسط البطاقة — النص مرن (RTL عربي + لاتيني «v1.0.0»
+          // يفيض 1.5px على 390dp بالسطر الصلب — ellipsis عند الضيق).
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(),
               Icon(Icons.verified_rounded, color: colors.gold, size: 20),
               const SizedBox(width: 6),
-              Text(
-                l10n.settingsAboutPhase1,
-                style: Theme.of(context).textTheme.labelMedium
-                    ?.copyWith(fontWeight: FontWeight.w800),
+              Flexible(
+                child: Text(
+                  l10n.settings2AboutPhase,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
               ),
-              const Spacer(),
             ],
           ),
           const SizedBox(height: 10),
@@ -842,7 +712,7 @@ class _AboutCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            l10n.settingsAboutVersion,
+            l10n.settings2AboutVersion(appVersion),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -887,7 +757,7 @@ class _AboutCard extends StatelessWidget {
             onTap: () => showLicensePage(
               context: context,
               applicationName: '${l10n.appBrand} — ${l10n.appTitle}',
-              applicationVersion: l10n.settingsAboutVersion,
+              applicationVersion: appVersion,
               applicationIcon: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Icon(

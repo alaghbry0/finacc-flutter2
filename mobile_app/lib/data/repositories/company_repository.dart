@@ -30,6 +30,48 @@ class CompanyRepository {
     return Company.fromRow(rows.first);
   }
 
+  /// **تحديث بيانات المنشأة** (UX-2a) — يكتب كل الحقول القابلة للتحرير
+  /// (الاسم/الهاتف/واتساب/العنوان/الرقم الضريبي/نسبة الضريبة/التذييل/
+  /// الشعار BLOB) في أمر واحد ويترك العملة الأساسية والبادئة كما هما
+  /// (تُثبَّتان من التأسيس — FR-08-01)، مع قيد تدقيق للتغيير.
+  ///
+  /// [company] كيان محدّث (المعرّف يحدد الصف؛ العملة تُتجاهل عمداً).
+  /// [now] للطوابع الزمنية (قابل للحقن في الاختبارات).
+  ///
+  /// يرفع [StateError] إن لم يوجد صف بالمعرّف (لا منشأة بعد التأسيس).
+  Future<Company> update(Company company, {int? userId, DateTime? now}) async {
+    final iso = (now ?? DateTime.now()).toUtc().toIso8601String();
+    final updated = await _db.update(
+      'company',
+      {
+        'name': company.name,
+        'phone': company.phone,
+        'whatsapp': company.whatsapp,
+        'address': company.address,
+        'tax_number': company.taxNumber,
+        'tax_rate': company.taxRate,
+        'footer_text': company.footerText,
+        'logo_png': company.logoPng,
+        'updated_at': iso,
+      },
+      where: 'id = ?',
+      whereArgs: [company.id],
+    );
+    if (updated == 0) {
+      throw StateError('لا توجد منشأة بمعرّف ${company.id} — أسّس أولاً');
+    }
+    // قيد تدقيق لتغيير بيانات المنشأة (FR-12-04 — أحداث موسّعة).
+    await _db.insert('audit_log', {
+      'user_id': userId,
+      'action': 'company_update',
+      'entity': 'company',
+      'entity_id': company.id,
+      'details': company.name,
+      'at': iso,
+    });
+    return company;
+  }
+
   /// العملة الأساسية (YER افتراضياً بعد البذور).
   Future<Currency?> findBaseCurrency() async {
     final rows = await _db.query('currency', where: 'is_base = 1', limit: 1);

@@ -842,18 +842,6 @@ abstract class AppLocalizations {
   /// **'Resets the app to first-install state — irreversible'**
   String get settingsWipeDesc;
 
-  /// No description provided for @settingsAboutPhase1.
-  ///
-  /// In en, this message translates to:
-  /// **'Phase 1 complete'**
-  String get settingsAboutPhase1;
-
-  /// No description provided for @settingsAboutVersion.
-  ///
-  /// In en, this message translates to:
-  /// **'Version 1.0.0 — Slice 0 + Slice 1'**
-  String get settingsAboutVersion;
-
   /// No description provided for @settingsAboutSrs.
   ///
   /// In en, this message translates to:
@@ -7980,6 +7968,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Page {page} of {total}'**
   String pdfFixPageIndicator(int page, int total);
+
+  /// No description provided for @settings2CustomizationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customization'**
+  String get settings2CustomizationTitle;
+
+  /// No description provided for @settings2CompanyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile'**
+  String get settings2CompanyTitle;
+
+  /// No description provided for @settings2CompanySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, phone, WhatsApp, address, logo and footer'**
+  String get settings2CompanySubtitle;
+
+  /// No description provided for @settings2CompanyNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name'**
+  String get settings2CompanyNameLabel;
+
+  /// No description provided for @settings2CompanyPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get settings2CompanyPhoneLabel;
+
+  /// No description provided for @settings2CompanyWhatsappLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get settings2CompanyWhatsappLabel;
+
+  /// No description provided for @settings2CompanyAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get settings2CompanyAddressLabel;
+
+  /// No description provided for @settings2CompanyTaxNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax number'**
+  String get settings2CompanyTaxNumberLabel;
+
+  /// No description provided for @settings2CompanyTaxRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax rate %'**
+  String get settings2CompanyTaxRateLabel;
+
+  /// No description provided for @settings2CompanyFooterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice footer text'**
+  String get settings2CompanyFooterLabel;
+
+  /// No description provided for @settings2CompanyFooterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Printed at the bottom of invoices — thanks or contact info'**
+  String get settings2CompanyFooterHint;
+
+  /// No description provided for @settings2CompanyLogoSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo'**
+  String get settings2CompanyLogoSection;
+
+  /// No description provided for @settings2CompanyLogoPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose logo'**
+  String get settings2CompanyLogoPick;
+
+  /// No description provided for @settings2CompanyLogoChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change logo'**
+  String get settings2CompanyLogoChange;
+
+  /// No description provided for @settings2CompanyLogoRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove logo'**
+  String get settings2CompanyLogoRemove;
+
+  /// No description provided for @settings2CompanyLogoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A gallery image stored inside your database — survives backups'**
+  String get settings2CompanyLogoHint;
+
+  /// No description provided for @settings2CompanyLogoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo is too large — pick a smaller image (1 MB limit).'**
+  String get settings2CompanyLogoTooLarge;
+
+  /// No description provided for @settings2CompanySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get settings2CompanySave;
+
+  /// No description provided for @settings2CompanySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile saved'**
+  String get settings2CompanySaved;
+
+  /// No description provided for @settings2CompanyNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name is required.'**
+  String get settings2CompanyNameRequired;
+
+  /// No description provided for @settings2CompanyInvalidTaxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax rate must be a number between 0 and 100.'**
+  String get settings2CompanyInvalidTaxRate;
+
+  /// No description provided for @settings2CompanySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save company profile — try again.'**
+  String get settings2CompanySaveFailed;
+
+  /// No description provided for @settings2CompanyCurrencyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency: {code} — fixed at setup, not editable here.'**
+  String settings2CompanyCurrencyNote(String code);
+
+  /// No description provided for @settings2SalePrefsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales preferences'**
+  String get settings2SalePrefsTitle;
+
+  /// No description provided for @settings2SalePrefsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default payment method, discounts and guard policies'**
+  String get settings2SalePrefsSubtitle;
+
+  /// No description provided for @settings2SalePrefsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Every change applies instantly and is saved to your local database.'**
+  String get settings2SalePrefsNote;
+
+  /// No description provided for @settings2SaleDefaultPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Default payment method'**
+  String get settings2SaleDefaultPayment;
+
+  /// No description provided for @settings2SaleDefaultPaymentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment sheet opens on this mode'**
+  String get settings2SaleDefaultPaymentDesc;
+
+  /// No description provided for @settings2SalePayCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Full cash'**
+  String get settings2SalePayCash;
+
+  /// No description provided for @settings2SalePayCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Full credit'**
+  String get settings2SalePayCredit;
+
+  /// No description provided for @settings2SalePayMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed'**
+  String get settings2SalePayMixed;
+
+  /// No description provided for @settings2SaleShowDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Show discounts in the cashier'**
+  String get settings2SaleShowDiscounts;
+
+  /// No description provided for @settings2SaleShowDiscountsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiding them simplifies the sell screen for discount-free shops'**
+  String get settings2SaleShowDiscountsDesc;
+
+  /// No description provided for @settings2SaleCreditLimitPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit policy'**
+  String get settings2SaleCreditLimitPolicy;
+
+  /// No description provided for @settings2SaleCreditLimitPolicyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'App behavior when a credit sale exceeds a customer\'s limit'**
+  String get settings2SaleCreditLimitPolicyDesc;
+
+  /// No description provided for @settings2SaleOverAvailPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling above available stock'**
+  String get settings2SaleOverAvailPolicy;
+
+  /// No description provided for @settings2SaleOverAvailPolicyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'\"Block\" stops posting any invoice whose quantity exceeds stock'**
+  String get settings2SaleOverAvailPolicyDesc;
+
+  /// No description provided for @settings2SaleBelowMarginPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Below-cost sale warning'**
+  String get settings2SaleBelowMarginPolicy;
+
+  /// No description provided for @settings2SaleBelowMarginPolicyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A cashier warning banner when an item sells below its cost'**
+  String get settings2SaleBelowMarginPolicyDesc;
+
+  /// No description provided for @settings2SalePolicyWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn and continue'**
+  String get settings2SalePolicyWarn;
+
+  /// No description provided for @settings2SalePolicyBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get settings2SalePolicyBlock;
+
+  /// No description provided for @settings2SaleWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the preference — current value unchanged.'**
+  String get settings2SaleWriteFailed;
+
+  /// No description provided for @settings2AppearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display & appearance'**
+  String get settings2AppearanceTitle;
+
+  /// No description provided for @settings2FontScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size'**
+  String get settings2FontScale;
+
+  /// No description provided for @settings2FontScaleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to the whole app instantly — normal for comfort, larger for low vision'**
+  String get settings2FontScaleDesc;
+
+  /// No description provided for @settings2FontScaleNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get settings2FontScaleNormal;
+
+  /// No description provided for @settings2FontScaleLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get settings2FontScaleLarge;
+
+  /// No description provided for @settings2FontScaleXlarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get settings2FontScaleXlarge;
+
+  /// No description provided for @settings2FontScaleSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample text'**
+  String get settings2FontScaleSample;
+
+  /// No description provided for @settings2HighContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get settings2HighContrast;
+
+  /// No description provided for @settings2HighContrastDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pure surfaces, maximum-contrast text and stronger borders'**
+  String get settings2HighContrastDesc;
+
+  /// No description provided for @settings2HighContrastNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Designed for low vision — replaces soft tints with extreme edges.'**
+  String get settings2HighContrastNote;
+
+  /// No description provided for @settings2BelowCostWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: {names} sells below cost after discounts — review the price.'**
+  String settings2BelowCostWarning(String names);
+
+  /// No description provided for @settings2AboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String settings2AboutVersion(String version);
+
+  /// No description provided for @settings2AboutPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-v1.0.0 — Wave 2'**
+  String get settings2AboutPhase;
 }
 
 class _AppLocalizationsDelegate

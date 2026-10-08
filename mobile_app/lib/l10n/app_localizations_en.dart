@@ -442,12 +442,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Resets the app to first-install state — irreversible';
 
   @override
-  String get settingsAboutPhase1 => 'Phase 1 complete';
-
-  @override
-  String get settingsAboutVersion => 'Version 1.0.0 — Slice 0 + Slice 1';
-
-  @override
   String get settingsAboutSrs =>
       'Built per the approved SRS v1.5 specification';
 
@@ -4596,4 +4590,192 @@ class AppLocalizationsEn extends AppLocalizations {
   String pdfFixPageIndicator(int page, int total) {
     return 'Page $page of $total';
   }
+
+  @override
+  String get settings2CustomizationTitle => 'Customization';
+
+  @override
+  String get settings2CompanyTitle => 'Company profile';
+
+  @override
+  String get settings2CompanySubtitle =>
+      'Name, phone, WhatsApp, address, logo and footer';
+
+  @override
+  String get settings2CompanyNameLabel => 'Company name';
+
+  @override
+  String get settings2CompanyPhoneLabel => 'Phone';
+
+  @override
+  String get settings2CompanyWhatsappLabel => 'WhatsApp';
+
+  @override
+  String get settings2CompanyAddressLabel => 'Address';
+
+  @override
+  String get settings2CompanyTaxNumberLabel => 'Tax number';
+
+  @override
+  String get settings2CompanyTaxRateLabel => 'Tax rate %';
+
+  @override
+  String get settings2CompanyFooterLabel => 'Invoice footer text';
+
+  @override
+  String get settings2CompanyFooterHint =>
+      'Printed at the bottom of invoices — thanks or contact info';
+
+  @override
+  String get settings2CompanyLogoSection => 'Logo';
+
+  @override
+  String get settings2CompanyLogoPick => 'Choose logo';
+
+  @override
+  String get settings2CompanyLogoChange => 'Change logo';
+
+  @override
+  String get settings2CompanyLogoRemove => 'Remove logo';
+
+  @override
+  String get settings2CompanyLogoHint =>
+      'A gallery image stored inside your database — survives backups';
+
+  @override
+  String get settings2CompanyLogoTooLarge =>
+      'Logo is too large — pick a smaller image (1 MB limit).';
+
+  @override
+  String get settings2CompanySave => 'Save changes';
+
+  @override
+  String get settings2CompanySaved => 'Company profile saved';
+
+  @override
+  String get settings2CompanyNameRequired => 'Company name is required.';
+
+  @override
+  String get settings2CompanyInvalidTaxRate =>
+      'Tax rate must be a number between 0 and 100.';
+
+  @override
+  String get settings2CompanySaveFailed =>
+      'Could not save company profile — try again.';
+
+  @override
+  String settings2CompanyCurrencyNote(String code) {
+    return 'Base currency: $code — fixed at setup, not editable here.';
+  }
+
+  @override
+  String get settings2SalePrefsTitle => 'Sales preferences';
+
+  @override
+  String get settings2SalePrefsSubtitle =>
+      'Default payment method, discounts and guard policies';
+
+  @override
+  String get settings2SalePrefsNote =>
+      'Every change applies instantly and is saved to your local database.';
+
+  @override
+  String get settings2SaleDefaultPayment => 'Default payment method';
+
+  @override
+  String get settings2SaleDefaultPaymentDesc =>
+      'The payment sheet opens on this mode';
+
+  @override
+  String get settings2SalePayCash => 'Full cash';
+
+  @override
+  String get settings2SalePayCredit => 'Full credit';
+
+  @override
+  String get settings2SalePayMixed => 'Mixed';
+
+  @override
+  String get settings2SaleShowDiscounts => 'Show discounts in the cashier';
+
+  @override
+  String get settings2SaleShowDiscountsDesc =>
+      'Hiding them simplifies the sell screen for discount-free shops';
+
+  @override
+  String get settings2SaleCreditLimitPolicy => 'Credit limit policy';
+
+  @override
+  String get settings2SaleCreditLimitPolicyDesc =>
+      'App behavior when a credit sale exceeds a customer\'s limit';
+
+  @override
+  String get settings2SaleOverAvailPolicy => 'Selling above available stock';
+
+  @override
+  String get settings2SaleOverAvailPolicyDesc =>
+      '\"Block\" stops posting any invoice whose quantity exceeds stock';
+
+  @override
+  String get settings2SaleBelowMarginPolicy => 'Below-cost sale warning';
+
+  @override
+  String get settings2SaleBelowMarginPolicyDesc =>
+      'A cashier warning banner when an item sells below its cost';
+
+  @override
+  String get settings2SalePolicyWarn => 'Warn and continue';
+
+  @override
+  String get settings2SalePolicyBlock => 'Block';
+
+  @override
+  String get settings2SaleWriteFailed =>
+      'Could not save the preference — current value unchanged.';
+
+  @override
+  String get settings2AppearanceTitle => 'Display & appearance';
+
+  @override
+  String get settings2FontScale => 'Font size';
+
+  @override
+  String get settings2FontScaleDesc =>
+      'Applies to the whole app instantly — normal for comfort, larger for low vision';
+
+  @override
+  String get settings2FontScaleNormal => 'Normal';
+
+  @override
+  String get settings2FontScaleLarge => 'Large';
+
+  @override
+  String get settings2FontScaleXlarge => 'Extra large';
+
+  @override
+  String get settings2FontScaleSample => 'Sample text';
+
+  @override
+  String get settings2HighContrast => 'High contrast';
+
+  @override
+  String get settings2HighContrastDesc =>
+      'Pure surfaces, maximum-contrast text and stronger borders';
+
+  @override
+  String get settings2HighContrastNote =>
+      'Designed for low vision — replaces soft tints with extreme edges.';
+
+  @override
+  String settings2BelowCostWarning(String names) {
+    return 'Warning: $names sells below cost after discounts — review the price.';
+  }
+
+  @override
+  String settings2AboutVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get settings2AboutPhase => 'Pre-v1.0.0 — Wave 2';
 }

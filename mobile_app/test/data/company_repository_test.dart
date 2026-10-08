@@ -1,9 +1,12 @@
 /// اختبارات مستودع المنشأة — التأسيس الذرّي الكامل وفق FR-13-01.
 library;
 
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/core/storage/app_database.dart';
 import 'package:mobile_app/data/repositories/company_repository.dart';
+import 'package:mobile_app/domain/models/company.dart';
 import 'package:mobile_app/domain/services/pin_hasher.dart';
 
 import '../helpers/app_for_tests.dart';
@@ -129,6 +132,82 @@ void main() {
     expect(
       currencies.map((c) => c.code),
       containsAll(['YER', 'SAR', 'USD', 'AED']),
+    );
+  });
+
+  group('UX-2a — تحديث بيانات المنشأة (update)', () {
+    test('تحديث كامل بحقول v1 الخاملة + شعار BLOB يعود قراءةً', () async {
+      final repo = CompanyRepository(handle.db);
+      await repo.executeSetup(testDraft(), DateTime.utc(2026, 10, 6));
+      final loaded = (await repo.findCompany())!;
+
+      final logo = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47, 1, 2, 3, 4]);
+      final updated = await repo.update(
+        loaded.copyWith(
+          name: 'متجر النور المحدّث',
+          phone: '777999888',
+          whatsapp: '777999888',
+          address: 'صنعاء - شارع حدة',
+          taxNumber: 'TAX-2026-777',
+          taxRate: 5,
+          footerText: 'شكراً لتعاملكم معنا',
+          logoPng: logo,
+        ),
+        now: DateTime.utc(2026, 10, 8, 9),
+      );
+      expect(updated.name, 'متجر النور المحدّث');
+
+      final reread = (await repo.findCompany())!;
+      expect(reread.name, 'متجر النور المحدّث');
+      expect(reread.phone, '777999888');
+      expect(reread.whatsapp, '777999888');
+      expect(reread.address, 'صنعاء - شارع حدة');
+      expect(reread.taxNumber, 'TAX-2026-777');
+      expect(reread.taxRate, 5);
+      expect(reread.footerText, 'شكراً لتعاملكم معنا');
+      expect(reread.logoPng, logo);
+      // العملة والبادئة لا تمسّهما update (تُثبَّتان من التأسيس).
+      expect(reread.currencyId, loaded.currencyId);
+      expect(reread.invoicePrefix, 'INV');
+    });
+
+    test('تصفير الشعار logoPng = null يمحو العمود بالقاعدة', () async {
+      final repo = CompanyRepository(handle.db);
+      await repo.executeSetup(testDraft(), DateTime.utc(2026, 10, 6));
+      final loaded = (await repo.findCompany())!;
+      await repo.update(
+        loaded.copyWith(logoPng: Uint8List.fromList([1, 2, 3])),
+      );
+      expect((await repo.findCompany())!.logoPng, isNotNull);
+      await repo.update((await repo.findCompany())!.copyWith(logoPng: null));
+      final cleared = (await repo.findCompany())!;
+      expect(cleared.logoPng, isNull);
+      final row = (await handle.db.query('company')).first;
+      expect(row['logo_png'], isNull);
+    });
+
+    test(
+      'قيد تدقيق company_update يُكتب، ومعرّف غائب يرفض StateError',
+      () async {
+        final repo = CompanyRepository(handle.db);
+        await repo.executeSetup(testDraft(), DateTime.utc(2026, 10, 6));
+        final loaded = (await repo.findCompany())!;
+        await repo.update(loaded.copyWith(name: 'الاسم الجديد'));
+
+        final audit = await handle.db.query(
+          'audit_log',
+          where: "action = 'company_update'",
+        );
+        expect(audit, hasLength(1));
+        expect(audit.first['entity'], 'company');
+        expect(audit.first['entity_id'], loaded.id);
+
+        expect(
+          () =>
+              repo.update(const Company(id: 9999, name: 'شبح', currencyId: 1)),
+          throwsStateError,
+        );
+      },
     );
   });
 }

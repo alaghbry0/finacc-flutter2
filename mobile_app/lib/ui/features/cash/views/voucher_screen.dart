@@ -27,6 +27,16 @@ import '../../../core/widgets/loading_state.dart';
 import '../view_models/voucher_view_model.dart';
 import 'widgets/cash_widgets.dart';
 
+/// حارس التأريخ الرجعي (UX-2a — `dating.max_backdate_days`): أقدم تاريخ
+/// يسمح به منتقي تاريخ السند = `now − الحد` (حد 0 أو سالب = اليوم فقط).
+/// كان المنتقي يقبل سنتين رجعياً بلا أي سقف من الإعدادات.
+///
+/// (علنية لتُختبر مباشرة — نفس نمط sellFormatDate بالوحدة.)
+DateTime voucherBackdateLowerBound(DateTime now, int maxBackdateDays) {
+  if (maxBackdateDays <= 0) return now;
+  return now.subtract(Duration(days: maxBackdateDays));
+}
+
 /// شاشة السند — `type` من المسار: `receipt` (قبض من عميل) أو `payment`
 /// (صرف لمورد؛ أي قيمة أخرى تُعامل صرفاً).
 class VoucherScreen extends StatelessWidget {
@@ -116,11 +126,17 @@ class _VoucherScreenBodyState extends State<_VoucherScreenBody> {
   }
 
   Future<void> _pickDate(VoucherViewModel vm) async {
+    // UX-2a — حارس التأريخ الرجعي: سقف الرجوع من الإعدادات
+    // (`dating.max_backdate_days`، افتراضي 30 يوماً) بدل سنتين مفتوحتين.
+    final settings = context.read<AppController>().settings;
+    final maxDays = settings == null ? 30 : await settings.maxBackdateDays();
+    if (!mounted) return;
+    final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: vm.txDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: voucherBackdateLowerBound(now, maxDays),
+      lastDate: now.add(const Duration(days: 1)),
     );
     if (picked != null) {
       vm.setDate(picked);
