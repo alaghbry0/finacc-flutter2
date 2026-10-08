@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../features/sell/view_models/sell_cart_session.dart';
 
 /// عنصر تبويب.
 class _TabSpec {
@@ -214,7 +215,10 @@ class AppShell extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: GestureDetector(
-                    onTap: () => _goBranch(_sellBranch),
+                    // مفتاح مستقر للاختبارات — الأيقونة تتبدل بين
+                    // add_shopping_cart (خامل) وpoint_of_sale (نشط).
+                    key: const Key('shell_sell_button'),
+                    onTap: () => _openSell(context),
                     // OverflowBox: يسمح للزر المركّب (دائرة + تسمية) بالارتفاع
                     // فوق حدّ الشريط بلا انزياح — الزر البارز يعلو بحرية
                     // بصرية بينما تبقى القيود سليمة (لا تجاوز RenderFlex).
@@ -240,5 +244,17 @@ class AppShell extends StatelessWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
+  }
+
+  /// P2-6: زر البيع البارز — سلة فارغة (أو بلا جلسة سلة) تفتح الكاشير
+  /// `/sell/new` مباشرة (أهم فعل يومي بلا خطوة المحور الوسيطة)، وجلسة
+  /// سلة قائمة تبقى على محور البيع كما كان (الكاشير يكمل سلته).
+  void _openSell(BuildContext context) {
+    final cart = sellCartSession.current;
+    if (cart == null || cart.state.lines.isEmpty) {
+      context.go('/sell/new');
+      return;
+    }
+    _goBranch(_sellBranch);
   }
 }

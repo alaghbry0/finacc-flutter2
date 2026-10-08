@@ -113,11 +113,18 @@ class _MiniSalesChartState extends State<MiniSalesChart>
                       color: colors.gold,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      'ستظهر مبيعاتك هنا بعد أول فاتورة',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
+                    // رسالة الفرق تلتف لسطرين على العروض الضيقة (إصلاح
+                    // فيض 119px على 390dp): لا اقتصاص ولا فيض.
+                    Flexible(
+                      child: Text(
+                        'ستظهر مبيعاتك هنا بعد أول فاتورة',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],

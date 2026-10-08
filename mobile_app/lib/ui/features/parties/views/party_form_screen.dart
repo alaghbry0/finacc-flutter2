@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
@@ -113,6 +114,28 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
   bool _controllersReady = false;
   bool _popped = false;
 
+  /// لقطة الحالة ما بعد التحميل — مقارنة التغييرات لحماية المغادرة (P1-4).
+  PartyFormState? _dirtyBaseline;
+
+  /// هل في النموذج تغييرات غير محفوظة؟ (مقارنة الحالة باللقطة؛ بعد الحفظ
+  /// أو قبل التحميل = نظيف).
+  bool get _dirty {
+    final baseline = _dirtyBaseline;
+    if (baseline == null) return false;
+    final state = _storedVm.state;
+    if (state.saved) return false;
+    return state.name != baseline.name ||
+        state.phone != baseline.phone ||
+        state.whatsapp != baseline.whatsapp ||
+        state.address != baseline.address ||
+        state.area != baseline.area ||
+        state.creditLimitText != baseline.creditLimitText ||
+        state.openingText != baseline.openingText ||
+        state.openingCurrencyId != baseline.openingCurrencyId ||
+        state.openingDate != baseline.openingDate ||
+        state.notes != baseline.notes;
+  }
+
   /// النموذج يُخزَّن حقلاً عند أول بناء (قراءة context داخل dispose غير آمنة).
   late final PartyFormViewModel _storedVm;
 
@@ -153,6 +176,7 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
     final state = _storedVm.state;
     if (!_controllersReady && !state.loading && state.loadError == null) {
       _controllersReady = true;
+      _dirtyBaseline = state;
       _name.text = state.name;
       _phone.text = state.phone;
       _whatsapp.text = state.whatsapp;
@@ -207,76 +231,84 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
     final state = vm.state;
     final isCustomer = state.kind == PartyKind.customer;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: Text(_titleFor(l10n, state))),
-      body: state.loading
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
-            )
-          : state.loadError != null
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: [
-                ErrorState(
-                  title: l10n.genericErrorTitle,
-                  message: l10n.dbOpenErrorMessage,
-                  technicalDetails: state.loadError.toString(),
-                  retryLabel: l10n.commonRetry,
-                  onRetry: vm.load,
-                  compact: true,
-                ),
-              ],
-            )
-          : Form(
-              key: _formKey,
-              child: ListView(
+    // حماية التغييرات غير المحفوظة (P1-4): الرجوع المباشر يعرض حوار
+    // «مغادرة/بقاء» — القرار الصريح وحده يفتح الباب.
+    return DirtyFormGuard(
+      isDirty: _dirty,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(title: Text(_titleFor(l10n, state))),
+        body: state.loading
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                children: const [ListSkeleton(rows: 6)],
+              )
+            : state.loadError != null
+            ? ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
-                  if (state.editMode && state.openingLocked) ...[
-                    PartiesInfoNote(
-                      icon: Icons.lock_rounded,
-                      message: l10n.partyFormOpeningLockedNote,
-                      warning: true,
-                    ),
-                    const SizedBox(height: 14),
-                  ],
-                  _nameField(l10n),
-                  const SizedBox(height: 14),
-                  _phoneField(l10n),
-                  if (isCustomer) ...[
-                    const SizedBox(height: 14),
-                    _whatsappField(l10n),
-                  ],
-                  const SizedBox(height: 14),
-                  _addressField(l10n),
-                  if (isCustomer) ...[
-                    const SizedBox(height: 14),
-                    _areaField(l10n),
-                    const SizedBox(height: 14),
-                    _creditLimitField(l10n, state),
-                  ],
-                  const SizedBox(height: 18),
-                  PartiesSectionTitle(
-                    icon: Icons.account_balance_wallet_rounded,
-                    title: l10n.partyFormOpeningSection,
+                  ErrorState(
+                    title: l10n.genericErrorTitle,
+                    message: l10n.dbOpenErrorMessage,
+                    technicalDetails: state.loadError.toString(),
+                    retryLabel: l10n.commonRetry,
+                    onRetry: vm.load,
+                    compact: true,
                   ),
-                  const SizedBox(height: 8),
-                  _openingSection(l10n, state),
-                  const SizedBox(height: 18),
-                  _notesField(l10n),
-                  if (state.validationError != null) ...[
-                    const SizedBox(height: 14),
-                    _ValidationErrorBanner(
-                      message: _validationMessage(l10n, state.validationError!),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  _saveButton(l10n, state),
                 ],
+              )
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                  children: [
+                    if (state.editMode && state.openingLocked) ...[
+                      PartiesInfoNote(
+                        icon: Icons.lock_rounded,
+                        message: l10n.partyFormOpeningLockedNote,
+                        warning: true,
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                    _nameField(l10n),
+                    const SizedBox(height: 14),
+                    _phoneField(l10n),
+                    if (isCustomer) ...[
+                      const SizedBox(height: 14),
+                      _whatsappField(l10n),
+                    ],
+                    const SizedBox(height: 14),
+                    _addressField(l10n),
+                    if (isCustomer) ...[
+                      const SizedBox(height: 14),
+                      _areaField(l10n),
+                      const SizedBox(height: 14),
+                      _creditLimitField(l10n, state),
+                    ],
+                    const SizedBox(height: 18),
+                    PartiesSectionTitle(
+                      icon: Icons.account_balance_wallet_rounded,
+                      title: l10n.partyFormOpeningSection,
+                    ),
+                    const SizedBox(height: 8),
+                    _openingSection(l10n, state),
+                    const SizedBox(height: 18),
+                    _notesField(l10n),
+                    if (state.validationError != null) ...[
+                      const SizedBox(height: 14),
+                      _ValidationErrorBanner(
+                        message: _validationMessage(
+                          l10n,
+                          state.validationError!,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    _saveButton(l10n, state),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

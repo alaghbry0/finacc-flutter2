@@ -48,6 +48,27 @@ enum AppPhase {
   error,
 }
 
+/// نتيجة المسح الكامل (AC-15) — نجاح أو حجب بفشل نسخة الأمان.
+sealed class WipeOutcome {
+  const WipeOutcome();
+}
+
+/// نجح المسح — `safetyBackupFileName` اسم ملف نسخة الأمان التي أُنشئت
+/// قبله مباشرة (null على منصة بلا ملفات: معاينة الويب).
+class WipeSucceeded extends WipeOutcome {
+  const WipeSucceeded({this.safetyBackupFileName});
+
+  final String? safetyBackupFileName;
+}
+
+/// حجب المسح — فشل إنشاء نسخة الأمان الإجبارية ولم يُمسَح أي شيء؛
+/// المتصل يعرض الخيار (إعادة المحاولة أو متابعة صريحة بلا نسخة).
+class WipeBlockedByBackupFailure extends WipeOutcome {
+  const WipeBlockedByBackupFailure(this.errorDetails);
+
+  final String errorDetails;
+}
+
 /// التحكم بحياة الجلسة كاملة.
 class AppController extends ChangeNotifier {
   AppController({AppDatabase? forTesting, BackupFileStore? backupStoreOverride})
@@ -158,6 +179,33 @@ class AppController extends ChangeNotifier {
 
   /// مدة القفل التلقائي الحالية بالدقائق.
   int get autolockMinutes => _autolockMinutes;
+
+  // ── استعادة الموقع بعد فتح القفل (P0-1b) ──
+
+  /// آخر مسار غير القفل قبل تفعيل القفل — يعود إليه المستخدم بعد الفتح
+  /// بدل إسقاطه على الرئيسية دائماً (فقدان سياق العمل عند القفل التلقائي).
+  String? _lockedFromPath;
+
+  /// يسجّل الموقع المقصود قبل تحويل القفل إليه (يستدعيه redirect الموجّه).
+  /// **المسار فقط بلا نصوص استعلام** — لا بيانات حساسة تُخزّن في الذاكة،
+  /// ومسارات القفل/الإقلاع/التأسيس تُتجاهل منعاً لحلقات إعادة التوجيه.
+  void noteLockedFrom(String path) {
+    if (path == '/lock' || path == '/splash' || path == '/onboarding') {
+      return;
+    }
+    _lockedFromPath = path;
+  }
+
+  /// وجهة العودة بعد فتح القفل — تُستهلك مرة واحدة (null = الرئيسية).
+  String? consumeUnlockDestination() {
+    final path = _lockedFromPath;
+    _lockedFromPath = null;
+    return path;
+  }
+
+  /// آخر مسار سُجّل قبل القفل (اختبارات).
+  @visibleForTesting
+  String? get lockedFromPathForTest => _lockedFromPath;
 
   /// هل الأرقام عربية شرقية الآن؟ (اختصار للعرض).
   bool get arabicIndicNumerals => _numerals == 'arabic_indic';
@@ -411,19 +459,47 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  /// مسح كامل — إغلاق ومحو القاعدة ثم إعادة التهيئة فارغة (AC-15).
-  Future<void> wipeAllData() async {
+  /// مسح كامل — **نسخة أمان إجبارية أولاً** (درس التراجع الحالي أصلاً:
+  /// مسح بلا نسخة أخيرة = ضياع نهائي)، ثم إغلاق ومحو القاعدة ثم إعادة
+  /// التهيئة فارغة (AC-15).
+  ///
+  /// فشل نسخة الأمان على منصة مدعومة **يحجب المسح** (لم يُمسَح شيء) —
+  /// والمتصل يعرض الخيار: إعادة المحاولة أو المتابعة بلا نسخة صراحةً
+  /// عبر [skipSafetyBackup]. نوع النسخة = «نسخة أمان» القائم
+  /// (`pre_restore`) — قيد DDL المجمّد لا يعرف `pre_wipe` بعد (إضافة
+  /// المفردة هجرة تقرّرها موجة التنسيق).
+  Future<WipeOutcome> wipeAllData({bool skipSafetyBackup = false}) async {
+    String? safetyBackupFileName;
+    if (!skipSafetyBackup) {
+      await ensureBackupEngine();
+      final svc = _backupSvc;
+      if (svc != null && svc.isSupported) {
+        final safety = await svc.createBackup(kind: BackupKind.preRestore);
+        if (!safety.ok) {
+          return WipeBlockedByBackupFailure(
+            safety.errorDetails ?? 'unknown backup failure',
+          );
+        }
+        safetyBackupFileName = safety.fileName;
+      }
+    }
     final db = _db;
     final dbFactory = platformDatabaseFactory;
     final path = await resolveDatabasePath();
     _idleTicker?.cancel();
     _idleTicker = null;
     _company = null;
+    _lockedFromPath = null;
     _companyRepo = null;
     _userRepo = null;
     _settingsRepo = null;
     _dashboardRepo = null;
     _auditRepo = null;
+    _itemRepo = null;
+    _batchRepo = null;
+    _customerRepo = null;
+    _supplierRepo = null;
+    _fxRepo = null;
     _saleRepo = null;
     _quotationRepo = null;
     _purchaseRepo = null;
@@ -436,6 +512,7 @@ class AppController extends ChangeNotifier {
     }
     await dbFactory.deleteDatabase(path);
     await bootstrap();
+    return WipeSucceeded(safetyBackupFileName: safetyBackupFileName);
   }
 
   @override

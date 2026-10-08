@@ -1,0 +1,822 @@
+     1→/// نموذج عرض سلة الكاشير — قلب التطبيق (§6.5 / FR-02).
+     2→///
+     3→/// سلة حية في الذاكرة (ChangeNotifier) تُسعَّر لحظياً عبر `SalePricing`
+     4→/// (المجموع/خصومات الأسطر/خصم الرأس/الصافي بلا أي وصول قاعدة أثناء
+     5→/// التسوق)، وترحَّل بضغطة عبر `SaleRepository.postSale` الذرّي، أو تُحوَّل
+     6→/// عرضَ سعر عبر `QuotationRepository`.
+     7→///
+     8→/// خطوط حمراء مطبَّقة هنا:
+     9→/// - **سياسة FX المفقود** (FR-08-09): اختيار عملة غير الأساس بلا سعر
+    10→///   اليوم → علم `fxGateRequired` يفتح BottomSheet إدخال السعر فوراً،
+    11→///   ويُمنع الدفع قبل إدخاله.
+    12→/// - **عميل نقدي مجهول** (`customerId = null`): نقدي كامل حصراً — الآجل
+    13→///   والمختلط يرفضان حتى يُختار عميل.
+    14→/// - **الكميات غير الصالحة ترفض فوراً** (لا قيمة ≤ 0 تدخل السلة أبداً).
+    15→/// - فشل `postSale` **لا يفقد السلة** — رسالة الرفض العربية تُعرض كما هي.
+    16→library;
+    17→
+    18→import 'package:flutter/foundation.dart';
+    19→import 'package:sqflite/sqflite.dart';
+    20→
+    21→import '../../../../core/storage/doc_sequence.dart';
+    22→import '../../../../data/repositories/company_repository.dart';
+    23→import '../../../../data/repositories/exchange_rate_repository.dart';
+    24→import '../../../../data/repositories/item_repository.dart';
+    25→import '../../../../data/repositories/quotation_repository.dart';
+    26→import '../../../../data/repositories/sale_repository.dart';
+    27→import '../../../../domain/core/result.dart';
+    28→import '../../../../domain/models/company.dart';
+    29→import '../../../../domain/models/item.dart';
+    30→import '../../../../domain/models/quotation.dart';
+    31→import '../../../../domain/models/sale.dart';
+    32→import '../../../../domain/services/sale_pricing.dart';
+    33→
+    34→/// تفاوت الكميات عند مقارنة المتاح (NUMERIC(12,3)).
+    35→const double _qtyEpsilon = 0.000001;
+    36→
+    37→/// علامة «أبقِ القيمة الحالية» للحقول القابلة للتصفير في `_stateWith`.
+    38→const Object _keep = Object();
+    39→
+    40→/// عميل السلة — محدد بالاسم، أو نقدي مجهول (id = null).
+    41→class CartCustomer {
+    42→  const CartCustomer({
+    43→    required this.name,
+    44→    this.id,
+    45→    this.phone,
+    46→    this.creditLimit,
+    47→  });
+    48→
+    49→  final int? id;
+    50→  final String name;
+    51→  final String? phone;
+    52→
+    53→  /// حد الائتمان (null = بلا حد — FR-03-01).
+    54→  final double? creditLimit;
+    55→
+    56→  /// عميل نقدي مجهول؟
+    57→  bool get isCash => id == null;
+    58→}
+    59→
+    60→/// سطر سلة الواجهة — صورة الصنف لحظة إضافته + حقوله القابلة للتحرير.
+    61→class CartUiLine {
+    62→  const CartUiLine({
+    63→    required this.productId,
+    64→    required this.name,
+    65→    required this.qty,
+    66→    required this.unitPrice,
+    67→    required this.discountType,
+    68→    required this.discountValue,
+    69→    required this.availableQty,
+    70→    required this.isService,
+    71→    this.barcode,
+    72→  });
+    73→
+    74→  final int productId;
+    75→  final String name;
+    76→  final String? barcode;
+    77→
+    78→  /// الكمية (> 0 دائماً — القيم غير الصالحة ترفض قبل الدخول).
+    79→  final double qty;
+    80→
+    81→  /// سعر الوحدة بعملة الفاتورة (≥ 0).
+    82→  final double unitPrice;
+    83→
+    84→  final SaleDiscountType discountType;
+    85→  final double discountValue;
+    86→
+    87→  /// المتاح بالمخزن المحدد لحظة الإضافة (null للخدمي — لا مخزون له).
+    88→  final double? availableQty;
+    89→
+    90→  final bool isService;
+    91→
+    92→  /// تجاوز الكمية للمتاح؟ (FR-02-02 — تحذير بصري بلون تحذيري).
+    93→  bool get exceedsAvailable =>
+    94→      availableQty != null && qty > availableQty! + _qtyEpsilon;
+    95→
+    96→  CartUiLine copyWith({
+    97→    double? qty,
+    98→    double? unitPrice,
+    99→    SaleDiscountType? discountType,
+   100→    double? discountValue,
+   101→  }) => CartUiLine(
+   102→    productId: productId,
+   103→    name: name,
+   104→    barcode: barcode,
+   105→    qty: qty ?? this.qty,
+   106→    unitPrice: unitPrice ?? this.unitPrice,
+   107→    discountType: discountType ?? this.discountType,
+   108→    discountValue: discountValue ?? this.discountValue,
+   109→    availableQty: availableQty,
+   110→    isService: isService,
+   111→  );
+   112→
+   113→  CartLine toCartLine() => CartLine(
+   114→    productId: productId,
+   115→    qty: qty,
+   116→    unitPrice: unitPrice,
+   117→    lineDiscountType: discountType,
+   118→    lineDiscountValue: discountValue,
+   119→  );
+   120→}
+   121→
+   122→/// حالة سلة الكاشير الكاملة.
+   123→class SellCartState {
+   124→  const SellCartState({
+   125→    required this.loading,
+   126→    this.error,
+   127→    required this.currencies,
+   128→    this.baseCurrency,
+   129→    this.currencyId,
+   130→    this.todayRate,
+   131→    required this.rateKnown,
+   132→    this.customer,
+   133→    this.warehouseId,
+   134→    required this.lines,
+   135→    required this.invoiceDiscountType,
+   136→    required this.invoiceDiscountValue,
+   137→    required this.posting,
+   138→    this.postError,
+   139→    this.notice,
+   140→    this.nextInvoiceNo,
+   141→    this.fxGateRequired = false,
+   142→    this.lastReceipt,
+   143→  });
+   144→
+   145→  final bool loading;
+   146→  final Object? error;
+   147→
+   148→  /// العملات النشطة (الأساس أولاً).
+   149→  final List<Currency> currencies;
+   150→  final Currency? baseCurrency;
+   151→
+   152→  /// عملة الفاتورة المحددة (الأساس افتراضياً).
+   153→  final int? currencyId;
+   154→
+   155→  /// سعر اليوم للعملة المحددة (null للأساس أو عند الغياب).
+   156→  final double? todayRate;
+   157→
+   158→  /// هل سعر اليوم معروف للعملة المحددة؟ (الأساس = true دائماً).
+   159→  final bool rateKnown;
+   160→
+   161→  final CartCustomer? customer;
+   162→  final int? warehouseId;
+   163→
+   164→  final List<CartUiLine> lines;
+   165→
+   166→  final SaleDiscountType invoiceDiscountType;
+   167→  final double invoiceDiscountValue;
+   168→
+   169→  /// ترحيل جارٍ الآن (قفل الأزرار).
+   170→  final bool posting;
+   171→
+   172→  /// رسالة رفض آخر ترحيل (تُعرض بوضوح — السلة لا تُفقد).
+   173→  final String? postError;
+   174→
+   175→  /// إشعار عابر (باركود غير موجود مثلاً) — يُمسح بعد العرض.
+   176→  final String? notice;
+   177→
+   178→  /// رقم INV القادم (معاينة — الترقيم الحقيقي ذرّي داخل المعاملة).
+   179→  final String? nextInvoiceNo;
+   180→
+   181→  /// طلب فتح نافذة إدخال سعر اليوم (FR-08-09) — يُستهلك بـ clearFxGate.
+   182→  final bool fxGateRequired;
+   183→
+   184→  /// إيصال آخر فاتورة مُرحَّلة (نجاح — «فاتورة جديدة» تفرّغ السلة).
+   185→  final SalePostedReceipt? lastReceipt;
+   186→
+   187→  Currency? get selectedCurrency {
+   188→    for (final currency in currencies) {
+   189→      if (currency.id == currencyId) return currency;
+   190→    }
+   191→    return null;
+   192→  }
+   193→
+   194→  bool get isCustomerSelected => customer != null && customer!.id != null;
+   195→
+   196→  static const SellCartState initial = SellCartState(
+   197→    loading: true,
+   198→    currencies: <Currency>[],
+   199→    rateKnown: true,
+   200→    lines: <CartUiLine>[],
+   201→    invoiceDiscountType: SaleDiscountType.amount,
+   202→    invoiceDiscountValue: 0,
+   203→    posting: false,
+   204→  );
+   205→}
+   206→
+   207→/// نموذج سلة الكاشير — يعيش الجلسة كاملة عبر [SellCartSession].
+   208→class SellCartViewModel extends ChangeNotifier {
+   209→  SellCartViewModel({
+   210→    required ItemRepository itemRepo,
+   211→    required CompanyRepository companyRepo,
+   212→    required ExchangeRateRepository fxRepo,
+   213→    required SaleRepository saleRepo,
+   214→    required QuotationRepository quotationRepo,
+   215→    required Database database,
+   216→    DateTime Function()? clock,
+   217→  }) : _items = itemRepo,
+   218→       _companies = companyRepo,
+   219→       _fx = fxRepo,
+   220→       _sales = saleRepo,
+   221→       _quotations = quotationRepo,
+   222→       _db = database,
+   223→       _clock = clock ?? DateTime.now;
+   224→
+   225→  final ItemRepository _items;
+   226→  final CompanyRepository _companies;
+   227→  final ExchangeRateRepository _fx;
+   228→  final SaleRepository _sales;
+   229→  final QuotationRepository _quotations;
+   230→  final Database _db;
+   231→  final DateTime Function() _clock;
+   232→
+   233→  SellCartState _state = SellCartState.initial;
+   234→  SellCartState get state => _state;
+   235→
+   236→  int? _userId;
+   237→  bool _initialized = false;
+   238→
+   239→  // ───────────────────────────────────────────────────────────────────
+   240→  // التحميل (مرة واحدة بالجلسة — السلة تنجو من التنقل بين الشاشات)
+   241→  // ───────────────────────────────────────────────────────────────────
+   242→
+   243→  Future<void> load() async {
+   244→    if (_initialized) {
+   245→      // إعادة الدخول للشاشة: تحديث سعر اليوم فقط (السلة كما هي).
+   246→      await _refreshRateKnowledge();
+   247→      return;
+   248→    }
+   249→    _state = SellCartState.initial;
+   250→    notifyListeners();
+   251→    try {
+   252→      final results = await Future.wait<Object?>([
+   253→        _companies.listActiveCurrencies(),
+   254→        _companies.findBaseCurrency(),
+   255→        _companies.findDefaultWarehouseId(),
+   256→        _companies.findAdminUserId(),
+   257→      ]);
+   258→      final currencies = results[0]! as List<Currency>;
+   259→      final base = results[1] as Currency?;
+   260→      final warehouseId = results[2] as int?;
+   261→      _userId = results[3] as int?;
+   262→
+   263→      _initialized = true;
+   264→      _state = SellCartState(
+   265→        loading: false,
+   266→        currencies: currencies,
+   267→        baseCurrency: base,
+   268→        currencyId: base?.id,
+   269→        todayRate: null,
+   270→        rateKnown: true,
+   271→        customer: null,
+   272→        warehouseId: warehouseId,
+   273→        lines: const <CartUiLine>[],
+   274→        invoiceDiscountType: SaleDiscountType.amount,
+   275→        invoiceDiscountValue: 0,
+   276→        posting: false,
+   277→        nextInvoiceNo: await _nextInvoicePreview(),
+   278→      );
+   279→    } catch (error) {
+   280→      _state = SellCartState(
+   281→        loading: false,
+   282→        error: error,
+   283→        currencies: const <Currency>[],
+   284→        rateKnown: true,
+   285→        lines: const <CartUiLine>[],
+   286→        invoiceDiscountType: SaleDiscountType.amount,
+   287→        invoiceDiscountValue: 0,
+   288→        posting: false,
+   289→      );
+   290→    }
+   291→    notifyListeners();
+   292→  }
+   293→
+   294→  // ───────────────────────────────────────────────────────────────────
+   295→  // التسعير الحي (نقي — بلا قاعدة)
+   296→  // ───────────────────────────────────────────────────────────────────
+   297→
+   298→  List<CartLine> get cartLines => [
+   299→    for (final line in _state.lines) line.toCartLine(),
+   300→  ];
+   301→
+   302→  /// السلة المُسعَّرة الآن — null عند الفراغ أو عدم قابلية التسعير.
+   303→  PricedCart? get pricedCart {
+   304→    if (_state.lines.isEmpty) return null;
+   305→    try {
+   306→      return SalePricing.priceCart(
+   307→        cartLines,
+   308→        invoiceDiscountType: _state.invoiceDiscountType,
+   309→        invoiceDiscountValue: _state.invoiceDiscountValue,
+   310→      );
+   311→    } on StateError {
+   312→      return null;
+   313→    }
+   314→  }
+   315→
+   316→  /// خطأ التحقق الحالي (كميات/أسعار/خصومات/صافٍ > 0) — null عند السلامة.
+   317→  String? get cartError => _state.lines.isEmpty
+   318→      ? null
+   319→      : SalePricing.validateCart(
+   320→          cartLines,
+   321→          invoiceDiscountType: _state.invoiceDiscountType,
+   322→          invoiceDiscountValue: _state.invoiceDiscountValue,
+   323→        );
+   324→
+   325→  /// الصافي الحالي (للعرض في زر الدفع) — 0 عند الفراغ.
+   326→  double get grandTotal => pricedCart?.totals.grandTotal ?? 0;
+   327→
+   328→  // ───────────────────────────────────────────────────────────────────
+   329→  // العميل والعملة
+   330→  // ───────────────────────────────────────────────────────────────────
+   331→
+   332→  /// اختيار عميل محدد.
+   333→  void setCustomer({
+   334→    required int id,
+   335→    required String name,
+   336→    String? phone,
+   337→    double? creditLimit,
+   338→  }) {
+   339→    _state = _stateWith(
+   340→      customer: CartCustomer(
+   341→        id: id,
+   342→        name: name,
+   343→        phone: phone,
+   344→        creditLimit: creditLimit,
+   345→      ),
+   346→      postError: null,
+   347→    );
+   348→    notifyListeners();
+   349→  }
+   350→
+   351→  /// رجوع لعميل نقدي مجهول (نقدي كامل حصراً).
+   352→  void setCashCustomer() {
+   353→    _state = _stateWith(customer: null, postError: null);
+   354→    notifyListeners();
+   355→  }
+   356→
+   357→  /// اختيار عملة الفاتورة — عند عملة غير الأساس بلا سعر اليوم تُفتح
+   358→  /// بوابة الإدخال فوراً (FR-08-09).
+   359→  Future<void> setCurrency(int currencyId) async {
+   360→    if (currencyId == _state.currencyId) return;
+   361→    final currency = _currencyById(currencyId);
+   362→    final isBase = currency?.isBase ?? false;
+   363→    var rateKnown = true;
+   364→    double? rate;
+   365→    if (!isBase) {
+   366→      rate = await _fx.rateFor(currencyId, _clock());
+   367→      rateKnown = rate != null && rate > 0;
+   368→    }
+   369→    _state = _stateWith(
+   370→      currencyId: currencyId,
+   371→      todayRate: rate,
+   372→      rateKnown: rateKnown,
+   373→      fxGateRequired: !isBase && !rateKnown,
+   374→      postError: null,
+   375→      notice: null,
+   376→    );
+   377→    notifyListeners();
+   378→  }
+   379→
+   380→  /// حفظ سعر اليوم من بوابة FX (يكتب عبر fx.setRate ثم يتابع).
+   381→  Future<Result<void, String>> saveTodayRate(double rate) async {
+   382→    final currencyId = _state.currencyId;
+   383→    if (currencyId == null) {
+   384→      return const Err<void, String>('اختر عملة أولاً.');
+   385→    }
+   386→    final result = await _fx.setRate(
+   387→      currencyId: currencyId,
+   388→      date: _clock(),
+   389→      rate: rate,
+   390→      userId: _userId ?? 1,
+   391→      now: _clock(),
+   392→    );
+   393→    if (result.isOk) {
+   394→      await _refreshRateKnowledge();
+   395→    }
+   396→    return result;
+   397→  }
+   398→
+   399→  /// استهلاك طلب فتح بوابة FX (بعد فتح النافذة).
+   400→  void clearFxGate() {
+   401→    if (!_state.fxGateRequired) return;
+   402→    _state = _stateWith(fxGateRequired: false);
+   403→    notifyListeners();
+   404→  }
+   405→
+   406→  Future<void> _refreshRateKnowledge() async {
+   407→    final currencyId = _state.currencyId;
+   408→    if (currencyId == null) return;
+   409→    final currency = _currencyById(currencyId);
+   410→    if (currency == null || currency.isBase) {
+   411→      _state = _stateWith(
+   412→        todayRate: null,
+   413→        rateKnown: true,
+   414→        fxGateRequired: false,
+   415→      );
+   416→      notifyListeners();
+   417→      return;
+   418→    }
+   419→    final rate = await _fx.rateFor(currencyId, _clock());
+   420→    final known = rate != null && rate > 0;
+   421→    _state = _stateWith(
+   422→      todayRate: rate,
+   423→      rateKnown: known,
+   424→      fxGateRequired: known ? false : _state.fxGateRequired,
+   425→    );
+   426→    notifyListeners();
+   427→  }
+   428→
+   429→  Currency? _currencyById(int id) {
+   430→    for (final currency in _state.currencies) {
+   431→      if (currency.id == id) return currency;
+   432→    }
+   433→    return null;
+   434→  }
+   435→
+   436→  // ───────────────────────────────────────────────────────────────────
+   437→  // بنود السلة
+   438→  // ───────────────────────────────────────────────────────────────────
+   439→
+   440→  /// إضافة صنف (الكمية 1 أو دمج مع سطر موجود لنفس الصنف).
+   441→  void addItemFromInfo(ItemStockInfo info) {
+   442→    final warehouseId = _state.warehouseId;
+   443→    final available = info.item.isService
+   444→        ? null
+   445→        : (info.warehouseQty[warehouseId] ?? info.totalQty);
+   446→    final price = info.retailPrice ?? 0.0;
+   447→    final existing = _lineIndexOf(info.item.id);
+   448→    if (existing >= 0) {
+   449→      _updateLine(existing, qty: _state.lines[existing].qty + 1);
+   450→      return;
+   451→    }
+   452→    _state = _stateWith(
+   453→      lines: [
+   454→        ..._state.lines,
+   455→        CartUiLine(
+   456→          productId: info.item.id,
+   457→          name: info.item.name,
+   458→          barcode: info.item.barcode,
+   459→          qty: 1,
+   460→          unitPrice: price,
+   461→          discountType: SaleDiscountType.amount,
+   462→          discountValue: 0,
+   463→          availableQty: available,
+   464→          isService: info.item.isService,
+   465→        ),
+   466→      ],
+   467→      postError: null,
+   468→    );
+   469→    notifyListeners();
+   470→  }
+   471→
+   472→  /// مسح باركود بإدخال يدوي — أول تطابق يضاف مباشرة بكمية 1.
+   473→  Future<bool> addByBarcode(String code) async {
+   474→    final trimmed = code.trim();
+   475→    if (trimmed.isEmpty) return false;
+   476→    final info = await _items.findByBarcode(
+   477→      trimmed,
+   478→      currencyId: _state.currencyId,
+   479→    );
+   480→    if (info == null) {
+   481→      _notice('لا صنف بباركود «$trimmed» — تأكد من الرقم أو أضفه من القائمة.');
+   482→      return false;
+   483→    }
+   484→    addItemFromInfo(info);
+   485→    return true;
+   486→  }
+   487→
+   488→  /// تعديل الكمية — القيم غير الصالحة (≤ 0 أو غير رقمية) ترفض فوراً.
+   489→  void setQty(int index, double qty) {
+   490→    if (qty.isNaN || qty.isInfinite || qty <= 0) {
+   491→      _notice('الكمية يجب أن تكون رقماً أكبر من صفر.');
+   492→      return;
+   493→    }
+   494→    _updateLine(index, qty: qty);
+   495→  }
+   496→
+   497→  /// تعديل سعر الوحدة (≥ 0).
+   498→  void setUnitPrice(int index, double price) {
+   499→    if (price.isNaN || price.isInfinite || price < 0) {
+   500→      _notice('السعر لا يمكن أن يكون سالباً.');
+   501→      return;
+   502→    }
+   503→    _updateLine(index, unitPrice: price);
+   504→  }
+   505→
+   506→  /// تعديل خصم السطر (٪ ضمن 0–100 / مبلغ ≥ 0).
+   507→  void setLineDiscount(int index, SaleDiscountType type, double value) {
+   508→    if (value.isNaN || value.isInfinite || value < 0) {
+   509→      _notice('قيمة الخصم لا يمكن أن تكون سالبة.');
+   510→      return;
+   511→    }
+   512→    if (type == SaleDiscountType.percent && value > 100) {
+   513→      _notice('نسبة الخصم لا يمكن أن تتجاوز 100%.');
+   514→      return;
+   515→    }
+   516→    _updateLine(index, discountType: type, discountValue: value);
+   517→  }
+   518→
+   519→  /// حذف سطر بالفهرس.
+   520→  void removeLine(int index) {
+   521→    if (index < 0 || index >= _state.lines.length) return;
+   522→    final lines = [..._state.lines]..removeAt(index);
+   523→    _state = _stateWith(lines: lines);
+   524→    notifyListeners();
+   525→  }
+   526→
+   527→  /// خصم رأس الفاتورة (نسبة/مبلغ).
+   528→  void setInvoiceDiscount(SaleDiscountType type, double value) {
+   529→    if (value.isNaN || value.isInfinite || value < 0) {
+   530→      _notice('قيمة الخصم لا يمكن أن تكون سالبة.');
+   531→      return;
+   532→    }
+   533→    if (type == SaleDiscountType.percent && value > 100) {
+   534→      _notice('نسبة خصم الفاتورة لا يمكن أن تتجاوز 100%.');
+   535→      return;
+   536→    }
+   537→    _state = _stateWith(invoiceDiscountType: type, invoiceDiscountValue: value);
+   538→    notifyListeners();
+   539→  }
+   540→
+   541→  // ───────────────────────────────────────────────────────────────────
+   542→  // الترحيل والدفع
+   543→  // ───────────────────────────────────────────────────────────────────
+   544→
+   545→  /// بناء مسودة الترحيل من الحالة الحالية (للاستخدام الداخلي والاختبارات).
+   546→  SaleDraft? buildDraft({
+   547→    required double paidCash,
+   548→    required SalePaymentMethod method,
+   549→  }) {
+   550→    final currencyId = _state.currencyId;
+   551→    final warehouseId = _state.warehouseId;
+   552→    if (currencyId == null || warehouseId == null) return null;
+   553→    return SaleDraft(
+   554→      customerId: _state.customer?.id,
+   555→      currencyId: currencyId,
+   556→      lines: cartLines,
+   557→      invoiceDiscountType: _state.invoiceDiscountType,
+   558→      invoiceDiscountValue: _state.invoiceDiscountValue,
+   559→      paidCash: paidCash,
+   560→      paymentMethod: method,
+   561→      warehouseId: warehouseId,
+   562→      issuedAt: _clock(),
+   563→    );
+   564→  }
+   565→
+   566→  /// **ترحيل الفاتورة** — نجاح: تُفرَّغ السلة ويُحفظ الإيصال؛ فشل: تُعرض
+   567→  /// رسالة الرفض العربية **والسلة لا تُفقد**.
+   568→  Future<Result<SalePostedReceipt, String>> postSale({
+   569→    required double paidCash,
+   570→    required SalePaymentMethod method,
+   571→  }) async {
+   572→    if (_state.posting) {
+   573→      return const Err<SalePostedReceipt, String>(
+   574→        'ترحيل جارٍ بالفعل — لحظات ويكتمل.',
+   575→      );
+   576→    }
+   577→    final failure = _prePostFailure(paidCash, method);
+   578→    if (failure != null) {
+   579→      _state = _stateWith(postError: failure);
+   580→      notifyListeners();
+   581→      return Err<SalePostedReceipt, String>(failure);
+   582→    }
+   583→    final draft = buildDraft(paidCash: paidCash, method: method);
+   584→    if (draft == null) {
+   585→      const message = 'الإعدادات غير مكتملة (العملة/المخزن) — أعد فتح الشاشة.';
+   586→      _state = _stateWith(postError: message);
+   587→      notifyListeners();
+   588→      return const Err<SalePostedReceipt, String>(message);
+   589→    }
+   590→
+   591→    _state = _stateWith(posting: true, postError: null);
+   592→    notifyListeners();
+   593→    final result = await _sales.postSale(
+   594→      draft,
+   595→      userId: _userId ?? 1,
+   596→      now: _clock(),
+   597→    );
+   598→    if (result.isOk) {
+   599→      final receipt = result.valueOrNull!;
+   600→      _state = _stateWith(
+   601→        posting: false,
+   602→        lines: const <CartUiLine>[],
+   603→        invoiceDiscountType: SaleDiscountType.amount,
+   604→        invoiceDiscountValue: 0,
+   605→        lastReceipt: receipt,
+   606→        postError: null,
+   607→        notice: null,
+   608→        nextInvoiceNo: await _nextInvoicePreview(),
+   609→      );
+   610→      notifyListeners();
+   611→    } else {
+   612→      _state = _stateWith(posting: false, postError: result.errorOrNull!);
+   613→      notifyListeners();
+   614→    }
+   615→    return result;
+   616→  }
+   617→
+   618→  /// فحوص ما قبل الترحيل (بترتيب رسائل واضح للمستخدم) — null عند السلامة.
+   619→  String? _prePostFailure(double paidCash, SalePaymentMethod method) {
+   620→    if (_state.lines.isEmpty) {
+   621→      return 'أضف بنداً واحداً على الأقل إلى الفاتورة قبل الدفع.';
+   622→    }
+   623→    final cartFailure = cartError;
+   624→    if (cartFailure != null) return cartFailure;
+   625→    final currency = _state.selectedCurrency;
+   626→    if (currency == null) return 'اختر عملة الفاتورة أولاً.';
+   627→    if (!currency.isBase && !_state.rateKnown) {
+   628→      // FR-08-09: منع الحفظ + طلب فتح بوابة إدخال سعر اليوم.
+   629→      _state = _stateWith(fxGateRequired: true);
+   630→      notifyListeners();
+   631→      return 'لا يوجد سعر صرف لعملة ${currency.code} بتاريخ اليوم — '
+   632→          'أدخل سعر اليوم أولاً ثم أكمل الدفع.';
+   633→    }
+   634→    final total = grandTotal;
+   635→    final payFailure = SalePricing.validatePayment(total, paidCash, method);
+   636→    if (payFailure != null) return payFailure;
+   637→    // عميل نقدي مجهول: نقدي كامل حصراً (الآجل يحتاج حساباً معروفاً).
+   638→    final settlement = SalePricing.settlePayment(total, paidCash);
+   639→    if (settlement.remainingCredit > moneyEpsilon &&
+   640→        !_state.isCustomerSelected) {
+   641→      return 'البيع الآجل يتطلب اختيار عميل أولاً — العميل النقدي المجهول '
+   642→          'يسدد نقداً كاملاً فقط.';
+   643→    }
+   644→    return null;
+   645→  }
+   646→
+   647→  // ───────────────────────────────────────────────────────────────────
+   648→  // عرض السعر (FR-02-11)
+   649→  // ───────────────────────────────────────────────────────────────────
+   650→
+   651→  /// حفظ السلة الحالية كعرض سعر QTE — بلا أي حركة مخزون/صندوق.
+   652→  /// السلة تبقى كما هي (يمكن المتابعة في البيع أو التفريغ من الشاشة).
+   653→  Future<Result<Quotation, String>> saveAsQuotation() async {
+   654→    if (_state.lines.isEmpty) {
+   655→      return const Err<Quotation, String>(
+   656→        'أضف بنداً واحداً على الأقل قبل حفظ عرض السعر.',
+   657→      );
+   658→    }
+   659→    final cartFailure = cartError;
+   660→    if (cartFailure != null) {
+   661→      return Err<Quotation, String>(cartFailure);
+   662→    }
+   663→    final currencyId = _state.currencyId;
+   664→    final warehouseId = _state.warehouseId;
+   665→    if (currencyId == null || warehouseId == null) {
+   666→      return const Err<Quotation, String>(
+   667→        'الإعدادات غير مكتملة (العملة/المخزن) — أعد فتح الشاشة.',
+   668→      );
+   669→    }
+   670→    return _quotations.createQuotation(
+   671→      QuotationDraft(
+   672→        customerId: _state.customer?.id,
+   673→        currencyId: currencyId,
+   674→        warehouseId: warehouseId,
+   675→        lines: [
+   676→          for (final line in _state.lines)
+   677→            QuotationLine(
+   678→              productId: line.productId,
+   679→              qty: line.qty,
+   680→              unitPrice: line.unitPrice,
+   681→              lineDiscountType: line.discountType,
+   682→              lineDiscountValue: line.discountValue,
+   683→            ),
+   684→        ],
+   685→        invoiceDiscountType: _state.invoiceDiscountType,
+   686→        invoiceDiscountValue: _state.invoiceDiscountValue,
+   687→        issuedAt: _clock(),
+   688→      ),
+   689→      userId: _userId ?? 1,
+   690→      now: _clock(),
+   691→    );
+   692→  }
+   693→
+   694→  // ───────────────────────────────────────────────────────────────────
+   695→  // أدوات الجلسة
+   696→  // ───────────────────────────────────────────────────────────────────
+   697→
+   698→  /// «فاتورة جديدة» — تفريغ السلة (يبقي العميل/العملة/المخزن لراحة الكاشير).
+   699→  void startNewInvoice() {
+   700→    _state = _stateWith(
+   701→      lines: const <CartUiLine>[],
+   702→      invoiceDiscountType: SaleDiscountType.amount,
+   703→      invoiceDiscountValue: 0,
+   704→      postError: null,
+   705→      notice: null,
+   706→      lastReceipt: null,
+   707→    );
+   708→    notifyListeners();
+   709→  }
+   710→
+   711→  /// إغلاق إيصال النجاح المعروض (يبدأ فاتورة جديدة).
+   712→  void dismissReceipt() => startNewInvoice();
+   713→
+   714→  void clearPostError() {
+   715→    if (_state.postError == null) return;
+   716→    _state = _stateWith(postError: null);
+   717→    notifyListeners();
+   718→  }
+   719→
+   720→  void clearNotice() {
+   721→    if (_state.notice == null) return;
+   722→    _state = _stateWith(notice: null);
+   723→    notifyListeners();
+   724→  }
+   725→
+   726→  void _notice(String message) {
+   727→    _state = _stateWith(notice: message);
+   728→    notifyListeners();
+   729→  }
+   730→
+   731→  void _updateLine(
+   732→    int index, {
+   733→    double? qty,
+   734→    double? unitPrice,
+   735→    SaleDiscountType? discountType,
+   736→    double? discountValue,
+   737→  }) {
+   738→    if (index < 0 || index >= _state.lines.length) return;
+   739→    final lines = [..._state.lines];
+   740→    lines[index] = lines[index].copyWith(
+   741→      qty: qty,
+   742→      unitPrice: unitPrice,
+   743→      discountType: discountType,
+   744→      discountValue: discountValue,
+   745→    );
+   746→    _state = _stateWith(lines: lines, postError: null, notice: null);
+   747→    notifyListeners();
+   748→  }
+   749→
+   750→  int _lineIndexOf(int productId) {
+   751→    for (var i = 0; i < _state.lines.length; i++) {
+   752→      if (_state.lines[i].productId == productId) return i;
+   753→    }
+   754→    return -1;
+   755→  }
+   756→
+   757→  /// معاينة رقم INV القادم (آخر رقم مُصدر + 1) — عرض فقط، الترقيم الحقيقي
+   758→  /// يستهلك ذرّياً داخل معاملة الترحيل.
+   759→  Future<String?> _nextInvoicePreview() async {
+   760→    try {
+   761→      final year = _clock().year;
+   762→      final last = await DocSequenceService(_db)
+   763→          .lastIssuedNumber(DocSequenceType.invoice, year);
+   764→      return formatDocNumber(DocSequenceType.invoice, year, last + 1);
+   765→    } catch (_) {
+   766→      return null;
+   767→    }
+   768→  }
+   769→
+   770→  /// نسخة حالة محدَّثة — للحقول القابلة للتصفير (customer/postError/notice/
+   771→  /// todayRate/lastReceipt): حذف الوسيطة أو تمرير null يصفّرها، وتمرير
+   772→  /// `_keep` يبقيها. بقية الحقول: حذف الوسيطة يبقيها.
+   773→  SellCartState _stateWith({
+   774→    bool? loading,
+   775→    List<Currency>? currencies,
+   776→    Object? baseCurrency = _keep,
+   777→    int? currencyId,
+   778→    Object? todayRate = _keep,
+   779→    bool? rateKnown,
+   780→    Object? customer = _keep,
+   781→    int? warehouseId,
+   782→    List<CartUiLine>? lines,
+   783→    SaleDiscountType? invoiceDiscountType,
+   784→    double? invoiceDiscountValue,
+   785→    bool? posting,
+   786→    Object? postError = _keep,
+   787→    Object? notice = _keep,
+   788→    String? nextInvoiceNo,
+   789→    bool? fxGateRequired,
+   790→    Object? lastReceipt = _keep,
+   791→  }) => SellCartState(
+   792→    loading: loading ?? _state.loading,
+   793→    error: _state.error,
+   794→    currencies: currencies ?? _state.currencies,
+   795→    baseCurrency: identical(baseCurrency, _keep)
+   796→        ? _state.baseCurrency
+   797→        : baseCurrency as Currency?,
+   798→    currencyId: currencyId ?? _state.currencyId,
+   799→    todayRate: identical(todayRate, _keep)
+   800→        ? _state.todayRate
+   801→        : todayRate as double?,
+   802→    rateKnown: rateKnown ?? _state.rateKnown,
+   803→    customer: identical(customer, _keep)
+   804→        ? _state.customer
+   805→        : customer as CartCustomer?,
+   806→    warehouseId: warehouseId ?? _state.warehouseId,
+   807→    lines: lines ?? _state.lines,
+   808→    invoiceDiscountType: invoiceDiscountType ?? _state.invoiceDiscountType,
+   809→    invoiceDiscountValue: invoiceDiscountValue ?? _state.invoiceDiscountValue,
+   810→    posting: posting ?? _state.posting,
+   811→    postError: identical(postError, _keep)
+   812→        ? _state.postError
+   813→        : postError as String?,
+   814→    notice: identical(notice, _keep) ? _state.notice : notice as String?,
+   815→    nextInvoiceNo: nextInvoiceNo ?? _state.nextInvoiceNo,
+   816→    fxGateRequired: fxGateRequired ?? _state.fxGateRequired,
+   817→    lastReceipt: identical(lastReceipt, _keep)
+   818→        ? _state.lastReceipt
+   819→        : lastReceipt as SalePostedReceipt?,
+   820→  );
+   821→}
+   822→

@@ -19,6 +19,7 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
@@ -63,6 +64,49 @@ class _VoucherScreenBody extends StatefulWidget {
 class _VoucherScreenBodyState extends State<_VoucherScreenBody> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+
+  /// لقطة ما بعد التحميل — حماية «التغييرات غير المحفوظة» (P1-4).
+  bool _baselineReady = false;
+  double? _bAmount;
+  String _bNotes = '';
+  int? _bPartyId;
+  int? _bBoxId;
+  int? _bCurrencyId;
+  DateTime _bDate = DateTime.now();
+  bool _bFifo = true;
+
+  /// يلتقط لقطة الحالة الأولى القابلة للتحرير (مرة واحدة بعد التحميل).
+  void _captureBaseline(VoucherViewModel vm) {
+    if (_baselineReady || vm.loading || vm.error != null) return;
+    _baselineReady = true;
+    _bAmount = vm.amount;
+    _bNotes = vm.notes;
+    _bPartyId = vm.partyId;
+    _bBoxId = vm.boxId;
+    _bCurrencyId = vm.voucherCurrencyId;
+    _bDate = vm.txDate;
+    _bFifo = vm.allocateFifo;
+  }
+
+  /// هل في السند تغييرات غير محفوظة؟
+  bool _isDirty(VoucherViewModel vm) {
+    if (!_baselineReady) return false;
+    return vm.amount != _bAmount ||
+        vm.notes != _bNotes ||
+        vm.partyId != _bPartyId ||
+        vm.boxId != _bBoxId ||
+        vm.voucherCurrencyId != _bCurrencyId ||
+        vm.txDate != _bDate ||
+        vm.allocateFifo != _bFifo;
+  }
+
+  /// رجوع محروس: زر الرجوع الصريح (go) يمر بنفس حوار الحماية (P1-4).
+  Future<void> _guardedBack(VoucherViewModel vm) async {
+    if (_isDirty(vm) && !await confirmDiscardChanges(context)) {
+      return;
+    }
+    if (mounted) context.go('/cash');
+  }
 
   @override
   void dispose() {
@@ -132,103 +176,109 @@ class _VoucherScreenBodyState extends State<_VoucherScreenBody> {
   Widget build(BuildContext context) {
     final vm = context.watch<VoucherViewModel>();
     final l10n = AppLocalizations.of(context)!;
+    _captureBaseline(vm);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go('/cash')),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              vm.isReceipt
-                  ? l10n.cashVoucherReceiptTitle
-                  : l10n.cashVoucherPaymentTitle,
-            ),
-            Text(
-              vm.isReceipt
-                  ? l10n.cashVoucherReceiptSubtitle
-                  : l10n.cashVoucherPaymentSubtitle,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
+    // حماية التغييرات غير المحفوظة (P1-4): الرجوع المباشر (النظام/الزر)
+    // يعرض حوار «مغادرة/بقاء».
+    return DirtyFormGuard(
+      isDirty: _isDirty(vm),
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          leading: BackButton(onPressed: () => unawaited(_guardedBack(vm))),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                vm.isReceipt
+                    ? l10n.cashVoucherReceiptTitle
+                    : l10n.cashVoucherPaymentTitle,
               ),
-            ),
-          ],
-        ),
-      ),
-      body: vm.loading
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
-            )
-          : vm.error != null
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: [
-                ErrorState(
-                  title: l10n.genericErrorTitle,
-                  message: l10n.dbOpenErrorMessage,
-                  technicalDetails: vm.error.toString(),
-                  retryLabel: l10n.commonRetry,
-                  onRetry: vm.load,
-                  compact: true,
+              Text(
+                vm.isReceipt
+                    ? l10n.cashVoucherReceiptSubtitle
+                    : l10n.cashVoucherPaymentSubtitle,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            )
-          : SafeArea(
-              top: false,
-              bottom: false,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                      children: [
-                        _PartyCard(
-                          vm: vm,
-                          onPick: () => unawaited(_openPartyPicker(vm)),
-                        ),
-                        const SizedBox(height: 12),
-                        _AmountCurrencyCard(
-                          vm: vm,
-                          controller: _amountController,
-                        ),
-                        const SizedBox(height: 12),
-                        _BoxDateCard(
-                          vm: vm,
-                          onPickDate: () => unawaited(_pickDate(vm)),
-                        ),
-                        if (vm.partyId != null) ...[
-                          const SizedBox(height: 12),
-                          _AllocationCard(vm: vm),
-                        ],
-                        if (vm.isCrossCurrency &&
-                            vm.projectedBoxDeposit != null) ...[
-                          const SizedBox(height: 12),
-                          _CrossCurrencyNote(vm: vm),
-                        ],
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _notesController,
-                          enabled: !vm.saving,
-                          maxLines: 2,
-                          maxLength: 200,
-                          onChanged: vm.setNotes,
-                          decoration: InputDecoration(
-                            labelText: l10n.cashVoucherNotesLabel,
-                            helperText: l10n.cashVoucherNotesHint,
-                            prefixIcon: const Icon(Icons.notes_rounded),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _BottomPostBar(vm: vm, onPost: () => unawaited(_post(vm))),
-                ],
               ),
-            ),
+            ],
+          ),
+        ),
+        body: vm.loading
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                children: const [ListSkeleton(rows: 6)],
+              )
+            : vm.error != null
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                children: [
+                  ErrorState(
+                    title: l10n.genericErrorTitle,
+                    message: l10n.dbOpenErrorMessage,
+                    technicalDetails: vm.error.toString(),
+                    retryLabel: l10n.commonRetry,
+                    onRetry: vm.load,
+                    compact: true,
+                  ),
+                ],
+              )
+            : SafeArea(
+                top: false,
+                bottom: false,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                        children: [
+                          _PartyCard(
+                            vm: vm,
+                            onPick: () => unawaited(_openPartyPicker(vm)),
+                          ),
+                          const SizedBox(height: 12),
+                          _AmountCurrencyCard(
+                            vm: vm,
+                            controller: _amountController,
+                          ),
+                          const SizedBox(height: 12),
+                          _BoxDateCard(
+                            vm: vm,
+                            onPickDate: () => unawaited(_pickDate(vm)),
+                          ),
+                          if (vm.partyId != null) ...[
+                            const SizedBox(height: 12),
+                            _AllocationCard(vm: vm),
+                          ],
+                          if (vm.isCrossCurrency &&
+                              vm.projectedBoxDeposit != null) ...[
+                            const SizedBox(height: 12),
+                            _CrossCurrencyNote(vm: vm),
+                          ],
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _notesController,
+                            enabled: !vm.saving,
+                            maxLines: 2,
+                            maxLength: 200,
+                            onChanged: vm.setNotes,
+                            decoration: InputDecoration(
+                              labelText: l10n.cashVoucherNotesLabel,
+                              helperText: l10n.cashVoucherNotesHint,
+                              prefixIcon: const Icon(Icons.notes_rounded),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _BottomPostBar(vm: vm, onPost: () => unawaited(_post(vm))),
+                  ],
+                ),
+              ),
+      ),
     );
   }
 }

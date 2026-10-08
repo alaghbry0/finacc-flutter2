@@ -61,7 +61,14 @@ class InvoicePdfBuilder {
         pw.SizedBox(height: 4 * pw.PdfPageFormat.mm),
         _metaGrid(doc),
         pw.SizedBox(height: 6 * pw.PdfPageFormat.mm),
-        _itemsSection(doc),
+        // عنوان القسم والجدول عنصران مستقلان في قائمة البناء (لا داخل
+        // Column واحدة): الجدول SpanningWidget يتدفق عبر الصفحات عبر
+        // MultiPage، ولفّه في Column كان يمنع التدفق فيرمي
+        // TooManyPagesException (ويعلّق بناء الصفحات في الريليز) للفواتير
+        // ذات البنود الكثيرة — إصلاح موجة 1-a فوق تدقيق UX-audit A5.
+        _itemsTitle(doc),
+        pw.SizedBox(height: 2 * pw.PdfPageFormat.mm),
+        _itemsTable(doc),
         pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
         _totalsCard(doc),
       ],
@@ -144,7 +151,8 @@ class InvoicePdfBuilder {
         ),
         pw.Text(
           doc.labels.title,
-          style: PrintText.head(color: PrintPalette.brandDeep, size: 18),
+          // ExtraBold لعنوان المستند الكبير (إصلاح UX-audit ExtraBold).
+          style: PrintText.extraHead(color: PrintPalette.brandDeep, size: 18),
           textDirection: pw.TextDirection.rtl,
         ),
       ],
@@ -201,19 +209,17 @@ class InvoicePdfBuilder {
     );
   }
 
-  /// عنوان قسم البنود + الجدول.
-  pw.Widget _itemsSection(InvoicePrintDoc doc) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-      children: [
-        pw.Text(
-          doc.labels.itemsSection,
-          style: PrintText.head(color: PrintPalette.brandDeep, size: 12),
-          textDirection: pw.TextDirection.rtl,
-        ),
-        pw.SizedBox(height: 2 * pw.PdfPageFormat.mm),
-        _itemsTable(doc),
-      ],
+  /// عنوان قسم البنود — عنصر مستقل أعلى الجدول: `Align` بعرض كامل يحافظ
+  /// على محاذاة العنوان يميناً (كما كان داخل Column الممتدة) بينما يبقى
+  /// الجدول حر التدفق لصفحات إضافية.
+  pw.Widget _itemsTitle(InvoicePrintDoc doc) {
+    return pw.Align(
+      alignment: pw.Alignment.centerRight,
+      child: pw.Text(
+        doc.labels.itemsSection,
+        style: PrintText.head(color: PrintPalette.brandDeep, size: 12),
+        textDirection: pw.TextDirection.rtl,
+      ),
     );
   }
 
@@ -366,6 +372,12 @@ class InvoicePdfBuilder {
   // -------------------------------------------------------------------
 
   /// سطر «تسمية يميناً : قيمة يساراً» — النمط العربي الأساسي للمعلومات.
+  ///
+  /// القيمة تُرسم RTL **دائماً** (إصلاح UX-audit A1): بلا `textDirection`
+  /// ترسم حزمة pdf العربيةَ بلا تشكيل معكوسةً مفككةً (شكوى المالك)، وقد
+  /// ينهار subsetter الخط (`Bad state: No element`) حين يجتمع عربي غير
+  /// مشكل بعربي مشكل في نفس المستند. الأرقام/اللاتيني داخل قيمة RTL
+  /// يعاد ترتيبها وفق BiDi فيقرؤها العربي بترتيبها المنطقي الصحيح.
   pw.Widget _kvLine(String label, String value, {double size = 9.5}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 1.5),
@@ -380,6 +392,7 @@ class InvoicePdfBuilder {
                   color: PrintPalette.brandDeep,
                   size: size,
                 ),
+                textDirection: pw.TextDirection.rtl,
               ),
             ),
           ),

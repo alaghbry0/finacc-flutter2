@@ -4545,4 +4545,74 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get reportsSalesByDesc =>
       'العميل/الفئة/الصنف/اليوم مع نسب التغير عن الفترة السابقة';
+
+  @override
+  String get sellFixPrintInvoice => 'طباعة الفاتورة';
+
+  @override
+  String get sellFixShareInvoice => 'مشاركة / واتساب';
+
+  @override
+  String get sellFixPrintAndNewInvoice => 'طباعة + فاتورة جديدة';
+
+  @override
+  String get sellFixClose => 'إغلاق';
+
+  @override
+  String get sellFixPrintLoadFailed =>
+      'تعذّر تحميل الفاتورة للطباعة — جرّب من قائمة الفواتير.';
+
+  @override
+  String get sellFixDetailReturnAction => 'مرتجع على هذه الفاتورة';
+
+  @override
+  String get sellFixNewCustomer => 'عميل جديد';
+
+  @override
+  String get sellFixNewCustomerTitle => 'عميل جديد سريع';
+
+  @override
+  String get sellFixNewCustomerNameLabel => 'اسم العميل';
+
+  @override
+  String get sellFixNewCustomerPhoneLabel => 'الهاتف (اختياري)';
+
+  @override
+  String get sellFixNewCustomerNameRequired => 'اسم العميل مطلوب.';
+
+  @override
+  String get sellFixNewCustomerSave => 'إضافة وتحديد';
+
+  @override
+  String get appFixUnsavedTitle => 'تغييرات غير محفوظة';
+
+  @override
+  String get appFixUnsavedBody =>
+      'هناك تغييرات لم تُحفظ بعد — المغادرة الآن تضيعها. هل تريد المغادرة دون حفظ؟';
+
+  @override
+  String get appFixUnsavedLeave => 'مغادرة';
+
+  @override
+  String get appFixUnsavedStay => 'بقاء';
+
+  @override
+  String get appFixWipeBackupFailedTitle => 'تعذّر إنشاء نسخة الأمان';
+
+  @override
+  String get appFixWipeBackupFailedBody =>
+      'فشل إنشاء النسخة الاحتياطية التلقائية قبل المسح، لذلك لم تُمسَح أي بيانات. أعد المحاولة، أو تابع المسح دون نسخة نهائية إن كنت متأكداً.';
+
+  @override
+  String get appFixWipeProceedNoBackup => 'متابعة بلا نسخة';
+
+  @override
+  String appFixWipeSafetyBackupAt(Object fileName) {
+    return 'أُنشئت نسخة أمان تلقائية قبل المسح باسم: $fileName';
+  }
+
+  @override
+  String pdfFixPageIndicator(int page, int total) {
+    return 'صفحة $page من $total';
+  }
 }

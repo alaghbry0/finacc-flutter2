@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../domain/services/numerals.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/confirm_word_dialog.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
@@ -791,40 +792,17 @@ class _DataSection extends StatelessWidget {
                   Icons.chevron_left_rounded,
                   color: scheme.onSurfaceVariant,
                 ),
-                onTap: () => _confirmWipe(context, l10n),
+                // المسار المحروس الموحد (AC-15): تأكيد ← كتابة الكلمة ←
+                // نسخة أمان إجبارية قبل المسح ← حوار نجاح يذكر ملفها.
+                onTap: () => unawaited(
+                  runGuardedWipeFlow(context, context.read<AppController>()),
+                ),
               ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  Future<void> _confirmWipe(BuildContext context, AppLocalizations l10n) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.wipeDialogTitle),
-        content: Text(l10n.wipeDialogBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.wipeConfirmWord),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    if (!context.mounted) return;
-    await context.read<AppController>().wipeAllData();
   }
 }
 

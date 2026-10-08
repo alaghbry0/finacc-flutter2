@@ -476,7 +476,17 @@ class _SecurityStep extends StatelessWidget {
                 ),
         ),
         const SizedBox(height: 18),
-        PinPad(onDigit: vm.addPinDigit, onBackspace: vm.backspacePin),
+        PinPad(
+          onDigit: (digit) {
+            vm.addPinDigit(digit);
+            // إرسال تلقائي عند بلوغ الحد الأقصى (6 خانات) — توحيداً مع
+            // لوحة شاشة القفل (P2-9): نفس سلوك الكاشير في المكانين.
+            if (vm.pinForDots.length == 6) {
+              vm.pinContinuePressed();
+            }
+          },
+          onBackspace: vm.backspacePin,
+        ),
         const SizedBox(height: 22),
         SizedBox(
           width: double.infinity,

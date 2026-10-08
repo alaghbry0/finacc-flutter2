@@ -6,6 +6,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,6 +15,7 @@ import '../../../../domain/models/item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
@@ -73,6 +75,29 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
   bool _controllersReady = false;
   bool _popped = false;
 
+  /// لقطة الحالة ما بعد التحميل — مقارنة التغييرات لحماية المغادرة (P1-4).
+  ItemFormState? _dirtyBaseline;
+
+  /// هل في النموذج تغييرات غير محفوظة؟ (مقارنة الحالة باللقطة؛ بعد الحفظ
+  /// أو قبل التحميل = نظيف).
+  bool get _dirty {
+    final baseline = _dirtyBaseline;
+    if (baseline == null) return false;
+    final state = _vm.state;
+    if (state.saved) return false;
+    return state.name != baseline.name ||
+        state.barcode != baseline.barcode ||
+        state.categoryId != baseline.categoryId ||
+        state.unitId != baseline.unitId ||
+        state.costText != baseline.costText ||
+        state.minStockText != baseline.minStockText ||
+        state.openingQtyText != baseline.openingQtyText ||
+        state.notes != baseline.notes ||
+        state.isService != baseline.isService ||
+        state.trackBatches != baseline.trackBatches ||
+        !mapEquals(state.priceTexts, baseline.priceTexts);
+  }
+
   /// النموذج يُخزَّن حقلاً عند أول بناء — القراءة من context داخل dispose
   /// غير آمنة (عنصر معطّل) وتكسر تفكيك الشجرة في الاختبارات.
   late final ItemFormViewModel _storedVm;
@@ -113,6 +138,7 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
     final state = _vm.state;
     if (!_controllersReady && !state.loading && state.loadError == null) {
       _controllersReady = true;
+      _dirtyBaseline = state;
       _name.text = state.name;
       _barcode.text = state.barcode;
       _cost.text = state.costText;
@@ -159,88 +185,96 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          state.editMode ? l10n.itemFormEditTitle : l10n.itemFormAddTitle,
+    // حماية التغييرات غير المحفوظة (P1-4): الرجوع المباشر يعرض حوار
+    // «مغادرة/بقاء» — القرار الصريح وحده يفتح الباب.
+    return DirtyFormGuard(
+      isDirty: _dirty,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text(
+            state.editMode ? l10n.itemFormEditTitle : l10n.itemFormAddTitle,
+          ),
         ),
-      ),
-      body: state.loading
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
-            )
-          : state.loadError != null
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: [
-                ErrorState(
-                  title: l10n.genericErrorTitle,
-                  message: l10n.dbOpenErrorMessage,
-                  technicalDetails: state.loadError.toString(),
-                  retryLabel: l10n.commonRetry,
-                  onRetry: vm.load,
-                  compact: true,
-                ),
-              ],
-            )
-          : Form(
-              key: _formKey,
-              child: ListView(
+        body: state.loading
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                children: const [ListSkeleton(rows: 6)],
+              )
+            : state.loadError != null
+            ? ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
-                  if (state.editMode) ...[
-                    InfoNoteCard(
-                      icon: Icons.info_rounded,
-                      message: l10n.itemFormEditNote,
-                    ),
-                    const SizedBox(height: 14),
-                  ],
-                  _nameField(l10n),
-                  const SizedBox(height: 14),
-                  _barcodeSection(l10n, state),
-                  const SizedBox(height: 14),
-                  _categoryRow(l10n, state),
-                  const SizedBox(height: 14),
-                  _unitRow(l10n, state),
-                  const SizedBox(height: 14),
-                  _costField(l10n),
-                  const SizedBox(height: 14),
-                  _serviceSwitch(l10n, state),
-                  if (!state.isService) ...[
-                    const SizedBox(height: 14),
-                    _minStockField(l10n),
-                    if (!state.editMode) ...[
-                      const SizedBox(height: 14),
-                      _openingQtyField(l10n),
-                    ],
-                    const SizedBox(height: 14),
-                    _trackBatchesSwitch(l10n, state),
-                  ],
-                  const SizedBox(height: 18),
-                  InventorySectionTitle(
-                    icon: Icons.sell_rounded,
-                    title: l10n.itemFormPricesSection,
+                  ErrorState(
+                    title: l10n.genericErrorTitle,
+                    message: l10n.dbOpenErrorMessage,
+                    technicalDetails: state.loadError.toString(),
+                    retryLabel: l10n.commonRetry,
+                    onRetry: vm.load,
+                    compact: true,
                   ),
-                  const SizedBox(height: 8),
-                  for (final currency in state.currencies)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _priceField(l10n, currency),
-                    ),
-                  _notesField(l10n),
-                  if (state.validationError != null) ...[
-                    const SizedBox(height: 14),
-                    _ValidationErrorBanner(
-                      message: _validationMessage(l10n, state.validationError!),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  _saveButton(l10n, state),
                 ],
+              )
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                  children: [
+                    if (state.editMode) ...[
+                      InfoNoteCard(
+                        icon: Icons.info_rounded,
+                        message: l10n.itemFormEditNote,
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                    _nameField(l10n),
+                    const SizedBox(height: 14),
+                    _barcodeSection(l10n, state),
+                    const SizedBox(height: 14),
+                    _categoryRow(l10n, state),
+                    const SizedBox(height: 14),
+                    _unitRow(l10n, state),
+                    const SizedBox(height: 14),
+                    _costField(l10n),
+                    const SizedBox(height: 14),
+                    _serviceSwitch(l10n, state),
+                    if (!state.isService) ...[
+                      const SizedBox(height: 14),
+                      _minStockField(l10n),
+                      if (!state.editMode) ...[
+                        const SizedBox(height: 14),
+                        _openingQtyField(l10n),
+                      ],
+                      const SizedBox(height: 14),
+                      _trackBatchesSwitch(l10n, state),
+                    ],
+                    const SizedBox(height: 18),
+                    InventorySectionTitle(
+                      icon: Icons.sell_rounded,
+                      title: l10n.itemFormPricesSection,
+                    ),
+                    const SizedBox(height: 8),
+                    for (final currency in state.currencies)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _priceField(l10n, currency),
+                      ),
+                    _notesField(l10n),
+                    if (state.validationError != null) ...[
+                      const SizedBox(height: 14),
+                      _ValidationErrorBanner(
+                        message: _validationMessage(
+                          l10n,
+                          state.validationError!,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    _saveButton(l10n, state),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

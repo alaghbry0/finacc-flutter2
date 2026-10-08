@@ -127,6 +127,12 @@ class StocktakeState {
 }
 
 /// نموذج عرض الجرد الفعلي.
+///
+/// **بقاء المسودة (P0-1a)**: `load()` لا يفرغ الأسطر بعد الآن — إعادة
+/// التحميل لنفس المخزن (تنشيط المسار/عودة من القفل) تُرحّل الأعداد
+/// المُدخلة والتوقيع والملاحظات إلى الأسطر الجديدة وتحدّث البيانات
+/// المرجعية فقط (الأسماء/الدفتري/تكلفة اللقطة)، بينما تبديل المخزن
+/// يفتح كشفاً نظيفاً (العدّ لا ينتقل بين المخازن — قرار موثّق).
 class StocktakeViewModel extends ChangeNotifier {
   StocktakeViewModel({
     required StocktakeRepository stocktakeRepo,
@@ -153,25 +159,44 @@ class StocktakeViewModel extends ChangeNotifier {
   /// المخزن المختار حالياً (يبدأ من المطلوب من المنادي ثم قابل للتبديل).
   int? _selectedWarehouseId;
 
+  /// طلب تبديل مخزن معلّق — التحميل القادم يفتح كشفاً نظيفاً (العدّ لا
+  /// ينتقل بين المخازن) بينما إعادة تحميل نفس المخزن تحفظ المسودة.
+  bool _switchingWarehouse = false;
+
+  /// طلب مسودة نظيفة بعد ترحيل الجرد — الأعداد المُرحَّلة لا تُرحَّل
+  /// للكشف التالي (كانت مطبّقة على الأرصدة).
+  bool _freshDraftPending = false;
+
   /// معرّف المستخدم المنفّذ (created_by وقيد التدقيق).
   int? get userId => _userId;
 
   /// التحميل الكامل: المخازن + المستخدم + العملة الأساسية + كشف الجرد
   /// + السجل. المخزن: المطلوب صراحة، وإلا الافتراضي، وإلا الأول.
+  /// المسودة تُحفظ لنفس المخزن (رأس الملف) — والكشف القائم يبقى ظاهراً
+  /// أثناء التحديث بلا وميض skeleton.
   Future<void> load() async {
+    final resetDraft = _switchingWarehouse || _freshDraftPending;
+    _switchingWarehouse = false;
+    _freshDraftPending = false;
+    final previous = _state;
+    // الكشف القائم يبقى معروضاً أثناء التحديث ما لم نبدّل المخزن أو
+    // نفتح مسودة نظيفة بعد الترحيل — لا وميض skeleton عند كل تنشيط.
+    final keepVisible = !resetDraft && previous.lines.isNotEmpty;
     _state = StocktakeState(
-      loading: true,
-      warehouses: const <StocktakeWarehouse>[],
-      warehouseId: null,
-      warehouseName: null,
-      lines: const <StocktakeLineDraft>[],
-      history: const <StocktakeHistoryRow>[],
-      countedBy: _state.countedBy,
-      countedAt: DateTime.now(),
-      notes: '',
-      query: '',
-      baseCurrencyCode: _state.baseCurrencyCode,
-      baseCurrencyDecimals: _state.baseCurrencyDecimals,
+      loading: !keepVisible,
+      warehouses: keepVisible
+          ? previous.warehouses
+          : const <StocktakeWarehouse>[],
+      warehouseId: keepVisible ? previous.warehouseId : null,
+      warehouseName: keepVisible ? previous.warehouseName : null,
+      lines: keepVisible ? previous.lines : const <StocktakeLineDraft>[],
+      history: keepVisible ? previous.history : const <StocktakeHistoryRow>[],
+      countedBy: previous.countedBy,
+      countedAt: previous.countedAt,
+      notes: previous.notes,
+      query: previous.query,
+      baseCurrencyCode: previous.baseCurrencyCode,
+      baseCurrencyDecimals: previous.baseCurrencyDecimals,
       posting: false,
     );
     notifyListeners();
@@ -189,9 +214,27 @@ class StocktakeViewModel extends ChangeNotifier {
       _userId = adminId;
 
       final warehouse = _resolveWarehouse(warehouses);
-      final lines = warehouse == null
+      // نفس المخزن (بلا طلب تصفير) → الأعداد المُدخلة والتوقيع والملاحظات
+      // تُرحّل إلى الأسطر الجديدة (تحديث مرجعي فقط — لا تصفير للمسودة).
+      final sameWarehouse =
+          !resetDraft &&
+          warehouse != null &&
+          warehouse.id == previous.warehouseId;
+      final carriedCounts = sameWarehouse
+          ? <int, double>{
+              for (final line in previous.lines)
+                if (line.countedQty != null) line.productId: line.countedQty!,
+            }
+          : const <int, double>{};
+      final loaded = warehouse == null
           ? const <StocktakeLineDraft>[]
           : await _stocktakes.loadDraft(warehouse.id);
+      final lines = [
+        for (final line in loaded)
+          carriedCounts.containsKey(line.productId)
+              ? line.withCounted(carriedCounts[line.productId])
+              : line,
+      ];
       final historyRows = warehouse == null
           ? const <StocktakeHistoryRow>[]
           : await _stocktakes.history(warehouseId: warehouse.id);
@@ -204,31 +247,51 @@ class StocktakeViewModel extends ChangeNotifier {
         warehouseName: warehouse?.name,
         lines: lines,
         history: historyRows,
-        countedBy: userName ?? '',
-        countedAt: DateTime.now(),
-        notes: '',
-        query: '',
+        countedBy: sameWarehouse ? previous.countedBy : (userName ?? ''),
+        countedAt: sameWarehouse ? previous.countedAt : DateTime.now(),
+        notes: sameWarehouse ? previous.notes : '',
+        query: sameWarehouse ? previous.query : '',
         baseCurrencyCode: currency?.code ?? '',
         baseCurrencyDecimals: currency?.decimals ?? 2,
         posting: false,
       );
     } catch (error) {
-      _state = StocktakeState(
-        loading: false,
-        warehouses: const <StocktakeWarehouse>[],
-        warehouseId: null,
-        warehouseName: null,
-        lines: const <StocktakeLineDraft>[],
-        history: const <StocktakeHistoryRow>[],
-        countedBy: _state.countedBy,
-        countedAt: _state.countedAt ?? DateTime.now(),
-        notes: _state.notes,
-        query: _state.query,
-        baseCurrencyCode: _state.baseCurrencyCode,
-        baseCurrencyDecimals: _state.baseCurrencyDecimals,
-        posting: false,
-        error: error,
-      );
+      // فشل التحديث فوق كشف قائم: المسودة تبقى محفوظة في الحالة (تظهر
+      // شاشة الخطأ مع إعادة المحاولة — والمسودة تُرحَّل عند نجاحها). فشل
+      // التحميل الأول يُعرض نظيفاً كما كان.
+      _state = keepVisible
+          ? StocktakeState(
+              loading: false,
+              warehouses: previous.warehouses,
+              warehouseId: previous.warehouseId,
+              warehouseName: previous.warehouseName,
+              lines: previous.lines,
+              history: previous.history,
+              countedBy: previous.countedBy,
+              countedAt: previous.countedAt,
+              notes: previous.notes,
+              query: previous.query,
+              baseCurrencyCode: previous.baseCurrencyCode,
+              baseCurrencyDecimals: previous.baseCurrencyDecimals,
+              posting: false,
+              error: error,
+            )
+          : StocktakeState(
+              loading: false,
+              warehouses: const <StocktakeWarehouse>[],
+              warehouseId: null,
+              warehouseName: null,
+              lines: const <StocktakeLineDraft>[],
+              history: const <StocktakeHistoryRow>[],
+              countedBy: previous.countedBy,
+              countedAt: previous.countedAt ?? DateTime.now(),
+              notes: previous.notes,
+              query: previous.query,
+              baseCurrencyCode: previous.baseCurrencyCode,
+              baseCurrencyDecimals: previous.baseCurrencyDecimals,
+              posting: false,
+              error: error,
+            );
     }
     notifyListeners();
   }
@@ -237,6 +300,7 @@ class StocktakeViewModel extends ChangeNotifier {
   Future<void> setWarehouse(int warehouseId) async {
     if (_state.warehouseId == warehouseId || _state.loading) return;
     _selectedWarehouseId = warehouseId;
+    _switchingWarehouse = true;
     await load();
   }
 
@@ -339,6 +403,8 @@ class StocktakeViewModel extends ChangeNotifier {
         lines: counted,
         userId: _userId ?? 0,
       );
+      // الكشف التالي نظيف — الأعداد المُرحّلة طُبّقت على الأرصدة.
+      _freshDraftPending = true;
       await load();
       return Ok<StocktakePosted, String>(
         StocktakePosted(

@@ -379,6 +379,11 @@ class StatementPdfBuilder {
   // -------------------------------------------------------------------
 
   /// سطر «تسمية يميناً : قيمة يساراً» — النمط العربي الأساسي للمعلومات.
+  ///
+  /// القيمة تُرسم RTL **دائماً** (إصلاح UX-audit A2): بلا `textDirection`
+  /// ترسم حزمة pdf العربيةَ (اسم الطرف/الفترة «من … إلى …») بلا تشكيل
+  /// معكوسةً مفككةً، وقد ينهار subsetter الخط حين يجتمع عربي غير مشكل
+  /// بعربي مشكل في نفس المستند.
   pw.Widget _kvLine(String label, String value, {double size = 9.5}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 1.5),
@@ -393,6 +398,7 @@ class StatementPdfBuilder {
                   color: PrintPalette.brandDeep,
                   size: size,
                 ),
+                textDirection: pw.TextDirection.rtl,
               ),
             ),
           ),

@@ -90,6 +90,13 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <!-- pdf.js محلي (إصلاح UX-audit A7 — موجة 1-a): معاينة الطباعة على
+       الويب كانت تكسر بلا شبكة لأن حزمة printing 5.14.3 تجلب pdf.js
+       من unpkg CDN وقت التشغيل. هذا المتغير (dartPdfJsBaseUrl — نفس
+       اسم متغير التجاوز في مصدر الحزمة) يوجهها إلى النسخة المحلية
+       web/pdfjs/ (نفس إصدار الحزمة بالضبط: 3.2.146، والمسار نسبي
+       فيتبع base-href النهائي ويجب أن ينتهي بـ "/"). -->
+  <script>window.dartPdfJsBaseUrl = 'pdfjs/';</script>
   <script src="flutter_bootstrap.js" defer></script>
   <script>
     // إخفاء شاشة الافتتاح فور أول إطار فلاتر.

@@ -326,6 +326,9 @@ class ShiftReportPdfBuilder {
                     pw.Text(
                       value,
                       style: PrintText.head(color: color, size: size),
+                      // قيمة الفرق مختلطة «250 · زيادة» — RTL يرسمها
+                      // بترتيب القراءة العربية الصحيح (إصلاح UX-audit A4).
+                      textDirection: pw.TextDirection.rtl,
                     ),
                     pw.Text(
                       label,
@@ -400,6 +403,10 @@ class ShiftReportPdfBuilder {
   };
 
   /// سطر «تسمية يميناً : قيمة يساراً» — النمط العربي الأساسي.
+  ///
+  /// القيمة تُرسم RTL **دائماً** (إصلاح UX-audit A4): بلا `textDirection`
+  /// ترسم حزمة pdf العربيةَ (الصندوق/المستخدم) بلا تشكيل معكوسةً
+  /// مفككةً، وقد ينهار subsetter الخط حين يجتمع عربي غير مشكل بعربي مشكل.
   pw.Widget _kvLine(String label, String value, {double size = 9.5}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 1.5),
@@ -414,6 +421,7 @@ class ShiftReportPdfBuilder {
                   color: PrintPalette.brandDeep,
                   size: size,
                 ),
+                textDirection: pw.TextDirection.rtl,
               ),
             ),
           ),

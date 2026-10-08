@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/core/result.dart';
+import '../../../../domain/models/party.dart';
 import '../../../../domain/models/sale.dart';
 import '../../../../domain/services/credit_limit.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -26,10 +28,13 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../view_models/customer_picker_view_model.dart';
+import '../view_models/print_on_save.dart';
 import '../view_models/sell_cart_session.dart';
 import '../view_models/sell_cart_view_model.dart';
 import 'widgets/customer_picker_sheet.dart';
 import 'widgets/fx_rate_gate_sheet.dart';
+import 'widgets/invoice_pdf_preview.dart';
 import 'widgets/item_picker_sheet.dart';
 import 'widgets/payment_sheet.dart';
 import 'widgets/sell_widgets.dart';
@@ -70,22 +75,27 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
   bool _fxGateOpen = false;
   bool _noticeShown = false;
 
+  /// النموذج يُخزَّن حقلاً — قراءة context داخل dispose غير آمنة (عنصر
+  /// معطّل) وتكسر تفكيك الشجرة عند مغادرة الكاشير (أصل استثناءHero
+  /// أثناء الرجوع من /sell/new).
+  late final SellCartViewModel _vm;
+
   @override
   void initState() {
     super.initState();
-    final vm = context.read<SellCartViewModel>();
-    vm.addListener(_onCartChanged);
+    _vm = context.read<SellCartViewModel>();
+    _vm.addListener(_onCartChanged);
   }
 
   @override
   void dispose() {
-    context.read<SellCartViewModel>().removeListener(_onCartChanged);
+    _vm.removeListener(_onCartChanged);
     super.dispose();
   }
 
   /// ردود الفعل للحالات العابرة: بوابة FX (FR-08-09) وإشعارات الباركود.
   void _onCartChanged() {
-    final vm = context.read<SellCartViewModel>();
+    final vm = _vm;
     final state = vm.state;
     if (state.fxGateRequired && !_fxGateOpen) {
       final currency = state.selectedCurrency;
@@ -134,6 +144,45 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       onPick: (pick) =>
           vm.setCustomer(id: pick.partyId, name: pick.name, phone: pick.phone),
       onCashCustomer: vm.setCashCustomer,
+      // P1-3: عميل جديد سريع داخل المنتقي — ينشئ طرفاً بحد أدنى من
+      // الحقول (اسم + هاتف، بلا رصيد افتتاحي) ويعيده مختاراً للسلة.
+      onCreateCustomer: (name, phone) =>
+          _createQuickCustomer(app, vm, name, phone),
+    );
+  }
+
+  /// ينشئ عميلاً جديداً من المنتقي (P1-3) — بعملة السلة للعرض ورصيد
+  /// صفري (لا افتتاحي)؛ الفشل يُعاد للعرض داخل النموذج المصغّر.
+  Future<Result<CustomerPick, String>> _createQuickCustomer(
+    AppController app,
+    SellCartViewModel vm,
+    String name,
+    String? phone,
+  ) async {
+    final customers = app.customers;
+    final companies = app.companies;
+    if (customers == null || companies == null) {
+      return const Err<CustomerPick, String>(
+        'المستودعات غير جاهزة — أعد فتح الشاشة ثم حاول.',
+      );
+    }
+    final userId = (await companies.findAdminUserId()) ?? 1;
+    final result = await customers.createCustomer(
+      CustomerDraft(name: name, phone: phone),
+      userId: userId,
+    );
+    if (result.isErr) {
+      return Err<CustomerPick, String>(result.errorOrNull!);
+    }
+    return Ok<CustomerPick, String>(
+      CustomerPick(
+        partyId: result.valueOrNull!,
+        name: name,
+        phone: (phone ?? '').isEmpty ? null : phone,
+        currencyCode: vm.state.baseCurrency?.code ?? '',
+        balance: 0,
+        hasMoreCurrencies: false,
+      ),
     );
   }
 
@@ -157,6 +206,11 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
     final state = vm.state;
     final priced = vm.pricedCart;
     if (priced == null) return;
+    // P0-2: استهلاك invoicing.print_on_save (نمط بوابة الائتمان — قراءة
+    // لحظة فتح نافذة الدفع): ask = أزرار، always = معاينة تلقائية، off = إخفاء.
+    final printMode = await resolvePrintOnSave(app.settings);
+    if (!mounted) return;
+    final sales = app.sales;
     final posted = await showPaymentSheet(
       context,
       grandTotal: priced.totals.grandTotal,
@@ -168,6 +222,15 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       // FR-03-05 (17-c): بوابة حد الائتمان — تُجلب لحظة التأكيد من
       // المستودع (الحد + الرصيد الحي بعملة الفاتورة) والإعداد.
       creditGate: () => _resolveCreditGate(app, vm),
+      // P0-2: فتح معاينة PDF للفاتورة المرحّلة (نمط زر PDF القائم).
+      printOnSave: printMode,
+      openInvoicePreview: sales == null
+          ? null
+          : (receipt) => openInvoicePdfPreview(
+              context,
+              saleRepo: sales,
+              invoiceId: receipt.invoiceId,
+            ),
     );
     if (posted) {
       vm.dismissReceipt();
@@ -857,7 +920,11 @@ class _BottomBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
+              // Wrap لا Row: زرا «إضافة صنف/خصم الفاتورة» يلتفان لسطر ثانٍ
+              // عند الشاشات الضيقة أو خطوط أعرض بدل فيض أفقي.
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   SizedBox(
                     height: 48,
@@ -870,7 +937,6 @@ class _BottomBar extends StatelessWidget {
                       label: Text(l10n.sellAddItem),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   SizedBox(
                     height: 48,
                     child: OutlinedButton.icon(

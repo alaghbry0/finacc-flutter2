@@ -193,9 +193,9 @@ class _DashboardBody extends StatelessWidget {
                     children: [
                       SectionHeader(title: l10n.dashboardQuickAccess),
                       const SizedBox(height: 10),
-                      // أربعة بلاطات مباشرة (طلب صاحب المشروع): العملاء
-                      // والموردون من الواجهة الأولى — لا يضطر الباحث عن
-                      // «صفحات العملاء» لمعرفة أن الأطراف تعنيهم.
+                      // ست بلاطات مباشرة على صفين (طلب صاحب المشروع +
+                      // إصلاح البنية): الأطراف من الواجهة الأولى، و**بلاطة
+                      // المشتريات** التي كانت مدفونة داخل محور البيع فقط.
                       Row(
                         children: [
                           Expanded(
@@ -222,6 +222,20 @@ class _DashboardBody extends StatelessWidget {
                               label: l10n.partiesHubSuppliers,
                               color: scheme.tertiary,
                               onTap: () => context.go('/parties/suppliers'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _QuickAccessTile(
+                              key: const Key('home_purchases_tile'),
+                              icon: Icons.shopping_cart_rounded,
+                              label: l10n.purHomeTitle,
+                              color: colors.gold,
+                              onTap: () => context.go('/purchases'),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -863,6 +877,7 @@ class _BackupReminderBanner extends StatelessWidget {
 
 class _QuickAccessTile extends StatelessWidget {
   const _QuickAccessTile({
+    super.key,
     required this.icon,
     required this.label,
     required this.color,

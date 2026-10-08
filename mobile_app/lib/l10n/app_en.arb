@@ -1429,5 +1429,37 @@
   "reportsSectionFlows": "Inventory & Sales Flows",
   "reportsItemMovementDesc": "Full item card with running balance per movement",
   "reportsStockSummaryDesc": "In/out/returns/adjustments per item with stock value",
-  "reportsSalesByDesc": "Customer/category/item/day with change vs previous period"
+  "reportsSalesByDesc": "Customer/category/item/day with change vs previous period",
+  "sellFixPrintInvoice": "Print invoice",
+  "sellFixShareInvoice": "Share / WhatsApp",
+  "sellFixPrintAndNewInvoice": "Print + new invoice",
+  "sellFixClose": "Close",
+  "sellFixPrintLoadFailed": "Couldn't load the invoice for printing — try again from the invoices list.",
+  "sellFixDetailReturnAction": "Return against this invoice",
+  "sellFixNewCustomer": "New customer",
+  "sellFixNewCustomerTitle": "Quick new customer",
+  "sellFixNewCustomerNameLabel": "Customer name",
+  "sellFixNewCustomerPhoneLabel": "Phone (optional)",
+  "sellFixNewCustomerNameRequired": "Customer name is required.",
+  "sellFixNewCustomerSave": "Add & select"
+,
+  "appFixUnsavedTitle": "Unsaved changes",
+  "appFixUnsavedBody": "You have unsaved changes — leaving now will discard them. Leave without saving?",
+  "appFixUnsavedLeave": "Leave",
+  "appFixUnsavedStay": "Stay",
+  "appFixWipeBackupFailedTitle": "Safety backup failed",
+  "appFixWipeBackupFailedBody": "The automatic pre-wipe backup failed, so no data was wiped. Try again, or continue without a final backup if you are sure.",
+  "appFixWipeProceedNoBackup": "Continue without backup",
+  "appFixWipeSafetyBackupAt": "An automatic safety backup was created before wiping: {fileName}",
+  "pdfFixPageIndicator": "Page {page} of {total}",
+  "@pdfFixPageIndicator": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }
