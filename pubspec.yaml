@@ -2,7 +2,7 @@ name: mobile_app
 description: "FinAcc — المُحاسِب الشخصي: نظام محاسبي ومخزون متكامل (SRS v1.5)"
 publish_to: 'none'
 
-version: 0.1.0+1
+version: 0.7.0+7
 
 environment:
   sdk: ^3.13.5
@@ -47,15 +47,34 @@ dependencies:
   printing: ^5.14.3
   url_launcher: ^6.3.3
 
-# ── منهجية التحقق (قرار صاحب المشروع) ──
-# لا اختبارات وحدات في هذا المستودع: البوابة الوحيدة للجودة أثناء التطوير
-# هي analyze 0/0 + بناء المعاينة + التحقق الحي من المتصفح (انظر AGENTS.md §4-7).
-# flutter_test وsqflite_common_ffi أُزيلت مع مجلد test/ (قابلة للاستعادة من git).
+  # ── النسخ الاحتياطي والاستعادة (الشريحة 8 — وحدة 11) ──
+  # ضغط ZIP للنسخة (.finbak = zip: manifest.json + finacc.db) — archive
+  # خالص Dart بلا كود أصلي (آمن لقيود NDK/القرص 10GB).
+  # ^3.6.1 لأن excel 4.0.6 (استيراد الأصناف) يقيد archive بـ 3.x.
+  archive: ^3.6.1
+  # مشاركة ملف النسخة عبر نظام التشغيل (FR-11-08 — واتساب/درايف/بلوتوث)
+  # وبديل الحفظ في Downloads — Java فقط بلا NDK.
+  share_plus: ^13.3.1
+
+# ── قيد البيئة: NDK ──
+# path_provider_android 2.3.x تعتمد على حزمة jni ذات كود C++ أصلي (CMake/NDK)
+# — وتنزيل NDK (~4GB) غير ممكن على قرص 10GB ويُمحى مع كل إعادة تشغيل للـ sandbox.
+# الإصدار 2.2.17 (MethodChannel المجرب) يقدم نفس API حرفياً بلا كود أصلي.
+# يُزال هذا القيد عند توفر قرص أكبر أو توفير jni ثنائيات جاهزة.
+dependency_overrides:
+  path_provider_android: 2.2.17
+
+# ── منهجية التحقق (حزام مزدوج منذ الجولة 14) ──
+# البوابات: analyze 0/0 + flutter test (414+) + بناء المعاينة + التحقق الحي
+# من المتصفح (انظر AGENTS.md §4-7). مجلد test/ مسترد ومؤمّن في git.
 dev_dependencies:
   flutter_test:
     sdk: flutter
   # Recommended lint set activated in analysis_options.yaml
   flutter_lints: ^6.0.0
+  # اختبارات القاعدة عبر FFI (نفس محرك التطبيق) — كانت تبعية عابرة فقط،
+  # أُعلنت صراحة لتصريف depend_on_referenced_packages في ملفات الاختبار.
+  sqflite_common_ffi: ^2.3.0
 
 flutter:
   uses-material-design: true

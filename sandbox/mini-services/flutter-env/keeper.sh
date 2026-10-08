@@ -8,6 +8,9 @@
 #   2. Flutter SDK 3.47.6 (stable)
 #   3. Linux desktop toolchain (clang / cmake / ninja / GTK3 dev)
 #   4. Android SDK (cmdline-tools + platform 36 + build-tools 36)
+#   4b. Temurin JDK 21 (النظام يوفر JRE فقط — بلا javac)
+#   4c. علامة NDK الوهمية (تمنع flutter-gradle-plugin من تنزيل NDK بـ4GB
+#       على قرص 10GB — التطبيق بلا كود أصلي بعد تثبيت path_provider_android 2.2.17)
 #
 # It runs automatically at every boot via .zscripts/dev.sh → mini-services/.
 # Safe to re-run manually at any time.
@@ -19,10 +22,12 @@ FLUTTER_ROOT="/home/z/flutter"
 FLUTTER_BIN="$FLUTTER_ROOT/bin/flutter"
 SYSROOT="/home/z/opt/sysroot"
 ANDROID_SDK="/home/z/android-sdk"
+JDK_DIR="/home/z/opt/jdk21"
 FLUTTER_VERSION="3.47.6"
 CMDTOOLS_VERSION="13114758"
 ANDROID_PLATFORM="android-36"
 ANDROID_BUILD_TOOLS="36.0.0"
+NDK_STUB_VERSION="28.2.13676358"
 JAVA_HOME_DIR="/usr/lib/jvm/java-21-openjdk-amd64"
 say() { echo "[flutter-env] $*"; }
 
@@ -108,12 +113,77 @@ else
   say "Android SDK present."
 fi
 
+# --- 4b. Temurin JDK 21 (javac) ------------------------------------------------
+if [ ! -x "$JDK_DIR/bin/javac" ]; then
+  say "Temurin JDK 21 missing — downloading..."
+  mkdir -p "$JDK_DIR"
+  if curl -sfL -o /tmp/temurin21.tar.gz \
+    "https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse"; then
+    tar -xzf /tmp/temurin21.tar.gz -C "$JDK_DIR" --strip-components=1
+    rm -f /tmp/temurin21.tar.gz
+    say "Temurin JDK 21 installed at $JDK_DIR"
+  else
+    say "ERROR: Temurin JDK download failed — builds will fall back to system JRE (no javac!)."
+  fi
+else
+  say "Temurin JDK 21 present."
+fi
+
+# --- 4d. binutils-multiarch (تجريد .so عبر المعماريات) ---------------------------
+# llvm-strip/llvm-objcopy يُستدعيان من مسار NDK أعلاه، وstrip النظام أحادي الهدف
+# (x86 فقط) — فنثبّت binutils-multiarch ونغلفهما إليه.
+MULTIARCH_DIR="/home/z/opt/binutils-multiarch"
+if [ ! -x "$MULTIARCH_DIR/usr/bin/x86_64-linux-gnu-strip" ]; then
+  say "binutils-multiarch missing — downloading..."
+  mkdir -p "$MULTIARCH_DIR" /tmp/multiarch-dl
+  if (cd /tmp/multiarch-dl && apt-get download binutils-multiarch >/dev/null 2>&1); then
+    dpkg -x /tmp/multiarch-dl/binutils-multiarch_*.deb "$MULTIARCH_DIR"
+    rm -rf /tmp/multiarch-dl
+    say "binutils-multiarch installed at $MULTIARCH_DIR"
+  else
+    say "ERROR: binutils-multiarch download failed — release strip will fail."
+  fi
+else
+  say "binutils-multiarch present."
+fi
+
+# --- 4c. NDK stub marker (يمنع تنزيل NDK ~4GB) ---------------------------------
+# flutter-gradle-plugin يفرض تنزيل NDK ما لم يجد الإصدار "مثبتاً" في
+# ANDROID_HOME/ndk — والتطبيق بلا كود أصلي (تثبيت path_provider_android 2.2.17
+# عبر dependency_overrides في pubspec). العلامة تكفي لتحقق forceNdkDownload،
+# ومهمة stripReleaseDebugSymbols تستدعي llvm-strip من نفس المسار — نوفر غلافاً
+# يحوّل إلى GNU strip المتوافق (يجرد ELF لأي معمارية).
+NDK_STUB_DIR="$ANDROID_SDK/ndk/$NDK_STUB_VERSION"
+if [ ! -f "$NDK_STUB_DIR/source.properties" ]; then
+  mkdir -p "$NDK_STUB_DIR"
+  printf 'Pkg.Desc = Android NDK (sandbox stub — app has no native code)\nPkg.Revision = %s\n' \
+    "$NDK_STUB_VERSION" > "$NDK_STUB_DIR/source.properties"
+  say "NDK stub marker created ($NDK_STUB_VERSION)."
+else
+  say "NDK stub marker present."
+fi
+NDK_STRIP_DIR="$NDK_STUB_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin"
+mkdir -p "$NDK_STRIP_DIR"
+MULTIARCH_LIB="$MULTIARCH_DIR/usr/lib/x86_64-linux-gnu"
+for tool in strip objcopy; do
+  if [ ! -x "$NDK_STRIP_DIR/llvm-$tool" ] && [ -x "$MULTIARCH_DIR/usr/bin/x86_64-linux-gnu-$tool" ]; then
+    printf '#!/bin/bash\nexport LD_LIBRARY_PATH="%s${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec %s/usr/bin/x86_64-linux-gnu-%s "$@"\n' \
+      "$MULTIARCH_LIB" "$MULTIARCH_DIR" "$tool" > "$NDK_STRIP_DIR/llvm-$tool"
+    chmod +x "$NDK_STRIP_DIR/llvm-$tool"
+    say "llvm-$tool wrapper (→ binutils-multiarch) created."
+  fi
+done
+
 # --- 5. Flutter configuration ---------------------------------------------------
 # Source the full env (PATH, LD_LIBRARY_PATH, PKG_CONFIG_PATH, CHROME, ...) so
 # that `flutter doctor` and subsequent builds see the complete toolchain.
 # shellcheck source=env.sh
 source "$KEEPER_DIR/env.sh"
-export JAVA_HOME="$JAVA_HOME_DIR"
+if [ -x "$JDK_DIR/bin/javac" ]; then
+  export JAVA_HOME="$JDK_DIR"
+else
+  export JAVA_HOME="$JAVA_HOME_DIR"
+fi
 export ANDROID_HOME="$ANDROID_SDK"
 
 "$FLUTTER_BIN" config --android-sdk "$ANDROID_SDK" >/dev/null 2>&1

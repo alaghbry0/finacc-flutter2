@@ -32,10 +32,7 @@ void main() {
 
   group('validateCart', () {
     test('سلة فارغة → خطأ', () {
-      expect(
-        PurchasePricing.validateCart([]),
-        contains('بنداً واحداً'),
-      );
+      expect(PurchasePricing.validateCart([]), contains('بنداً واحداً'));
     });
 
     test('كمية ≤ 0 → خطأ يسمّي البند', () {
@@ -82,10 +79,9 @@ void main() {
 
     test('الخصومات تجعل الصافي صفراً → خطأ (FR-02-05)', () {
       expect(
-        PurchasePricing.validateCart(
-          [line(1, 1, 100)],
-          invoiceDiscountValue: 100,
-        ),
+        PurchasePricing.validateCart([
+          line(1, 1, 100),
+        ], invoiceDiscountValue: 100),
         contains('صفراً أو سالباً'),
       );
     });
@@ -134,10 +130,10 @@ void main() {
 
   group('توزيع خصم الرأس pro-rata (قاعدة 5.4-3)', () {
     test('بمبلغ: 60/40 على سطرين قيمتهما 600 و400 — Σ الموزَّع = 100', () {
-      final priced = PurchasePricing.priceCart(
-        [line(1, 6, 100), line(2, 4, 100)],
-        invoiceDiscountValue: 100,
-      );
+      final priced = PurchasePricing.priceCart([
+        line(1, 6, 100),
+        line(2, 4, 100),
+      ], invoiceDiscountValue: 100);
       expect(priced.lines[0].invoiceDiscountAllocated, 60);
       expect(priced.lines[1].invoiceDiscountAllocated, 40);
       expect(
@@ -167,10 +163,11 @@ void main() {
     test('توزيع غير قابل للقسمة: القرش الأخير يستقر في آخر سطر موجب', () {
       // ثلاثة أسطر 333/333/334 ومجموعها 1000 وخصم 100 → حصص 33.3/33.3
       // والباقي 33.4 لآخر سطر.
-      final priced = PurchasePricing.priceCart(
-        [line(1, 333, 1), line(2, 333, 1), line(3, 334, 1)],
-        invoiceDiscountValue: 100,
-      );
+      final priced = PurchasePricing.priceCart([
+        line(1, 333, 1),
+        line(2, 333, 1),
+        line(3, 334, 1),
+      ], invoiceDiscountValue: 100);
       expect(priced.lines[0].invoiceDiscountAllocated, 33.3);
       expect(priced.lines[1].invoiceDiscountAllocated, 33.3);
       expect(priced.lines[2].invoiceDiscountAllocated, 33.4);
@@ -190,10 +187,10 @@ void main() {
     });
 
     test('خصم يطابق صافي الأسطر كاملاً → كل سطر يصفر', () {
-      final priced = PurchasePricing.priceCart(
-        [line(1, 1, 600), line(2, 1, 400)],
-        invoiceDiscountValue: 1000,
-      );
+      final priced = PurchasePricing.priceCart([
+        line(1, 1, 600),
+        line(2, 1, 400),
+      ], invoiceDiscountValue: 1000);
       expect(priced.totals.grandTotal, 0);
       expect(priced.lines[0].invoiceDiscountAllocated, 600);
       expect(priced.lines[1].invoiceDiscountAllocated, 400);
@@ -202,18 +199,14 @@ void main() {
   });
 
   group('دمج خصم السطر مع خصم الرأس', () {
-    test('خصم سطر نسبة + خصم رأس مبلغ — التوزيع على الصافي بعد خصم السطر',
-        () {
+    test('خصم سطر نسبة + خصم رأس مبلغ — التوزيع على الصافي بعد خصم السطر', () {
       // السطر أ: 10×100 بخصم سطر 10% → صافي 900؛ السطر ب: 5×100 → 500.
       // خصم رأس 200 → أ: 200×900/1400 = 128.57، ب: 71.43 (القرش الأخير
       // يستقر في آخر سطر موجب: 200 − 128.57 = 71.43).
-      final priced = PurchasePricing.priceCart(
-        [
-          line(1, 10, 100, type: PurchaseDiscountType.percent, discount: 10),
-          line(2, 5, 100),
-        ],
-        invoiceDiscountValue: 200,
-      );
+      final priced = PurchasePricing.priceCart([
+        line(1, 10, 100, type: PurchaseDiscountType.percent, discount: 10),
+        line(2, 5, 100),
+      ], invoiceDiscountValue: 200);
       expect(priced.totals.subtotal, 1500);
       expect(priced.totals.lineDiscountsTotal, 100);
       expect(priced.lines[0].netAfterLineDiscount, 900);
@@ -237,27 +230,15 @@ void main() {
   group('validatePayment / settlePayment (FR-02-03 باتجاه الشراء)', () {
     test('نقدي كامل/آجل/مختلط تُقبل عند التطابق', () {
       expect(
-        PurchasePricing.validatePayment(
-          1000,
-          1000,
-          PurchasePaymentMethod.cash,
-        ),
+        PurchasePricing.validatePayment(1000, 1000, PurchasePaymentMethod.cash),
         isNull,
       );
       expect(
-        PurchasePricing.validatePayment(
-          1000,
-          0,
-          PurchasePaymentMethod.credit,
-        ),
+        PurchasePricing.validatePayment(1000, 0, PurchasePaymentMethod.credit),
         isNull,
       );
       expect(
-        PurchasePricing.validatePayment(
-          1000,
-          400,
-          PurchasePaymentMethod.mixed,
-        ),
+        PurchasePricing.validatePayment(1000, 400, PurchasePaymentMethod.mixed),
         isNull,
       );
     });
@@ -274,11 +255,7 @@ void main() {
 
     test('تعارض التعلان مع الأرقام → رسالة تسمّي المطلوب', () {
       expect(
-        PurchasePricing.validatePayment(
-          1000,
-          400,
-          PurchasePaymentMethod.cash,
-        ),
+        PurchasePricing.validatePayment(1000, 400, PurchasePaymentMethod.cash),
         contains('تسديد الصافي كاملاً'),
       );
       expect(
