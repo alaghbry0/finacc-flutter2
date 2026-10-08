@@ -205,6 +205,17 @@ class _HubCard extends StatelessWidget {
           _HubDivider(),
           _HubRow(
             index: 4,
+            icon: Icons.checklist_rounded,
+            titleKey: (l10n) => l10n.stocktakeTitle,
+            subtitleKey: (l10n) => l10n.reportsStocktakeDesc,
+            color: FinColors.of(context).gold,
+            badgeCount: null,
+            badgeColor: null,
+            onTap: () => context.go('/inventory/stocktake'),
+          ),
+          _HubDivider(),
+          _HubRow(
+            index: 5,
             icon: Icons.upload_file_rounded,
             titleKey: (l10n) => l10n.inventoryHubImport,
             subtitleKey: (l10n) => l10n.inventoryHubImportDesc,
@@ -215,7 +226,7 @@ class _HubCard extends StatelessWidget {
           ),
           _HubDivider(),
           _HubRow(
-            index: 5,
+            index: 6,
             icon: Icons.category_rounded,
             titleKey: (l10n) => l10n.inventoryHubCategoriesUnits,
             subtitleKey: (l10n) => l10n.inventoryHubCategoriesUnitsDesc,

@@ -5977,6 +5977,1883 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account statement for {party} — closing balance {balance}'**
   String printingShareMessageStatement(Object balance, Object party);
+
+  /// No description provided for @backupScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupScreenTitle;
+
+  /// No description provided for @backupWebPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Web preview'**
+  String get backupWebPreviewTitle;
+
+  /// No description provided for @backupWebPreviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This preview keeps its data inside your browser. Actual file backup — creating, restoring, and sharing — is available in the Android app.'**
+  String get backupWebPreviewBody;
+
+  /// No description provided for @backupLastBackupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful backup'**
+  String get backupLastBackupLabel;
+
+  /// No description provided for @backupLastNever.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup yet'**
+  String get backupLastNever;
+
+  /// No description provided for @backupSavedCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored backups'**
+  String get backupSavedCountLabel;
+
+  /// No description provided for @backupCreateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up now'**
+  String get backupCreateNow;
+
+  /// No description provided for @backupCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating backup…'**
+  String get backupCreating;
+
+  /// No description provided for @backupCreateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One dated, compressed file stored in the app\'s backups folder'**
+  String get backupCreateHint;
+
+  /// No description provided for @backupCreateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup created: {fileName}'**
+  String backupCreateSuccess(String fileName);
+
+  /// No description provided for @backupCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the backup'**
+  String get backupCreateFailed;
+
+  /// No description provided for @backupScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic schedule'**
+  String get backupScheduleTitle;
+
+  /// No description provided for @backupScheduleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A silent backup runs when you open the app once the interval has passed'**
+  String get backupScheduleDesc;
+
+  /// No description provided for @backupScheduleDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get backupScheduleDaily;
+
+  /// No description provided for @backupScheduleWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get backupScheduleWeekly;
+
+  /// No description provided for @backupScheduleOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get backupScheduleOff;
+
+  /// No description provided for @backupRetentionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Retention'**
+  String get backupRetentionTitle;
+
+  /// No description provided for @backupRetentionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the last {count} backups and deletes older ones automatically'**
+  String backupRetentionDesc(int count);
+
+  /// No description provided for @backupLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup history'**
+  String get backupLogTitle;
+
+  /// No description provided for @backupLogEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No backups yet'**
+  String get backupLogEmptyTitle;
+
+  /// No description provided for @backupLogEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first backup with one tap — a single file that holds all your data.'**
+  String get backupLogEmptyBody;
+
+  /// No description provided for @backupKindManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get backupKindManual;
+
+  /// No description provided for @backupKindAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get backupKindAuto;
+
+  /// No description provided for @backupKindSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety (before restore)'**
+  String get backupKindSafety;
+
+  /// No description provided for @backupKindGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupKindGeneric;
+
+  /// No description provided for @backupStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get backupStatusOk;
+
+  /// No description provided for @backupStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get backupStatusFailed;
+
+  /// No description provided for @backupFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'File deleted'**
+  String get backupFileMissing;
+
+  /// No description provided for @backupRestoreTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this backup'**
+  String get backupRestoreTooltip;
+
+  /// No description provided for @backupShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the file'**
+  String get backupShareTooltip;
+
+  /// No description provided for @backupRestoreFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from external file'**
+  String get backupRestoreFromFile;
+
+  /// No description provided for @backupRestoreFromFileDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a .finbak file you received via sharing or a manual copy'**
+  String get backupRestoreFromFileDesc;
+
+  /// No description provided for @backupSizeKb.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} KB'**
+  String backupSizeKb(String value);
+
+  /// No description provided for @backupSizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} MB'**
+  String backupSizeMb(String value);
+
+  /// No description provided for @backupShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the file'**
+  String get backupShareFailed;
+
+  /// No description provided for @backupSettingSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the setting'**
+  String get backupSettingSaveFailed;
+
+  /// No description provided for @backupRestoreDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get backupRestoreDialogTitle;
+
+  /// No description provided for @backupRestoreWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will replace ALL current data with the backup\'s data. A safety copy of your current data is created automatically before the replacement.'**
+  String get backupRestoreWarnBody;
+
+  /// No description provided for @backupRestoreConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace data'**
+  String get backupRestoreConfirm;
+
+  /// No description provided for @backupRestoreRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring…'**
+  String get backupRestoreRunning;
+
+  /// No description provided for @backupRestoreSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore completed'**
+  String get backupRestoreSuccessTitle;
+
+  /// No description provided for @backupRestoreSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup\'s data is back in the app. You will now be asked for that backup\'s PIN.'**
+  String get backupRestoreSuccessBody;
+
+  /// No description provided for @backupRestoreFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed'**
+  String get backupRestoreFailedTitle;
+
+  /// No description provided for @backupRestoreClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get backupRestoreClose;
+
+  /// No description provided for @backupInspectFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get backupInspectFile;
+
+  /// No description provided for @backupInspectCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup date'**
+  String get backupInspectCreated;
+
+  /// No description provided for @backupInspectSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get backupInspectSize;
+
+  /// No description provided for @backupInspectSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Schema version'**
+  String get backupInspectSchema;
+
+  /// No description provided for @backupInspectChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint (SHA-256)'**
+  String get backupInspectChecksum;
+
+  /// No description provided for @backupInspectKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get backupInspectKind;
+
+  /// No description provided for @backupErrNotFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file is not a valid FinAcc backup (.finbak).'**
+  String get backupErrNotFile;
+
+  /// No description provided for @backupErrChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity check failed — the file is corrupted or was modified after creation.'**
+  String get backupErrChecksum;
+
+  /// No description provided for @backupErrNewerSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup uses a newer schema (v{fileVersion}) than this app (v{appVersion}) — update the app first.'**
+  String backupErrNewerSchema(int fileVersion, int appVersion);
+
+  /// No description provided for @backupErrSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the safety backup before restoring — the operation was cancelled and your data is untouched.'**
+  String get backupErrSafety;
+
+  /// No description provided for @backupErrOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the restored database — your current data was restored as it was.'**
+  String get backupErrOpenFailed;
+
+  /// No description provided for @backupErrUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore is available in the Android app only.'**
+  String get backupErrUnsupported;
+
+  /// No description provided for @backupBannerAutoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'An automatic backup was created successfully at {time}'**
+  String backupBannerAutoDone(String time);
+
+  /// No description provided for @backupBannerAutoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic backup failed — create one manually from settings.'**
+  String get backupBannerAutoFailed;
+
+  /// No description provided for @backupBannerWebDue.
+  ///
+  /// In en, this message translates to:
+  /// **'A backup is due — full backup features are in the Android app.'**
+  String get backupBannerWebDue;
+
+  /// No description provided for @backupBannerOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get backupBannerOpen;
+
+  /// No description provided for @settingsBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get settingsBackupTitle;
+
+  /// No description provided for @settingsBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap local backup, scheduling, restore, and sharing'**
+  String get settingsBackupDesc;
+
+  /// No description provided for @settingsAboutDbSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Database size: {size}'**
+  String settingsAboutDbSize(String size);
+
+  /// No description provided for @shiftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift'**
+  String get shiftTitle;
+
+  /// No description provided for @shiftOpenNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No open shift'**
+  String get shiftOpenNoneTitle;
+
+  /// No description provided for @shiftOpenNoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the shift by entering the box opening count, then track sales and collections until you close it with the comprehensive equation.'**
+  String get shiftOpenNoneBody;
+
+  /// No description provided for @shiftOpeningCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening count'**
+  String get shiftOpeningCountLabel;
+
+  /// No description provided for @shiftOpenButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open shift'**
+  String get shiftOpenButton;
+
+  /// No description provided for @shiftInvalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number (zero or more).'**
+  String get shiftInvalidAmount;
+
+  /// No description provided for @shiftLiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open shift'**
+  String get shiftLiveTitle;
+
+  /// No description provided for @shiftOpenedAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened at'**
+  String get shiftOpenedAtLabel;
+
+  /// No description provided for @shiftRunningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In so far'**
+  String get shiftRunningIn;
+
+  /// No description provided for @shiftRunningOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out so far'**
+  String get shiftRunningOut;
+
+  /// No description provided for @shiftExpectedSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected so far'**
+  String get shiftExpectedSoFar;
+
+  /// No description provided for @shiftAutoRefreshNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-refreshes every 30 seconds'**
+  String get shiftAutoRefreshNote;
+
+  /// No description provided for @shiftCloseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Close shift'**
+  String get shiftCloseButton;
+
+  /// No description provided for @shiftHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent shifts'**
+  String get shiftHistoryTitle;
+
+  /// No description provided for @shiftHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No closed shifts yet — close your first shift to see its report here.'**
+  String get shiftHistoryEmpty;
+
+  /// No description provided for @shiftCountedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted amount'**
+  String get shiftCountedLabel;
+
+  /// No description provided for @shiftCountedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount actually counted in the box right now'**
+  String get shiftCountedHint;
+
+  /// No description provided for @shiftExpectedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get shiftExpectedLabel;
+
+  /// No description provided for @shiftDifferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get shiftDifferenceLabel;
+
+  /// No description provided for @shiftSurplus.
+  ///
+  /// In en, this message translates to:
+  /// **'Surplus'**
+  String get shiftSurplus;
+
+  /// No description provided for @shiftDeficit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deficit'**
+  String get shiftDeficit;
+
+  /// No description provided for @shiftMatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched'**
+  String get shiftMatched;
+
+  /// No description provided for @shiftNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get shiftNotesLabel;
+
+  /// No description provided for @shiftNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — e.g. the reason for a surplus or deficit'**
+  String get shiftNotesHint;
+
+  /// No description provided for @shiftConfirmClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm closing'**
+  String get shiftConfirmClose;
+
+  /// No description provided for @shiftCloseSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift closed'**
+  String get shiftCloseSuccessTitle;
+
+  /// No description provided for @shiftEquationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Comprehensive equation breakdown'**
+  String get shiftEquationTitle;
+
+  /// No description provided for @shiftChequesDeferredNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheques are deferred to v1.1 — shown as zero in the equation.'**
+  String get shiftChequesDeferredNote;
+
+  /// No description provided for @shiftCompCashSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash sales'**
+  String get shiftCompCashSales;
+
+  /// No description provided for @shiftCompCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get shiftCompCollections;
+
+  /// No description provided for @shiftCompOwnerDeposits.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner deposits'**
+  String get shiftCompOwnerDeposits;
+
+  /// No description provided for @shiftCompTransfersIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers & deposits in'**
+  String get shiftCompTransfersIn;
+
+  /// No description provided for @shiftCompBankIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank deposits in'**
+  String get shiftCompBankIn;
+
+  /// No description provided for @shiftCompChequesCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheques cleared'**
+  String get shiftCompChequesCleared;
+
+  /// No description provided for @shiftCompSupplierPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier payments'**
+  String get shiftCompSupplierPayments;
+
+  /// No description provided for @shiftCompExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get shiftCompExpenses;
+
+  /// No description provided for @shiftCompOwnerDraws.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner draws'**
+  String get shiftCompOwnerDraws;
+
+  /// No description provided for @shiftCompTransfersOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers & withdrawals out'**
+  String get shiftCompTransfersOut;
+
+  /// No description provided for @shiftCompBankOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank withdrawals'**
+  String get shiftCompBankOut;
+
+  /// No description provided for @shiftCompChequesPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheques paid'**
+  String get shiftCompChequesPaid;
+
+  /// No description provided for @shiftCompOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other items (net)'**
+  String get shiftCompOther;
+
+  /// No description provided for @shiftPdfPreviewAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview PDF report'**
+  String get shiftPdfPreviewAction;
+
+  /// No description provided for @shiftPrintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift Report'**
+  String get shiftPrintTitle;
+
+  /// No description provided for @shiftPrintBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Box'**
+  String get shiftPrintBox;
+
+  /// No description provided for @shiftPrintUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get shiftPrintUser;
+
+  /// No description provided for @shiftPrintOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get shiftPrintOpened;
+
+  /// No description provided for @shiftPrintClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get shiftPrintClosed;
+
+  /// No description provided for @shiftPrintItemCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get shiftPrintItemCol;
+
+  /// No description provided for @shiftPrintDirectionCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get shiftPrintDirectionCol;
+
+  /// No description provided for @shiftPrintValueCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get shiftPrintValueCol;
+
+  /// No description provided for @shiftPrintDirIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In (+)'**
+  String get shiftPrintDirIn;
+
+  /// No description provided for @shiftPrintDirOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out (−)'**
+  String get shiftPrintDirOut;
+
+  /// No description provided for @shiftPrintTotalIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Total in'**
+  String get shiftPrintTotalIn;
+
+  /// No description provided for @shiftPrintTotalOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Total out'**
+  String get shiftPrintTotalOut;
+
+  /// No description provided for @shiftPrintNotesRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing notes'**
+  String get shiftPrintNotesRow;
+
+  /// No description provided for @shiftPrintShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift report for {box} — expected {expected}, difference {difference}'**
+  String shiftPrintShareMessage(String box, String expected, String difference);
+
+  /// No description provided for @agingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt aging'**
+  String get agingTitle;
+
+  /// No description provided for @agingHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer dues by age: 0–30 / 31–60 / 61–90 / 90+ days (FIFO)'**
+  String get agingHubSubtitle;
+
+  /// No description provided for @agingAsOfLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'As of {date}'**
+  String agingAsOfLabel(String date);
+
+  /// No description provided for @agingCurrencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Report currency'**
+  String get agingCurrencyLabel;
+
+  /// No description provided for @agingBucket0to30.
+  ///
+  /// In en, this message translates to:
+  /// **'0–30 days'**
+  String get agingBucket0to30;
+
+  /// No description provided for @agingBucket31to60.
+  ///
+  /// In en, this message translates to:
+  /// **'31–60 days'**
+  String get agingBucket31to60;
+
+  /// No description provided for @agingBucket61to90.
+  ///
+  /// In en, this message translates to:
+  /// **'61–90 days'**
+  String get agingBucket61to90;
+
+  /// No description provided for @agingBucket90plus.
+  ///
+  /// In en, this message translates to:
+  /// **'Over 90 days'**
+  String get agingBucket90plus;
+
+  /// No description provided for @agingTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Grand total'**
+  String get agingTotalLabel;
+
+  /// No description provided for @agingCustomersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No debtors} one{1 debtor} other{{count} debtors}}'**
+  String agingCustomersCount(num count);
+
+  /// No description provided for @agingNotYetDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet due:'**
+  String get agingNotYetDueLabel;
+
+  /// No description provided for @agingNoDebtsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No outstanding debts'**
+  String get agingNoDebtsTitle;
+
+  /// No description provided for @agingNoDebtsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No unsettled credit amounts on any customer in this currency — everything is settled. Excellent!'**
+  String get agingNoDebtsBody;
+
+  /// No description provided for @agingInvoicesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 open invoice} other{{count} open invoices}}'**
+  String agingInvoicesCount(num count);
+
+  /// No description provided for @agingDueDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get agingDueDateLabel;
+
+  /// No description provided for @agingDaysOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue by {count, plural, one{1 day} other{{count} days}}'**
+  String agingDaysOverdue(num count);
+
+  /// No description provided for @agingDueInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Due in {count, plural, one{1 day} other{{count} days}}'**
+  String agingDueInDays(num count);
+
+  /// No description provided for @agingDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get agingDueToday;
+
+  /// No description provided for @agingRemindTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Send WhatsApp reminder'**
+  String get agingRemindTooltip;
+
+  /// No description provided for @agingNoPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'This customer has no WhatsApp or phone number — update their details first.'**
+  String get agingNoPhone;
+
+  /// No description provided for @agingWhatsAppFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open WhatsApp — make sure it is installed.'**
+  String get agingWhatsAppFailed;
+
+  /// No description provided for @agingStaleWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh failed — showing the last successful report.'**
+  String get agingStaleWarning;
+
+  /// No description provided for @agingReminderCompanyFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'our company'**
+  String get agingReminderCompanyFallback;
+
+  /// No description provided for @agingReminderMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {name}, this is a kind reminder of the outstanding balance on your account with {company}, totaling {total}. Thank you for your understanding.'**
+  String agingReminderMessage(String name, String company, String total);
+
+  /// No description provided for @monthSalesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This month\'s sales'**
+  String get monthSalesTitle;
+
+  /// No description provided for @monthChangeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Up {pct}% vs last month'**
+  String monthChangeUp(String pct);
+
+  /// No description provided for @monthChangeDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Down {pct}% vs last month'**
+  String monthChangeDown(String pct);
+
+  /// No description provided for @monthChangeFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Level with last month'**
+  String get monthChangeFlat;
+
+  /// No description provided for @monthNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get monthNew;
+
+  /// No description provided for @monthInvoices.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no invoices yet} one{one invoice} other{{count} invoices}}'**
+  String monthInvoices(num count);
+
+  /// No description provided for @topItemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-selling items'**
+  String get topItemsTitle;
+
+  /// No description provided for @topItemsScope.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get topItemsScope;
+
+  /// No description provided for @topItemsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales this month yet'**
+  String get topItemsEmpty;
+
+  /// No description provided for @topItemsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Best sellers will appear here as soon as the first sale of this month is completed.'**
+  String get topItemsEmptyBody;
+
+  /// No description provided for @topItemsQtyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty: {qty}'**
+  String topItemsQtyCount(String qty);
+
+  /// No description provided for @creditLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit exceeded'**
+  String get creditLimitTitle;
+
+  /// No description provided for @creditLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'This invoice will push the customer\'s balance beyond their allowed credit limit.'**
+  String get creditLimitExceeded;
+
+  /// No description provided for @creditLimitBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This credit sale cannot proceed: the resulting balance exceeds the credit limit (block mode is on).'**
+  String get creditLimitBlocked;
+
+  /// No description provided for @creditLimitLimitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit'**
+  String get creditLimitLimitLabel;
+
+  /// No description provided for @creditLimitCurrentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance'**
+  String get creditLimitCurrentLabel;
+
+  /// No description provided for @creditLimitResultingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance after this invoice'**
+  String get creditLimitResultingLabel;
+
+  /// No description provided for @creditLimitContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get creditLimitContinue;
+
+  /// No description provided for @creditLimitCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get creditLimitCancel;
+
+  /// No description provided for @creditLimitBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get creditLimitBack;
+
+  /// No description provided for @stocktakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical stocktake'**
+  String get stocktakeTitle;
+
+  /// No description provided for @stocktakeHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Count & reconcile stock'**
+  String get stocktakeHeroTitle;
+
+  /// No description provided for @stocktakeHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare book stock with your physical count; differences are valued at the snapshot cost at posting time, and balances lock to the counted quantities.'**
+  String get stocktakeHeroSubtitle;
+
+  /// No description provided for @stocktakeWarehouseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse'**
+  String get stocktakeWarehouseLabel;
+
+  /// No description provided for @stocktakeCountedAtLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Count date'**
+  String get stocktakeCountedAtLabel;
+
+  /// No description provided for @stocktakeCountedByLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted by'**
+  String get stocktakeCountedByLabel;
+
+  /// No description provided for @stocktakeCountedByHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The stocktake is signed with this name'**
+  String get stocktakeCountedByHint;
+
+  /// No description provided for @stocktakeNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get stocktakeNotesLabel;
+
+  /// No description provided for @stocktakeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search items by name…'**
+  String get stocktakeSearchHint;
+
+  /// No description provided for @stocktakeBookQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get stocktakeBookQty;
+
+  /// No description provided for @stocktakeCountedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted'**
+  String get stocktakeCountedQty;
+
+  /// No description provided for @stocktakeUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get stocktakeUnitCost;
+
+  /// No description provided for @stocktakeSetBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy book qty'**
+  String get stocktakeSetBook;
+
+  /// No description provided for @stocktakeMatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched'**
+  String get stocktakeMatched;
+
+  /// No description provided for @stocktakeSurplus.
+  ///
+  /// In en, this message translates to:
+  /// **'Surplus'**
+  String get stocktakeSurplus;
+
+  /// No description provided for @stocktakeShortage.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortage'**
+  String get stocktakeShortage;
+
+  /// No description provided for @stocktakeNetDiff.
+  ///
+  /// In en, this message translates to:
+  /// **'Net difference'**
+  String get stocktakeNetDiff;
+
+  /// No description provided for @stocktakeCountedProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted {counted} of {total}'**
+  String stocktakeCountedProgress(int counted, int total);
+
+  /// No description provided for @stocktakePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve stocktake'**
+  String get stocktakePost;
+
+  /// No description provided for @stocktakeHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stocktake history'**
+  String get stocktakeHistoryTitle;
+
+  /// No description provided for @stocktakeHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No stocktakes for this warehouse yet — the first one will appear here.'**
+  String get stocktakeHistoryEmpty;
+
+  /// No description provided for @stocktakeHistoryLines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} lines'**
+  String stocktakeHistoryLines(int count);
+
+  /// No description provided for @stocktakeReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review stocktake differences'**
+  String get stocktakeReviewTitle;
+
+  /// No description provided for @stocktakeReviewNoDiffs.
+  ///
+  /// In en, this message translates to:
+  /// **'No differences — everything counted matches the books.'**
+  String get stocktakeReviewNoDiffs;
+
+  /// No description provided for @stocktakeReviewWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'After approval, balances lock to the counted quantities and differences post as stocktake movements at snapshot cost — this cannot be undone.'**
+  String get stocktakeReviewWarning;
+
+  /// No description provided for @stocktakeReviewSkipNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} uncounted item(s) will be skipped from this stocktake.'**
+  String stocktakeReviewSkipNote(int count);
+
+  /// No description provided for @stocktakeConfirmPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & post'**
+  String get stocktakeConfirmPost;
+
+  /// No description provided for @stocktakeSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stocktake approved'**
+  String get stocktakeSuccessTitle;
+
+  /// No description provided for @stocktakeSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances locked to the counted quantities and adjustments posted as signed stocktake movements.'**
+  String get stocktakeSuccessBody;
+
+  /// No description provided for @stocktakeSuccessDiffs.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference lines'**
+  String get stocktakeSuccessDiffs;
+
+  /// No description provided for @stocktakeEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse is empty'**
+  String get stocktakeEmptyTitle;
+
+  /// No description provided for @stocktakeEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock items in this warehouse — add items first, then run a stocktake.'**
+  String get stocktakeEmptyBody;
+
+  /// No description provided for @stocktakeNoWarehouseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No warehouses'**
+  String get stocktakeNoWarehouseTitle;
+
+  /// No description provided for @stocktakeNoWarehouseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a warehouse first, then start counting.'**
+  String get stocktakeNoWarehouseBody;
+
+  /// No description provided for @stocktakeSearchEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get stocktakeSearchEmptyTitle;
+
+  /// No description provided for @stocktakeSearchEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or clear the search.'**
+  String get stocktakeSearchEmptyBody;
+
+  /// No description provided for @profitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit & loss'**
+  String get profitTitle;
+
+  /// No description provided for @profitSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get profitSales;
+
+  /// No description provided for @profitSalesReturns.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales returns'**
+  String get profitSalesReturns;
+
+  /// No description provided for @profitCogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost of goods sold (COGS)'**
+  String get profitCogs;
+
+  /// No description provided for @profitReturnCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned goods cost'**
+  String get profitReturnCost;
+
+  /// No description provided for @profitStockSurplus.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock surplus'**
+  String get profitStockSurplus;
+
+  /// No description provided for @profitStockShortage.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock shortage'**
+  String get profitStockShortage;
+
+  /// No description provided for @profitExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get profitExpenses;
+
+  /// No description provided for @profitFx.
+  ///
+  /// In en, this message translates to:
+  /// **'Realized FX gains/losses'**
+  String get profitFx;
+
+  /// No description provided for @profitOwnerDrawings.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner drawings'**
+  String get profitOwnerDrawings;
+
+  /// No description provided for @profitOwnerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner drawings (outside expenses)'**
+  String get profitOwnerSection;
+
+  /// No description provided for @profitNetSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Net sales'**
+  String get profitNetSales;
+
+  /// No description provided for @profitNetCogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Net cost'**
+  String get profitNetCogs;
+
+  /// No description provided for @profitTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get profitTotal;
+
+  /// No description provided for @profitNetForOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Net left for the owner'**
+  String get profitNetForOwner;
+
+  /// No description provided for @profitSectionRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Revenue'**
+  String get profitSectionRevenue;
+
+  /// No description provided for @profitSectionCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get profitSectionCost;
+
+  /// No description provided for @profitSectionAdjustments.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustments (stock & FX)'**
+  String get profitSectionAdjustments;
+
+  /// No description provided for @profitSectionExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get profitSectionExpenses;
+
+  /// No description provided for @profitEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity in this period'**
+  String get profitEmptyTitle;
+
+  /// No description provided for @profitEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales, expenses or adjustments were recorded within this period — try widening it or record your first activity.'**
+  String get profitEmptyBody;
+
+  /// No description provided for @profitBaseCurrencyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'All amounts are in the base currency'**
+  String get profitBaseCurrencyNote;
+
+  /// No description provided for @profitGeneratedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated at {time}'**
+  String profitGeneratedAt(Object time);
+
+  /// No description provided for @profitPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period: {from} → {to}'**
+  String profitPeriodLabel(Object from, Object to);
+
+  /// No description provided for @profitInvoicesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no invoices} one{one invoice} other{{count} invoices}}'**
+  String profitInvoicesCount(num count);
+
+  /// No description provided for @profitStaleWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh failed — showing the last loaded copy'**
+  String get profitStaleWarning;
+
+  /// No description provided for @profitPdfButton.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF report'**
+  String get profitPdfButton;
+
+  /// No description provided for @profitPdfTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit & loss report'**
+  String get profitPdfTitle;
+
+  /// No description provided for @profitPrintItemCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get profitPrintItemCol;
+
+  /// No description provided for @profitPrintValueCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get profitPrintValueCol;
+
+  /// No description provided for @profitPrintFooterNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Derived exclusively from the Posting Map (Annex W)'**
+  String get profitPrintFooterNote;
+
+  /// No description provided for @profitPrintShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit & loss report ({from} → {to}) — profit {profit} {currency}'**
+  String profitPrintShareMessage(
+    Object currency,
+    Object from,
+    Object profit,
+    Object to,
+  );
+
+  /// No description provided for @periodToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get periodToday;
+
+  /// No description provided for @periodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get periodWeek;
+
+  /// No description provided for @periodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get periodMonth;
+
+  /// No description provided for @periodQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'This quarter'**
+  String get periodQuarter;
+
+  /// No description provided for @periodYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get periodYear;
+
+  /// No description provided for @periodCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get periodCustom;
+
+  /// No description provided for @periodCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the start and end dates'**
+  String get periodCustomHint;
+
+  /// No description provided for @periodFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get periodFrom;
+
+  /// No description provided for @periodTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get periodTo;
+
+  /// No description provided for @periodCustomRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} → {to}'**
+  String periodCustomRange(Object from, Object to);
+
+  /// No description provided for @invoiceProfitSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice profit'**
+  String get invoiceProfitSectionTitle;
+
+  /// No description provided for @invoiceProfitManagerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Manager only'**
+  String get invoiceProfitManagerHint;
+
+  /// No description provided for @invoiceCostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get invoiceCostLabel;
+
+  /// No description provided for @invoiceProfitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profit'**
+  String get invoiceProfitLabel;
+
+  /// No description provided for @invoiceMarginLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin'**
+  String get invoiceMarginLabel;
+
+  /// No description provided for @reportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get reportsTitle;
+
+  /// No description provided for @reportsHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports & Control Center'**
+  String get reportsHeroTitle;
+
+  /// No description provided for @reportsHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbers from a single source of truth — derived exclusively via the Posting Map'**
+  String get reportsHeroSubtitle;
+
+  /// No description provided for @reportsSectionFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance & Profit'**
+  String get reportsSectionFinance;
+
+  /// No description provided for @reportsSectionDebts.
+  ///
+  /// In en, this message translates to:
+  /// **'Debts & Collection'**
+  String get reportsSectionDebts;
+
+  /// No description provided for @reportsSectionInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory & Control'**
+  String get reportsSectionInventory;
+
+  /// No description provided for @reportsPnlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The binding formula via the Posting Map with net-remaining-for-owner'**
+  String get reportsPnlDesc;
+
+  /// No description provided for @reportsStocktakeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare book vs counted and settle diffs at snapshot cost'**
+  String get reportsStocktakeDesc;
+
+  /// No description provided for @itemMovementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item movement'**
+  String get itemMovementTitle;
+
+  /// No description provided for @itemMovementPickTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a product first'**
+  String get itemMovementPickTitle;
+
+  /// No description provided for @itemMovementPickBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Show every movement of the product in the period with the running balance after each entry.'**
+  String get itemMovementPickBody;
+
+  /// No description provided for @itemMovementPickButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose product'**
+  String get itemMovementPickButton;
+
+  /// No description provided for @itemMovementChangeProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Change product'**
+  String get itemMovementChangeProduct;
+
+  /// No description provided for @itemMovementPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose product'**
+  String get itemMovementPickerTitle;
+
+  /// No description provided for @itemMovementPickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or barcode'**
+  String get itemMovementPickerSearchHint;
+
+  /// No description provided for @itemMovementPickerNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results'**
+  String get itemMovementPickerNoResults;
+
+  /// No description provided for @itemMovementOpeningBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance (before period)'**
+  String get itemMovementOpeningBalance;
+
+  /// No description provided for @itemMovementTotalIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Total in'**
+  String get itemMovementTotalIn;
+
+  /// No description provided for @itemMovementTotalOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Total out'**
+  String get itemMovementTotalOut;
+
+  /// No description provided for @itemMovementWacNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Current unit cost'**
+  String get itemMovementWacNow;
+
+  /// No description provided for @itemMovementBalanceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get itemMovementBalanceAfter;
+
+  /// No description provided for @itemMovementMovementCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No movements} one{One movement} two{Two movements} few{{count} movements} many{{count} movements} other{{count} movements}}'**
+  String itemMovementMovementCount(num count);
+
+  /// No description provided for @itemMovementUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get itemMovementUnitCost;
+
+  /// No description provided for @itemMovementPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period: {from} to {to}'**
+  String itemMovementPeriodLabel(Object from, Object to);
+
+  /// No description provided for @itemMovementEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No movements in this period'**
+  String get itemMovementEmptyTitle;
+
+  /// No description provided for @itemMovementEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This product did not move between the selected dates — try widening the period.'**
+  String get itemMovementEmptyBody;
+
+  /// No description provided for @stockSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock movement summary'**
+  String get stockSummaryTitle;
+
+  /// No description provided for @stockSummaryTotalItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No moving products} one{One moving product} two{Two moving products} few{{count} moving products} many{{count} moving products} other{{count} moving products}}'**
+  String stockSummaryTotalItems(num count);
+
+  /// No description provided for @stockSummaryTotalValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total inventory value at cost'**
+  String get stockSummaryTotalValue;
+
+  /// No description provided for @stockSummaryQtyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'In'**
+  String get stockSummaryQtyIn;
+
+  /// No description provided for @stockSummaryQtyOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get stockSummaryQtyOut;
+
+  /// No description provided for @stockSummaryQtyReturns.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns'**
+  String get stockSummaryQtyReturns;
+
+  /// No description provided for @stockSummaryQtyAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust'**
+  String get stockSummaryQtyAdjust;
+
+  /// No description provided for @stockSummaryEndBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get stockSummaryEndBalance;
+
+  /// No description provided for @stockSummaryValueAtCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Value at cost'**
+  String get stockSummaryValueAtCost;
+
+  /// No description provided for @stockSummaryPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period: {from} to {to}'**
+  String stockSummaryPeriodLabel(Object from, Object to);
+
+  /// No description provided for @stockSummaryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock movement in this period'**
+  String get stockSummaryEmptyTitle;
+
+  /// No description provided for @stockSummaryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock movements recorded between the selected dates — try widening the period.'**
+  String get stockSummaryEmptyBody;
+
+  /// No description provided for @salesByTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales by'**
+  String get salesByTitle;
+
+  /// No description provided for @salesByCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get salesByCustomer;
+
+  /// No description provided for @salesByCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get salesByCategory;
+
+  /// No description provided for @salesByItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get salesByItem;
+
+  /// No description provided for @salesByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get salesByDay;
+
+  /// No description provided for @salesByNoCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in (no customer)'**
+  String get salesByNoCustomer;
+
+  /// No description provided for @salesByUncategorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncategorized'**
+  String get salesByUncategorized;
+
+  /// No description provided for @salesByInvoicesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No invoices} one{One invoice} two{Two invoices} few{{count} invoices} many{{count} invoices} other{{count} invoices}}'**
+  String salesByInvoicesCount(num count);
+
+  /// No description provided for @salesByTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total sales'**
+  String get salesByTotal;
+
+  /// No description provided for @salesByChangeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentages compare against an equal-length period immediately before the selected one.'**
+  String get salesByChangeNote;
+
+  /// No description provided for @salesByPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period: {from} to {to}'**
+  String salesByPeriodLabel(Object from, Object to);
+
+  /// No description provided for @salesByEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales in this period'**
+  String get salesByEmptyTitle;
+
+  /// No description provided for @salesByEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed sale invoices between the selected dates — try widening the period.'**
+  String get salesByEmptyBody;
+
+  /// No description provided for @changeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Up {pct}%'**
+  String changeUp(Object pct);
+
+  /// No description provided for @changeDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Down {pct}%'**
+  String changeDown(Object pct);
+
+  /// No description provided for @changeNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get changeNew;
+
+  /// No description provided for @movementTypePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase'**
+  String get movementTypePurchase;
+
+  /// No description provided for @movementTypeSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale'**
+  String get movementTypeSale;
+
+  /// No description provided for @movementTypeSaleReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale return'**
+  String get movementTypeSaleReturn;
+
+  /// No description provided for @movementTypePurchaseReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase return'**
+  String get movementTypePurchaseReturn;
+
+  /// No description provided for @movementTypeAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Stocktake adjustment'**
+  String get movementTypeAdjust;
+
+  /// No description provided for @movementTypeOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance'**
+  String get movementTypeOpening;
+
+  /// No description provided for @movementTypeTransferIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer in'**
+  String get movementTypeTransferIn;
+
+  /// No description provided for @movementTypeTransferOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer out'**
+  String get movementTypeTransferOut;
+
+  /// No description provided for @reportsSectionFlows.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory & Sales Flows'**
+  String get reportsSectionFlows;
+
+  /// No description provided for @reportsItemMovementDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Full item card with running balance per movement'**
+  String get reportsItemMovementDesc;
+
+  /// No description provided for @reportsStockSummaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'In/out/returns/adjustments per item with stock value'**
+  String get reportsStockSummaryDesc;
+
+  /// No description provided for @reportsSalesByDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer/category/item/day with change vs previous period'**
+  String get reportsSalesByDesc;
 }
 
 class _AppLocalizationsDelegate

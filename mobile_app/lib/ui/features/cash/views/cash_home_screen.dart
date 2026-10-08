@@ -334,6 +334,13 @@ class _QuickAccessGrid extends StatelessWidget {
           color: colors.gold,
           onTap: () => _openQuickSheet(context, QuickMovementKind.bankDeposit),
         ),
+        // الوردية بالمعادلة الشاملة (الشريحة 9 — FR-04-04).
+        CashQuickTile(
+          icon: Icons.lock_clock_rounded,
+          label: l10n.shiftTitle,
+          color: scheme.primary,
+          onTap: () => context.go('/cash/shift'),
+        ),
         CashQuickTile(
           icon: Icons.account_balance_wallet_rounded,
           label: l10n.cashQuickBoxes,

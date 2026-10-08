@@ -5,8 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mobile_app"
+    namespace = "app.finacc.mobile"
     compileSdk = flutter.compileSdkVersion
+    // التطبيق Dart خالص بلا كود أصلي — NDK غير مستخدم فعلياً؛ وجود هذا السطر مع
+    // علامة الوهم في ANDROID_HOME/ndk يمنع flutter-gradle-plugin من تنزيل NDK (~4GB)
+    // على قرص محدود (الإضافة تفرض التنزيل إن لم يجد الإصدار "مثبتاً").
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -15,8 +18,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mobile_app"
+        // معرّف التطبيق الفريد (قابل للتغيير قبل أي نشر على المتاجر — قرر مع المالك حينها)
+        applicationId = "app.finacc.mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -31,9 +34,13 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // توقيع بمفاتيح debug مؤقتاً لأول APK تجريبي — إنشاء keystore إنتاجي قرارٌ مع المالك قبل النشر
             signingConfig = signingConfigs.getByName("debug")
+            // جداول رموز الأصناف الأصلية لرصد الأعطال ميزة نشرٍ على Play — تُعطّل هنا
+            // (حزمة تجريبية أصغر + مهمة extractNativeSymbolTables بلا objcopy).
+            ndk {
+                debugSymbolLevel = "none"
+            }
         }
     }
 }

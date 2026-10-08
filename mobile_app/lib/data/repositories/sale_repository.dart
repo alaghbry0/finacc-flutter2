@@ -244,11 +244,21 @@ class SaleRepository {
             remainingCredit,
           );
           if (credit.overLimit) {
-            return Err(
-              'تجاوز حد الائتمان: رصيد العميل الحالي ${_num(credit.balance)} '
-              '+ الآجل الجديد ${_num(remainingCredit)} يتجاوز الحد '
-              '${_num(credit.creditLimit ?? 0)} — قلّل الآجل أو استوفِ أولاً.',
+            // FR-03-05 (17-c): السلوك من إعداد parties.credit_limit_action
+            // — 'block' يرفض هنا نهائياً؛ 'warn' (الافتراضي) حواره في
+            // PaymentSheet («متابعة على أي حال») وقد أقرّه المستخدم،
+            // فلا يمنع الترحيل — هذا المستودع حارس 'block' حصراً.
+            final action = await _settings.getString(
+              'parties.credit_limit_action',
+              'warn',
             );
+            if (action == 'block') {
+              return Err(
+                'تجاوز حد الائتمان: رصيد العميل الحالي ${_num(credit.balance)} '
+                '+ الآجل الجديد ${_num(remainingCredit)} يتجاوز الحد '
+                '${_num(credit.creditLimit ?? 0)} — قلّل الآجل أو استوفِ أولاً.',
+              );
+            }
           }
         }
       }

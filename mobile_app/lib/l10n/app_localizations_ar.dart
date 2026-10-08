@@ -3403,4 +3403,1146 @@ class AppLocalizationsAr extends AppLocalizations {
   String printingShareMessageStatement(Object balance, Object party) {
     return 'كشف حساب $party — الرصيد الختامي $balance';
   }
+
+  @override
+  String get backupScreenTitle => 'النسخ الاحتياطي والاستعادة';
+
+  @override
+  String get backupWebPreviewTitle => 'معاينة ويب';
+
+  @override
+  String get backupWebPreviewBody =>
+      'بيانات هذه المعاينة داخل متصفحك، والنسخ الاحتياطي الفعلي — إنشاءً واستعادةً ومشاركةً للملف — متاح في تطبيق أندرويد.';
+
+  @override
+  String get backupLastBackupLabel => 'آخر نسخة ناجحة';
+
+  @override
+  String get backupLastNever => 'لم تُنشأ أي نسخة بعد';
+
+  @override
+  String get backupSavedCountLabel => 'نسخ محفوظة';
+
+  @override
+  String get backupCreateNow => 'إنشاء نسخة الآن';
+
+  @override
+  String get backupCreating => 'جارٍ إنشاء النسخة…';
+
+  @override
+  String get backupCreateHint =>
+      'ملف واحد مضغوط مؤرَّخ بالتاريخ والوقت يُحفظ في مجلد نسخ التطبيق';
+
+  @override
+  String backupCreateSuccess(String fileName) {
+    return 'تم إنشاء النسخة: $fileName';
+  }
+
+  @override
+  String get backupCreateFailed => 'تعذّر إنشاء النسخة الاحتياطية';
+
+  @override
+  String get backupScheduleTitle => 'الجدولة التلقائية';
+
+  @override
+  String get backupScheduleDesc =>
+      'نسخة تلقائية صامتة عند فتح التطبيق متى مضى الوقت المحدد';
+
+  @override
+  String get backupScheduleDaily => 'يومي';
+
+  @override
+  String get backupScheduleWeekly => 'أسبوعي';
+
+  @override
+  String get backupScheduleOff => 'إيقاف';
+
+  @override
+  String get backupRetentionTitle => 'الاحتفاظ بالنسخ';
+
+  @override
+  String backupRetentionDesc(int count) {
+    return 'يُحتفظ بآخر $count نسخة وتُحذف الأقدم تلقائياً';
+  }
+
+  @override
+  String get backupLogTitle => 'سجل النسخ';
+
+  @override
+  String get backupLogEmptyTitle => 'لا نسخ بعد';
+
+  @override
+  String get backupLogEmptyBody =>
+      'أنشئ أول نسخة احتياطية بضغطة واحدة — ملف واحد يحمل كل بياناتك.';
+
+  @override
+  String get backupKindManual => 'يدوية';
+
+  @override
+  String get backupKindAuto => 'تلقائية';
+
+  @override
+  String get backupKindSafety => 'أمان قبل الاستعادة';
+
+  @override
+  String get backupKindGeneric => 'نسخة';
+
+  @override
+  String get backupStatusOk => 'ناجحة';
+
+  @override
+  String get backupStatusFailed => 'فاشلة';
+
+  @override
+  String get backupFileMissing => 'الملف محذوف';
+
+  @override
+  String get backupRestoreTooltip => 'استعادة هذه النسخة';
+
+  @override
+  String get backupShareTooltip => 'مشاركة الملف';
+
+  @override
+  String get backupRestoreFromFile => 'استعادة من ملف خارجي';
+
+  @override
+  String get backupRestoreFromFileDesc =>
+      'اختر ملف .finbak وصلك بالمشاركة أو بنسخ يدوي';
+
+  @override
+  String backupSizeKb(String value) {
+    return '$value ك.ب';
+  }
+
+  @override
+  String backupSizeMb(String value) {
+    return '$value م.ب';
+  }
+
+  @override
+  String get backupShareFailed => 'تعذّرت مشاركة الملف';
+
+  @override
+  String get backupSettingSaveFailed => 'تعذّر حفظ الإعداد';
+
+  @override
+  String get backupRestoreDialogTitle => 'استعادة نسخة احتياطية';
+
+  @override
+  String get backupRestoreWarnBody =>
+      'سيستبدل هذا كل البيانات الحالية ببيانات النسخة. تُنشأ نسخة أمان من بياناتك الحالية تلقائياً قبل الاستبدال.';
+
+  @override
+  String get backupRestoreConfirm => 'استبدال البيانات';
+
+  @override
+  String get backupRestoreRunning => 'جارٍ الاستعادة…';
+
+  @override
+  String get backupRestoreSuccessTitle => 'تمت الاستعادة بنجاح';
+
+  @override
+  String get backupRestoreSuccessBody =>
+      'عادت بيانات النسخة إلى التطبيق، وسيُطلب منك الآن رمز القفل الخاص بها.';
+
+  @override
+  String get backupRestoreFailedTitle => 'تعذّرت الاستعادة';
+
+  @override
+  String get backupRestoreClose => 'إغلاق';
+
+  @override
+  String get backupInspectFile => 'الملف';
+
+  @override
+  String get backupInspectCreated => 'تاريخ النسخة';
+
+  @override
+  String get backupInspectSize => 'الحجم';
+
+  @override
+  String get backupInspectSchema => 'إصدار المخطط';
+
+  @override
+  String get backupInspectChecksum => 'البصمة (SHA-256)';
+
+  @override
+  String get backupInspectKind => 'النوع';
+
+  @override
+  String get backupErrNotFile =>
+      'الملف المختار ليس نسخة احتياطية صالحة من FinAcc (‎.finbak).';
+
+  @override
+  String get backupErrChecksum =>
+      'فشل فحص السلامة — الملف تالف أو عُدِّل بعد إنشائه.';
+
+  @override
+  String backupErrNewerSchema(int fileVersion, int appVersion) {
+    return 'هذه النسخة بمخطط أحدث (v$fileVersion) من تطبيق التطبيق (v$appVersion) — حدِّث التطبيق أولاً.';
+  }
+
+  @override
+  String get backupErrSafety =>
+      'تعذّر إنشاء نسخة الأمان قبل الاستعادة — أُلغيت العملية وبياناتك كما هي.';
+
+  @override
+  String get backupErrOpenFailed =>
+      'فشل فتح القاعدة المستعادة — أُعيدت بياناتك الحالية كما كانت.';
+
+  @override
+  String get backupErrUnsupported => 'الاستعادة متاحة في تطبيق أندرويد فقط.';
+
+  @override
+  String backupBannerAutoDone(String time) {
+    return 'أُنشئت نسخة احتياطية تلقائية بنجاح عند $time';
+  }
+
+  @override
+  String get backupBannerAutoFailed =>
+      'تعذّرت النسخة التلقائية — أنشئ نسخة يدوياً من الإعدادات.';
+
+  @override
+  String get backupBannerWebDue =>
+      'حان وقت نسخة احتياطية — ميزات النسخ الكاملة في تطبيق أندرويد.';
+
+  @override
+  String get backupBannerOpen => 'إدارة النسخ';
+
+  @override
+  String get settingsBackupTitle => 'النسخ الاحتياطي والاستعادة';
+
+  @override
+  String get settingsBackupDesc =>
+      'نسخة محلية مضغوطة بضغطة واحدة، جدولة واستعادة ومشاركة';
+
+  @override
+  String settingsAboutDbSize(String size) {
+    return 'حجم القاعدة: $size';
+  }
+
+  @override
+  String get shiftTitle => 'الوردية';
+
+  @override
+  String get shiftOpenNoneTitle => 'لا توجد وردية مفتوحة';
+
+  @override
+  String get shiftOpenNoneBody =>
+      'افتح الوردية بتسجيل الرصيد الافتتاحي للصندوق، ثم تابع المبيعات والتحصيلات حتى الإقفال بالمعادلة الشاملة.';
+
+  @override
+  String get shiftOpeningCountLabel => 'الرصيد الافتتاحي';
+
+  @override
+  String get shiftOpenButton => 'فتح الوردية';
+
+  @override
+  String get shiftInvalidAmount =>
+      'أدخل رقماً صالحاً أكبر من صفر أو مساوياً له.';
+
+  @override
+  String get shiftLiveTitle => 'وردية مفتوحة';
+
+  @override
+  String get shiftOpenedAtLabel => 'وقت الفتح';
+
+  @override
+  String get shiftRunningIn => 'الوارد حتى الآن';
+
+  @override
+  String get shiftRunningOut => 'الصادر حتى الآن';
+
+  @override
+  String get shiftExpectedSoFar => 'المتوقع حتى الآن';
+
+  @override
+  String get shiftAutoRefreshNote => 'يتحدّث تلقائياً كل 30 ثانية';
+
+  @override
+  String get shiftCloseButton => 'إقفال الوردية';
+
+  @override
+  String get shiftHistoryTitle => 'آخر الورديات';
+
+  @override
+  String get shiftHistoryEmpty =>
+      'لا ورديات مقفلة بعد — أقفل أول وردية ليظهر تقريرها هنا.';
+
+  @override
+  String get shiftCountedLabel => 'العدّ الفعلي';
+
+  @override
+  String get shiftCountedHint => 'المبلغ المعدود فعلاً في الصندوق الآن';
+
+  @override
+  String get shiftExpectedLabel => 'المتوقع';
+
+  @override
+  String get shiftDifferenceLabel => 'الفرق';
+
+  @override
+  String get shiftSurplus => 'زيادة';
+
+  @override
+  String get shiftDeficit => 'عجز';
+
+  @override
+  String get shiftMatched => 'مطابق';
+
+  @override
+  String get shiftNotesLabel => 'ملاحظات';
+
+  @override
+  String get shiftNotesHint => 'اختياري — مثلاً سبب الزيادة أو العجز';
+
+  @override
+  String get shiftConfirmClose => 'تأكيد الإقفال';
+
+  @override
+  String get shiftCloseSuccessTitle => 'أُقفلت الوردية';
+
+  @override
+  String get shiftEquationTitle => 'تفصيل المعادلة الشاملة';
+
+  @override
+  String get shiftChequesDeferredNote =>
+      'الشيكات مؤجلة إلى الإصدار 1.1 — تظهر صفراً في المعادلة.';
+
+  @override
+  String get shiftCompCashSales => 'مبيعات نقدية';
+
+  @override
+  String get shiftCompCollections => 'تحصيلات';
+
+  @override
+  String get shiftCompOwnerDeposits => 'إيداعات المالك';
+
+  @override
+  String get shiftCompTransfersIn => 'تحويلات وإيداعات واردة';
+
+  @override
+  String get shiftCompBankIn => 'إيداعات بنكية';
+
+  @override
+  String get shiftCompChequesCleared => 'شيكات محصّلة';
+
+  @override
+  String get shiftCompSupplierPayments => 'مدفوعات موردين';
+
+  @override
+  String get shiftCompExpenses => 'مصاريف';
+
+  @override
+  String get shiftCompOwnerDraws => 'مسحوبات المالك';
+
+  @override
+  String get shiftCompTransfersOut => 'تحويلات وسحوبات صادرة';
+
+  @override
+  String get shiftCompBankOut => 'سحب بنكي';
+
+  @override
+  String get shiftCompChequesPaid => 'شيكات مصروفة';
+
+  @override
+  String get shiftCompOther => 'بنود أخرى (صافٍ)';
+
+  @override
+  String get shiftPdfPreviewAction => 'معاينة تقرير PDF';
+
+  @override
+  String get shiftPrintTitle => 'تقرير الوردية';
+
+  @override
+  String get shiftPrintBox => 'الصندوق';
+
+  @override
+  String get shiftPrintUser => 'المستخدم';
+
+  @override
+  String get shiftPrintOpened => 'الفتح';
+
+  @override
+  String get shiftPrintClosed => 'الإقفال';
+
+  @override
+  String get shiftPrintItemCol => 'البند';
+
+  @override
+  String get shiftPrintDirectionCol => 'الاتجاه';
+
+  @override
+  String get shiftPrintValueCol => 'القيمة';
+
+  @override
+  String get shiftPrintDirIn => 'وارد (+)';
+
+  @override
+  String get shiftPrintDirOut => 'صادر (−)';
+
+  @override
+  String get shiftPrintTotalIn => 'إجمالي الوارد';
+
+  @override
+  String get shiftPrintTotalOut => 'إجمالي الصادر';
+
+  @override
+  String get shiftPrintNotesRow => 'ملاحظات الإقفال';
+
+  @override
+  String shiftPrintShareMessage(
+    String box,
+    String expected,
+    String difference,
+  ) {
+    return 'تقرير وردية $box — المتوقع $expected والفرق $difference';
+  }
+
+  @override
+  String get agingTitle => 'أعمار الديون';
+
+  @override
+  String get agingHubSubtitle =>
+      'تصنيف مستحقات العملاء: ٠–٣٠ / ٣١–٦٠ / ٦١–٩٠ / +٩٠ يوماً (FIFO)';
+
+  @override
+  String agingAsOfLabel(String date) {
+    return 'حتى $date';
+  }
+
+  @override
+  String get agingCurrencyLabel => 'عملة التقرير';
+
+  @override
+  String get agingBucket0to30 => '٠–٣٠ يوماً';
+
+  @override
+  String get agingBucket31to60 => '٣١–٦٠ يوماً';
+
+  @override
+  String get agingBucket61to90 => '٦١–٩٠ يوماً';
+
+  @override
+  String get agingBucket90plus => 'أكثر من ٩٠ يوماً';
+
+  @override
+  String get agingTotalLabel => 'الإجمالي العام';
+
+  @override
+  String agingCustomersCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عميل مدين',
+      many: '$count عميلاً مديناً',
+      few: '$count عملاء مدينون',
+      two: 'عميلان مدينان',
+      one: 'عميل مدين واحد',
+      zero: 'لا مدينين',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get agingNotYetDueLabel => 'غير مستحق بعد:';
+
+  @override
+  String get agingNoDebtsTitle => 'لا ديون مستحقة';
+
+  @override
+  String get agingNoDebtsBody =>
+      'لا توجد مبالغ آجلة غير محصّلة على أي عميل بهذه العملة — كل الآجال سُدّدت، وضع مالي ممتاز!';
+
+  @override
+  String agingInvoicesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاتورة مفتوحة',
+      many: '$count فاتورة مفتوحة',
+      few: '$count فواتير مفتوحة',
+      two: 'فاتورتان مفتوحتان',
+      one: 'فاتورة مفتوحة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get agingDueDateLabel => 'الاستحقاق';
+
+  @override
+  String agingDaysOverdue(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوماً',
+      many: '$count يوماً',
+      few: '$count أيام',
+      two: 'يومان',
+      one: 'يوم واحد',
+    );
+    return 'متأخر $_temp0';
+  }
+
+  @override
+  String agingDueInDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count يوماً',
+      many: '$count يوماً',
+      few: '$count أيام',
+      two: 'يومين',
+      one: 'يوم واحد',
+    );
+    return 'يستحق خلال $_temp0';
+  }
+
+  @override
+  String get agingDueToday => 'مستحق اليوم';
+
+  @override
+  String get agingRemindTooltip => 'إرسال تذكير واتساب';
+
+  @override
+  String get agingNoPhone =>
+      'لا يوجد رقم واتساب أو هاتف لهذا العميل — حدِّث بياناته أولاً.';
+
+  @override
+  String get agingWhatsAppFailed =>
+      'تعذّر فتح واتساب — تأكد من تثبيته على الجهاز.';
+
+  @override
+  String get agingStaleWarning => 'تعذّر التحديث — المعروض آخر تقرير ناجح.';
+
+  @override
+  String get agingReminderCompanyFallback => 'مؤسستنا';
+
+  @override
+  String agingReminderMessage(String name, String company, String total) {
+    return 'مرحباً $name، نودّ تذكيركم بوجود مبلغ مستحق على حسابكم لدى $company بمجموع $total. شكراً لتفهمكم.';
+  }
+
+  @override
+  String get monthSalesTitle => 'مبيعات الشهر';
+
+  @override
+  String monthChangeUp(String pct) {
+    return 'ارتفاع $pct٪ عن الشهر السابق';
+  }
+
+  @override
+  String monthChangeDown(String pct) {
+    return 'انخفاض $pct٪ عن الشهر السابق';
+  }
+
+  @override
+  String get monthChangeFlat => 'مطابق للشهر السابق';
+
+  @override
+  String get monthNew => 'جديد';
+
+  @override
+  String monthInvoices(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاتورة',
+      many: '$count فاتورة',
+      few: '$count فواتير',
+      two: 'فاتورتان',
+      one: 'فاتورة واحدة',
+      zero: 'لا فواتير بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get topItemsTitle => 'أعلى الأصناف مبيعاً';
+
+  @override
+  String get topItemsScope => 'هذا الشهر';
+
+  @override
+  String get topItemsEmpty => 'لا مبيعات هذا الشهر بعد';
+
+  @override
+  String get topItemsEmptyBody =>
+      'ستظهر الأصناف الأكثر مبيعاً هنا فور إتمام أول فاتورة بيع هذا الشهر.';
+
+  @override
+  String topItemsQtyCount(String qty) {
+    return 'الكمية: $qty';
+  }
+
+  @override
+  String get creditLimitTitle => 'تجاوز حد الائتمان';
+
+  @override
+  String get creditLimitExceeded =>
+      'هذه الفاتورة ستجعل رصيد العميل يتجاوز حد الائتمان المسموح له.';
+
+  @override
+  String get creditLimitBlocked =>
+      'لا يمكن إتمام هذا البيع الآجل: الرصيد المتوقع بعد الفاتورة يتجاوز حد الائتمان (وضع المنع مفعّل).';
+
+  @override
+  String get creditLimitLimitLabel => 'حد الائتمان';
+
+  @override
+  String get creditLimitCurrentLabel => 'الرصيد الحالي';
+
+  @override
+  String get creditLimitResultingLabel => 'الرصيد بعد الفاتورة';
+
+  @override
+  String get creditLimitContinue => 'متابعة على أي حال';
+
+  @override
+  String get creditLimitCancel => 'إلغاء';
+
+  @override
+  String get creditLimitBack => 'رجوع';
+
+  @override
+  String get stocktakeTitle => 'الجرد الفعلي';
+
+  @override
+  String get stocktakeHeroTitle => 'جرد المخزن ومطابقة الأرصدة';
+
+  @override
+  String get stocktakeHeroSubtitle =>
+      'قارن الرصيد الدفتري بما عددته فعلاً؛ تُقيَّم الفروقات بتكلفة لقطة وقت الجرد، وبعد الاعتماد تُقفل الأرصدة على المقيس.';
+
+  @override
+  String get stocktakeWarehouseLabel => 'المخزن';
+
+  @override
+  String get stocktakeCountedAtLabel => 'تاريخ الجرد';
+
+  @override
+  String get stocktakeCountedByLabel => 'اسم الجانِد';
+
+  @override
+  String get stocktakeCountedByHint => 'يُوقَّع الجرد باسمه';
+
+  @override
+  String get stocktakeNotesLabel => 'ملاحظات (اختياري)';
+
+  @override
+  String get stocktakeSearchHint => 'ابحث عن صنف بالاسم…';
+
+  @override
+  String get stocktakeBookQty => 'دفتري';
+
+  @override
+  String get stocktakeCountedQty => 'الفعلي';
+
+  @override
+  String get stocktakeUnitCost => 'تكلفة الوحدة';
+
+  @override
+  String get stocktakeSetBook => 'نسخ الدفتري';
+
+  @override
+  String get stocktakeMatched => 'مطابق';
+
+  @override
+  String get stocktakeSurplus => 'زيادة';
+
+  @override
+  String get stocktakeShortage => 'عجز';
+
+  @override
+  String get stocktakeNetDiff => 'صافي الفرق';
+
+  @override
+  String stocktakeCountedProgress(int counted, int total) {
+    return 'المعدود $counted من $total';
+  }
+
+  @override
+  String get stocktakePost => 'اعتماد الجرد';
+
+  @override
+  String get stocktakeHistoryTitle => 'سجل عمليات الجرد';
+
+  @override
+  String get stocktakeHistoryEmpty =>
+      'لم يُجرَد هذا المخزن بعد — أول جرد سيظهر هنا.';
+
+  @override
+  String stocktakeHistoryLines(int count) {
+    return '$count بند';
+  }
+
+  @override
+  String get stocktakeReviewTitle => 'مراجعة فروقات الجرد';
+
+  @override
+  String get stocktakeReviewNoDiffs => 'لا فروقات — كل المعدود مطابق لدفتره.';
+
+  @override
+  String get stocktakeReviewWarning =>
+      'بعد الاعتماد تُقفل الأرصدة على المقيس وتُرحَّل الفروقات كحركات جرد بتكلفة اللقطة — لا يمكن التراجع.';
+
+  @override
+  String stocktakeReviewSkipNote(int count) {
+    return '$count صنفاً غير معدود سيُتجاوز من هذا الجرد.';
+  }
+
+  @override
+  String get stocktakeConfirmPost => 'تأكيد الاعتماد والترحيل';
+
+  @override
+  String get stocktakeSuccessTitle => 'تم اعتماد الجرد';
+
+  @override
+  String get stocktakeSuccessBody =>
+      'قُفلت الأرصدة على المقيس ورُحّلت التسويات بحركات جرد موقَّعة.';
+
+  @override
+  String get stocktakeSuccessDiffs => 'أسطر الفروقات';
+
+  @override
+  String get stocktakeEmptyTitle => 'المخزن فارغ';
+
+  @override
+  String get stocktakeEmptyBody =>
+      'لا أصناف مخزنية في هذا المخزن — أضف أصنافاً ثم ابدأ الجرد.';
+
+  @override
+  String get stocktakeNoWarehouseTitle => 'لا مخازن';
+
+  @override
+  String get stocktakeNoWarehouseBody => 'أنشئ مخزناً أولاً ثم ابدأ الجرد.';
+
+  @override
+  String get stocktakeSearchEmptyTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get stocktakeSearchEmptyBody => 'جرّب اسماً آخر أو امسح البحث.';
+
+  @override
+  String get profitTitle => 'الأرباح والخسائر';
+
+  @override
+  String get profitSales => 'المبيعات';
+
+  @override
+  String get profitSalesReturns => 'مرتجع المبيعات';
+
+  @override
+  String get profitCogs => 'تكلفة المبيعات (COGS)';
+
+  @override
+  String get profitReturnCost => 'تكلفة المرتجع';
+
+  @override
+  String get profitStockSurplus => 'زيادات الجرد';
+
+  @override
+  String get profitStockShortage => 'عجز الجرد';
+
+  @override
+  String get profitExpenses => 'المصاريف';
+
+  @override
+  String get profitFx => 'فروق الصرف المحققة';
+
+  @override
+  String get profitOwnerDrawings => 'مسحوبات المالك';
+
+  @override
+  String get profitOwnerSection => 'مسحوبات المالك (خارج المصاريف)';
+
+  @override
+  String get profitNetSales => 'صافي المبيعات';
+
+  @override
+  String get profitNetCogs => 'صافي التكلفة';
+
+  @override
+  String get profitTotal => 'الربح';
+
+  @override
+  String get profitNetForOwner => 'صافي ما بقي للمالك';
+
+  @override
+  String get profitSectionRevenue => 'الإيراد';
+
+  @override
+  String get profitSectionCost => 'التكلفة';
+
+  @override
+  String get profitSectionAdjustments => 'التسويات (الجرد وفروق الصرف)';
+
+  @override
+  String get profitSectionExpenses => 'المصاريف';
+
+  @override
+  String get profitEmptyTitle => 'لا حركة في هذه الفترة';
+
+  @override
+  String get profitEmptyBody =>
+      'لم تُسجَّل أي مبيعات أو مصاريف أو تسويات خلال الفترة المحددة — جرّب توسيعها أو أنشئ أول حركة.';
+
+  @override
+  String get profitBaseCurrencyNote => 'جميع المبالغ بالعملة الأساسية';
+
+  @override
+  String profitGeneratedAt(Object time) {
+    return 'أُنشئ في $time';
+  }
+
+  @override
+  String profitPeriodLabel(Object from, Object to) {
+    return 'الفترة: من $from إلى $to';
+  }
+
+  @override
+  String profitInvoicesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاتورة',
+      many: '$count فاتورة',
+      few: '$count فواتير',
+      two: 'فاتورتان',
+      one: 'فاتورة واحدة',
+      zero: 'بلا فواتير',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profitStaleWarning => 'تعذّر التحديث — تُعرض آخر نسخة محمّلة';
+
+  @override
+  String get profitPdfButton => 'تقرير PDF';
+
+  @override
+  String get profitPdfTitle => 'تقرير الأرباح والخسائر';
+
+  @override
+  String get profitPrintItemCol => 'البند';
+
+  @override
+  String get profitPrintValueCol => 'القيمة';
+
+  @override
+  String get profitPrintFooterNote => 'مُشتق حصراً من خريطة الترحيل (ملحق و)';
+
+  @override
+  String profitPrintShareMessage(
+    Object currency,
+    Object from,
+    Object profit,
+    Object to,
+  ) {
+    return 'تقرير الأرباح والخسائر من $from إلى $to — الربح $profit $currency';
+  }
+
+  @override
+  String get periodToday => 'اليوم';
+
+  @override
+  String get periodWeek => 'آخر ٧ أيام';
+
+  @override
+  String get periodMonth => 'هذا الشهر';
+
+  @override
+  String get periodQuarter => 'هذا الربع';
+
+  @override
+  String get periodYear => 'هذه السنة';
+
+  @override
+  String get periodCustom => 'فترة مخصصة';
+
+  @override
+  String get periodCustomHint => 'اختر تاريخ البداية والنهاية';
+
+  @override
+  String get periodFrom => 'من';
+
+  @override
+  String get periodTo => 'إلى';
+
+  @override
+  String periodCustomRange(Object from, Object to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String get invoiceProfitSectionTitle => 'ربح الفاتورة';
+
+  @override
+  String get invoiceProfitManagerHint => 'للمدير';
+
+  @override
+  String get invoiceCostLabel => 'التكلفة';
+
+  @override
+  String get invoiceProfitLabel => 'الربح';
+
+  @override
+  String get invoiceMarginLabel => 'هامش الربح';
+
+  @override
+  String get reportsTitle => 'التقارير';
+
+  @override
+  String get reportsHeroTitle => 'مركز التقارير والرقابة';
+
+  @override
+  String get reportsHeroSubtitle =>
+      'أرقامك من مصدر حقيقة واحد — مشتقة حصراً من خريطة الترحيل';
+
+  @override
+  String get reportsSectionFinance => 'المالية والأرباح';
+
+  @override
+  String get reportsSectionDebts => 'الديون والتحصيل';
+
+  @override
+  String get reportsSectionInventory => 'المخزون والرقابة';
+
+  @override
+  String get reportsPnlDesc =>
+      'الصيغة الملزمة عبر خريطة الترحيل مع صافي ما بقي للمالك';
+
+  @override
+  String get reportsStocktakeDesc =>
+      'مقارنة الدفتري بالفعلي وتسوية الفروق بتكلفة اللقطة';
+
+  @override
+  String get itemMovementTitle => 'حركة صنف';
+
+  @override
+  String get itemMovementPickTitle => 'اختر صنفاً أولاً';
+
+  @override
+  String get itemMovementPickBody =>
+      'اعرض كل حركات الصنف خلال الفترة مع الباقي التراكمي بعد كل حركة.';
+
+  @override
+  String get itemMovementPickButton => 'اختيار الصنف';
+
+  @override
+  String get itemMovementChangeProduct => 'تغيير الصنف';
+
+  @override
+  String get itemMovementPickerTitle => 'اختر الصنف';
+
+  @override
+  String get itemMovementPickerSearchHint => 'ابحث بالاسم أو الباركود';
+
+  @override
+  String get itemMovementPickerNoResults => 'لا نتائج مطابقة للبحث';
+
+  @override
+  String get itemMovementOpeningBalance => 'رصيد ما قبل الفترة';
+
+  @override
+  String get itemMovementTotalIn => 'إجمالي الوارد';
+
+  @override
+  String get itemMovementTotalOut => 'إجمالي الصادر';
+
+  @override
+  String get itemMovementWacNow => 'التكلفة الحالية للوحدة';
+
+  @override
+  String get itemMovementBalanceAfter => 'الباقي';
+
+  @override
+  String itemMovementMovementCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حركة',
+      many: '$count حركة',
+      few: '$count حركات',
+      two: 'حركتان',
+      one: 'حركة واحدة',
+      zero: 'لا حركات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get itemMovementUnitCost => 'تكلفة الوحدة';
+
+  @override
+  String itemMovementPeriodLabel(Object from, Object to) {
+    return 'الفترة: من $from إلى $to';
+  }
+
+  @override
+  String get itemMovementEmptyTitle => 'لا حركة في هذه الفترة';
+
+  @override
+  String get itemMovementEmptyBody =>
+      'لم يتحرك هذا الصنف بين التاريخين المحددين — جرّب توسيع الفترة.';
+
+  @override
+  String get stockSummaryTitle => 'ملخص حركة المخزون';
+
+  @override
+  String stockSummaryTotalItems(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صنف متحرك',
+      many: '$count صنفاً متحركاً',
+      few: '$count أصناف متحركة',
+      two: 'صنفان متحركان',
+      one: 'صنف واحد متحرك',
+      zero: 'لا أصناف متحركة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stockSummaryTotalValue => 'إجمالي قيمة المخزون بالتكلفة';
+
+  @override
+  String get stockSummaryQtyIn => 'وارد';
+
+  @override
+  String get stockSummaryQtyOut => 'صادر';
+
+  @override
+  String get stockSummaryQtyReturns => 'مرتجع';
+
+  @override
+  String get stockSummaryQtyAdjust => 'تسوية';
+
+  @override
+  String get stockSummaryEndBalance => 'الرصيد';
+
+  @override
+  String get stockSummaryValueAtCost => 'القيمة بالتكلفة';
+
+  @override
+  String stockSummaryPeriodLabel(Object from, Object to) {
+    return 'الفترة: من $from إلى $to';
+  }
+
+  @override
+  String get stockSummaryEmptyTitle => 'لا حركة مخزون في هذه الفترة';
+
+  @override
+  String get stockSummaryEmptyBody =>
+      'لم تُسجَّل أي حركة مخزون بين التاريخين المحددين — جرّب توسيع الفترة.';
+
+  @override
+  String get salesByTitle => 'المبيعات حسب';
+
+  @override
+  String get salesByCustomer => 'العميل';
+
+  @override
+  String get salesByCategory => 'الفئة';
+
+  @override
+  String get salesByItem => 'الصنف';
+
+  @override
+  String get salesByDay => 'اليوم';
+
+  @override
+  String get salesByNoCustomer => 'عميل نقدي (بلا عميل)';
+
+  @override
+  String get salesByUncategorized => 'غير مصنّف';
+
+  @override
+  String salesByInvoicesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاتورة',
+      many: '$count فاتورة',
+      few: '$count فواتير',
+      two: 'فاتورتان',
+      one: 'فاتورة واحدة',
+      zero: 'بلا فواتير',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salesByTotal => 'إجمالي المبيعات';
+
+  @override
+  String get salesByChangeNote =>
+      'النسبة مقارنةً بفترة سابقة مساوية في الطول مباشرةً قبل المحددة.';
+
+  @override
+  String salesByPeriodLabel(Object from, Object to) {
+    return 'الفترة: من $from إلى $to';
+  }
+
+  @override
+  String get salesByEmptyTitle => 'لا مبيعات في هذه الفترة';
+
+  @override
+  String get salesByEmptyBody =>
+      'لا فواتير بيع مكتملة بين التاريخين المحددين — جرّب توسيع الفترة.';
+
+  @override
+  String changeUp(Object pct) {
+    return 'ارتفاع $pct٪';
+  }
+
+  @override
+  String changeDown(Object pct) {
+    return 'انخفاض $pct٪';
+  }
+
+  @override
+  String get changeNew => 'جديد';
+
+  @override
+  String get movementTypePurchase => 'شراء';
+
+  @override
+  String get movementTypeSale => 'بيع';
+
+  @override
+  String get movementTypeSaleReturn => 'مرتجع بيع';
+
+  @override
+  String get movementTypePurchaseReturn => 'مرتجع شراء';
+
+  @override
+  String get movementTypeAdjust => 'تسوية جرد';
+
+  @override
+  String get movementTypeOpening => 'رصيد افتتاحي';
+
+  @override
+  String get movementTypeTransferIn => 'تحويل وارد';
+
+  @override
+  String get movementTypeTransferOut => 'تحويل صادر';
+
+  @override
+  String get reportsSectionFlows => 'حركة المخزون والمبيعات';
+
+  @override
+  String get reportsItemMovementDesc =>
+      'بطاقة الصنف الكاملة بالباقي التراكمي لكل حركة';
+
+  @override
+  String get reportsStockSummaryDesc =>
+      'وارد/صادر/مرتجع/تسوية لكل صنف مع قيمة المخزون';
+
+  @override
+  String get reportsSalesByDesc =>
+      'العميل/الفئة/الصنف/اليوم مع نسب التغير عن الفترة السابقة';
 }

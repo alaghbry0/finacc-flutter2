@@ -50,20 +50,20 @@ void main() {
     settings = SettingsRepository(handle.db);
     warehouseId =
         (await handle.db.rawQuery('SELECT id FROM warehouse LIMIT 1'))
-                    .first['id']
-                as int;
+                .first['id']
+            as int;
     userId =
         (await handle.db.rawQuery('SELECT id FROM app_user LIMIT 1'))
-                    .first['id']
-                as int;
+                .first['id']
+            as int;
     baseCurrencyId =
         (await handle.db.rawQuery('SELECT id FROM currency WHERE is_base = 1'))
-                    .first['id']
-                as int;
+                .first['id']
+            as int;
     sarId =
         (await handle.db.rawQuery("SELECT id FROM currency WHERE code = 'SAR'"))
-                    .first['id']
-                as int;
+                .first['id']
+            as int;
     defaultCashboxId =
         (await handle.db.rawQuery(
               'SELECT id FROM cashbox WHERE is_default = 1',
@@ -159,119 +159,120 @@ void main() {
   // ── الترحيل الكامل ────────────────────────────────────────────────
 
   group('postPurchase — فاتورة نقدي بعملة الأساس (AC-09-أ)', () {
-    test('كل الجداول مكتوبة صحيحة: invoice/invoice_item/stock/cash/audit',
-        () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 25);
-      final result = await purchases.postPurchase(
-        draft(
-          [PurchaseLine(productId: pen, qty: 4, unitCost: 25)],
-          paidCash: 100,
-          method: PurchasePaymentMethod.cash,
-        ),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      final receipt = result.valueOrNull!;
+    test(
+      'كل الجداول مكتوبة صحيحة: invoice/invoice_item/stock/cash/audit',
+      () async {
+        final pen = await makeProduct('قلم', cost: 0, price: 25);
+        final result = await purchases.postPurchase(
+          draft(
+            [PurchaseLine(productId: pen, qty: 4, unitCost: 25)],
+            paidCash: 100,
+            method: PurchasePaymentMethod.cash,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        final receipt = result.valueOrNull!;
 
-      // التسلسل الذرّي (قاعدة 5.4-1): PUR-YYYY-NNNNN.
-      expect(receipt.docNo, 'PUR-2026-00001');
-      expect(receipt.totals.subtotal, 100);
-      expect(receipt.totals.grandTotal, 100);
-      expect(receipt.remainingCredit, 0);
-      expect(receipt.exchangeRate, 1);
-      expect(receipt.rateIsFallback, isFalse);
+        // التسلسل الذرّي (قاعدة 5.4-1): PUR-YYYY-NNNNN.
+        expect(receipt.docNo, 'PUR-2026-00001');
+        expect(receipt.totals.subtotal, 100);
+        expect(receipt.totals.grandTotal, 100);
+        expect(receipt.remainingCredit, 0);
+        expect(receipt.exchangeRate, 1);
+        expect(receipt.rateIsFallback, isFalse);
 
-      final invoice = await row('invoice');
-      expect(invoice['invoice_no'], 'PUR-2026-00001');
-      expect(invoice['doc_type'], 'purchase');
-      expect(invoice['pay_status'], 'cash');
-      expect(invoice['status'], 'completed');
-      expect(invoice['issued_at'], at.toUtc().toIso8601String());
-      expect(invoice['supplier_id'], supplierId);
-      expect(invoice['quotation_id'], isNull);
-      expect(invoice['original_invoice_id'], isNull);
-      expect(invoice['warehouse_id'], warehouseId);
-      expect(invoice['cashbox_id'], defaultCashboxId);
-      expect(invoice['currency_id'], baseCurrencyId);
-      expect(invoice['exchange_rate'], 1);
-      expect(invoice['rate_is_fallback'], 0);
-      expect(invoice['subtotal'], 100);
-      expect(invoice['discount_amount'], 0);
-      expect(invoice['total'], 100);
-      expect(invoice['total_base'], 100);
-      expect(invoice['paid_amount'], 100);
-      expect(invoice['due_amount'], 0);
-      expect(invoice['cost_total'], 100); // 4 × 25.
-      expect(invoice['created_by'], userId);
+        final invoice = await row('invoice');
+        expect(invoice['invoice_no'], 'PUR-2026-00001');
+        expect(invoice['doc_type'], 'purchase');
+        expect(invoice['pay_status'], 'cash');
+        expect(invoice['status'], 'completed');
+        expect(invoice['issued_at'], at.toUtc().toIso8601String());
+        expect(invoice['supplier_id'], supplierId);
+        expect(invoice['quotation_id'], isNull);
+        expect(invoice['original_invoice_id'], isNull);
+        expect(invoice['warehouse_id'], warehouseId);
+        expect(invoice['cashbox_id'], defaultCashboxId);
+        expect(invoice['currency_id'], baseCurrencyId);
+        expect(invoice['exchange_rate'], 1);
+        expect(invoice['rate_is_fallback'], 0);
+        expect(invoice['subtotal'], 100);
+        expect(invoice['discount_amount'], 0);
+        expect(invoice['total'], 100);
+        expect(invoice['total_base'], 100);
+        expect(invoice['paid_amount'], 100);
+        expect(invoice['due_amount'], 0);
+        expect(invoice['cost_total'], 100); // 4 × 25.
+        expect(invoice['created_by'], userId);
 
-      final item = await row('invoice_item');
-      expect(item['invoice_id'], receipt.invoiceId);
-      expect(item['product_id'], pen);
-      expect(item['line_desc'], 'قلم');
-      expect(item['qty'], 4);
-      expect(item['unit_price'], 25);
-      expect(item['discount_percent'], 0);
-      expect(item['discount_amount'], 0);
-      expect(item['line_total'], 100);
-      expect(item['line_cost'], 100); // بالعملة الأساسية.
-      expect(item['batch_id'], isNull);
+        final item = await row('invoice_item');
+        expect(item['invoice_id'], receipt.invoiceId);
+        expect(item['product_id'], pen);
+        expect(item['line_desc'], 'قلم');
+        expect(item['qty'], 4);
+        expect(item['unit_price'], 25);
+        expect(item['discount_percent'], 0);
+        expect(item['discount_amount'], 0);
+        expect(item['line_total'], 100);
+        expect(item['line_cost'], 100); // بالعملة الأساسية.
+        expect(item['batch_id'], isNull);
 
-      expect(await stockQty(pen), 4);
+        expect(await stockQty(pen), 4);
 
-      final movement = await row(
-        'stock_movement',
-        where: "product_id = $pen AND movement_type = 'purchase'",
-      );
-      expect(movement['movement_type'], 'purchase');
-      expect((movement['qty'] as num).toDouble(), 4); // الوارد موجب.
-      expect(movement['unit_cost'], 25);
-      expect(movement['ref_type'], 'invoice');
-      expect(movement['ref_id'], receipt.invoiceId);
-      expect(movement['warehouse_id'], warehouseId);
+        final movement = await row(
+          'stock_movement',
+          where: "product_id = $pen AND movement_type = 'purchase'",
+        );
+        expect(movement['movement_type'], 'purchase');
+        expect((movement['qty'] as num).toDouble(), 4); // الوارد موجب.
+        expect(movement['unit_cost'], 25);
+        expect(movement['ref_type'], 'invoice');
+        expect(movement['ref_id'], receipt.invoiceId);
+        expect(movement['warehouse_id'], warehouseId);
 
-      // اتجاه الصندوق معاكس للبيع: سند **صرف** من الصندوق.
-      final cash = await row('cash_tx');
-      expect(cash['tx_type'], 'payment');
-      expect(cash['cashbox_id'], defaultCashboxId);
-      expect(cash['currency_id'], baseCurrencyId);
-      expect(cash['amount'], 100);
-      expect(cash['exchange_rate'], 1);
-      expect(cash['ref_type'], 'invoice');
-      expect(cash['ref_id'], receipt.invoiceId);
-      expect(cash['supplier_id'], isNull); // لا خصم مزدوج من رصيد المورد.
+        // اتجاه الصندوق معاكس للبيع: سند **صرف** من الصندوق.
+        final cash = await row('cash_tx');
+        expect(cash['tx_type'], 'payment');
+        expect(cash['cashbox_id'], defaultCashboxId);
+        expect(cash['currency_id'], baseCurrencyId);
+        expect(cash['amount'], 100);
+        expect(cash['exchange_rate'], 1);
+        expect(cash['ref_type'], 'invoice');
+        expect(cash['ref_id'], receipt.invoiceId);
+        expect(cash['supplier_id'], isNull); // لا خصم مزدوج من رصيد المورد.
 
-      final allocation = await row('payment_allocation');
-      expect(allocation['cash_tx_id'], cash['id']);
-      expect(allocation['invoice_id'], receipt.invoiceId);
-      expect(allocation['allocated_amount'], 100);
+        final allocation = await row('payment_allocation');
+        expect(allocation['cash_tx_id'], cash['id']);
+        expect(allocation['invoice_id'], receipt.invoiceId);
+        expect(allocation['allocated_amount'], 100);
 
-      final audit = await row(
-        'audit_log',
-        where: "action = 'purchase_post'",
-      );
-      expect(audit['entity'], 'invoice');
-      expect(audit['entity_id'], receipt.invoiceId);
-      expect(audit['details'], contains('PUR-2026-00001'));
-    });
+        final audit = await row('audit_log', where: "action = 'purchase_post'");
+        expect(audit['entity'], 'invoice');
+        expect(audit['entity_id'], receipt.invoiceId);
+        expect(audit['details'], contains('PUR-2026-00001'));
+      },
+    );
 
-    test('رقم فاتورة المورد الورقي داخل الملاحظة الداخلية (القرار 5)',
-        () async {
-      final pen = await makeProduct('قلم');
-      final result = await purchases.postPurchase(
-        draft(
-          [PurchaseLine(productId: pen, qty: 1, unitCost: 10)],
-          paidCash: 10,
-          method: PurchasePaymentMethod.cash,
-          supplierRef: 'INV-889',
-        ),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue);
-      final invoice = await row('invoice');
-      expect(invoice['notes_internal'], 'فاتورة المورد: INV-889');
-    });
+    test(
+      'رقم فاتورة المورد الورقي داخل الملاحظة الداخلية (القرار 5)',
+      () async {
+        final pen = await makeProduct('قلم');
+        final result = await purchases.postPurchase(
+          draft(
+            [PurchaseLine(productId: pen, qty: 1, unitCost: 10)],
+            paidCash: 10,
+            method: PurchasePaymentMethod.cash,
+            supplierRef: 'INV-889',
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue);
+        final invoice = await row('invoice');
+        expect(invoice['notes_internal'], 'فاتورة المورد: INV-889');
+      },
+    );
 
     test('التسلسل يتقدم عبر الفواتير ولا يُستهلك عند الرفض', () async {
       final a = await makeProduct('صنف أ');
@@ -360,8 +361,7 @@ void main() {
       expect(second.valueOrNull!.docNo, 'PUR-2026-00002');
     });
 
-    test('qty_old = 0 مع تكلفة قديمة عالقة → التكلفة الجديدة مباشرة',
-        () async {
+    test('qty_old = 0 مع تكلفة قديمة عالقة → التكلفة الجديدة مباشرة', () async {
       // صنف بلا مخزون لكن cost_price قديمة 50 (بقايا) — الشراء يعتمد
       // التكلفة الجديدة مباشرة (5.4-3: qty_old ≤ 0 → cost_new).
       final item = await makeProduct('صنف معدوم', cost: 50);
@@ -762,31 +762,33 @@ void main() {
       expect(result.errorOrNull, contains('مؤرشف'));
     });
 
-    test('أي رفض لا يترك أثراً (لا فاتورة ولا سند ولا رقم ولا تدقيق)',
-        () async {
-      final pen = await makeProduct('قلم');
-      final result = await purchases.postPurchase(
-        draft(
-          [PurchaseLine(productId: pen, qty: 0, unitCost: 5)], // كمية صفر.
-        ),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isErr, isTrue);
-      expect(await count('invoice'), 0);
-      expect(await count('invoice_item'), 0);
-      expect(
-        await count('stock_movement', where: "movement_type = 'purchase'"),
-        0,
-      );
-      expect(await count('cash_tx'), 0);
-      expect(await count('payment_allocation'), 0);
-      expect(await count('audit_log', where: "action = 'purchase_post'"), 0);
-      final seq = await handle.db.rawQuery(
-        "SELECT last_no FROM doc_sequence WHERE doc_type = 'PUR'",
-      );
-      expect(seq, isEmpty); // الرقم لم يُستهلك إطلاقاً.
-    });
+    test(
+      'أي رفض لا يترك أثراً (لا فاتورة ولا سند ولا رقم ولا تدقيق)',
+      () async {
+        final pen = await makeProduct('قلم');
+        final result = await purchases.postPurchase(
+          draft(
+            [PurchaseLine(productId: pen, qty: 0, unitCost: 5)], // كمية صفر.
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isErr, isTrue);
+        expect(await count('invoice'), 0);
+        expect(await count('invoice_item'), 0);
+        expect(
+          await count('stock_movement', where: "movement_type = 'purchase'"),
+          0,
+        );
+        expect(await count('cash_tx'), 0);
+        expect(await count('payment_allocation'), 0);
+        expect(await count('audit_log', where: "action = 'purchase_post'"), 0);
+        final seq = await handle.db.rawQuery(
+          "SELECT last_no FROM doc_sequence WHERE doc_type = 'PUR'",
+        );
+        expect(seq, isEmpty); // الرقم لم يُستهلك إطلاقاً.
+      },
+    );
   });
 
   // ── القراءات ─────────────────────────────────────────────────────
@@ -795,16 +797,20 @@ void main() {
     test('تفاصيل كاملة + قائمة أحدث أولاً مع تصفية المورد', () async {
       final pen = await makeProduct('قلم');
       final paper = await makeProduct('ورق');
-      final first = await purchases.postPurchase(
-        draft([PurchaseLine(productId: pen, qty: 2, unitCost: 10)]),
-        userId: userId,
-        now: at,
-      ).then((r) => r.valueOrNull!);
-      final second = await purchases.postPurchase(
-        draft([PurchaseLine(productId: paper, qty: 1, unitCost: 30)]),
-        userId: userId,
-        now: at,
-      ).then((r) => r.valueOrNull!);
+      final first = await purchases
+          .postPurchase(
+            draft([PurchaseLine(productId: pen, qty: 2, unitCost: 10)]),
+            userId: userId,
+            now: at,
+          )
+          .then((r) => r.valueOrNull!);
+      final second = await purchases
+          .postPurchase(
+            draft([PurchaseLine(productId: paper, qty: 1, unitCost: 30)]),
+            userId: userId,
+            now: at,
+          )
+          .then((r) => r.valueOrNull!);
 
       final detail = await purchases.purchaseDetail(second.invoiceId);
       expect(detail, isNotNull);

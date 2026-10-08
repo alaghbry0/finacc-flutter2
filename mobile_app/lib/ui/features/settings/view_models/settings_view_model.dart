@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/settings_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
+import '../../../../data/services/backup/backup_service.dart';
 import '../../../../domain/models/company.dart';
 
 /// بيانات شاشة الإعدادات مجمّعة.
@@ -20,6 +21,7 @@ class SettingsData {
     this.adminName,
     this.autolockMinutes = 5,
     this.themeMode = 'system',
+    this.dbSizeBytes,
     this.error,
   });
 
@@ -29,6 +31,10 @@ class SettingsData {
   final String? adminName;
   final int autolockMinutes;
   final String themeMode;
+
+  /// حجم ملف القاعدة بالبايت (بند «حول» — FR-13-07) أو null.
+  final int? dbSizeBytes;
+
   final Object? error;
 }
 
@@ -37,13 +43,18 @@ class SettingsViewModel extends ChangeNotifier {
     required CompanyRepository companyRepo,
     required UserRepository userRepo,
     required SettingsRepository settingsRepo,
+    BackupService? backupEngine,
   }) : _companies = companyRepo,
        _users = userRepo,
-       _settings = settingsRepo;
+       _settings = settingsRepo,
+       _backup = backupEngine;
 
   final CompanyRepository _companies;
   final UserRepository _users;
   final SettingsRepository _settings;
+
+  /// محرك النسخ — لحجم القاعدة في بند «حول» (اختياري).
+  final BackupService? _backup;
 
   SettingsData _state = const SettingsData(loading: true);
   SettingsData get state => _state;
@@ -57,6 +68,7 @@ class SettingsViewModel extends ChangeNotifier {
       adminName: _state.adminName,
       autolockMinutes: _state.autolockMinutes,
       themeMode: _state.themeMode,
+      dbSizeBytes: _state.dbSizeBytes,
     );
     notifyListeners();
     try {
@@ -66,6 +78,9 @@ class SettingsViewModel extends ChangeNotifier {
         _users.adminDisplayName(),
         _settings.autolockMinutes(),
         _settings.themeMode(),
+        _backup == null
+            ? Future<Object?>.value(null)
+            : _backup.databaseFileSize(),
       ]);
       _state = SettingsData(
         loading: false,
@@ -74,6 +89,7 @@ class SettingsViewModel extends ChangeNotifier {
         adminName: results[2] as String?,
         autolockMinutes: results[3] as int,
         themeMode: results[4] as String,
+        dbSizeBytes: results[5] as int?,
       );
     } catch (error) {
       _state = SettingsData(
@@ -83,6 +99,7 @@ class SettingsViewModel extends ChangeNotifier {
         adminName: _state.adminName,
         autolockMinutes: _state.autolockMinutes,
         themeMode: _state.themeMode,
+        dbSizeBytes: _state.dbSizeBytes,
         error: error,
       );
     }
