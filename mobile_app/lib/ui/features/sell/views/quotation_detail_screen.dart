@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/models/quotation.dart';
+import '../../../../domain/services/credit_limit.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -399,6 +400,9 @@ class _ActionsBar extends StatelessWidget {
       customerName: vm.state.detail?.customerName,
       onConfirm: (paidCash, method) =>
           vm.convertToInvoice(paidCash: paidCash, paymentMethod: method),
+      // FR-03-05 (17-c): بوابة حد الائتمان عند تحويل عرض السعر لفاتورة.
+      creditGate: () =>
+          _resolveCreditGate(context.read<AppController>(), quotation),
     );
     if (posted && context.mounted) {
       ScaffoldMessenger.of(context)
@@ -407,6 +411,33 @@ class _ActionsBar extends StatelessWidget {
           SnackBar(content: Text(l10n.sellQuotationConvertedMessage)),
         );
     }
+  }
+
+  /// يجلب معطيات بوابة حد الائتمان لعرض السعر المحوَّل — null عند غياب
+  /// العميل (عرض نقدي مجهول) أو المستودعات (FR-03-05).
+  Future<CreditLimitGate?> _resolveCreditGate(
+    AppController app,
+    Quotation quotation,
+  ) async {
+    final customerId = quotation.customerId;
+    if (customerId == null) return null;
+    final customers = app.customers;
+    final settings = app.settings;
+    if (customers == null || settings == null) return null;
+    final check = await customers.checkCredit(
+      customerId,
+      quotation.currencyId,
+      0,
+    );
+    final action = await settings.getString(
+      'parties.credit_limit_action',
+      'warn',
+    );
+    return CreditLimitGate(
+      creditLimit: check.creditLimit,
+      action: action,
+      currentBalance: check.balance,
+    );
   }
 
   Future<void> _markSent(

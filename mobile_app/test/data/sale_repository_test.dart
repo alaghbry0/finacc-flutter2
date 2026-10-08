@@ -740,9 +740,13 @@ void main() {
   });
 
   // ── حد الائتمان ──────────────────────────────────────────────────
+  // 17-c: السلوك من إعداد parties.credit_limit_action — المستودع يحرس
+  // 'block' حصراً (رفض نهائي)؛ 'warn' (الافتراضي) حواره في PaymentSheet
+  // («متابعة على أي حال») فلا يمنع الترحيل هنا.
 
   group('حد الائتمان (FR-03-05)', () {
-    test('آجل يتجاوز الحد → رفض ولا فاتورة', () async {
+    test('آجل يتجاوز الحد بسلوك block → رفض ولا فاتورة', () async {
+      await settings.set('parties.credit_limit_action', 'block');
       final customer = await makeCustomer('سالم', creditLimit: 100);
       final pen = await makeProduct('قلم', cost: 0, price: 150, qty: 10);
       final result = await sales.postSale(
@@ -782,7 +786,8 @@ void main() {
       expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
     });
 
-    test('حد 0 → أي آجل يُرفض، والنقدي ينجح', () async {
+    test('حد 0 بسلوك block → أي آجل يُرفض، والنقدي ينجح', () async {
+      await settings.set('parties.credit_limit_action', 'block');
       final customer = await makeCustomer('ممنوع آجلاً', creditLimit: 0);
       final pen = await makeProduct('قلم', cost: 0, price: 50, qty: 10);
       final credit = await sales.postSale(
@@ -816,7 +821,8 @@ void main() {
       expect(cash.isOk, isTrue, reason: '${cash.errorOrNull}');
     });
 
-    test('الرصيد القائم يُحتسب: آجلان متتاليان ضد حد واحد', () async {
+    test('الرصيد القائم يُحتسب: آجلان متتاليان ضد حد واحد (block)', () async {
+      await settings.set('parties.credit_limit_action', 'block');
       final customer = await makeCustomer('متراكم', creditLimit: 100);
       final pen = await makeProduct('قلم', cost: 0, price: 60, qty: 10);
       Future<Result<SalePostedReceipt, String>> creditSale() => sales.postSale(
@@ -855,6 +861,38 @@ void main() {
       expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
       expect(await customers.balanceInCurrency(customer, baseCurrencyId), 30);
     });
+
+    test(
+      '17-c: بسلوك warn (الافتراضي) → التجاوز يمرّ (الحوار في الواجهة)',
+      () async {
+        // الإعداد غير مضبوط → الافتراضي warn: المستودع لا يمنع؛ التحذير
+        // مسؤولية PaymentSheet (حوار «متابعة على أي حال») — FR-03-05.
+        final customer = await makeCustomer('مُتَحَدّي الحد', creditLimit: 100);
+        final pen = await makeProduct('قلم', cost: 0, price: 150, qty: 10);
+        final result = await sales.postSale(
+          SaleDraft(
+            customerId: customer,
+            currencyId: baseCurrencyId,
+            lines: [CartLine(productId: pen, qty: 1, unitPrice: 150)],
+            paidCash: 0,
+            paymentMethod: SalePaymentMethod.credit,
+            warehouseId: warehouseId,
+            issuedAt: at,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(
+          result.isOk,
+          isTrue,
+          reason: 'warn لا يمنع الترحيل: ${result.errorOrNull}',
+        );
+        expect(
+          await customers.balanceInCurrency(customer, baseCurrencyId),
+          150,
+        );
+      },
+    );
   });
 
   // ── سياسة سعر الصرف ──────────────────────────────────────────────

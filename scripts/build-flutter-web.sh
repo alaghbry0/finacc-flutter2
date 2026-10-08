@@ -32,9 +32,11 @@ fi
 
 # dart2js O4 gets SIGKILLed (OOM) on the 4GB sandbox — O2 is the sweet spot
 # (full minification, a third of the peak memory). --debug builds ignore it.
+# --no-wasm-dry-run (الشريحة 10): فحص wasm الجاف يضاعف دورة الترجمة
+# ويقتل dart2js بـ OOM بعد نمو الشجرة — نحن نبني لـ CanvasKit حصراً.
 D2JS_FLAG=""
 if [ "$BUILD_MODE" = "release" ]; then
-  D2JS_FLAG="--dart2js-optimization O2"
+  D2JS_FLAG="--dart2js-optimization O2 --no-wasm-dry-run"
 fi
 
 # use_arabic=true — the `pdf` package ships Arabic glyph-shaping DISABLED by

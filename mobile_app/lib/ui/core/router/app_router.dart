@@ -13,6 +13,7 @@ import '../../features/cash/views/boxes_screen.dart';
 import '../../features/cash/views/cash_home_screen.dart';
 import '../../features/cash/views/categories_screen.dart';
 import '../../features/cash/views/movements_screen.dart';
+import '../../features/cash/views/shift_screen.dart';
 import '../../features/cash/views/voucher_screen.dart';
 import '../../features/home/views/home_screen.dart';
 import '../../features/inventory/views/batches_screen.dart';
@@ -23,6 +24,7 @@ import '../../features/inventory/views/item_detail_screen.dart';
 import '../../features/inventory/views/item_form_screen.dart';
 import '../../features/inventory/views/items_list_screen.dart';
 import '../../features/inventory/views/low_stock_screen.dart';
+import '../../features/inventory/views/stocktake_screen.dart';
 import '../../features/onboarding_auth/views/lock_screen.dart';
 import '../../features/onboarding_auth/views/onboarding_screen.dart';
 import '../../features/parties/views/exchange_rates_screen.dart';
@@ -35,12 +37,19 @@ import '../../features/purchases/views/purchase_screen.dart';
 import '../../features/purchases/views/purchases_home_screen.dart';
 import '../../features/purchases/views/purchases_list_screen.dart';
 import '../../features/purchases/views/returns_screen.dart';
+import '../../features/reports/views/aging_report_screen.dart';
+import '../../features/reports/views/item_movement_screen.dart';
+import '../../features/reports/views/profit_report_screen.dart';
+import '../../features/reports/views/reports_hub_screen.dart';
+import '../../features/reports/views/sales_by_screen.dart';
+import '../../features/reports/views/stock_summary_screen.dart';
 import '../../features/sell/views/quotation_detail_screen.dart';
 import '../../features/sell/views/quotations_screen.dart';
 import '../../features/sell/views/sales_invoices_screen.dart';
 import '../../features/sell/views/sell_home_screen.dart';
 import '../../features/sell/views/sell_screen.dart';
 import '../../features/settings/views/audit_log_screen.dart';
+import '../../features/settings/views/backup_screen.dart';
 import '../../features/settings/views/change_pin_screen.dart';
 import '../../features/settings/views/settings_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
@@ -205,6 +214,39 @@ GoRouter buildAppRouter(AppController controller) {
           ),
         ],
       ),
+      // وحدة التقارير (الشريحة 9→10) — مركز التقارير جذر المسار: بطاقات
+      // الأقسام (الأرباح عبر خريطة الترحيل، أعمار الديون، روابط الرقابة
+      // العميقة) وتُلحق بها تقارير الشريحة 10 الباقية فور جاهزيتها.
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const ReportsHubScreen(),
+        routes: [
+          GoRoute(
+            path: 'aging',
+            builder: (context, state) => const AgingReportScreen(),
+          ),
+          // الأرباح والخسائر (FR-09-02) — الصيغة الملزمة عبر Posting Map.
+          GoRoute(
+            path: 'profit',
+            builder: (context, state) => const ProfitReportScreen(),
+          ),
+          // حركة صنف (FR-09-03) — بطاقة الصنف بالباقي التراكمي.
+          GoRoute(
+            path: 'item-movement',
+            builder: (context, state) => const ItemMovementScreen(),
+          ),
+          // ملخص حركة المخزون (FR-09-04) — وارد/صادر/مرتجع/تسوية لكل صنف.
+          GoRoute(
+            path: 'stock-summary',
+            builder: (context, state) => const StockSummaryScreen(),
+          ),
+          // المبيعات حسب (FR-09-06) — العميل/الفئة/الصنف/اليوم + نسب التغير.
+          GoRoute(
+            path: 'sales-by',
+            builder: (context, state) => const SalesByScreen(),
+          ),
+        ],
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
@@ -263,6 +305,12 @@ GoRouter buildAppRouter(AppController controller) {
                   GoRoute(
                     path: 'categories-units',
                     builder: (context, state) => const CategoriesUnitsScreen(),
+                  ),
+                  // الجرد الفعلي (FR-01-08 — الشريحة 10): دفتري/فعلي +
+                  // تسوية ذرّية بتكلفة لقطة داخل معاملة واحدة.
+                  GoRoute(
+                    path: 'stocktake',
+                    builder: (context, state) => const StocktakeScreen(),
                   ),
                 ],
               ),
@@ -358,6 +406,11 @@ GoRouter buildAppRouter(AppController controller) {
                     path: 'categories',
                     builder: (context, state) => const CategoriesScreen(),
                   ),
+                  // الوردية بالمعادلة الشاملة (الشريحة 9 — FR-04-04).
+                  GoRoute(
+                    path: 'shift',
+                    builder: (context, state) => const ShiftScreen(),
+                  ),
                 ],
               ),
             ],
@@ -375,6 +428,11 @@ GoRouter buildAppRouter(AppController controller) {
                   GoRoute(
                     path: 'audit-log',
                     builder: (context, state) => const AuditLogScreen(),
+                  ),
+                  // النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11).
+                  GoRoute(
+                    path: 'backup',
+                    builder: (context, state) => const BackupScreen(),
                   ),
                 ],
               ),

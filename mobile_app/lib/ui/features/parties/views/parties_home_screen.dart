@@ -255,8 +255,24 @@ class _HubCard extends StatelessWidget {
             onTap: () => context.go('/parties/payables'),
           ),
           _PartyHubDivider(),
+          // أعمار الديون (FR-09-05 — الشريحة 9): تصنيف FIFO للمستحقات.
           _PartyHubRow(
             index: 4,
+            icon: Icons.hourglass_bottom_rounded,
+            title: l10n.agingTitle,
+            subtitle: Text(
+              l10n.agingHubSubtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            color: colors.negative,
+            onTap: () => context.go('/reports/aging'),
+          ),
+          _PartyHubDivider(),
+          _PartyHubRow(
+            index: 5,
             icon: Icons.currency_exchange_rounded,
             title: l10n.partiesHubRates,
             subtitle: _RatesSubtitle(

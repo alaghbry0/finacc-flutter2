@@ -2,7 +2,12 @@
 # Sourced from ~/.bashrc (line added by mini-services/flutter-env/keeper.sh).
 
 export PATH="/home/z/flutter/bin:/home/z/opt/sysroot/usr/bin:$PATH"
-export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
+# JDK كامل (javac) من Temurin — نظام JRE فقط بلا مترجم. البديل الاحتياطي النظامي.
+if [ -x /home/z/opt/jdk21/bin/javac ]; then
+  export JAVA_HOME="/home/z/opt/jdk21"
+else
+  export JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
+fi
 export ANDROID_HOME="/home/z/android-sdk"
 
 # Chrome for `flutter run -d chrome` / web builds. The versioned directory

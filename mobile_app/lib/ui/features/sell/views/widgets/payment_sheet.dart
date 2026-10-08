@@ -2,6 +2,10 @@
 /// الصافي كبير أعلى + الطرق (نقدي كامل / آجل كامل / مختلط) + المدفوع
 /// نقداً والباقي للعميل بوضوح + رفض الآجل لعميل نقدي مجهول + تأكيد
 /// الترحيل + إيصال نجاح مبسط بشارة «سعر صرف تقديري» عند fallback.
+///
+/// **17-c / FR-03-05**: بوابة حد الائتمان عند التأكيد — [creditGate]
+/// (اختياري) يُستدعى قبل الترحيل بالجزء الآجل حصراً؛ عند التجاوز:
+/// warn → حوار «متابعة على أي حال / إلغاء»، block → «رجوع» حصراً.
 library;
 
 import 'package:flutter/material.dart';
@@ -9,6 +13,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../../domain/core/result.dart';
 import '../../../../../domain/models/sale.dart';
+import '../../../../../domain/services/credit_limit.dart';
 import '../../../../../domain/services/sale_pricing.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -24,6 +29,11 @@ enum _PayMode { fullCash, fullCredit, mixed }
 /// [onConfirm] ينفّذ الترحيل الفعلي (postSale للسلة، أو convertToInvoice
 /// لعرض السعر) ويعيد نتيجته كما هي — رسائل الرفض العربية تُعرض داخل
 /// النافذة بلا فقد للسياق.
+///
+/// [creditGate] (FR-03-05، 17-c — اختياري): يُستدعى لحظة التأكيد عند
+/// وجود جزء آجل ليجلب (الحد + الرصيد الجاري بعملة الفاتورة + سلوك
+/// الإعداد `parties.credit_limit_action`)؛ قد يعيد null (لا عميل/
+/// فشل قراءة) فتمر الفاتورة بلا فحص — المستودع يبقى الحارس الأخير.
 Future<bool> showPaymentSheet(
   BuildContext context, {
   required double grandTotal,
@@ -35,6 +45,7 @@ Future<bool> showPaymentSheet(
     SalePaymentMethod method,
   )
   onConfirm,
+  Future<CreditLimitGate?> Function()? creditGate,
 }) async {
   final posted = await showModalBottomSheet<bool>(
     context: context,
@@ -48,6 +59,7 @@ Future<bool> showPaymentSheet(
       currencyCode: currencyCode,
       customerName: customerName,
       onConfirm: onConfirm,
+      creditGate: creditGate,
     ),
   );
   return posted ?? false;
@@ -60,6 +72,7 @@ class _PaymentSheet extends StatefulWidget {
     required this.currencyCode,
     required this.customerName,
     required this.onConfirm,
+    this.creditGate,
   });
 
   final double grandTotal;
@@ -71,6 +84,9 @@ class _PaymentSheet extends StatefulWidget {
     SalePaymentMethod method,
   )
   onConfirm;
+
+  /// بوابة حد الائتمان (FR-03-05) — null بلا فحص (نقدي محض أو بلا عميل).
+  final Future<CreditLimitGate?> Function()? creditGate;
 
   @override
   State<_PaymentSheet> createState() => _PaymentSheetState();
@@ -157,6 +173,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     final paid = _validatedPaidCash();
     if (paid == null) return;
     final method = SalePricing.derivePayStatus(widget.grandTotal, paid);
+    // FR-03-05 (17-c): فحص حد الائتمان قبل الترحيل — **الجزء الآجل
+    // حصراً** (الدفع المختلط يقيَّم بجزئه الآجل لا بكامل الصافي).
+    if (!await _awaitCreditLimitApproval(paid)) return;
     setState(() {
       _posting = true;
       _error = null;
@@ -174,6 +193,45 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         _error = result.errorOrNull!;
       });
     }
+  }
+
+  /// يشغّل بوابة الائتمان عند وجود جزء آجل — يعيد false إذا ألغى
+  /// المستخدم أو كان السلوك block (لا متابعة). النقدي المحض يمر مباشرة.
+  Future<bool> _awaitCreditLimitApproval(double paid) async {
+    final gate = widget.creditGate;
+    if (gate == null) return true;
+    final settlement = settlePreview(widget.grandTotal, paid);
+    final newDue = settlement.remainingCredit;
+    if (newDue <= moneyEpsilon) return true;
+    final CreditLimitGate? data;
+    try {
+      data = await gate();
+    } catch (_) {
+      // فشل قراءة البوابة لا يمنع البيع — المستودع حارس أخير.
+      return true;
+    }
+    if (data == null) return true;
+    final gateData = data;
+    final decision = evaluateCreditLimit(
+      creditLimit: gateData.creditLimit,
+      action: gateData.action,
+      currentBalance: gateData.currentBalance,
+      newDue: newDue,
+    );
+    if (!decision.triggered) return true;
+    if (!mounted) return false;
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: !decision.blocked,
+          builder: (dialogContext) => _CreditLimitDialog(
+            decision: decision,
+            gate: gateData,
+            decimals: widget.decimals,
+            currencyCode: widget.currencyCode,
+            customerName: widget.customerName,
+          ),
+        ) ??
+        false;
   }
 
   @override
@@ -368,6 +426,151 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       borderRadius: BorderRadius.circular(999),
     ),
   );
+}
+
+/// حوار حد الائتمان (FR-03-05 / 17-c): الحد + الرصيد الحالي + الرصيد
+/// المتوقع بعد الفاتورة. warn → «متابعة على أي حال / إلغاء»؛
+/// block → «رجوع» حصراً (لا متابعة، والنقر خارجه لا يمرر).
+class _CreditLimitDialog extends StatelessWidget {
+  const _CreditLimitDialog({
+    required this.decision,
+    required this.gate,
+    required this.decimals,
+    required this.currencyCode,
+    required this.customerName,
+  });
+
+  final CreditLimitDecision decision;
+  final CreditLimitGate gate;
+  final int decimals;
+  final String? currencyCode;
+  final String? customerName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    final d = decimals == 0 ? 0 : 2;
+
+    return AlertDialog(
+      icon: Icon(
+        Icons.gpp_maybe_rounded,
+        color: decision.blocked ? colors.negative : colors.warning,
+        size: 32,
+      ),
+      title: Text(l10n.creditLimitTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            decision.blocked
+                ? l10n.creditLimitBlocked
+                : l10n.creditLimitExceeded,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          if (customerName != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              // اسم العميل + رمز عملة الفاتورة (سياق المبالغ المعروضة).
+              currencyCode != null && currencyCode!.isNotEmpty
+                  ? '$customerName • ${currencyCode!}'
+                  : customerName!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          _LimitRow(
+            label: l10n.creditLimitLimitLabel,
+            value: gate.creditLimit ?? 0,
+            decimals: d,
+            color: colors.gold,
+            emphasized: true,
+          ),
+          _LimitRow(
+            label: l10n.creditLimitCurrentLabel,
+            value: gate.currentBalance,
+            decimals: d,
+            color: scheme.onSurfaceVariant,
+          ),
+          _LimitRow(
+            label: l10n.creditLimitResultingLabel,
+            value: decision.resultingBalance,
+            decimals: d,
+            color: decision.blocked ? colors.negative : colors.warning,
+            emphasized: true,
+          ),
+        ],
+      ),
+      actions: [
+        if (!decision.blocked) ...[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.creditLimitCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.creditLimitContinue),
+          ),
+        ] else
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.creditLimitBack),
+          ),
+      ],
+    );
+  }
+}
+
+/// سطر مبلغ داخل حوار الائتمان — تسمية + مبلغ بأرقام جدولية.
+class _LimitRow extends StatelessWidget {
+  const _LimitRow({
+    required this.label,
+    required this.value,
+    required this.decimals,
+    required this.color,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final double value;
+  final int decimals;
+  final Color color;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: emphasized ? FontWeight.w800 : FontWeight.w400,
+              ),
+            ),
+          ),
+          // مبلغ ملوّن بأرقام جدولية (LTR داخل السياق العربي).
+          Text(
+            AmountText.formatFor(context, value, decimals),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// رأس النافذة — الصافي كبير + رمز العملة + العميل.

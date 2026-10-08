@@ -6,6 +6,12 @@
 /// هذه الجولة: حركات دخول متدرجة (fade+slide بتأخيرات متتابعة)، بطاقة
 /// ترحيب بزخرفة هندسية خافتة وخط ذهبي فاصل، شارة «آخر تحديث»، وبلاطات
 /// بحلقة أيقونة متدرجة.
+///
+/// إكمال 17-c (FR-09-01): بطاقة «مبيعات الشهر» العريضة أسفل بلاطات
+/// اليوم (الإجمالي + شارة المقارنة ٪ بالأخضر/الأحمر أو «جديد» + عدد
+/// الفواتير) + قسم «أعلى الأصناف مبيعاً» بعد رسم 30 يوماً (شارات
+/// ترتيب ذهبية/فضية/برونزية + شريط حصة الكمية النسبي) — كلها عبر
+/// NumeralsScope وتنسيق المبالغ الموحّد.
 library;
 
 import 'dart:async';
@@ -20,15 +26,18 @@ import '../../../../domain/services/hijri_date.dart';
 import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/mini_sales_chart.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
+import '../../../../data/repositories/dashboard_repository.dart'
+    show MonthSalesStats, TopItemStat;
 import '../view_models/home_view_model.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -40,6 +49,7 @@ class HomeScreen extends StatelessWidget {
     final vm = DashboardViewModel(
       repository: app.dashboard!,
       companyRepository: app.companies,
+      backupEngine: app.backupEngine,
     );
     unawaited(vm.load(companyName: app.company?.name));
     return ChangeNotifierProvider<DashboardViewModel>.value(
@@ -85,6 +95,18 @@ class _DashboardBody extends StatelessWidget {
                   gregorianText: _gregorianText(NumeralsScope.of(context)),
                 ),
               ),
+              // بانر تذكير النسخ الاحتياطي (FR-11-04) — يظهر عند النتيجة
+              // أو الاستحقاق فقط، قابل للإخفاء لبقية الجلسة.
+              if (vm.backupReminder != null) ...[
+                const SizedBox(height: 12),
+                _StaggeredEntrance(
+                  index: 1,
+                  child: _BackupReminderBanner(
+                    reminder: vm.backupReminder!,
+                    onDismiss: vm.dismissBackupReminder,
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
               if (state.loading)
                 const StatTilesSkeleton()
@@ -138,8 +160,33 @@ class _DashboardBody extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 18),
+              // بطاقة «مبيعات الشهر» العريضة (17-c / FR-09-01): الإجمالي
+              // + شارة المقارنة بالشهر السابق + عدد فواتير الشهر.
+              // التدهور (null) أو الخطأ العام = غياب البطاقة بلا أثر.
+              if (state.loading)
+                _StaggeredEntrance(
+                  index: 2,
+                  child: FinCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionHeader(title: l10n.monthSalesTitle),
+                        const ListSkeleton(rows: 2),
+                      ],
+                    ),
+                  ),
+                )
+              else if (state.error == null && state.month != null)
+                _StaggeredEntrance(
+                  index: 2,
+                  child: _MonthSalesCard(
+                    stats: state.month!,
+                    currencyCode: vm.currencyCode,
+                  ),
+                ),
+              const SizedBox(height: 18),
               _StaggeredEntrance(
-                index: 2,
+                index: 3,
                 child: FinCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +241,7 @@ class _DashboardBody extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               _StaggeredEntrance(
-                index: 3,
+                index: 4,
                 child: FinCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,8 +267,32 @@ class _DashboardBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 18),
+              // أعلى الأصناف مبيعاً هذا الشهر (17-c / FR-09-01) — بعد رسم
+              // الـ30 يوماً؛ شارات ترتيب ملوّنة + شريط حصة الكمية.
+              if (state.loading)
+                _StaggeredEntrance(
+                  index: 5,
+                  child: FinCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SectionHeader(title: l10n.topItemsTitle),
+                        const ListSkeleton(rows: 3),
+                      ],
+                    ),
+                  ),
+                )
+              else if (state.error == null && state.topItems != null)
+                _StaggeredEntrance(
+                  index: 5,
+                  child: _TopItemsCard(
+                    items: state.topItems!,
+                    currencyCode: vm.currencyCode,
+                  ),
+                ),
+              const SizedBox(height: 18),
               _StaggeredEntrance(
-                index: 4,
+                index: 6,
                 child: FinCard(
                   child: Column(
                     children: [
@@ -278,6 +349,391 @@ class _DashboardBody extends StatelessWidget {
   }
 }
 
+/// بطاقة «مبيعات الشهر» (17-c / FR-09-01): إجمالي الشهر بالعملة الأساس
+/// + شارة المقارنة بالشهر السابق (أخضر ▲ / أحمر ▼ / محايد / «جديد» عند
+/// صفر السابق) + شارة عدد فواتير الشهر بجانب حلقة أيقونة تقويم.
+class _MonthSalesCard extends StatelessWidget {
+  const _MonthSalesCard({required this.stats, required this.currencyCode});
+
+  final MonthSalesStats stats;
+  final String? currencyCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    final arabicIndic = NumeralsScope.of(context);
+    final pct = stats.changePct;
+
+    // شارة المقارنة: أخضر عند الصعود، أحمر عند الهبوط، محايد عند
+    // التساوي، و«جديد» عند صفر الشهر السابق (لا نسبة رياضياً).
+    Widget? badge;
+    Color? badgeColor;
+    if (pct == null) {
+      if (stats.thisMonthSales > 0) {
+        badge = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.auto_awesome_rounded, size: 13),
+            const SizedBox(width: 4),
+            Text(l10n.monthNew),
+          ],
+        );
+        badgeColor = colors.gold;
+      }
+    } else if (pct > 0) {
+      badge = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.arrow_drop_up_rounded, size: 18),
+          const SizedBox(width: 2),
+          Text(l10n.monthChangeUp(_pctText(pct, arabicIndic))),
+        ],
+      );
+      badgeColor = colors.positive;
+    } else if (pct < 0) {
+      badge = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.arrow_drop_down_rounded, size: 18),
+          const SizedBox(width: 2),
+          Text(l10n.monthChangeDown(_pctText(pct, arabicIndic))),
+        ],
+      );
+      badgeColor = colors.negative;
+    } else {
+      badge = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.trending_flat_rounded, size: 15),
+          const SizedBox(width: 4),
+          Text(l10n.monthChangeFlat),
+        ],
+      );
+      badgeColor = colors.neutral;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: l10n.monthSalesTitle),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Flexible(
+                        child: AmountText(
+                          amount: stats.thisMonthSales,
+                          size: AmountSize.display,
+                        ),
+                      ),
+                      if (currencyCode != null && currencyCode!.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          currencyCode!,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: colors.gold,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (badge != null) ...[
+                    const SizedBox(height: 8),
+                    // الشارة: نص ملون بخلفية دلالية شفافة — العلامة
+                    // غير اللونية (السهم) مرافقة دائماً (§6.1).
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: badgeColor!.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: badgeColor.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: DefaultTextStyle(
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(
+                              color: badgeColor,
+                              fontWeight: FontWeight.w800,
+                            ),
+                        child: badge,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // حلقة أيقونة تقويم + شارة عدد فواتير الشهر تحتها.
+            Column(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.primary.withValues(alpha: 0.10),
+                    border: Border.all(
+                      color: scheme.primary.withValues(alpha: 0.30),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.calendar_month_rounded,
+                    color: scheme.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.monthInvoices(stats.invoiceCountThisMonth),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// نسبة مئوية مضغوطة (بلا كسر زائف: «23» لا «23.0») بأرقام النظام.
+  static String _pctText(double pct, bool arabicIndic) {
+    final text = pct.abs().toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
+    return arabicIndic ? Numerals.toArabicIndic(text) : text;
+  }
+}
+
+/// قسم «أعلى الأصناف مبيعاً» هذا الشهر (17-c / FR-09-01): بطاقة ترتيب
+/// بشارات ذهبية/فضية/برونزية للأعمدة الأولى، وكمية وإيراد لكل صنف،
+/// وشريط حصة الكمية النسبي — أو حالة فراغ عند غياب مبيعات الشهر.
+class _TopItemsCard extends StatelessWidget {
+  const _TopItemsCard({required this.items, required this.currencyCode});
+
+  final List<TopItemStat> items;
+  final String? currencyCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (items.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(title: l10n.topItemsTitle),
+          EmptyState(
+            icon: Icons.military_tech_rounded,
+            title: l10n.topItemsEmpty,
+            message: l10n.topItemsEmptyBody,
+            compact: true,
+          ),
+        ],
+      );
+    }
+    final maxQty = items.first.qtySold <= 0 ? 1.0 : items.first.qtySold;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: SectionHeader(title: l10n.topItemsTitle)),
+            _MonthScopeChip(label: l10n.topItemsScope),
+          ],
+        ),
+        for (var i = 0; i < items.length; i++)
+          _TopItemRow(
+            rank: i + 1,
+            stat: items[i],
+            maxQty: maxQty,
+            currencyCode: currencyCode,
+          ),
+      ],
+    );
+  }
+}
+
+/// شارة «هذا الشهر» الصغيرة بجوار ترويسة القسم.
+class _MonthScopeChip extends StatelessWidget {
+  const _MonthScopeChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.event_repeat_rounded,
+            size: 13,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// سطر صنف في قائمة الأعلى: شارة ترتيب (ذهبي/فضي/برونزي) + الاسم
+/// والكمية + الإيراد بالعملة الأساس + شريط حصة الكمية النسبي.
+class _TopItemRow extends StatelessWidget {
+  const _TopItemRow({
+    required this.rank,
+    required this.stat,
+    required this.maxQty,
+    required this.currencyCode,
+  });
+
+  final int rank;
+  final TopItemStat stat;
+  final double maxQty;
+  final String? currencyCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    final arabicIndic = NumeralsScope.of(context);
+
+    // تدرّج الميداليات: ذهبي → فضي (محايد) → برونزي (تحذيري دافئ)
+    // → بقية القائمة بلون التطبيق الهادئ.
+    final medalColor = switch (rank) {
+      1 => colors.gold,
+      2 => colors.neutral,
+      3 => colors.warning,
+      _ => scheme.primary.withValues(alpha: 0.75),
+    };
+    final rankText = arabicIndic
+        ? Numerals.toArabicIndic(rank.toString())
+        : rank.toString();
+    final qtyText = stat.qtySold == stat.qtySold.truncateToDouble()
+        ? stat.qtySold.truncate().toString()
+        : stat.qtySold.toStringAsFixed(3);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 4),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: medalColor.withValues(alpha: 0.16),
+                  border: Border.all(color: medalColor.withValues(alpha: 0.40)),
+                ),
+                child: Center(
+                  child: Text(
+                    rankText,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: medalColor,
+                      fontWeight: FontWeight.w900,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stat.name,
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.topItemsQtyCount(
+                        arabicIndic ? Numerals.toArabicIndic(qtyText) : qtyText,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  AmountText(
+                    amount: stat.revenueBase,
+                    size: AmountSize.row,
+                    showSignMarker: false,
+                  ),
+                  if (currencyCode != null && currencyCode!.isNotEmpty)
+                    Text(
+                      currencyCode!,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colors.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // شريط حصة الكمية النسبي (نسبةً لأعلى صنف) بلون الميدالية.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: SizedBox(
+              height: 4,
+              child: LinearProgressIndicator(
+                value: (stat.qtySold / maxQty).clamp(0.0, 1.0),
+                minHeight: 4,
+                backgroundColor: scheme.surfaceContainerLow,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  medalColor.withValues(alpha: 0.75),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// دخول متدرج: انزلاق رأسي خفيف + تلاشٍ بتأخير index*90ms.
 class _StaggeredEntrance extends StatelessWidget {
   const _StaggeredEntrance({required this.index, required this.child});
@@ -306,6 +762,105 @@ class _StaggeredEntrance extends StatelessWidget {
 }
 
 /// بلاطة وصول سريع — أيقونة داخل حلقة ملوّنة + تسمية، تفتح الوحدة.
+/// بانر تذكير النسخ الاحتياطي (FR-11-04) — نتيجة النسخة التلقائية أو
+/// تنبيه الاستحقاق، بزر فتح شاشة النسخ وزر إخفاء لبقية الجلسة.
+class _BackupReminderBanner extends StatelessWidget {
+  const _BackupReminderBanner({
+    required this.reminder,
+    required this.onDismiss,
+  });
+
+  final BackupReminder reminder;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    final arabicIndic = NumeralsScope.of(context);
+
+    final (bg, fg, icon) = switch (reminder.kind) {
+      BackupReminderKind.autoDone => (
+        colors.positiveContainer.withValues(alpha: 0.6),
+        colors.onPositiveContainer,
+        Icons.cloud_done_rounded,
+      ),
+      BackupReminderKind.autoFailed => (
+        colors.negativeContainer.withValues(alpha: 0.6),
+        colors.onNegativeContainer,
+        Icons.cloud_off_rounded,
+      ),
+      BackupReminderKind.webDue => (
+        colors.warningContainer.withValues(alpha: 0.6),
+        colors.onWarningContainer,
+        Icons.cloud_upload_rounded,
+      ),
+    };
+
+    final message = switch (reminder.kind) {
+      BackupReminderKind.autoDone => l10n.backupBannerAutoDone(
+        _timeText(reminder.at?.toLocal(), arabicIndic),
+      ),
+      BackupReminderKind.autoFailed => l10n.backupBannerAutoFailed,
+      BackupReminderKind.webDue => l10n.backupBannerWebDue,
+    };
+
+    return Container(
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 6, 10),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 22, color: fg),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.go('/more/backup'),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              foregroundColor: fg,
+            ),
+            child: Text(l10n.backupBannerOpen),
+          ),
+          SizedBox(
+            width: 34,
+            height: 34,
+            child: IconButton(
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              padding: EdgeInsets.zero,
+              iconSize: 16,
+              color: scheme.onSurfaceVariant,
+              onPressed: onDismiss,
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// وقت النسخة «HH:mm» بأرقام النظام الحي.
+  static String _timeText(DateTime? local, bool arabicIndic) {
+    final text = local == null
+        ? DateFormat('HH:mm').format(DateTime.now())
+        : DateFormat('HH:mm').format(local);
+    return arabicIndic ? Numerals.toArabicIndic(text) : text;
+  }
+}
+
 class _QuickAccessTile extends StatelessWidget {
   const _QuickAccessTile({
     required this.icon,

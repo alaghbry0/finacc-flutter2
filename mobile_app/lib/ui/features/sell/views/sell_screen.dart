@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/models/sale.dart';
+import '../../../../domain/services/credit_limit.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -151,6 +152,7 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
   }
 
   Future<void> _openPayment() async {
+    final app = context.read<AppController>();
     final vm = context.read<SellCartViewModel>();
     final state = vm.state;
     final priced = vm.pricedCart;
@@ -163,10 +165,39 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       customerName: state.customer?.name,
       onConfirm: (paidCash, method) =>
           vm.postSale(paidCash: paidCash, method: method),
+      // FR-03-05 (17-c): بوابة حد الائتمان — تُجلب لحظة التأكيد من
+      // المستودع (الحد + الرصيد الحي بعملة الفاتورة) والإعداد.
+      creditGate: () => _resolveCreditGate(app, vm),
     );
     if (posted) {
       vm.dismissReceipt();
     }
+  }
+
+  /// يجلب معطيات بوابة حد الائتمان — null عند غياب العميل/المستودعات
+  /// (عميل نقدي مجهول: لا آجل أصلاً فلا فحص — FR-03-05).
+  Future<CreditLimitGate?> _resolveCreditGate(
+    AppController app,
+    SellCartViewModel vm,
+  ) async {
+    final customerId = vm.state.customer?.id;
+    final currencyId = vm.state.currencyId;
+    if (customerId == null || currencyId == null) return null;
+    final customers = app.customers;
+    final settings = app.settings;
+    if (customers == null || settings == null) return null;
+    // checkCredit يقرأ الحد من جدول العميل والرصيد بصيغة FR-03-02
+    // بعملة الفاتورة (لا الحقل المخزَّن في السلة — دائماً حي).
+    final check = await customers.checkCredit(customerId, currencyId, 0);
+    final action = await settings.getString(
+      'parties.credit_limit_action',
+      'warn',
+    );
+    return CreditLimitGate(
+      creditLimit: check.creditLimit,
+      action: action,
+      currentBalance: check.balance,
+    );
   }
 
   Future<void> _saveQuotation() async {

@@ -3394,4 +3394,1136 @@ class AppLocalizationsEn extends AppLocalizations {
   String printingShareMessageStatement(Object balance, Object party) {
     return 'Account statement for $party — closing balance $balance';
   }
+
+  @override
+  String get backupScreenTitle => 'Backup & Restore';
+
+  @override
+  String get backupWebPreviewTitle => 'Web preview';
+
+  @override
+  String get backupWebPreviewBody =>
+      'This preview keeps its data inside your browser. Actual file backup — creating, restoring, and sharing — is available in the Android app.';
+
+  @override
+  String get backupLastBackupLabel => 'Last successful backup';
+
+  @override
+  String get backupLastNever => 'No backup yet';
+
+  @override
+  String get backupSavedCountLabel => 'Stored backups';
+
+  @override
+  String get backupCreateNow => 'Back up now';
+
+  @override
+  String get backupCreating => 'Creating backup…';
+
+  @override
+  String get backupCreateHint =>
+      'One dated, compressed file stored in the app\'s backups folder';
+
+  @override
+  String backupCreateSuccess(String fileName) {
+    return 'Backup created: $fileName';
+  }
+
+  @override
+  String get backupCreateFailed => 'Could not create the backup';
+
+  @override
+  String get backupScheduleTitle => 'Automatic schedule';
+
+  @override
+  String get backupScheduleDesc =>
+      'A silent backup runs when you open the app once the interval has passed';
+
+  @override
+  String get backupScheduleDaily => 'Daily';
+
+  @override
+  String get backupScheduleWeekly => 'Weekly';
+
+  @override
+  String get backupScheduleOff => 'Off';
+
+  @override
+  String get backupRetentionTitle => 'Retention';
+
+  @override
+  String backupRetentionDesc(int count) {
+    return 'Keeps the last $count backups and deletes older ones automatically';
+  }
+
+  @override
+  String get backupLogTitle => 'Backup history';
+
+  @override
+  String get backupLogEmptyTitle => 'No backups yet';
+
+  @override
+  String get backupLogEmptyBody =>
+      'Create your first backup with one tap — a single file that holds all your data.';
+
+  @override
+  String get backupKindManual => 'Manual';
+
+  @override
+  String get backupKindAuto => 'Automatic';
+
+  @override
+  String get backupKindSafety => 'Safety (before restore)';
+
+  @override
+  String get backupKindGeneric => 'Backup';
+
+  @override
+  String get backupStatusOk => 'OK';
+
+  @override
+  String get backupStatusFailed => 'Failed';
+
+  @override
+  String get backupFileMissing => 'File deleted';
+
+  @override
+  String get backupRestoreTooltip => 'Restore this backup';
+
+  @override
+  String get backupShareTooltip => 'Share the file';
+
+  @override
+  String get backupRestoreFromFile => 'Restore from external file';
+
+  @override
+  String get backupRestoreFromFileDesc =>
+      'Pick a .finbak file you received via sharing or a manual copy';
+
+  @override
+  String backupSizeKb(String value) {
+    return '$value KB';
+  }
+
+  @override
+  String backupSizeMb(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String get backupShareFailed => 'Could not share the file';
+
+  @override
+  String get backupSettingSaveFailed => 'Could not save the setting';
+
+  @override
+  String get backupRestoreDialogTitle => 'Restore a backup';
+
+  @override
+  String get backupRestoreWarnBody =>
+      'This will replace ALL current data with the backup\'s data. A safety copy of your current data is created automatically before the replacement.';
+
+  @override
+  String get backupRestoreConfirm => 'Replace data';
+
+  @override
+  String get backupRestoreRunning => 'Restoring…';
+
+  @override
+  String get backupRestoreSuccessTitle => 'Restore completed';
+
+  @override
+  String get backupRestoreSuccessBody =>
+      'The backup\'s data is back in the app. You will now be asked for that backup\'s PIN.';
+
+  @override
+  String get backupRestoreFailedTitle => 'Restore failed';
+
+  @override
+  String get backupRestoreClose => 'Close';
+
+  @override
+  String get backupInspectFile => 'File';
+
+  @override
+  String get backupInspectCreated => 'Backup date';
+
+  @override
+  String get backupInspectSize => 'Size';
+
+  @override
+  String get backupInspectSchema => 'Schema version';
+
+  @override
+  String get backupInspectChecksum => 'Fingerprint (SHA-256)';
+
+  @override
+  String get backupInspectKind => 'Type';
+
+  @override
+  String get backupErrNotFile =>
+      'The selected file is not a valid FinAcc backup (.finbak).';
+
+  @override
+  String get backupErrChecksum =>
+      'Integrity check failed — the file is corrupted or was modified after creation.';
+
+  @override
+  String backupErrNewerSchema(int fileVersion, int appVersion) {
+    return 'This backup uses a newer schema (v$fileVersion) than this app (v$appVersion) — update the app first.';
+  }
+
+  @override
+  String get backupErrSafety =>
+      'Could not create the safety backup before restoring — the operation was cancelled and your data is untouched.';
+
+  @override
+  String get backupErrOpenFailed =>
+      'Could not open the restored database — your current data was restored as it was.';
+
+  @override
+  String get backupErrUnsupported =>
+      'Restore is available in the Android app only.';
+
+  @override
+  String backupBannerAutoDone(String time) {
+    return 'An automatic backup was created successfully at $time';
+  }
+
+  @override
+  String get backupBannerAutoFailed =>
+      'Automatic backup failed — create one manually from settings.';
+
+  @override
+  String get backupBannerWebDue =>
+      'A backup is due — full backup features are in the Android app.';
+
+  @override
+  String get backupBannerOpen => 'Manage';
+
+  @override
+  String get settingsBackupTitle => 'Backup & Restore';
+
+  @override
+  String get settingsBackupDesc =>
+      'One-tap local backup, scheduling, restore, and sharing';
+
+  @override
+  String settingsAboutDbSize(String size) {
+    return 'Database size: $size';
+  }
+
+  @override
+  String get shiftTitle => 'Shift';
+
+  @override
+  String get shiftOpenNoneTitle => 'No open shift';
+
+  @override
+  String get shiftOpenNoneBody =>
+      'Open the shift by entering the box opening count, then track sales and collections until you close it with the comprehensive equation.';
+
+  @override
+  String get shiftOpeningCountLabel => 'Opening count';
+
+  @override
+  String get shiftOpenButton => 'Open shift';
+
+  @override
+  String get shiftInvalidAmount => 'Enter a valid number (zero or more).';
+
+  @override
+  String get shiftLiveTitle => 'Open shift';
+
+  @override
+  String get shiftOpenedAtLabel => 'Opened at';
+
+  @override
+  String get shiftRunningIn => 'In so far';
+
+  @override
+  String get shiftRunningOut => 'Out so far';
+
+  @override
+  String get shiftExpectedSoFar => 'Expected so far';
+
+  @override
+  String get shiftAutoRefreshNote => 'Auto-refreshes every 30 seconds';
+
+  @override
+  String get shiftCloseButton => 'Close shift';
+
+  @override
+  String get shiftHistoryTitle => 'Recent shifts';
+
+  @override
+  String get shiftHistoryEmpty =>
+      'No closed shifts yet — close your first shift to see its report here.';
+
+  @override
+  String get shiftCountedLabel => 'Counted amount';
+
+  @override
+  String get shiftCountedHint =>
+      'The amount actually counted in the box right now';
+
+  @override
+  String get shiftExpectedLabel => 'Expected';
+
+  @override
+  String get shiftDifferenceLabel => 'Difference';
+
+  @override
+  String get shiftSurplus => 'Surplus';
+
+  @override
+  String get shiftDeficit => 'Deficit';
+
+  @override
+  String get shiftMatched => 'Matched';
+
+  @override
+  String get shiftNotesLabel => 'Notes';
+
+  @override
+  String get shiftNotesHint =>
+      'Optional — e.g. the reason for a surplus or deficit';
+
+  @override
+  String get shiftConfirmClose => 'Confirm closing';
+
+  @override
+  String get shiftCloseSuccessTitle => 'Shift closed';
+
+  @override
+  String get shiftEquationTitle => 'Comprehensive equation breakdown';
+
+  @override
+  String get shiftChequesDeferredNote =>
+      'Cheques are deferred to v1.1 — shown as zero in the equation.';
+
+  @override
+  String get shiftCompCashSales => 'Cash sales';
+
+  @override
+  String get shiftCompCollections => 'Collections';
+
+  @override
+  String get shiftCompOwnerDeposits => 'Owner deposits';
+
+  @override
+  String get shiftCompTransfersIn => 'Transfers & deposits in';
+
+  @override
+  String get shiftCompBankIn => 'Bank deposits in';
+
+  @override
+  String get shiftCompChequesCleared => 'Cheques cleared';
+
+  @override
+  String get shiftCompSupplierPayments => 'Supplier payments';
+
+  @override
+  String get shiftCompExpenses => 'Expenses';
+
+  @override
+  String get shiftCompOwnerDraws => 'Owner draws';
+
+  @override
+  String get shiftCompTransfersOut => 'Transfers & withdrawals out';
+
+  @override
+  String get shiftCompBankOut => 'Bank withdrawals';
+
+  @override
+  String get shiftCompChequesPaid => 'Cheques paid';
+
+  @override
+  String get shiftCompOther => 'Other items (net)';
+
+  @override
+  String get shiftPdfPreviewAction => 'Preview PDF report';
+
+  @override
+  String get shiftPrintTitle => 'Shift Report';
+
+  @override
+  String get shiftPrintBox => 'Box';
+
+  @override
+  String get shiftPrintUser => 'User';
+
+  @override
+  String get shiftPrintOpened => 'Opened';
+
+  @override
+  String get shiftPrintClosed => 'Closed';
+
+  @override
+  String get shiftPrintItemCol => 'Item';
+
+  @override
+  String get shiftPrintDirectionCol => 'Direction';
+
+  @override
+  String get shiftPrintValueCol => 'Value';
+
+  @override
+  String get shiftPrintDirIn => 'In (+)';
+
+  @override
+  String get shiftPrintDirOut => 'Out (−)';
+
+  @override
+  String get shiftPrintTotalIn => 'Total in';
+
+  @override
+  String get shiftPrintTotalOut => 'Total out';
+
+  @override
+  String get shiftPrintNotesRow => 'Closing notes';
+
+  @override
+  String shiftPrintShareMessage(
+    String box,
+    String expected,
+    String difference,
+  ) {
+    return 'Shift report for $box — expected $expected, difference $difference';
+  }
+
+  @override
+  String get agingTitle => 'Debt aging';
+
+  @override
+  String get agingHubSubtitle =>
+      'Customer dues by age: 0–30 / 31–60 / 61–90 / 90+ days (FIFO)';
+
+  @override
+  String agingAsOfLabel(String date) {
+    return 'As of $date';
+  }
+
+  @override
+  String get agingCurrencyLabel => 'Report currency';
+
+  @override
+  String get agingBucket0to30 => '0–30 days';
+
+  @override
+  String get agingBucket31to60 => '31–60 days';
+
+  @override
+  String get agingBucket61to90 => '61–90 days';
+
+  @override
+  String get agingBucket90plus => 'Over 90 days';
+
+  @override
+  String get agingTotalLabel => 'Grand total';
+
+  @override
+  String agingCustomersCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count debtors',
+      one: '1 debtor',
+      zero: 'No debtors',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get agingNotYetDueLabel => 'Not yet due:';
+
+  @override
+  String get agingNoDebtsTitle => 'No outstanding debts';
+
+  @override
+  String get agingNoDebtsBody =>
+      'No unsettled credit amounts on any customer in this currency — everything is settled. Excellent!';
+
+  @override
+  String agingInvoicesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open invoices',
+      one: '1 open invoice',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get agingDueDateLabel => 'Due';
+
+  @override
+  String agingDaysOverdue(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Overdue by $_temp0';
+  }
+
+  @override
+  String agingDueInDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Due in $_temp0';
+  }
+
+  @override
+  String get agingDueToday => 'Due today';
+
+  @override
+  String get agingRemindTooltip => 'Send WhatsApp reminder';
+
+  @override
+  String get agingNoPhone =>
+      'This customer has no WhatsApp or phone number — update their details first.';
+
+  @override
+  String get agingWhatsAppFailed =>
+      'Could not open WhatsApp — make sure it is installed.';
+
+  @override
+  String get agingStaleWarning =>
+      'Refresh failed — showing the last successful report.';
+
+  @override
+  String get agingReminderCompanyFallback => 'our company';
+
+  @override
+  String agingReminderMessage(String name, String company, String total) {
+    return 'Hello $name, this is a kind reminder of the outstanding balance on your account with $company, totaling $total. Thank you for your understanding.';
+  }
+
+  @override
+  String get monthSalesTitle => 'This month\'s sales';
+
+  @override
+  String monthChangeUp(String pct) {
+    return 'Up $pct% vs last month';
+  }
+
+  @override
+  String monthChangeDown(String pct) {
+    return 'Down $pct% vs last month';
+  }
+
+  @override
+  String get monthChangeFlat => 'Level with last month';
+
+  @override
+  String get monthNew => 'New';
+
+  @override
+  String monthInvoices(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invoices',
+      one: 'one invoice',
+      zero: 'no invoices yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get topItemsTitle => 'Top-selling items';
+
+  @override
+  String get topItemsScope => 'This month';
+
+  @override
+  String get topItemsEmpty => 'No sales this month yet';
+
+  @override
+  String get topItemsEmptyBody =>
+      'Best sellers will appear here as soon as the first sale of this month is completed.';
+
+  @override
+  String topItemsQtyCount(String qty) {
+    return 'Qty: $qty';
+  }
+
+  @override
+  String get creditLimitTitle => 'Credit limit exceeded';
+
+  @override
+  String get creditLimitExceeded =>
+      'This invoice will push the customer\'s balance beyond their allowed credit limit.';
+
+  @override
+  String get creditLimitBlocked =>
+      'This credit sale cannot proceed: the resulting balance exceeds the credit limit (block mode is on).';
+
+  @override
+  String get creditLimitLimitLabel => 'Credit limit';
+
+  @override
+  String get creditLimitCurrentLabel => 'Current balance';
+
+  @override
+  String get creditLimitResultingLabel => 'Balance after this invoice';
+
+  @override
+  String get creditLimitContinue => 'Continue anyway';
+
+  @override
+  String get creditLimitCancel => 'Cancel';
+
+  @override
+  String get creditLimitBack => 'Go back';
+
+  @override
+  String get stocktakeTitle => 'Physical stocktake';
+
+  @override
+  String get stocktakeHeroTitle => 'Count & reconcile stock';
+
+  @override
+  String get stocktakeHeroSubtitle =>
+      'Compare book stock with your physical count; differences are valued at the snapshot cost at posting time, and balances lock to the counted quantities.';
+
+  @override
+  String get stocktakeWarehouseLabel => 'Warehouse';
+
+  @override
+  String get stocktakeCountedAtLabel => 'Count date';
+
+  @override
+  String get stocktakeCountedByLabel => 'Counted by';
+
+  @override
+  String get stocktakeCountedByHint => 'The stocktake is signed with this name';
+
+  @override
+  String get stocktakeNotesLabel => 'Notes (optional)';
+
+  @override
+  String get stocktakeSearchHint => 'Search items by name…';
+
+  @override
+  String get stocktakeBookQty => 'Book';
+
+  @override
+  String get stocktakeCountedQty => 'Counted';
+
+  @override
+  String get stocktakeUnitCost => 'Unit cost';
+
+  @override
+  String get stocktakeSetBook => 'Copy book qty';
+
+  @override
+  String get stocktakeMatched => 'Matched';
+
+  @override
+  String get stocktakeSurplus => 'Surplus';
+
+  @override
+  String get stocktakeShortage => 'Shortage';
+
+  @override
+  String get stocktakeNetDiff => 'Net difference';
+
+  @override
+  String stocktakeCountedProgress(int counted, int total) {
+    return 'Counted $counted of $total';
+  }
+
+  @override
+  String get stocktakePost => 'Approve stocktake';
+
+  @override
+  String get stocktakeHistoryTitle => 'Stocktake history';
+
+  @override
+  String get stocktakeHistoryEmpty =>
+      'No stocktakes for this warehouse yet — the first one will appear here.';
+
+  @override
+  String stocktakeHistoryLines(int count) {
+    return '$count lines';
+  }
+
+  @override
+  String get stocktakeReviewTitle => 'Review stocktake differences';
+
+  @override
+  String get stocktakeReviewNoDiffs =>
+      'No differences — everything counted matches the books.';
+
+  @override
+  String get stocktakeReviewWarning =>
+      'After approval, balances lock to the counted quantities and differences post as stocktake movements at snapshot cost — this cannot be undone.';
+
+  @override
+  String stocktakeReviewSkipNote(int count) {
+    return '$count uncounted item(s) will be skipped from this stocktake.';
+  }
+
+  @override
+  String get stocktakeConfirmPost => 'Confirm & post';
+
+  @override
+  String get stocktakeSuccessTitle => 'Stocktake approved';
+
+  @override
+  String get stocktakeSuccessBody =>
+      'Balances locked to the counted quantities and adjustments posted as signed stocktake movements.';
+
+  @override
+  String get stocktakeSuccessDiffs => 'Difference lines';
+
+  @override
+  String get stocktakeEmptyTitle => 'Warehouse is empty';
+
+  @override
+  String get stocktakeEmptyBody =>
+      'No stock items in this warehouse — add items first, then run a stocktake.';
+
+  @override
+  String get stocktakeNoWarehouseTitle => 'No warehouses';
+
+  @override
+  String get stocktakeNoWarehouseBody =>
+      'Create a warehouse first, then start counting.';
+
+  @override
+  String get stocktakeSearchEmptyTitle => 'No matches';
+
+  @override
+  String get stocktakeSearchEmptyBody =>
+      'Try another name or clear the search.';
+
+  @override
+  String get profitTitle => 'Profit & loss';
+
+  @override
+  String get profitSales => 'Sales';
+
+  @override
+  String get profitSalesReturns => 'Sales returns';
+
+  @override
+  String get profitCogs => 'Cost of goods sold (COGS)';
+
+  @override
+  String get profitReturnCost => 'Returned goods cost';
+
+  @override
+  String get profitStockSurplus => 'Stock surplus';
+
+  @override
+  String get profitStockShortage => 'Stock shortage';
+
+  @override
+  String get profitExpenses => 'Expenses';
+
+  @override
+  String get profitFx => 'Realized FX gains/losses';
+
+  @override
+  String get profitOwnerDrawings => 'Owner drawings';
+
+  @override
+  String get profitOwnerSection => 'Owner drawings (outside expenses)';
+
+  @override
+  String get profitNetSales => 'Net sales';
+
+  @override
+  String get profitNetCogs => 'Net cost';
+
+  @override
+  String get profitTotal => 'Profit';
+
+  @override
+  String get profitNetForOwner => 'Net left for the owner';
+
+  @override
+  String get profitSectionRevenue => 'Revenue';
+
+  @override
+  String get profitSectionCost => 'Cost';
+
+  @override
+  String get profitSectionAdjustments => 'Adjustments (stock & FX)';
+
+  @override
+  String get profitSectionExpenses => 'Expenses';
+
+  @override
+  String get profitEmptyTitle => 'No activity in this period';
+
+  @override
+  String get profitEmptyBody =>
+      'No sales, expenses or adjustments were recorded within this period — try widening it or record your first activity.';
+
+  @override
+  String get profitBaseCurrencyNote => 'All amounts are in the base currency';
+
+  @override
+  String profitGeneratedAt(Object time) {
+    return 'Generated at $time';
+  }
+
+  @override
+  String profitPeriodLabel(Object from, Object to) {
+    return 'Period: $from → $to';
+  }
+
+  @override
+  String profitInvoicesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invoices',
+      one: 'one invoice',
+      zero: 'no invoices',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get profitStaleWarning =>
+      'Refresh failed — showing the last loaded copy';
+
+  @override
+  String get profitPdfButton => 'PDF report';
+
+  @override
+  String get profitPdfTitle => 'Profit & loss report';
+
+  @override
+  String get profitPrintItemCol => 'Item';
+
+  @override
+  String get profitPrintValueCol => 'Value';
+
+  @override
+  String get profitPrintFooterNote =>
+      'Derived exclusively from the Posting Map (Annex W)';
+
+  @override
+  String profitPrintShareMessage(
+    Object currency,
+    Object from,
+    Object profit,
+    Object to,
+  ) {
+    return 'Profit & loss report ($from → $to) — profit $profit $currency';
+  }
+
+  @override
+  String get periodToday => 'Today';
+
+  @override
+  String get periodWeek => 'Last 7 days';
+
+  @override
+  String get periodMonth => 'This month';
+
+  @override
+  String get periodQuarter => 'This quarter';
+
+  @override
+  String get periodYear => 'This year';
+
+  @override
+  String get periodCustom => 'Custom range';
+
+  @override
+  String get periodCustomHint => 'Pick the start and end dates';
+
+  @override
+  String get periodFrom => 'From';
+
+  @override
+  String get periodTo => 'To';
+
+  @override
+  String periodCustomRange(Object from, Object to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get invoiceProfitSectionTitle => 'Invoice profit';
+
+  @override
+  String get invoiceProfitManagerHint => 'Manager only';
+
+  @override
+  String get invoiceCostLabel => 'Cost';
+
+  @override
+  String get invoiceProfitLabel => 'Profit';
+
+  @override
+  String get invoiceMarginLabel => 'Margin';
+
+  @override
+  String get reportsTitle => 'Reports';
+
+  @override
+  String get reportsHeroTitle => 'Reports & Control Center';
+
+  @override
+  String get reportsHeroSubtitle =>
+      'Numbers from a single source of truth — derived exclusively via the Posting Map';
+
+  @override
+  String get reportsSectionFinance => 'Finance & Profit';
+
+  @override
+  String get reportsSectionDebts => 'Debts & Collection';
+
+  @override
+  String get reportsSectionInventory => 'Inventory & Control';
+
+  @override
+  String get reportsPnlDesc =>
+      'The binding formula via the Posting Map with net-remaining-for-owner';
+
+  @override
+  String get reportsStocktakeDesc =>
+      'Compare book vs counted and settle diffs at snapshot cost';
+
+  @override
+  String get itemMovementTitle => 'Item movement';
+
+  @override
+  String get itemMovementPickTitle => 'Pick a product first';
+
+  @override
+  String get itemMovementPickBody =>
+      'Show every movement of the product in the period with the running balance after each entry.';
+
+  @override
+  String get itemMovementPickButton => 'Choose product';
+
+  @override
+  String get itemMovementChangeProduct => 'Change product';
+
+  @override
+  String get itemMovementPickerTitle => 'Choose product';
+
+  @override
+  String get itemMovementPickerSearchHint => 'Search by name or barcode';
+
+  @override
+  String get itemMovementPickerNoResults => 'No matching results';
+
+  @override
+  String get itemMovementOpeningBalance => 'Opening balance (before period)';
+
+  @override
+  String get itemMovementTotalIn => 'Total in';
+
+  @override
+  String get itemMovementTotalOut => 'Total out';
+
+  @override
+  String get itemMovementWacNow => 'Current unit cost';
+
+  @override
+  String get itemMovementBalanceAfter => 'Remaining';
+
+  @override
+  String itemMovementMovementCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movements',
+      many: '$count movements',
+      few: '$count movements',
+      two: 'Two movements',
+      one: 'One movement',
+      zero: 'No movements',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get itemMovementUnitCost => 'Unit cost';
+
+  @override
+  String itemMovementPeriodLabel(Object from, Object to) {
+    return 'Period: $from to $to';
+  }
+
+  @override
+  String get itemMovementEmptyTitle => 'No movements in this period';
+
+  @override
+  String get itemMovementEmptyBody =>
+      'This product did not move between the selected dates — try widening the period.';
+
+  @override
+  String get stockSummaryTitle => 'Stock movement summary';
+
+  @override
+  String stockSummaryTotalItems(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count moving products',
+      many: '$count moving products',
+      few: '$count moving products',
+      two: 'Two moving products',
+      one: 'One moving product',
+      zero: 'No moving products',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stockSummaryTotalValue => 'Total inventory value at cost';
+
+  @override
+  String get stockSummaryQtyIn => 'In';
+
+  @override
+  String get stockSummaryQtyOut => 'Out';
+
+  @override
+  String get stockSummaryQtyReturns => 'Returns';
+
+  @override
+  String get stockSummaryQtyAdjust => 'Adjust';
+
+  @override
+  String get stockSummaryEndBalance => 'Balance';
+
+  @override
+  String get stockSummaryValueAtCost => 'Value at cost';
+
+  @override
+  String stockSummaryPeriodLabel(Object from, Object to) {
+    return 'Period: $from to $to';
+  }
+
+  @override
+  String get stockSummaryEmptyTitle => 'No stock movement in this period';
+
+  @override
+  String get stockSummaryEmptyBody =>
+      'No stock movements recorded between the selected dates — try widening the period.';
+
+  @override
+  String get salesByTitle => 'Sales by';
+
+  @override
+  String get salesByCustomer => 'Customer';
+
+  @override
+  String get salesByCategory => 'Category';
+
+  @override
+  String get salesByItem => 'Product';
+
+  @override
+  String get salesByDay => 'Day';
+
+  @override
+  String get salesByNoCustomer => 'Walk-in (no customer)';
+
+  @override
+  String get salesByUncategorized => 'Uncategorized';
+
+  @override
+  String salesByInvoicesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invoices',
+      many: '$count invoices',
+      few: '$count invoices',
+      two: 'Two invoices',
+      one: 'One invoice',
+      zero: 'No invoices',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salesByTotal => 'Total sales';
+
+  @override
+  String get salesByChangeNote =>
+      'Percentages compare against an equal-length period immediately before the selected one.';
+
+  @override
+  String salesByPeriodLabel(Object from, Object to) {
+    return 'Period: $from to $to';
+  }
+
+  @override
+  String get salesByEmptyTitle => 'No sales in this period';
+
+  @override
+  String get salesByEmptyBody =>
+      'No completed sale invoices between the selected dates — try widening the period.';
+
+  @override
+  String changeUp(Object pct) {
+    return 'Up $pct%';
+  }
+
+  @override
+  String changeDown(Object pct) {
+    return 'Down $pct%';
+  }
+
+  @override
+  String get changeNew => 'New';
+
+  @override
+  String get movementTypePurchase => 'Purchase';
+
+  @override
+  String get movementTypeSale => 'Sale';
+
+  @override
+  String get movementTypeSaleReturn => 'Sale return';
+
+  @override
+  String get movementTypePurchaseReturn => 'Purchase return';
+
+  @override
+  String get movementTypeAdjust => 'Stocktake adjustment';
+
+  @override
+  String get movementTypeOpening => 'Opening balance';
+
+  @override
+  String get movementTypeTransferIn => 'Transfer in';
+
+  @override
+  String get movementTypeTransferOut => 'Transfer out';
+
+  @override
+  String get reportsSectionFlows => 'Inventory & Sales Flows';
+
+  @override
+  String get reportsItemMovementDesc =>
+      'Full item card with running balance per movement';
+
+  @override
+  String get reportsStockSummaryDesc =>
+      'In/out/returns/adjustments per item with stock value';
+
+  @override
+  String get reportsSalesByDesc =>
+      'Customer/category/item/day with change vs previous period';
 }

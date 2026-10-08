@@ -26,6 +26,9 @@ import '../../../data/repositories/sale_repository.dart';
 import '../../../data/repositories/settings_repository.dart';
 import '../../../data/repositories/supplier_repository.dart';
 import '../../../data/repositories/user_repository.dart';
+import '../../../data/services/backup/backup_service.dart';
+import '../../../data/services/backup/backup_store.dart';
+import '../../../data/services/backup/backup_store_factory.dart';
 
 /// أطوار التطبيق المرئية.
 enum AppPhase {
@@ -47,11 +50,15 @@ enum AppPhase {
 
 /// التحكم بحياة الجلسة كاملة.
 class AppController extends ChangeNotifier {
-  AppController({AppDatabase? forTesting}) {
+  AppController({AppDatabase? forTesting, BackupFileStore? backupStoreOverride})
+    : _testBackupStore = backupStoreOverride {
     if (forTesting != null) {
       _adopt(forTesting);
     }
   }
+
+  /// مخزن ملفات النسخ المحقون (اختبارات الاستعادة) — null في الإنتاج.
+  final BackupFileStore? _testBackupStore;
 
   AppPhase _phase = AppPhase.initializing;
   String? _errorDetails;
@@ -71,6 +78,7 @@ class AppController extends ChangeNotifier {
   PurchaseRepository? _purchaseRepo;
   ReturnRepository? _returnRepo;
   CashRepository? _cashRepo;
+  BackupService? _backupSvc;
   Company? _company;
 
   DateTime _lastActivity = DateTime.now();
@@ -135,6 +143,10 @@ class AppController extends ChangeNotifier {
   /// مستودع النقدية والصناديق (المرحلة 6 — FR-04).
   CashRepository? get cash => _cashRepo;
 
+  /// محرك النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11) — يُنشأ مع
+  /// كل قاعدة مفتوحة (جاهز بعد bootstrap) ويتجدد تلقائياً بعد أي استعادة.
+  BackupService? get backupEngine => _backupSvc;
+
   /// المنشأة الحالية (بعد التأسيس).
   Company? get company => _company;
 
@@ -156,6 +168,9 @@ class AppController extends ChangeNotifier {
     _errorDetails = null;
     notifyListeners();
     try {
+      // شبكة أمان الاستعادة (FR-11-02): علامة متروكة = استعادة قُطعت
+      // بالمنتصف → إرجاع القاعدة القديمة قبل أي فتح.
+      await BackupService.recoverInterruptedRestoreIfAny();
       final db = await AppDatabase.open();
       _adopt(db);
       await _decidePhase();
@@ -184,6 +199,38 @@ class AppController extends ChangeNotifier {
     _purchaseRepo = PurchaseRepository(db.db);
     _returnRepo = ReturnRepository(db.db);
     _cashRepo = CashRepository(db.db);
+    // محرك النسخ يُبنى لاحقاً (يحتاج حل مسار المنصة غير المتزامن).
+    _backupSvc = null;
+  }
+
+  /// يبني محرك النسخ فوق القاعدة الحالية (مخزن الاختبار إن وُجد).
+  Future<void> _initBackupEngine() async {
+    final db = _db;
+    final settings = _settingsRepo;
+    if (db == null || settings == null) return;
+    try {
+      final store = _testBackupStore ?? await _defaultBackupStore();
+      _backupSvc = BackupService(
+        database: db,
+        settings: settings,
+        store: store,
+      );
+    } catch (_) {
+      _backupSvc = null;
+    }
+  }
+
+  /// مخزن ملفات النسخ الافتراضي للمنصة (يُستبدل في الاختبارات بالحقن).
+  Future<BackupFileStore> _defaultBackupStore() {
+    return defaultBackupFileStore();
+  }
+
+  /// يضمن تهيئة محرك النسخ إن لم يكن جاهزاً (idempotent) — تستدعيه شاشة
+  /// النسخ عند الفتح كشبكة أمان إن تعذّرت التهيئة وقت الإقلاع.
+  Future<void> ensureBackupEngine() async {
+    if (_backupSvc == null) {
+      await _initBackupEngine();
+    }
   }
 
   Future<void> _decidePhase() async {
@@ -194,6 +241,8 @@ class AppController extends ChangeNotifier {
     _numerals = await _settingsRepo!.numerals();
     // بذر فئة «رواتب» idempotent (FR-04-05) — قبل أي واجهة.
     await _cashRepo!.ensureSeeded();
+    // محرك النسخ الاحتياطي (الشريحة 8) — بعد نجاح كل ما سبق.
+    await _initBackupEngine();
     // جلسة جديدة = مقفلة دائماً (PIN عند كل فتح — FR-12-01).
     _phase = company == null ? AppPhase.needsOnboarding : AppPhase.locked;
     notifyListeners();
@@ -262,6 +311,42 @@ class AppController extends ChangeNotifier {
   }
 
   // ── مدة القفل التلقائي (FR-12-05 — `security.autolock_minutes`) ──
+
+  /// يستعيد نسخة احتياطية من بايتات ملف (FR-11-02) — تنسيق كامل:
+  /// الخدمة تتحقق وتؤمّن وتستبدل وتفتح، والمتحكم يتبنّى النتيجة:
+  /// النجاح = مستودعات جديدة + إعادة تحديد الطور (قفل/تأسيس)؛ والفشل
+  /// بعد الإغلاق = إعادة تبنّي القاعدة القديمة دون تغيير الطور.
+  Future<RestoreResult> restoreBackupFromBytes(
+    Uint8List bytes, {
+    String? sourceName,
+  }) async {
+    var svc = _backupSvc;
+    if (svc == null) {
+      await _initBackupEngine();
+      svc = _backupSvc;
+    }
+    if (svc == null) {
+      return const RestoreFailure(RestoreFailureReason.unsupportedPlatform);
+    }
+    final result = await svc.restoreFromBytes(bytes, sourceName: sourceName);
+    switch (result) {
+      case final RestoreSuccess success:
+        _idleTicker?.cancel();
+        _idleTicker = null;
+        _adopt(success.newDatabase);
+        await _decidePhase();
+        return result;
+      case final RestoreFailure failure:
+        final reopened = failure.reopenedDatabase;
+        if (reopened != null) {
+          // بيانات المستخدم لم تتغير — الجلسة تكمل بالمستودعات المعاد
+          // فتحها (نفس القاعدة القديمة بعد الإرجاع).
+          _adopt(reopened);
+          notifyListeners();
+        }
+        return result;
+    }
+  }
 
   /// يثبّت مدة القفل التلقائي (1–60 دقيقة) — تُطبَّق فوراً على مراقب
   /// الخمول الجاري دون قفل الجلسة، مع قيد تدقيق للتغيير الأمني.
@@ -344,6 +429,7 @@ class AppController extends ChangeNotifier {
     _purchaseRepo = null;
     _returnRepo = null;
     _cashRepo = null;
+    _backupSvc = null;
     _db = null;
     if (db != null) {
       await db.close();

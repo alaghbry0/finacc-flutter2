@@ -131,17 +131,16 @@ Future<Supplier> _createSupplier(
   return (await lookup.supplier(ok.value))!;
 }
 
-PartyFormViewModel _formVm(_Repos repos, {int? editId}) =>
-    PartyFormViewModel(
-      customerRepo: repos.customers,
-      supplierRepo: repos.suppliers,
-      companyRepo: repos.companies,
-      fxRepo: repos.fx,
-      partyLookup: PartyLookup(repos.db.db),
-      partyKind: PartyKind.customer,
-      reference: _today,
-      editPartyId: editId,
-    );
+PartyFormViewModel _formVm(_Repos repos, {int? editId}) => PartyFormViewModel(
+  customerRepo: repos.customers,
+  supplierRepo: repos.suppliers,
+  companyRepo: repos.companies,
+  fxRepo: repos.fx,
+  partyLookup: PartyLookup(repos.db.db),
+  partyKind: PartyKind.customer,
+  reference: _today,
+  editPartyId: editId,
+);
 
 PartyListViewModel _listVm(_Repos repos, PartyKind kind) => PartyListViewModel(
   gate: kind == PartyKind.customer
@@ -160,66 +159,68 @@ PartyDetailViewModel _detailVm(_Repos repos, PartyKind kind, int id) =>
       partyLookup: PartyLookup(repos.db.db),
       partyKind: kind,
       id: id,
-);
+    );
 
 void main() {
   setUpAll(initFfiForTests);
 
   group('PartyListViewModel — البحث والتصفية والأرشفة', () {
-    test('البحث بالاسم يرشّح، والرقائق تفلتر، والأرشفة بلا حركات تنجح',
-        () async {
-      final repos = await _open();
-      final noMovements = await _createCustomer(repos, 'عبدالله السامعي');
-      final withSar = await _createCustomer(
-        repos,
-        'بهاء الدين',
-        opening: 5000,
-        currencyCode: 'SAR',
-      );
+    test(
+      'البحث بالاسم يرشّح، والرقائق تفلتر، والأرشفة بلا حركات تنجح',
+      () async {
+        final repos = await _open();
+        final noMovements = await _createCustomer(repos, 'عبدالله السامعي');
+        final withSar = await _createCustomer(
+          repos,
+          'بهاء الدين',
+          opening: 5000,
+          currencyCode: 'SAR',
+        );
 
-      final vm = _listVm(repos, PartyKind.customer);
-      await vm.load();
+        final vm = _listVm(repos, PartyKind.customer);
+        await vm.load();
 
-      // الكل: طرفان (الأول سطر صفري بعملة القاعدة).
-      expect(vm.state.rows, hasLength(2));
-      expect(vm.state.distinctParties, 2);
+        // الكل: طرفان (الأول سطر صفري بعملة القاعدة).
+        expect(vm.state.rows, hasLength(2));
+        expect(vm.state.distinctParties, 2);
 
-      // بأرصدة: سطر بهاء فقط (٥٠٠٠ SAR).
-      await vm.setFilter(PartyListFilter.withBalance);
-      expect(vm.state.rows, hasLength(1));
-      expect(vm.state.rows.first.name, 'بهاء الدين');
-      expect(vm.state.rows.first.currencyCode, 'SAR');
-      expect(vm.state.rows.first.balance, 5000);
+        // بأرصدة: سطر بهاء فقط (٥٠٠٠ SAR).
+        await vm.setFilter(PartyListFilter.withBalance);
+        expect(vm.state.rows, hasLength(1));
+        expect(vm.state.rows.first.name, 'بهاء الدين');
+        expect(vm.state.rows.first.currencyCode, 'SAR');
+        expect(vm.state.rows.first.balance, 5000);
 
-      // بدون أرصدة: عبدالله (بلا حركات).
-      await vm.setFilter(PartyListFilter.zeroBalance);
-      expect(vm.state.rows, hasLength(1));
-      expect(vm.state.rows.first.name, 'عبدالله السامعي');
+        // بدون أرصدة: عبدالله (بلا حركات).
+        await vm.setFilter(PartyListFilter.zeroBalance);
+        expect(vm.state.rows, hasLength(1));
+        expect(vm.state.rows.first.name, 'عبدالله السامعي');
 
-      // البحث باسم غير موجود يفرّغ.
-      await vm.setFilter(PartyListFilter.all);
-      await vm.setQuery('zzz');
-      expect(vm.state.rows, isEmpty);
+        // البحث باسم غير موجود يفرّغ.
+        await vm.setFilter(PartyListFilter.all);
+        await vm.setQuery('zzz');
+        expect(vm.state.rows, isEmpty);
 
-      // البحث بهاتف بهاء يرشّح له.
-      await _createCustomer(repos, 'هاتف مجهول', phone: '777999888');
-      await vm.setQuery('777999888');
-      expect(vm.state.rows, hasLength(1));
-      await vm.setQuery('');
+        // البحث بهاتف بهاء يرشّح له.
+        await _createCustomer(repos, 'هاتف مجهول', phone: '777999888');
+        await vm.setQuery('777999888');
+        expect(vm.state.rows, hasLength(1));
+        await vm.setQuery('');
 
-      // أرشفة بلا حركات تنجح ويختفي من القائمة.
-      final outcome = await vm.archive(noMovements.id);
-      expect(outcome, PartyArchiveOutcome.done);
-      expect(
-        vm.state.rows.map((r) => r.partyId),
-        isNot(contains(noMovements.id)),
-      );
+        // أرشفة بلا حركات تنجح ويختفي من القائمة.
+        final outcome = await vm.archive(noMovements.id);
+        expect(outcome, PartyArchiveOutcome.done);
+        expect(
+          vm.state.rows.map((r) => r.partyId),
+          isNot(contains(noMovements.id)),
+        );
 
-      // أرشفة من له رصيد افتتاحي (حركة) تُرفض.
-      final blocked = await vm.archive(withSar.id);
-      expect(blocked, PartyArchiveOutcome.blocked);
-      vm.dispose();
-    });
+        // أرشفة من له رصيد افتتاحي (حركة) تُرفض.
+        final blocked = await vm.archive(withSar.id);
+        expect(blocked, PartyArchiveOutcome.blocked);
+        vm.dispose();
+      },
+    );
 
     test('تصفية المؤرشفين تعرضه بشارة، ومرآة الموردين تعمل', () async {
       final repos = await _open();
@@ -238,43 +239,45 @@ void main() {
   });
 
   group('PartyFormViewModel — التحقق والدلالات الثلاث والافتتاحي', () {
-    test('الاسم إلزامي، وحد الائتمان الثلاث يُخزَّن بدلالاته الصحيحة',
-        () async {
-      final repos = await _open();
+    test(
+      'الاسم إلزامي، وحد الائتمان الثلاث يُخزَّن بدلالاته الصحيحة',
+      () async {
+        final repos = await _open();
 
-      // 1) الاسم الفارغ يُرفض فوراً.
-      var vm = _formVm(repos);
-      await vm.load();
-      expect(await vm.save(), isFalse);
-      expect(vm.state.validationError, PartyFormError.nameRequired);
+        // 1) الاسم الفارغ يُرفض فوراً.
+        var vm = _formVm(repos);
+        await vm.load();
+        expect(await vm.save(), isFalse);
+        expect(vm.state.validationError, PartyFormError.nameRequired);
 
-      // 2) حد فارغ = بلا حد (NULL).
-      vm.setName('عميل بلا حد');
-      expect(await vm.save(), isTrue);
-      final unlimited = await repos.customerRow(1);
-      expect(unlimited['credit_limit'], isNull);
+        // 2) حد فارغ = بلا حد (NULL).
+        vm.setName('عميل بلا حد');
+        expect(await vm.save(), isTrue);
+        final unlimited = await repos.customerRow(1);
+        expect(unlimited['credit_limit'], isNull);
 
-      // 3) صفر = منع الآجل.
-      vm = _formVm(repos);
-      await vm.load();
-      vm.setName('عميل آجل ممنوع');
-      vm.setCreditLimitText('0');
-      expect(vm.state.parsedCreditLimit, 0);
-      expect(await vm.save(), isTrue);
-      final forbidden = await repos.customerRow(2);
-      expect(forbidden['credit_limit'], 0);
+        // 3) صفر = منع الآجل.
+        vm = _formVm(repos);
+        await vm.load();
+        vm.setName('عميل آجل ممنوع');
+        vm.setCreditLimitText('0');
+        expect(vm.state.parsedCreditLimit, 0);
+        expect(await vm.save(), isTrue);
+        final forbidden = await repos.customerRow(2);
+        expect(forbidden['credit_limit'], 0);
 
-      // 4) رقم = الحد نفسه.
-      vm = _formVm(repos);
-      await vm.load();
-      vm.setName('عميل بحد');
-      vm.setCreditLimitText('5000');
-      expect(vm.state.parsedCreditLimit, 5000);
-      expect(await vm.save(), isTrue);
-      final limited = await repos.customerRow(3);
-      expect(limited['credit_limit'], 5000);
-      vm.dispose();
-    });
+        // 4) رقم = الحد نفسه.
+        vm = _formVm(repos);
+        await vm.load();
+        vm.setName('عميل بحد');
+        vm.setCreditLimitText('5000');
+        expect(vm.state.parsedCreditLimit, 5000);
+        expect(await vm.save(), isTrue);
+        final limited = await repos.customerRow(3);
+        expect(limited['credit_limit'], 5000);
+        vm.dispose();
+      },
+    );
 
     test('افتتاحي غير صفري بلا عملة يُرفض؛ وبعملة يُحفظ بها', () async {
       final repos = await _open();
@@ -285,10 +288,7 @@ void main() {
       vm.setOpeningText('250');
       vm.setOpeningCurrency(null); // مسح العملة.
       expect(await vm.save(), isFalse);
-      expect(
-        vm.state.validationError,
-        PartyFormError.openingCurrencyRequired,
-      );
+      expect(vm.state.validationError, PartyFormError.openingCurrencyRequired);
 
       // العملة الأساسية = سعر 1 بلا بحث.
       vm.setOpeningCurrency(await repos.currencyId('YER'));
@@ -300,8 +300,7 @@ void main() {
       vm.dispose();
     });
 
-    test('افتتاحي بعملة غير الأساس بلا سعر معروف يُرفض (FR-08-09)',
-        () async {
+    test('افتتاحي بعملة غير الأساس بلا سعر معروف يُرفض (FR-08-09)', () async {
       final repos = await _open();
       final vm = _formVm(repos);
       await vm.load();
@@ -400,7 +399,10 @@ void main() {
       // مسح الفترة يعيد الافتتاحي قيداً داخل الكشف.
       await vm.clearPeriod();
       expect(vm.state.from, isNull);
-      expect(vm.state.statement!.entries.first.code, StatementEntryCode.opening);
+      expect(
+        vm.state.statement!.entries.first.code,
+        StatementEntryCode.opening,
+      );
 
       // الأرصدة مفصولة بكل عملة.
       expect(vm.state.balances, hasLength(1));
@@ -419,14 +421,16 @@ void main() {
       final vm = _detailVm(repos, PartyKind.supplier, supplier.id);
       await vm.load();
       expect(vm.state.record!.name, 'مصنع ماء فين');
-      expect(vm.state.statement!.entries.first.code, StatementEntryCode.opening);
+      expect(
+        vm.state.statement!.entries.first.code,
+        StatementEntryCode.opening,
+      );
       expect(vm.state.statement!.finalBalance, 2500);
       vm.dispose();
     });
   });
 
-  group('ExchangeRatesViewModel — سعر اليوم يعمل غداً (latestBefore)',
-      () {
+  group('ExchangeRatesViewModel — سعر اليوم يعمل غداً (latestBefore)', () {
     test('الحفظ والتحديث (UPSERT) وحالة الإكمال والفشل الرقمي', () async {
       final repos = await _open();
       final vm = ExchangeRatesViewModel(
@@ -455,16 +459,16 @@ void main() {
 
       // حفظ سعر اليوم.
       expect(await vm.setRateFor(sarId, '215'), isTrue);
-      final sarEntry = vm.state.entries
-          .firstWhere((e) => e.currency.id == sarId);
+      final sarEntry = vm.state.entries.firstWhere(
+        (e) => e.currency.id == sarId,
+      );
       expect(sarEntry.enteredToday, isTrue);
       expect(sarEntry.todayRate, 215);
       expect(sarEntry.latest!.rate, 215);
 
       // التحديث لنفس اليوم = نفس الصف (UPSERT) لا تكرار.
       expect(await vm.setRateFor(sarId, '220'), isTrue);
-      final after = vm.state.entries
-          .firstWhere((e) => e.currency.id == sarId);
+      final after = vm.state.entries.firstWhere((e) => e.currency.id == sarId);
       expect(after.todayRate, 220);
       expect(after.history, hasLength(1));
 
@@ -486,12 +490,24 @@ void main() {
   group('PartyBalancesViewModel — فصل العملات بلا خلط', () {
     test('مجموعة لكل عملة بإجماليها، والبحث محلي', () async {
       final repos = await _open();
-      await _createCustomer(repos, 'بهاء الدين', opening: 5000,
-          currencyCode: 'SAR');
-      await _createCustomer(repos, 'سالم الحضرمي', opening: 3000,
-          currencyCode: 'SAR');
-      await _createCustomer(repos, 'محمد الجابري', opening: 200,
-          currencyCode: 'USD');
+      await _createCustomer(
+        repos,
+        'بهاء الدين',
+        opening: 5000,
+        currencyCode: 'SAR',
+      );
+      await _createCustomer(
+        repos,
+        'سالم الحضرمي',
+        opening: 3000,
+        currencyCode: 'SAR',
+      );
+      await _createCustomer(
+        repos,
+        'محمد الجابري',
+        opening: 200,
+        currencyCode: 'USD',
+      );
 
       final vm = PartyBalancesViewModel(
         gate: CustomerRepoGate(repos.customers),
@@ -523,8 +539,12 @@ void main() {
 
     test('مرآة الموردين: payables مجمّعة بكل عملة', () async {
       final repos = await _open();
-      await _createSupplier(repos, 'مورد دولاري', opening: 400,
-          currencyCode: 'USD');
+      await _createSupplier(
+        repos,
+        'مورد دولاري',
+        opening: 400,
+        currencyCode: 'USD',
+      );
       final vm = PartyBalancesViewModel(
         gate: SupplierRepoGate(repos.suppliers),
         companyRepo: repos.companies,
@@ -542,11 +562,19 @@ void main() {
   group('PartiesHomeViewModel — العدّادات وحالة أسعار اليوم', () {
     test('العدّادات والإجماليات لكل عملة وشارة النقص/الاكتمال', () async {
       final repos = await _open();
-      await _createCustomer(repos, 'بهاء الدين', opening: 5000,
-          currencyCode: 'SAR');
+      await _createCustomer(
+        repos,
+        'بهاء الدين',
+        opening: 5000,
+        currencyCode: 'SAR',
+      );
       await _createCustomer(repos, 'عبدالله بلا حركات');
-      await _createSupplier(repos, 'مورد دولار', opening: 300,
-          currencyCode: 'USD');
+      await _createSupplier(
+        repos,
+        'مورد دولار',
+        opening: 300,
+        currencyCode: 'USD',
+      );
       await repos.fx.setRate(
         currencyId: await repos.currencyId('SAR'),
         date: _today,

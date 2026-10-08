@@ -8,19 +8,13 @@ import '../../../../data/repositories/purchase_repository.dart';
 import '../../../../domain/models/purchase.dart';
 
 class PurchaseDetailState {
-  const PurchaseDetailState({
-    required this.loading,
-    this.detail,
-    this.error,
-  });
+  const PurchaseDetailState({required this.loading, this.detail, this.error});
 
   final bool loading;
   final PurchaseInvoiceDetail? detail;
   final Object? error;
 
-  static const PurchaseDetailState initial = PurchaseDetailState(
-    loading: true,
-  );
+  static const PurchaseDetailState initial = PurchaseDetailState(loading: true);
 }
 
 class PurchaseDetailViewModel extends ChangeNotifier {

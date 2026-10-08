@@ -12,11 +12,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../../domain/services/numerals.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/numerals_scope.dart';
 import '../view_models/settings_view_model.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -37,6 +39,7 @@ class SettingsScreen extends StatelessWidget {
         companyRepo: app.companies!,
         userRepo: app.users!,
         settingsRepo: app.settings!,
+        backupEngine: app.backupEngine,
       );
       unawaited(vm.load());
     }
@@ -76,16 +79,63 @@ class _SettingsBody extends StatelessWidget {
           else ...[
             _CompanyCard(state: state),
             const SizedBox(height: 16),
+            // مركز التقارير (الشريحة 10) — بوابة الأرباح والرقابة اليومية.
+            const _ReportsSection(),
+            const SizedBox(height: 16),
             _SecuritySection(),
             const SizedBox(height: 16),
             const _AppearanceSection(),
             const SizedBox(height: 16),
             _DataSection(),
             const SizedBox(height: 16),
-            const _AboutCard(),
+            _AboutCard(state: state),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// قسم مركز التقارير — بطاقة ذهبية Accent بنمط أقسام الإعدادات، أول
+/// ما يقع عليه البصر بعد بطاقة المنشأة (أهم أداة رقابية يومية).
+class _ReportsSection extends StatelessWidget {
+  const _ReportsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(icon: Icons.insights_rounded, title: l10n.reportsTitle),
+        const SizedBox(height: 8),
+        FinCard(
+          accent: colors.gold,
+          child: _ActionRow(
+            icon: Icons.trending_up_rounded,
+            iconColor: colors.positive,
+            title: l10n.reportsHeroTitle,
+            subtitle: l10n.reportsPnlDesc,
+            trailing: Icon(
+              Icons.auto_awesome_rounded,
+              size: 16,
+              color: colors.gold,
+            ),
+            onTap: () => context.go('/reports'),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            l10n.reportsHeroSubtitle,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -707,7 +757,8 @@ class _ThemeOptionRow extends StatelessWidget {
   }
 }
 
-/// قسم البيانات: المسح الكامل (AC-15) — بوابة الحذر الأحمر.
+/// قسم البيانات: النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11) +
+/// المسح الكامل (AC-15) — بوابة الحذر الأحمر.
 class _DataSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -720,16 +771,29 @@ class _DataSection extends StatelessWidget {
         _SectionTitle(icon: Icons.storage_rounded, title: l10n.settingsData),
         const SizedBox(height: 8),
         FinCard(
-          child: _ActionRow(
-            icon: Icons.delete_forever_rounded,
-            iconColor: colors.negative,
-            title: l10n.settingsWipe,
-            subtitle: l10n.settingsWipeDesc,
-            trailing: Icon(
-              Icons.chevron_left_rounded,
-              color: scheme.onSurfaceVariant,
-            ),
-            onTap: () => _confirmWipe(context, l10n),
+          child: Column(
+            children: [
+              _ActionRow(
+                icon: Icons.backup_rounded,
+                iconColor: scheme.primary,
+                title: l10n.settingsBackupTitle,
+                subtitle: l10n.settingsBackupDesc,
+                trailing: const Icon(Icons.chevron_left_rounded),
+                onTap: () => context.go('/more/backup'),
+              ),
+              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+              _ActionRow(
+                icon: Icons.delete_forever_rounded,
+                iconColor: colors.negative,
+                title: l10n.settingsWipe,
+                subtitle: l10n.settingsWipeDesc,
+                trailing: Icon(
+                  Icons.chevron_left_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+                onTap: () => _confirmWipe(context, l10n),
+              ),
+            ],
           ),
         ),
       ],
@@ -766,7 +830,10 @@ class _DataSection extends StatelessWidget {
 
 /// بطاقة «حول»: الاسم والإصدار ووثيقة المتطلبات ومرحلة التسليم.
 class _AboutCard extends StatelessWidget {
-  const _AboutCard();
+  const _AboutCard({required this.state});
+
+  /// بيانات الإعدادات (لحجم القاعدة — FR-13-07).
+  final SettingsData state;
 
   @override
   Widget build(BuildContext context) {
@@ -812,6 +879,20 @@ class _AboutCard extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
+          // حجم القاعدة (FR-13-07) — من ملف finacc.db على المنصات الأصلية.
+          if (state.dbSizeBytes != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.settingsAboutDbSize(
+                _formatDbSize(context, state.dbSizeBytes!),
+              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
           const SizedBox(height: 14),
           Divider(
             color: Theme.of(context).colorScheme.outlineVariant
@@ -938,4 +1019,17 @@ class _ActionRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// حجم القاعدة مقروءاً (ك.ب/م.ب) بأرقام النظام الحي — لبند «حول».
+String _formatDbSize(BuildContext context, int bytes) {
+  final l10n = AppLocalizations.of(context)!;
+  final arabicIndic = NumeralsScope.of(context);
+  String digits(String text) =>
+      arabicIndic ? Numerals.toArabicIndic(text) : text;
+  final kb = bytes / 1024;
+  if (kb < 1024) {
+    return l10n.backupSizeKb(digits(kb.round().toString()));
+  }
+  return l10n.backupSizeMb(digits((kb / 1024).toStringAsFixed(1)));
 }

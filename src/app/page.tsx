@@ -5,14 +5,21 @@ import { useCallback, useEffect, useState } from "react";
 import {
   BadgeCheck,
   Braces,
+  CalendarClock,
   CheckCircle2,
   CreditCard,
   Database,
+  Download,
   ExternalLink,
   Fingerprint,
+  FlaskConical,
+  Hash,
+  History,
   Info,
   Package,
+  PackageCheck,
   RefreshCw,
+  ShieldCheck,
   Smartphone,
   Sparkles,
   Terminal,
@@ -35,6 +42,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 /* ================================================================== */
 
 const PREVIEW_URL = "/mobile_app/index.html";
+
+/** رابط حزمة أندرويد الأولى — تُخدَّم من مجلد public/downloads. */
+const APK_URL = "/downloads/FinAcc-v0.7.0.apk";
+
+type ApkInfo = {
+  available: boolean;
+  sizeBytes?: number;
+  sha256?: string;
+  builtAt?: string;
+};
 
 /* لوحة الألوان — Premium Fintech داكن (أخضر مالي + ذهبي):             */
 /* خلفيات #0B1512 / #0F1D19 · بذرة #00695C · ذهبي #C9A96A · نص #E8F0EC */
@@ -207,7 +224,7 @@ const slice1Items: React.ReactNode[] = [
   </>,
 ];
 
-const slices2to7Items: React.ReactNode[] = [
+const slices2to10Items: React.ReactNode[] = [
   <>
     <b>الشريحة 2–3</b> — المخزون الكامل: الأصناف والباركود (EAN-13/Code128
     بمعاينة حية) والدفعات <Mono>FEFO</Mono> واستيراد Excel/CSV + الأطراف
@@ -230,10 +247,38 @@ const slices2to7Items: React.ReactNode[] = [
     مسحوبات وإيداع مالك، تحويل بعملتين، وإبطال بحركة معاكسة
   </>,
   <>
-    <b>الشريحة 7 (بدء)</b> — وحدة <Mono>PDF/الطباعة</Mono>: فاتورة المبيعات
-    <Mono>A4</Mono> بعربية مصيّرة كاملة (خط Almarai داخل المستند) + معاينة
-    حية بدقة <Mono>150dpi</Mono> + طباعة/مشاركة/واتساب دفاعية — وسندات
-    القبض والصرف <Mono>A5</Mono> (تحققها الحي للجولة القادمة)
+    <b>الشريحة 7 — كاملة</b> — وحدة <Mono>PDF/الطباعة</Mono>: فاتورة المبيعات
+    <Mono>A4</Mono> وسندات القبض/الصرف <Mono>A5</Mono> وكشف حساب الطرف
+    <Mono>A4</Mono> — بعربية مصيّرة كاملة (خط Almarai داخل المستند) + معاينة
+    حية بدقة <Mono>150dpi</Mono> بشريط حجم الملف + طباعة/مشاركة/واتساب دفاعية
+    — وتتوّج بأول حزمة <Mono>APK</Mono> لأندرويد
+  </>,
+  <>
+    <b>الشريحة 8 — كاملة ✅ معلم MVP</b> — النسخ الاحتياطي والاستعادة
+    (FR-11): محرك نسخ بأرشيف <Mono>.finbak</Mono> (ZIP: manifest + قاعدة)
+    بتدقيق بصمة، جدولة يومية/أسبوعية، احتفاظ تلقائي (3/7/14/30)، سجل نسخ
+    كامل، استعادة من ملف مع حماية المخطط الأحدث، مشاركة عبر النظام
+    (<Mono>share_plus</Mono>)، وتذكير ذكي في اللوحة الرئيسية — 64 اختباراً
+    جديداً ترفع الحزمة إلى 478
+  </>,
+  <>
+    <b>الشريحة 9 — كاملة</b> — الديون والرقابة اليومية (الأسابيع 9–10):
+    <b>الوردية بالمعادلة الشاملة</b> (FR-04-04) — فتح/إقفال بعدّ فعلي، تفكيك
+    كامل لكل بنود الوارد والصادر بتلوين زيادة/عجز، وتقرير وردية PDF عربي
+    قابل للمشاركة — و<b>أعمار الديون FIFO</b> (FR-09-05) بدلاء 0–30/31–60/
+    61–90/+90 بعملة محددة وتذكيرات واتساب بنص جاهز لكل عميل — و<b>إنفاذ
+    حد الائتمان</b> (FR-03-05) بإعداد <Mono>warn/block</Mono> في ورقة الدفع
+    — و<b>إكمال الداشبورد</b> (FR-09-01) ببطاقة مبيعات الشهر بمقارنة
+    نسبية وأعلى الأصناف مبيعاً بمراتب ذهبية — 30 اختباراً جديداً ترفع
+    الحزمة إلى 508
+  </>,
+  <>
+    <b>الشريحة 10 — كاملة</b> — الرقابة والحقيقة (الأسابيع 11–12): الجرد
+    الفعلي بتكلفة اللقطة + الأرباح عبر <Mono>Posting Map</Mono> حصراً +
+    تقارير حركة صنف وملخص المخزون والمبيعات حسب + ربح الفاتورة + مركز
+    التقارير + اختبار أداء AC-22 على 50 ألف فاتورة/20 ألف صنف/100 ألف
+    حركة (الداشبورد 8–16ms &lt; 3s، البحث 19–27ms &lt; 100ms، تقرير
+    الشهر 29ms &lt; 3s) — 95 اختباراً جديداً ترفع الحزمة إلى 603
   </>,
 ];
 
@@ -244,19 +289,29 @@ const qualityGates = [
     result: "صفر أخطاء وصفر تحذيرات",
   },
   {
-    icon: BadgeCheck,
-    name: "التحقق الحي من المتصفح",
-    result: "البوابة الوحيدة للجودة",
+    icon: FlaskConical,
+    name: "flutter test",
+    result: "603/603 اختباراً خضراء (95 جديدة للشريحة 10)",
   },
   {
     icon: Braces,
     name: "dart format",
-    result: "تنسيق قياسي",
+    result: "تنسيق قياسي نظيف",
   },
   {
     icon: Smartphone,
     name: "المعاينة الحية",
     result: "تعمل داخل إطار الهاتف",
+  },
+  {
+    icon: PackageCheck,
+    name: "flutter build apk",
+    result: "release v0.7.0+7 — موقّعة ومنشورة على GitHub",
+  },
+  {
+    icon: BadgeCheck,
+    name: "التحقق الحي من المتصفح",
+    result: "البوابة الملزمة للجودة",
   },
 ] as const;
 
@@ -267,6 +322,8 @@ const qualityGates = [
 export default function FinAccStage1DeliveryPanel() {
   const [iframeKey, setIframeKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [apkInfo, setApkInfo] = useState<ApkInfo | null>(null);
+  const [shaCopied, setShaCopied] = useState(false);
 
   /**
    * منطق التحديث: رفع key الـ iframe يجعل React يفكّ العنصر القديم ويركّب
@@ -288,6 +345,31 @@ export default function FinAccStage1DeliveryPanel() {
     const timer = window.setTimeout(() => setLoading(false), 15_000);
     return () => window.clearTimeout(timer);
   }, [loading]);
+
+  /* جلب معلومات حزمة APK (الحجم/البصمة/تاريخ البناء) من مسار API. */
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/apk-info")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: ApkInfo | null) => {
+        if (!cancelled && data) setApkInfo(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const copySha = useCallback(() => {
+    if (!apkInfo?.sha256) return;
+    navigator.clipboard
+      ?.writeText(apkInfo.sha256)
+      .then(() => {
+        setShaCopied(true);
+        window.setTimeout(() => setShaCopied(false), 1600);
+      })
+      .catch(() => undefined);
+  }, [apkInfo]);
 
   return (
     <div
@@ -319,7 +401,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                v0.7.0 — الشريحة 7 كاملة + 414 اختباراً مستعاداً
+                v0.10.0 — الشريحة 10: الرقابة والحقيقة
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -345,7 +427,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            v0.7.0 — الشريحة 7 كاملة (فاتورة/سند/كشف حساب PDF)
+            v0.10.0 — الشريحة 10: الرقابة والحقيقة
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -426,6 +508,110 @@ export default function FinAccStage1DeliveryPanel() {
 
             {/* ------------------ بطاقة حالة المعاينة ------------------ */}
             <div className="space-y-4">
+              {/* جديد هذا البناء — الشريحة 10 */}
+              <Card className="gap-4 border-[#C9A96A]/30 bg-gradient-to-l from-[#C9A96A]/[0.08] via-[#0F1D19]/95 to-[#0F1D19]/95 py-5 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
+                <CardHeader className="px-5">
+                  <CardTitle className="flex flex-wrap items-center gap-2.5 text-sm font-extrabold">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E3C88F] opacity-60" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#E3C88F]" />
+                    </span>
+                    جديد هذا البناء — الشريحة 10
+                    <Badge className="gap-1 border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
+                      v0.10.0
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs text-[#9DB5AC]">
+                    جرّبها الآن داخل الإطار — كلها في هذه المعاينة الحية
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-5">
+                  <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {[
+                      {
+                        icon: PackageCheck,
+                        title: "الجرد الفعلي",
+                        desc: "الرصيد الدفتري مقابل الفعلي + تسوية ذرّية واحدة بتكلفة لقطة وقت الجرد + توحيد الدفعات FEFO + سجل جرد كامل",
+                        path: "المسار: المخزون ← الجرد الفعلي (أو مركز التقارير)",
+                        gold: true,
+                      },
+                      {
+                        icon: Sparkles,
+                        title: "الأرباح والخسائر عبر خريطة الترحيل",
+                        desc: "الصيغة الملزمة (المبيعات − المرتجع) − (COGS − تكلفة المرتجع) + زيادات الجرد − عجز الجرد − المصاريف ± فروق الصرف — ومسحوبات المالك بنداً مستقلاً و«صافي ما بقي للمالك» ختاماً + تصدير PDF عربي",
+                        path: "المسار: المزيد ← مركز التقارير ← الأرباح والخسائر",
+                        gold: true,
+                      },
+                      {
+                        icon: Database,
+                        title: "مركز التقارير الجديد",
+                        desc: "جذر /reports صار مركزاً بأقسام (المالية/الحركة/الديون/الرقابة) مع مدخل بارز في تبويب «المزيد»",
+                        path: "المسار: المزيد ← مركز التقارير",
+                        gold: false,
+                      },
+                      {
+                        icon: History,
+                        title: "حركة صنف",
+                        desc: "بطاقة الصنف بالباقي التراكمي لكل حركة (وارد/صادر/مرتجع/تسوية ملوّنة) + رصيد افتتاحي وتكلفة WAC",
+                        path: "المسار: مركز التقارير ← حركة صنف",
+                        gold: false,
+                      },
+                      {
+                        icon: Package,
+                        title: "ملخص حركة المخزون",
+                        desc: "وارد/صادر/مرتجع/تسوية لكل صنف مع قيمة المخزون بالتكلفة",
+                        path: "المسار: مركز التقارير ← ملخص حركة المخزون",
+                        gold: false,
+                      },
+                      {
+                        icon: CalendarClock,
+                        title: "المبيعات حسب",
+                        desc: "العميل/الفئة/الصنف/اليوم مع نسب التغير عن الفترة السابقة",
+                        path: "المسار: مركز التقارير ← المبيعات حسب",
+                        gold: false,
+                      },
+                      {
+                        icon: CreditCard,
+                        title: "ربح كل فاتورة",
+                        desc: "التكلفة والربح وهامش ٪ داخل تفاصيل فاتورة البيع (للمدير)",
+                        path: "المسار: المبيعات ← تفاصيل فاتورة البيع",
+                        gold: false,
+                      },
+                    ].map((feature) => (
+                      <li
+                        key={feature.title}
+                        className={`flex items-start gap-2.5 rounded-xl border p-3 transition-colors ${
+                          feature.gold
+                            ? "border-[#C9A96A]/40 bg-[#C9A96A]/[0.05] hover:border-[#C9A96A]/55"
+                            : "border-[#1E332D] bg-[#0B1512]/70 hover:border-[#C9A96A]/35"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
+                            feature.gold
+                              ? "border-[#C9A96A]/45 bg-[#C9A96A]/15 text-[#E3C88F]"
+                              : "border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]"
+                          }`}
+                        >
+                          <feature.icon className="h-3.5 w-3.5" aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold leading-tight text-[#E8F0EC]">
+                            {feature.title}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-snug text-[#9DB5AC]">
+                            {feature.desc}
+                          </p>
+                          <p className="mt-1 text-[11px] font-bold leading-snug text-[#E3C88F]">
+                            {feature.path}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+
               <Card className="gap-5 border-[#1E332D] bg-[#0F1D19]/90 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
                 <CardHeader className="px-6">
                   <CardTitle className="flex items-center gap-2.5 text-base font-extrabold">
@@ -510,13 +696,155 @@ export default function FinAccStage1DeliveryPanel() {
           </div>
         </section>
 
-        {/* ================= ما تم إنجازه — حتى الشريحة 7 ================= */}
+        {/* ================== التطبيق على أندرويد — أول APK ================== */}
+        <section className="mb-12">
+          <SectionHeading
+            icon={PackageCheck}
+            kicker="جاهز للتثبيت"
+            title="التطبيق على أندرويد — أول حزمة APK"
+            subtitle="نفس الكود الذي جرّبته في المعاينة أعلاه، مُترجم ترجمة أصلية (AOT) في حزمة تثبيت واحدة تعمل على كل الأجهزة"
+          />
+
+          <Card className="gap-0 border-[#1E332D] bg-[#0F1D19]/90 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
+            <CardContent className="grid grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)]">
+              {/* ------------------ التفاصيل ------------------ */}
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <PackageCheck className="h-3 w-3" aria-hidden="true" />
+                    الإصدار 0.7.0 (بناء 7)
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#9DB5AC]">
+                    <Smartphone className="h-3 w-3" aria-hidden="true" />
+                    أندرويد 7.0 أو أحدث
+                  </Badge>
+                  <Badge
+                    dir="ltr"
+                    className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 font-mono text-[11px] font-bold text-[#9DB5AC]"
+                  >
+                    app.finacc.mobile
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <div className="rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#C9A96A]">
+                      <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                      حجم الحزمة
+                    </p>
+                    <p dir="ltr" className="mt-1 font-mono text-sm font-bold text-[#E8F0EC]">
+                      {apkInfo?.available && apkInfo.sizeBytes
+                        ? `${(apkInfo.sizeBytes / 1024 / 1024).toFixed(1)} MB`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#C9A96A]">
+                      <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
+                      تاريخ البناء
+                    </p>
+                    <p dir="ltr" className="mt-1 font-mono text-sm font-bold text-[#E8F0EC]">
+                      {apkInfo?.available && apkInfo.builtAt
+                        ? new Date(apkInfo.builtAt).toLocaleString("ar", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* بصمة التحقق SHA-256 */}
+                <div className="rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#C9A96A]">
+                      <Hash className="h-3.5 w-3.5" aria-hidden="true" />
+                      بصمة التحقق SHA-256
+                    </p>
+                    {apkInfo?.sha256 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={copySha}
+                        className="h-8 gap-1.5 border-[#2A4A42] bg-transparent px-2.5 text-[10px] font-bold text-[#8FD9C6] hover:border-[#4DBFA8]/50 hover:bg-[#4DBFA8]/10 focus-visible:ring-[#4DBFA8]/40"
+                      >
+                        {shaCopied ? "تم النسخ ✓" : "نسخ"}
+                      </Button>
+                    )}
+                  </div>
+                  <p dir="ltr" className="mt-1 break-all font-mono text-[11px] leading-5 text-[#9DB5AC]">
+                    {apkInfo?.sha256 ?? "—"}
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-[#D7E4DE]">
+                    موقّعة بمفاتيح التجربة (debug) لأغراض الاختبار — قبل أي نشر رسمي
+                    سننشئ مفتاح توقيع إنتاجياً باسمك. عند التثبيت فعّل «التثبيت من
+                    مصادر غير معروفة» من إعدادات أندرويد.
+                  </p>
+                </div>
+              </div>
+
+              {/* ------------------ زر التنزيل ------------------ */}
+              <div className="flex flex-col justify-center gap-4 rounded-2xl border border-[#C9A96A]/20 bg-gradient-to-b from-[#00695C]/[0.12] via-[#0B1512]/60 to-[#0B1512]/60 p-5">
+                {apkInfo?.available ? (
+                  <Button
+                    asChild
+                    className="h-14 gap-3 border-transparent bg-gradient-to-l from-[#C9A96A] to-[#E3C88F] text-base font-extrabold text-[#0B1512] shadow-lg shadow-[#C9A96A]/25 hover:from-[#D8B878] hover:to-[#EDD6A6] focus-visible:ring-[#C9A96A]/40"
+                  >
+                    <a href={APK_URL} download="FinAcc-v0.7.0.apk">
+                      <Download className="h-5 w-5" aria-hidden="true" />
+                      تنزيل حزمة APK
+                    </a>
+                  </Button>
+                ) : (
+                  <div className="flex h-14 items-center justify-center gap-3 rounded-xl border border-dashed border-[#2A4A42] bg-[#0B1512]/70 text-sm font-bold text-[#9DB5AC]">
+                    <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    الحزمة قيد الإعداد…
+                  </div>
+                )}
+
+                <div className="space-y-2 text-[11px] leading-relaxed text-[#9DB5AC]">
+                  <p className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    تحقّق من البصمة بعد التنزيل:{" "}
+                    <span dir="ltr" className="font-mono">sha256sum FinAcc-v0.7.0.apk</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Smartphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    حزمة موحّدة (arm64 + arm + x86_64) تعمل على أي جهاز أندرويد 7.0+
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    بياناتك لا تغادر جهازك — قاعدة بيانات محلية بالكامل
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    نسخة دائمة وموثّقة على GitHub:{" "}
+                    <a
+                      href="https://github.com/alaghbry0/finacc-flutter2/releases/tag/v0.7.0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-[#8FD9C6] underline decoration-[#4DBFA8]/40 underline-offset-2 hover:decoration-[#4DBFA8]"
+                    >
+                      Releases/v0.7.0
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* ================= ما تم إنجازه — حتى الشريحة 10 ================= */}
         <section className="mb-12">
           <SectionHeading
             icon={Database}
             kicker="حصاد الجولات"
-            title="ما تم إنجازه — حتى الشريحة 7 (بدء PDF)"
-            subtitle="سبع شريحات مكتملة أو جارية: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية وبدء الطباعة — كلها متحقق منها حياً من المتصفح"
+            title="ما تم إنجازه — حتى الشريحة 10"
+            subtitle="عشر شريحات مكتملة: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية والطباعة والنسخ الاحتياطي — ثم الوردية وأعمار الديون في الرقابة اليومية، وختاماً الجرد الفعلي والأرباح عبر خريطة الترحيل ومركز التقارير في جولة الرقابة والحقيقة"
           />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -579,24 +907,82 @@ export default function FinAccStage1DeliveryPanel() {
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
                     <Sparkles className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  الشرائح 2–7 — النواة التشغيلية الكاملة
+                  الشرائح 2–10 — النواة التشغيلية والرقابة والحقيقة
                   <Badge className="ml-auto gap-1 border-[#C9A96A]/30 bg-[#C9A96A]/10 text-[10px] font-bold text-[#E3C88F]">
                     <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-                    v0.4.0 + v0.5.0 + بدء 7
+                    v0.4.0 → v0.10.0
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-sm text-[#9DB5AC]">
-                  المخزون والدفعات والأطراف والكاشير والمشتريات والمرتجعات والنقدية والسندات — ثم بدء الطباعة
+                  المخزون والدفعات والأطراف والكاشير والمشتريات والنقدية والسندات والطباعة والنسخ — ثم الوردية وأعمار الديون، فالجرد الفعلي والأرباح والتقارير
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-6">
                 <ul className="space-y-2.5">
-                  {slices2to7Items.map((item, i) => (
+                  {slices2to10Items.map((item, i) => (
                     <DoneItem key={i}>{item}</DoneItem>
                   ))}
                 </ul>
               </CardContent>
             </Card>
+          </div>
+
+          {/* شريط خارطة الطريق — تتبّع الشرائح 0–11 */}
+          <div className="mt-6 overflow-x-auto pb-1">
+            <ol className="flex min-w-max items-stretch gap-1.5" aria-label="خارطة طريق الشرائح">
+              {[
+                { label: "0", title: "التخزين", done: true },
+                { label: "1", title: "الهوية", done: true },
+                { label: "2–3", title: "المخزون والأطراف", done: true },
+                { label: "4", title: "الكاشير", done: true },
+                { label: "5", title: "المشتريات", done: true },
+                { label: "6", title: "النقدية", done: true },
+                { label: "7", title: "الطباعة", done: true },
+                { label: "8", title: "النسخ MVP", done: true },
+                { label: "9", title: "الديون والوردية", done: true },
+                { label: "10", title: "الجرد والأرباح", done: true, current: true },
+                { label: "11", title: "الإطلاق 1.0", done: false },
+              ].map((stage) => (
+                <li
+                  key={stage.label}
+                  className={`flex min-w-[86px] flex-col items-center gap-1.5 rounded-xl border px-2.5 py-2.5 text-center transition-colors ${
+                    stage.current
+                      ? "border-[#C9A96A]/50 bg-[#C9A96A]/[0.09] shadow-[0_0_24px_-8px_rgba(201,169,106,0.45)]"
+                      : stage.done
+                        ? "border-[#1E332D] bg-[#0F1D19]/80 hover:border-[#2A4A42]"
+                        : "border-dashed border-[#1E332D] bg-transparent opacity-70"
+                  }`}
+                >
+                  <span
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-extrabold ${
+                      stage.done
+                        ? "bg-[#00695C]/40 text-[#8FD9C6] ring-1 ring-[#4DBFA8]/40"
+                        : "bg-[#16302A]/60 text-[#9DB5AC]"
+                    }`}
+                  >
+                    {stage.done ? (
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    ) : (
+                      stage.label
+                    )}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold leading-none ${
+                      stage.current
+                        ? "text-[#E3C88F]"
+                        : stage.done
+                          ? "text-[#D7E4DE]"
+                          : "text-[#9DB5AC]"
+                    }`}
+                  >
+                    {stage.title}
+                  </span>
+                  <span className="text-[9px] leading-none text-[#9DB5AC]/70">
+                    {stage.current ? "الجولة الحالية" : stage.done ? "مكتملة" : "قادمة"}
+                  </span>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
@@ -609,7 +995,7 @@ export default function FinAccStage1DeliveryPanel() {
             subtitle="كل بوابة اجتازها المشروع قبل عرض هذه اللوحة"
           />
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {qualityGates.map((gate) => (
               <Card
                 key={gate.name}
@@ -637,30 +1023,41 @@ export default function FinAccStage1DeliveryPanel() {
         {/* ======================= الخطوة التالية ======================= */}
         <section className="mb-4">
           <SectionHeading
-            icon={Sparkles}
-            kicker="ما بعد الاعتماد"
-            title="الخطوة التالية"
-            subtitle="قرار واحد يفصلنا عن مواصلة البناء"
+            icon={CreditCard}
+            kicker="ما بعد الرقابة والحقيقة"
+            title="الخطوة التالية — الشريحة 11: التصلب والإطلاق"
+            subtitle="اختبارات E2E لكل معايير القبول على الجهاز المرجعي + أسبوع إصلاح + تجربة حية مع محلات حقيقية — نحو إصدار 1.0.0"
           />
 
           <Card className="gap-4 border-[#C9A96A]/25 bg-gradient-to-l from-[#C9A96A]/[0.07] via-[#0F1D19]/95 to-[#0F1D19]/95 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)]">
             <CardContent className="flex flex-col gap-5 px-6 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <p className="text-sm leading-relaxed text-[#D7E4DE] sm:text-base">
-                  بانتظار مراجعتك واعتمادك للمرحلة الأولى — ثم نبدأ{" "}
+                  اكتملت رحلة الرقابة والحقيقة — <b>الجرد الفعلي</b> بتكلفة
+                  اللقطة و<b>الأرباح والخسائر</b> عبر
+                  (<span dir="ltr" className="font-mono text-xs">Posting Map</span>{" "}
+                  حصراً) و<b>مركز التقارير</b> الكامل — فالجولة القادمة هي
+                  الختام:{" "}
                   <span className="font-extrabold text-[#E3C88F]">
-                    الشريحة 2 (الأصناف والدفعات)
-                  </span>
-                  .
+                    الشريحة 11 — التصلب والإطلاق
+                  </span>{" "}
+                  (الأسابيع 13–14): اختبارات <b>E2E</b> لكل معايير القبول
+                  على الجهاز المرجعي، ثم <b>أسبوع إصلاح</b> مخصّص، ثم{" "}
+                  <b>تجربة حية مع محلات حقيقية</b> — وصولاً إلى{" "}
+                  <span className="font-extrabold text-[#8FD9C6]">إصدار 1.0.0</span>.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <Package className="h-3.5 w-3.5" aria-hidden="true" />
-                    الأصناف
+                    <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
+                    E2E لكل معايير القبول
                   </Badge>
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
-                    الدفعات
+                    <History className="h-3.5 w-3.5" aria-hidden="true" />
+                    أسبوع إصلاح مخصّص
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
+                    تجربة حية مع محلات حقيقية
                   </Badge>
                 </div>
               </div>
@@ -668,15 +1065,12 @@ export default function FinAccStage1DeliveryPanel() {
               <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5 sm:max-w-[280px]">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
                 <p className="text-xs leading-relaxed text-[#D7E4DE]">
-                  لتجربة التطبيق بكامل الشاشة، استخدم زر{" "}
-                  <span className="font-bold text-[#E3C88F]">«فتح في تبويب جديد»</span> من{" "}
-                  <a
-                    href="#preview"
-                    className="font-bold text-[#8FD9C6] underline decoration-[#4DBFA8]/40 underline-offset-4 hover:decoration-[#4DBFA8]"
-                  >
-                    لوحة المعاينة الجانبية
-                  </a>{" "}
-                  بالأعلى.
+                  جرّب رحلة الرقابة كاملة في المعاينة الحية بالأعلى:{" "}
+                  <span className="font-bold text-[#E3C88F]">الأرباح والخسائر</span>{" "}
+                  من المزيد ← مركز التقارير (بدّل الفترات وصدّر PDF)، ثم{" "}
+                  <span className="font-bold text-[#E3C88F]">الجرد الفعلي</span>{" "}
+                  من المخزون (عدّ كميات وشاهد تسوية الفروق بتكلفة اللقطة)، ثم
+                  حركة صنف وملخص المخزون والمبيعات حسب.
                 </p>
               </div>
             </CardContent>
