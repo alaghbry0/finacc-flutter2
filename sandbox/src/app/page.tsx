@@ -9,12 +9,10 @@ import {
   CheckCircle2,
   CreditCard,
   Database,
-  DatabaseBackup,
   Download,
   ExternalLink,
   Fingerprint,
   FlaskConical,
-  HardDriveDownload,
   Hash,
   History,
   Info,
@@ -255,6 +253,14 @@ const slices2to7Items: React.ReactNode[] = [
     حية بدقة <Mono>150dpi</Mono> بشريط حجم الملف + طباعة/مشاركة/واتساب دفاعية
     — وتتوّج بأول حزمة <Mono>APK</Mono> لأندرويد
   </>,
+  <>
+    <b>الشريحة 8 — كاملة ✅ معلم MVP</b> — النسخ الاحتياطي والاستعادة
+    (FR-11): محرك نسخ بأرشيف <Mono>.finbak</Mono> (ZIP: manifest + قاعدة)
+    بتدقيق بصمة، جدولة يومية/أسبوعية، احتفاظ تلقائي (3/7/14/30)، سجل نسخ
+    كامل، استعادة من ملف مع حماية المخطط الأحدث، مشاركة عبر النظام
+    (<Mono>share_plus</Mono>)، وتذكير ذكي في اللوحة الرئيسية — 64 اختباراً
+    جديداً ترفع الحزمة إلى 478
+  </>,
 ];
 
 const qualityGates = [
@@ -266,7 +272,7 @@ const qualityGates = [
   {
     icon: FlaskConical,
     name: "flutter test",
-    result: "414/414 اختباراً خضراء",
+    result: "478/478 اختباراً خضراء (64 جديدة للنسخ)",
   },
   {
     icon: Braces,
@@ -281,7 +287,7 @@ const qualityGates = [
   {
     icon: PackageCheck,
     name: "flutter build apk",
-    result: "release v0.7.0+7 — موقّعة وجاهزة",
+    result: "release v0.7.0+7 — موقّعة ومنشورة على GitHub",
   },
   {
     icon: BadgeCheck,
@@ -376,7 +382,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                v0.7.0 — الشريحة 7 كاملة + أول APK
+                v0.8.0 — الشريحة 8 كاملة + معلم MVP
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -402,7 +408,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            v0.7.0 — الشريحة 7 كاملة + أول APK
+            v0.8.0 — الشريحة 8 كاملة + معلم MVP
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -691,19 +697,31 @@ export default function FinAccStage1DeliveryPanel() {
                     <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
                     بياناتك لا تغادر جهازك — قاعدة بيانات محلية بالكامل
                   </p>
+                  <p className="flex items-start gap-2">
+                    <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    نسخة دائمة وموثّقة على GitHub:{" "}
+                    <a
+                      href="https://github.com/alaghbry0/finacc-flutter2/releases/tag/v0.7.0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-[#8FD9C6] underline decoration-[#4DBFA8]/40 underline-offset-2 hover:decoration-[#4DBFA8]"
+                    >
+                      Releases/v0.7.0
+                    </a>
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </section>
 
-        {/* ================= ما تم إنجازه — حتى الشريحة 7 ================= */}
+        {/* ================= ما تم إنجازه — حتى الشريحة 8 ================= */}
         <section className="mb-12">
           <SectionHeading
             icon={Database}
             kicker="حصاد الجولات"
-            title="ما تم إنجازه — حتى الشريحة 7 كاملة + أول APK"
-            subtitle="سبع شريحات مكتملة: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية والطباعة الكاملة — وكلها تتوّج الآن بأول حزمة تثبيت لأندرويد"
+            title="ما تم إنجازه — حتى الشريحة 8 ومعلم MVP"
+            subtitle="ثمان شريحات مكتملة: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية والطباعة والنسخ الاحتياطي — تحقق هدف MVP بالكامل (نهاية الأسبوع 8) والكود كله مدفوع للمستودع البعيد"
           />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -824,10 +842,10 @@ export default function FinAccStage1DeliveryPanel() {
         {/* ======================= الخطوة التالية ======================= */}
         <section className="mb-4">
           <SectionHeading
-            icon={DatabaseBackup}
+            icon={CreditCard}
             kicker="ما بعد الاعتماد"
-            title="الخطوة التالية — الشريحة 8: النسخ الاحتياطي"
-            subtitle="بوابة MVP الأولى: نسخ محلي مجدول باحتفاظ تلقائي واستعادة موثوقة"
+            title="الخطوة التالية — الشريحة 9: الديون والرقابة اليومية"
+            subtitle="بعد تحقق MVP: كشوف بعملة محددة، أعمار ديون FIFO، حدود ائتمان، تذكيرات واتساب، وفروق الصرف المحققة"
           />
 
           <Card className="gap-4 border-[#C9A96A]/25 bg-gradient-to-l from-[#C9A96A]/[0.07] via-[#0F1D19]/95 to-[#0F1D19]/95 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)]">
@@ -836,25 +854,27 @@ export default function FinAccStage1DeliveryPanel() {
                 <p className="text-sm leading-relaxed text-[#D7E4DE] sm:text-base">
                   الجولة القادمة تنطلق إلى{" "}
                   <span className="font-extrabold text-[#E3C88F]">
-                    الشريحة 8 — النسخ الاحتياطي
+                    الشريحة 9 — الديون والرقابة اليومية
                   </span>{" "}
-                  (FR-11): نسخ محلي بجدولة واحتفاظ تلقائي، واستعادة بتدقيق{" "}
-                  <span dir="ltr" className="font-mono text-xs">Checksum</span>،
-                  ومشاركة ملف النسخة — وصولاً إلى{" "}
-                  <span className="font-extrabold text-[#8FD9C6]">MVP بنهاية الأسبوع 8</span>.
+                  (الأسابيع 9–10): كشوف أعمار الديون بعملة محددة بتخصيص{" "}
+                  <span dir="ltr" className="font-mono text-xs">FIFO</span>،
+                  حدود ائتمان لكل عميل، تذكيرات واتساب للديون المستحقة،
+                  فروق الصرف المحققة، وتنبيهات قرب انتهاء الصلاحية — وصولاً
+                  إلى الوردية بالمعادلة الشاملة والداشبورد المكتمل نحو{" "}
+                  <span className="font-extrabold text-[#8FD9C6]">إصدار 1.0.0</span>.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <DatabaseBackup className="h-3.5 w-3.5" aria-hidden="true" />
-                    نسخ محلي
+                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+                    أعمار ديون FIFO
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
+                    تنبيهات الصلاحية والاستحقاق
                   </Badge>
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                     <History className="h-3.5 w-3.5" aria-hidden="true" />
-                    جدولة واحتفاظ
-                  </Badge>
-                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <HardDriveDownload className="h-3.5 w-3.5" aria-hidden="true" />
-                    استعادة ومشاركة
+                    فروق الصرف المحققة
                   </Badge>
                 </div>
               </div>
@@ -862,7 +882,7 @@ export default function FinAccStage1DeliveryPanel() {
               <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5 sm:max-w-[280px]">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
                 <p className="text-xs leading-relaxed text-[#D7E4DE]">
-                  لتجربة الأداء الكامل، ثبّت حزمة{" "}
+                  لتجربة النسخ الاحتياطي الكاملة، ثبّت حزمة{" "}
                   <span className="font-bold text-[#E3C88F]">APK</span> من قسم{" "}
                   <a
                     href="#apk"
@@ -870,7 +890,7 @@ export default function FinAccStage1DeliveryPanel() {
                   >
                     «التطبيق على أندرويد»
                   </a>{" "}
-                  بالأعلى — المعاينة داخل الإطار تبقى نسخة الويب.
+                  بالأعلى — النسخ المحلي والاستعادة والمشاركة ميزات الجهاز.
                 </p>
               </div>
             </CardContent>
