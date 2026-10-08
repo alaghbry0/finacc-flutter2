@@ -24,6 +24,7 @@ import '../../../../data/repositories/exchange_rate_repository.dart';
 import '../../../../data/repositories/item_repository.dart';
 import '../../../../data/repositories/quotation_repository.dart';
 import '../../../../data/repositories/sale_repository.dart';
+import '../../../../data/repositories/settings_repository.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/item.dart';
@@ -69,6 +70,7 @@ class CartUiLine {
     required this.availableQty,
     required this.isService,
     this.barcode,
+    this.costPrice = 0,
   });
 
   final int productId;
@@ -89,6 +91,10 @@ class CartUiLine {
 
   final bool isService;
 
+  /// تكلفة الوحدة بالعملة الأساسية لحظة الإضافة (UX-2a — كشف البيع تحت
+  /// التكلفة `invoicing.discount_below_margin`).
+  final double costPrice;
+
   /// تجاوز الكمية للمتاح؟ (FR-02-02 — تحذير بصري بلون تحذيري).
   bool get exceedsAvailable =>
       availableQty != null && qty > availableQty! + _qtyEpsilon;
@@ -108,6 +114,7 @@ class CartUiLine {
     discountValue: discountValue ?? this.discountValue,
     availableQty: availableQty,
     isService: isService,
+    costPrice: costPrice,
   );
 
   CartLine toCartLine() => CartLine(
@@ -140,6 +147,9 @@ class SellCartState {
     this.nextInvoiceNo,
     this.fxGateRequired = false,
     this.lastReceipt,
+    this.overAvailPolicy = 'warn',
+    this.showDiscounts = true,
+    this.warnBelowMargin = false,
   });
 
   final bool loading;
@@ -181,8 +191,19 @@ class SellCartState {
   /// طلب فتح نافذة إدخال سعر اليوم (FR-08-09) — يُستهلك بـ clearFxGate.
   final bool fxGateRequired;
 
-  /// إيصال آخر فاتورة مُرحَّلة (نجاح — «فاتورة جديدة» تفرّغ السلة).
+  /// إيصال آخر فاتورة مرحّلة (نجاح — «فاتورة جديدة» تفرّغ السلة).
   final SalePostedReceipt? lastReceipt;
+
+  /// سياسة البيع فوق المتاح (UX-2a — `sale.over_avail_policy`):
+  /// `warn` = تحذير بصري فقط (سلوك v0.x)، `block` = منع الترحيل.
+  final String overAvailPolicy;
+
+  /// إظهار عناصر الخصم بالكاشير (UX-2a — `sale.show_discounts`).
+  final bool showDiscounts;
+
+  /// تحذير البيع تحت التكلفة مفعّل؟ (UX-2a —
+  /// `invoicing.discount_below_margin`).
+  final bool warnBelowMargin;
 
   Currency? get selectedCurrency {
     for (final currency in currencies) {
@@ -201,6 +222,9 @@ class SellCartState {
     invoiceDiscountType: SaleDiscountType.amount,
     invoiceDiscountValue: 0,
     posting: false,
+    overAvailPolicy: 'warn',
+    showDiscounts: true,
+    warnBelowMargin: false,
   );
 }
 
@@ -213,6 +237,7 @@ class SellCartViewModel extends ChangeNotifier {
     required SaleRepository saleRepo,
     required QuotationRepository quotationRepo,
     required Database database,
+    SettingsRepository? settingsRepo,
     DateTime Function()? clock,
   }) : _items = itemRepo,
        _companies = companyRepo,
@@ -220,6 +245,7 @@ class SellCartViewModel extends ChangeNotifier {
        _sales = saleRepo,
        _quotations = quotationRepo,
        _db = database,
+       _settings = settingsRepo,
        _clock = clock ?? DateTime.now;
 
   final ItemRepository _items;
@@ -228,6 +254,11 @@ class SellCartViewModel extends ChangeNotifier {
   final SaleRepository _sales;
   final QuotationRepository _quotations;
   final Database _db;
+
+  /// مستودع الإعدادات (UX-2a) — اختياري: غيابه يبقي سلوك v0.x
+  /// (warn / خصومات ظاهرة / بلا تحذير هامش) فلا تنكسر شاشات بلا وصول.
+  final SettingsRepository? _settings;
+
   final DateTime Function() _clock;
 
   SellCartState _state = SellCartState.initial;
@@ -249,6 +280,21 @@ class SellCartViewModel extends ChangeNotifier {
     _state = SellCartState.initial;
     notifyListeners();
     try {
+      // سياسات التخصيص (UX-2a) — قراءة واحدة متزامنة مع باقي التحميل؛
+      // غياب المستودع يبقي سلوك v0.x (warn/خصومات ظاهرة/بلا تحذير هامش).
+      var overAvailPolicy = 'warn';
+      var showDiscounts = true;
+      var warnBelowMargin = false;
+      if (_settings != null) {
+        final policyResults = await Future.wait<Object?>([
+          _settings.overAvailPolicy(),
+          _settings.showDiscounts(),
+          _settings.discountBelowMargin(),
+        ]);
+        overAvailPolicy = policyResults[0]! as String;
+        showDiscounts = policyResults[1]! as bool;
+        warnBelowMargin = policyResults[2]! as bool;
+      }
       final results = await Future.wait<Object?>([
         _companies.listActiveCurrencies(),
         _companies.findBaseCurrency(),
@@ -275,6 +321,9 @@ class SellCartViewModel extends ChangeNotifier {
         invoiceDiscountValue: 0,
         posting: false,
         nextInvoiceNo: await _nextInvoicePreview(),
+        overAvailPolicy: overAvailPolicy,
+        showDiscounts: showDiscounts,
+        warnBelowMargin: warnBelowMargin,
       );
     } catch (error) {
       _state = SellCartState(
@@ -324,6 +373,35 @@ class SellCartViewModel extends ChangeNotifier {
 
   /// الصافي الحالي (للعرض في زر الدفع) — 0 عند الفراغ.
   double get grandTotal => pricedCart?.totals.grandTotal ?? 0;
+
+  /// أسطر السلة المباعة تحت التكلفة (UX-2a — لافتة تحذير بالكاشير عند
+  /// تفعيل `invoicing.discount_below_margin`): يقارن صافي السطر بعد كل
+  /// الخصومات بتكلفة الكمية — حكراً على عملة الأساس (التكلفة المحفوظة
+  /// بالأساس؛ فاتورة بعملة أخرى تُترك بلا تحذير كاذب).
+  List<String> get belowCostLineNames {
+    final state = _state;
+    if (!state.warnBelowMargin || state.lines.isEmpty) {
+      return const <String>[];
+    }
+    final pricedLines = pricedCart?.lines;
+    if (pricedLines == null || pricedLines.length != state.lines.length) {
+      return const <String>[];
+    }
+    final baseId = state.baseCurrency?.id;
+    if (baseId == null || state.currencyId != baseId) {
+      return const <String>[];
+    }
+    final names = <String>[];
+    for (var i = 0; i < state.lines.length; i++) {
+      final line = state.lines[i];
+      if (line.isService || line.costPrice <= 0) continue;
+      final costTotal = line.costPrice * line.qty;
+      if (pricedLines[i].netFinal < costTotal - _qtyEpsilon) {
+        names.add(line.name);
+      }
+    }
+    return names;
+  }
 
   // ───────────────────────────────────────────────────────────────────
   // العميل والعملة
@@ -462,6 +540,8 @@ class SellCartViewModel extends ChangeNotifier {
           discountValue: 0,
           availableQty: available,
           isService: info.item.isService,
+          // UX-2a: تكلفة اللقطة لكشف البيع تحت التكلفة (عملة الأساس حصراً).
+          costPrice: info.item.costPrice,
         ),
       ],
       postError: null,
@@ -634,6 +714,19 @@ class SellCartViewModel extends ChangeNotifier {
     final total = grandTotal;
     final payFailure = SalePricing.validatePayment(total, paidCash, method);
     if (payFailure != null) return payFailure;
+    // UX-2a — `sale.over_avail_policy` = block: أي سطر يتجاوز المتاح يمنع
+    // الترحيل من هنا (warn = سلوك v0.x: تحذير بصري فقط والمستودع حارس
+    // أخير برسالته الخاصة).
+    if (_state.overAvailPolicy == 'block') {
+      for (final line in _state.lines) {
+        if (line.exceedsAvailable) {
+          return 'لا يمكن الترحيل: كمية «${line.name}» تتجاوز المتاح '
+              '(${_qtyText(line.availableQty!)}) — سياسة «منع البيع فوق '
+              'المتاح» مفعّلة من تفضيلات البيع. خفّض الكمية أو عوّض '
+              'المخزون أولاً.';
+        }
+      }
+    }
     // عميل نقدي مجهول: نقدي كامل حصراً (الآجل يحتاج حساباً معروفاً).
     final settlement = SalePricing.settlePayment(total, paidCash);
     if (settlement.remainingCredit > moneyEpsilon &&
@@ -765,6 +858,11 @@ class SellCartViewModel extends ChangeNotifier {
     return -1;
   }
 
+  /// نص كمية للرسائل (نفس نمط sellQtyText بلا استيراد طبقة العرض).
+  static String _qtyText(double qty) => qty == qty.truncateToDouble()
+      ? qty.truncate().toString()
+      : qty.toStringAsFixed(3);
+
   /// معاينة رقم INV القادم (آخر رقم مُصدر + 1) — عرض فقط، الترقيم الحقيقي
   /// يستهلك ذرّياً داخل معاملة الترحيل.
   Future<String?> _nextInvoicePreview() async {
@@ -799,6 +897,9 @@ class SellCartViewModel extends ChangeNotifier {
     String? nextInvoiceNo,
     bool? fxGateRequired,
     Object? lastReceipt = _keep,
+    String? overAvailPolicy,
+    bool? showDiscounts,
+    bool? warnBelowMargin,
   }) => SellCartState(
     loading: loading ?? _state.loading,
     error: _state.error,
@@ -828,5 +929,8 @@ class SellCartViewModel extends ChangeNotifier {
     lastReceipt: identical(lastReceipt, _keep)
         ? _state.lastReceipt
         : lastReceipt as SalePostedReceipt?,
+    overAvailPolicy: overAvailPolicy ?? _state.overAvailPolicy,
+    showDiscounts: showDiscounts ?? _state.showDiscounts,
+    warnBelowMargin: warnBelowMargin ?? _state.warnBelowMargin,
   );
 }

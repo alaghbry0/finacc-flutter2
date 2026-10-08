@@ -52,9 +52,12 @@ import '../../features/sell/views/quotations_screen.dart';
 import '../../features/sell/views/sales_invoices_screen.dart';
 import '../../features/sell/views/sell_home_screen.dart';
 import '../../features/sell/views/sell_screen.dart';
+import '../../features/settings/views/appearance_screen.dart';
 import '../../features/settings/views/audit_log_screen.dart';
 import '../../features/settings/views/backup_screen.dart';
 import '../../features/settings/views/change_pin_screen.dart';
+import '../../features/settings/views/company_profile_screen.dart';
+import '../../features/settings/views/sale_preferences_screen.dart';
 import '../../features/settings/views/settings_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
 import '../session/app_controller.dart';
@@ -466,6 +469,21 @@ GoRouter buildAppRouter(AppController controller) {
                   GoRoute(
                     path: 'backup',
                     builder: (context, state) => const BackupScreen(),
+                  ),
+                  // بيانات المنشأة (UX-2a) — المحرر الكامل + رافع الشعار.
+                  GoRoute(
+                    path: 'company',
+                    builder: (context, state) => const CompanyProfileScreen(),
+                  ),
+                  // تفضيلات البيع (UX-2a) — سياسات الكاشير الخمس.
+                  GoRoute(
+                    path: 'sale-prefs',
+                    builder: (context, state) => const SalePreferencesScreen(),
+                  ),
+                  // العرض والمظهر (UX-2a) — ثيم/أرقام/حجم خط/تباين عالي.
+                  GoRoute(
+                    path: 'appearance',
+                    builder: (context, state) => const AppearanceScreen(),
                   ),
                 ],
               ),

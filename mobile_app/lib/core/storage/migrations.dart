@@ -41,9 +41,19 @@ int get currentSchemaVersion => migrations.last.version;
 /// كانت تُرفض في البيع بمتاح = 0 رغم رصيد كتابي كبير. تُنشأ لكل
 /// (صنف × مخزن) دفعة افتتاحية بالفرق المتبقي بصلاحية بعيدة 9999-12-31 —
 /// العبارة **idempotent** (إعادة تشغيلها لا تكرر: الفرق يصبح صفراً).
+///
+/// **الإصدار 3** (موجة UX-2a — التخصيص الشامل): عمود `logo_png` في
+/// `company` (قرار المنسق: الشعار BLOB داخل القاعدة لينجو مع ملف النسخة
+/// الاحتياطي) + بذر مفاتيح التخصيص الجديدة في `settings`
+/// (`sale.default_payment` / `sale.show_discounts` / `display.font_scale`).
 const List<DbMigration> migrations = <DbMigration>[
   DbMigration(version: 1, statements: schemaV1Ddl, seeds: _seedStatements),
   DbMigration(version: 2, statements: <String>[repairOpeningBatchesV2]),
+  DbMigration(
+    version: 3,
+    statements: <String>[alterCompanyLogoPngV3],
+    seeds: _seedStatementsV3,
+  ),
 ];
 
 /// عبارة إصلاح الإصدار 2 — انظر [migrations]. (علنية لتُختبر مباشرة.)
@@ -111,6 +121,28 @@ const List<String> _seedStatements = <String>[
     ('backup.retention_count', '7', strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     ('security.autolock_minutes', '5', strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     ('dating.max_backdate_days', '30', strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  ''',
+];
+
+/// عبارة DDL للإصدار 3 — عمود الشعار BLOB في جدول `company`.
+///
+/// (علنية لتُختبر مباشرة.) الشعار يُخزَّن كـ PNG مضغوط داخل القاعدة —
+/// قرار المنسق في UX-audit-synthesis: ينجو تلقائياً مع ملف النسخة
+/// الاحتياطي (zip = قاعدة كاملة) بلا مسار ملف خارجي ينقطع بالنقل.
+const String alterCompanyLogoPngV3 =
+    'ALTER TABLE company ADD COLUMN logo_png BLOB';
+
+/// بذور الإصدار 3 — مفاتيح التخصيص الجديدة (موجة UX-2a).
+///
+/// `INSERT OR IGNORE` حصراً: البذر لا يدوس قيمة موجودة (قاعدة ترقّت يدوياً
+/// أو مفتاح كتبه المستخدم قبل الترقية) — وبهذا إعادة تشغيل الهجرة فوق
+/// أي حالة **idempotent** بلا ازدواج ولا فقد.
+const List<String> _seedStatementsV3 = <String>[
+  '''
+  INSERT OR IGNORE INTO settings(key, value, updated_at) VALUES
+    ('sale.default_payment', '"cash"', strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    ('sale.show_discounts', '"on"', strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    ('display.font_scale', '"normal"', strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   ''',
 ];
 

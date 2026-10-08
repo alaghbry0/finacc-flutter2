@@ -13,7 +13,8 @@ class SettingsRepository {
 
   final Database _db;
 
-  /// المفاتيح المعتمدة (ملحق هـ — مفاتيح V1 + حالة أمنية نظامية).
+  /// المفاتيح المعتمدة (ملحق هـ — مفاتيح V1 + حالة أمنية نظامية +
+  /// مفاتيح موجة UX-2a للتخصيص الشامل).
   static const Set<String> knownKeys = <String>{
     'inventory.min_stock_alert',
     'invoicing.tax_mode',
@@ -25,7 +26,10 @@ class SettingsRepository {
     'fx.daily_reminder',
     'fx.fallback',
     'display.numerals',
+    'display.font_scale',
     'ui.high_contrast',
+    'sale.default_payment',
+    'sale.show_discounts',
     'backup.schedule',
     'backup.retention_count',
     'security.autolock_minutes',
@@ -115,6 +119,65 @@ class SettingsRepository {
   /// `ui.high_contrast` — وضع التباين العالي (FR-13-05).
   Future<bool> highContrast() async =>
       (await getString('ui.high_contrast', 'off')) == 'on';
+
+  /// يثبّت وضع التباين العالي (`on` / `off`).
+  Future<void> setHighContrast(bool on) =>
+      set('ui.high_contrast', on ? 'on' : 'off');
+
+  // ── موصّلات موجة UX-2a (التخصيص الشامل) ──
+
+  /// `sale.default_payment` — وضع الدفع الذي تُفتح عليه نافذة الدفع
+  /// (`cash` / `credit` / `mixed` — افتراضي cash بذر v3).
+  Future<String> defaultPayment() => getString('sale.default_payment', 'cash');
+
+  /// يثبّت طريقة الدفع الافتراضية (القيم الثلاث الملزمة حصراً).
+  Future<void> setDefaultPayment(String mode) async {
+    const allowed = {'cash', 'credit', 'mixed'};
+    if (!allowed.contains(mode)) {
+      throw ArgumentError('طريقة دفع افتراضية غير معروفة: $mode');
+    }
+    await set('sale.default_payment', mode);
+  }
+
+  /// `sale.show_discounts` — إظهار عناصر الخصم في الكاشير (افتراضي on).
+  Future<bool> showDiscounts() async =>
+      (await getString('sale.show_discounts', 'on')) == 'on';
+
+  /// يثبّت إظهار/إخفاء الخصومات بالكاشير.
+  Future<void> setShowDiscounts(bool show) =>
+      set('sale.show_discounts', show ? 'on' : 'off');
+
+  /// `display.font_scale` — حجم خط التطبيق
+  /// (`normal` / `large` / `xlarge` — افتراضي normal بذر v3).
+  Future<String> fontScale() => getString('display.font_scale', 'normal');
+
+  /// يثبّت حجم الخط (المستويات الثلاثة الملزمة حصراً).
+  Future<void> setFontScale(String mode) async {
+    const allowed = {'normal', 'large', 'xlarge'};
+    if (!allowed.contains(mode)) {
+      throw ArgumentError('حجم خط غير معروف: $mode');
+    }
+    await set('display.font_scale', mode);
+  }
+
+  /// `sale.over_avail_policy` — سياسة البيع فوق المتاح (`warn`/`block`).
+  /// مزروعة منذ v1 وبلا واجهة حتى UX-2a — الموصّل الموحّد لاستهلاكها.
+  Future<String> overAvailPolicy() =>
+      getString('sale.over_avail_policy', 'warn');
+
+  /// `parties.credit_limit_action` — سياسة حد الائتمان (`warn`/`block`).
+  /// مستهلكة منذ 17-c عبر قراءة نصية مباشرة — الموصّل الموحّد.
+  Future<String> creditLimitAction() =>
+      getString('parties.credit_limit_action', 'warn');
+
+  /// `invoicing.discount_below_margin` — تحذير البيع تحت التكلفة
+  /// (`on`/`off` — مزروعة off منذ v1 وبلا واجهة حتى UX-2a).
+  Future<bool> discountBelowMargin() async =>
+      (await getString('invoicing.discount_below_margin', 'off')) == 'on';
+
+  /// `dating.max_backdate_days` — سقف التأريخ الرجعي لسندات النقدية
+  /// (افتراضي 30 يوماً؛ مزروعة منذ v1 وبلا استهلاك حتى UX-2a).
+  Future<int> maxBackdateDays() => getInt('dating.max_backdate_days', 30);
 
   /// مُتحقق عبارة المرور (حالة أمنية نظامية).
   Future<String?> passphraseHash() async {

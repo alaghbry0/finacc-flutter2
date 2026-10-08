@@ -54,11 +54,13 @@ void main() {
       // قسم الأمان: تغيير PIN وسجل التدقيق والقفل.
       expect(find.textContaining('تغيير رمز'), findsOneWidget);
       expect(find.text('سجل التدقيق'), findsOneWidget);
-      // المظهر ونظام الأرقام والبيانات.
+      // البيانات (المسح المحروس) وبوابات التخصيص الثلاث (UX-2a — الثيم
+      // والأرقام انتقلا من المركز إلى شاشة «العرض والمظهر» المتخصصة،
+      // وتغطيهما اختبارات settings2_screens هناك).
       expect(find.textContaining('مسح كل البيانات'), findsOneWidget);
-      expect(find.text('نظام الأرقام'), findsOneWidget);
-      expect(find.text('عربي شرقي'), findsOneWidget);
-      expect(find.text('غربي'), findsOneWidget);
+      expect(find.text('بيانات المنشأة'), findsOneWidget);
+      expect(find.text('تفضيلات البيع'), findsOneWidget);
+      expect(find.text('العرض والمظهر'), findsOneWidget);
       vm.dispose();
       controller.dispose();
     });

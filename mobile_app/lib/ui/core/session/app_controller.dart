@@ -114,6 +114,12 @@ class AppController extends ChangeNotifier {
   /// نظام الأرقام المحفوظ (`display.numerals` — western/arabic_indic).
   String _numerals = 'western';
 
+  /// حجم الخط المحفوظ (`display.font_scale` — normal/large/xlarge، UX-2a).
+  String _fontScale = 'normal';
+
+  /// التباين العالي المحفوظ (`ui.high_contrast` — UX-2a وصله بالثيم).
+  bool _highContrast = false;
+
   /// الطور الحالي.
   AppPhase get phase => _phase;
 
@@ -176,6 +182,19 @@ class AppController extends ChangeNotifier {
 
   /// نظام الأرقام الحالي (`western` / `arabic_indic`).
   String get numerals => _numerals;
+
+  /// حجم الخط الحالي (`normal` / `large` / `xlarge` — UX-2a).
+  String get fontScale => _fontScale;
+
+  /// معامل تكبير الخط الحالي (normal = 1.0 بلا تجاوز MediaQuery).
+  double get fontScaleFactor => switch (_fontScale) {
+    'large' => 1.15,
+    'xlarge' => 1.3,
+    _ => 1.0,
+  };
+
+  /// التباين العالي مفعّل؟ (ثيم أسطح صافية ونصوص قصوى — FR-13-05).
+  bool get highContrast => _highContrast;
 
   /// مدة القفل التلقائي الحالية بالدقائق.
   int get autolockMinutes => _autolockMinutes;
@@ -287,6 +306,8 @@ class AppController extends ChangeNotifier {
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
     _themeMode = await _settingsRepo!.themeMode();
     _numerals = await _settingsRepo!.numerals();
+    _fontScale = await _settingsRepo!.fontScale();
+    _highContrast = await _settingsRepo!.highContrast();
     // بذر فئة «رواتب» idempotent (FR-04-05) — قبل أي واجهة.
     await _cashRepo!.ensureSeeded();
     // محرك النسخ الاحتياطي (الشريحة 8) — بعد نجاح كل ما سبق.
@@ -306,6 +327,8 @@ class AppController extends ChangeNotifier {
     _company = await _companyRepo!.findCompany();
     _autolockMinutes = await _settingsRepo!.autolockMinutes();
     _numerals = await _settingsRepo!.numerals();
+    _fontScale = await _settingsRepo!.fontScale();
+    _highContrast = await _settingsRepo!.highContrast();
     _enterSession();
   }
 
@@ -353,6 +376,37 @@ class AppController extends ChangeNotifier {
     notifyListeners();
     try {
       await _settingsRepo?.setNumerals(mode);
+    } catch (_) {
+      // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
+    }
+  }
+
+  // ── حجم الخط (`display.font_scale` — UX-2a) ──
+
+  /// يثبّت حجم الخط محلياً وفي القاعدة — textScaler التطبيق كله يتغير
+  /// فوراً (يُطبّقه جذر التطبيق من [fontScaleFactor]).
+  Future<void> setFontScale(String mode) async {
+    if (mode != 'normal' && mode != 'large' && mode != 'xlarge') return;
+    if (mode == _fontScale) return;
+    _fontScale = mode;
+    notifyListeners();
+    try {
+      await _settingsRepo?.setFontScale(mode);
+    } catch (_) {
+      // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
+    }
+  }
+
+  // ── التباين العالي (`ui.high_contrast` — UX-2a) ──
+
+  /// يثبّت التباين العالي محلياً وفي القاعدة — الثيم يتبدّل فوراً
+  /// (جذر التطبيق يبني FinTheme بوضع التباين العالي).
+  Future<void> setHighContrast(bool on) async {
+    if (on == _highContrast) return;
+    _highContrast = on;
+    notifyListeners();
+    try {
+      await _settingsRepo?.setHighContrast(on);
     } catch (_) {
       // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
     }

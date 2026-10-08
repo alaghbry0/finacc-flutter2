@@ -46,6 +46,10 @@ enum _PayMode { fullCash, fullCredit, mixed }
 /// [openInvoicePreview] (اختياري): يفتح معاينة PDF للفاتورة المرحّلة
 /// — المستدعي يمرر نمط الزر القائم (openInvoicePdfPreview من
 /// invoice_pdf_preview.dart). غيابه يعني سلوك off للأزرار.
+///
+/// [initialPayMode] (UX-2a — `sale.default_payment`): الوضع الذي تُفتح
+/// عليه النافذة (`cash`/`credit`/`mixed`) — آجل/مختلط بلا عميل يسقطان
+/// إلى نقدي (P2-3)؛ الافتراضي cash (سلوك ما قبل التفضيل).
 Future<bool> showPaymentSheet(
   BuildContext context, {
   required double grandTotal,
@@ -59,6 +63,7 @@ Future<bool> showPaymentSheet(
   onConfirm,
   Future<CreditLimitGate?> Function()? creditGate,
   PrintOnSaveMode printOnSave = PrintOnSaveMode.ask,
+  String initialPayMode = 'cash',
   Future<void> Function(SalePostedReceipt receipt)? openInvoicePreview,
 }) async {
   final posted = await showModalBottomSheet<bool>(
@@ -75,6 +80,7 @@ Future<bool> showPaymentSheet(
       onConfirm: onConfirm,
       creditGate: creditGate,
       printOnSave: printOnSave,
+      initialPayMode: initialPayMode,
       openInvoicePreview: openInvoicePreview,
     ),
   );
@@ -90,6 +96,7 @@ class _PaymentSheet extends StatefulWidget {
     required this.onConfirm,
     this.creditGate,
     this.printOnSave = PrintOnSaveMode.ask,
+    this.initialPayMode = 'cash',
     this.openInvoicePreview,
   });
 
@@ -108,6 +115,9 @@ class _PaymentSheet extends StatefulWidget {
 
   /// وضع الطباعة عند الحفظ (P0-2 — invoicing.print_on_save).
   final PrintOnSaveMode printOnSave;
+
+  /// وضع الدفع الافتتاحي (UX-2a — sale.default_payment).
+  final String initialPayMode;
 
   /// يفتح معاينة PDF للفاتورة المرحّلة (null = بلا طباعة).
   final Future<void> Function(SalePostedReceipt receipt)? openInvoicePreview;
@@ -136,7 +146,18 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   @override
   void initState() {
     super.initState();
-    _cashController = TextEditingController(text: _fmt(widget.grandTotal));
+    // UX-2a — `sale.default_payment`: الوضع الافتتاحي من تفضيلات البيع؛
+    // آجل/مختلط بلا عميل يسقطان إلى نقدي (P2-3 — النقدي المجهول يسدد
+    // كاملاً حصراً فلا معنى لافتتاح معطّل).
+    _mode = switch (widget.initialPayMode) {
+      'credit' when widget.customerName != null => _PayMode.fullCredit,
+      'mixed' when widget.customerName != null => _PayMode.mixed,
+      _ => _PayMode.fullCash,
+    };
+    // نقدي كامل يُملأ بالصافي؛ آجل/مختلط يبدآن من صفر (P2-2).
+    _cashController = TextEditingController(
+      text: _mode == _PayMode.fullCash ? _fmt(widget.grandTotal) : '0',
+    );
   }
 
   @override
