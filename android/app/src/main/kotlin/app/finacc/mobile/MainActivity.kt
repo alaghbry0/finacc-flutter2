@@ -1,4 +1,4 @@
-package com.example.mobile_app
+package app.finacc.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -3403,4 +3403,221 @@ class AppLocalizationsAr extends AppLocalizations {
   String printingShareMessageStatement(Object balance, Object party) {
     return 'كشف حساب $party — الرصيد الختامي $balance';
   }
+
+  @override
+  String get backupScreenTitle => 'النسخ الاحتياطي والاستعادة';
+
+  @override
+  String get backupWebPreviewTitle => 'معاينة ويب';
+
+  @override
+  String get backupWebPreviewBody =>
+      'بيانات هذه المعاينة داخل متصفحك، والنسخ الاحتياطي الفعلي — إنشاءً واستعادةً ومشاركةً للملف — متاح في تطبيق أندرويد.';
+
+  @override
+  String get backupLastBackupLabel => 'آخر نسخة ناجحة';
+
+  @override
+  String get backupLastNever => 'لم تُنشأ أي نسخة بعد';
+
+  @override
+  String get backupSavedCountLabel => 'نسخ محفوظة';
+
+  @override
+  String get backupCreateNow => 'إنشاء نسخة الآن';
+
+  @override
+  String get backupCreating => 'جارٍ إنشاء النسخة…';
+
+  @override
+  String get backupCreateHint =>
+      'ملف واحد مضغوط مؤرَّخ بالتاريخ والوقت يُحفظ في مجلد نسخ التطبيق';
+
+  @override
+  String backupCreateSuccess(String fileName) {
+    return 'تم إنشاء النسخة: $fileName';
+  }
+
+  @override
+  String get backupCreateFailed => 'تعذّر إنشاء النسخة الاحتياطية';
+
+  @override
+  String get backupScheduleTitle => 'الجدولة التلقائية';
+
+  @override
+  String get backupScheduleDesc =>
+      'نسخة تلقائية صامتة عند فتح التطبيق متى مضى الوقت المحدد';
+
+  @override
+  String get backupScheduleDaily => 'يومي';
+
+  @override
+  String get backupScheduleWeekly => 'أسبوعي';
+
+  @override
+  String get backupScheduleOff => 'إيقاف';
+
+  @override
+  String get backupRetentionTitle => 'الاحتفاظ بالنسخ';
+
+  @override
+  String backupRetentionDesc(int count) {
+    return 'يُحتفظ بآخر $count نسخة وتُحذف الأقدم تلقائياً';
+  }
+
+  @override
+  String get backupLogTitle => 'سجل النسخ';
+
+  @override
+  String get backupLogEmptyTitle => 'لا نسخ بعد';
+
+  @override
+  String get backupLogEmptyBody =>
+      'أنشئ أول نسخة احتياطية بضغطة واحدة — ملف واحد يحمل كل بياناتك.';
+
+  @override
+  String get backupKindManual => 'يدوية';
+
+  @override
+  String get backupKindAuto => 'تلقائية';
+
+  @override
+  String get backupKindSafety => 'أمان قبل الاستعادة';
+
+  @override
+  String get backupKindGeneric => 'نسخة';
+
+  @override
+  String get backupStatusOk => 'ناجحة';
+
+  @override
+  String get backupStatusFailed => 'فاشلة';
+
+  @override
+  String get backupFileMissing => 'الملف محذوف';
+
+  @override
+  String get backupRestoreTooltip => 'استعادة هذه النسخة';
+
+  @override
+  String get backupShareTooltip => 'مشاركة الملف';
+
+  @override
+  String get backupRestoreFromFile => 'استعادة من ملف خارجي';
+
+  @override
+  String get backupRestoreFromFileDesc =>
+      'اختر ملف .finbak وصلك بالمشاركة أو بنسخ يدوي';
+
+  @override
+  String backupSizeKb(String value) {
+    return '$value ك.ب';
+  }
+
+  @override
+  String backupSizeMb(String value) {
+    return '$value م.ب';
+  }
+
+  @override
+  String get backupShareFailed => 'تعذّرت مشاركة الملف';
+
+  @override
+  String get backupSettingSaveFailed => 'تعذّر حفظ الإعداد';
+
+  @override
+  String get backupRestoreDialogTitle => 'استعادة نسخة احتياطية';
+
+  @override
+  String get backupRestoreWarnBody =>
+      'سيستبدل هذا كل البيانات الحالية ببيانات النسخة. تُنشأ نسخة أمان من بياناتك الحالية تلقائياً قبل الاستبدال.';
+
+  @override
+  String get backupRestoreConfirm => 'استبدال البيانات';
+
+  @override
+  String get backupRestoreRunning => 'جارٍ الاستعادة…';
+
+  @override
+  String get backupRestoreSuccessTitle => 'تمت الاستعادة بنجاح';
+
+  @override
+  String get backupRestoreSuccessBody =>
+      'عادت بيانات النسخة إلى التطبيق، وسيُطلب منك الآن رمز القفل الخاص بها.';
+
+  @override
+  String get backupRestoreFailedTitle => 'تعذّرت الاستعادة';
+
+  @override
+  String get backupRestoreClose => 'إغلاق';
+
+  @override
+  String get backupInspectFile => 'الملف';
+
+  @override
+  String get backupInspectCreated => 'تاريخ النسخة';
+
+  @override
+  String get backupInspectSize => 'الحجم';
+
+  @override
+  String get backupInspectSchema => 'إصدار المخطط';
+
+  @override
+  String get backupInspectChecksum => 'البصمة (SHA-256)';
+
+  @override
+  String get backupInspectKind => 'النوع';
+
+  @override
+  String get backupErrNotFile =>
+      'الملف المختار ليس نسخة احتياطية صالحة من FinAcc (‎.finbak).';
+
+  @override
+  String get backupErrChecksum =>
+      'فشل فحص السلامة — الملف تالف أو عُدِّل بعد إنشائه.';
+
+  @override
+  String backupErrNewerSchema(int fileVersion, int appVersion) {
+    return 'هذه النسخة بمخطط أحدث (v$fileVersion) من تطبيق التطبيق (v$appVersion) — حدِّث التطبيق أولاً.';
+  }
+
+  @override
+  String get backupErrSafety =>
+      'تعذّر إنشاء نسخة الأمان قبل الاستعادة — أُلغيت العملية وبياناتك كما هي.';
+
+  @override
+  String get backupErrOpenFailed =>
+      'فشل فتح القاعدة المستعادة — أُعيدت بياناتك الحالية كما كانت.';
+
+  @override
+  String get backupErrUnsupported => 'الاستعادة متاحة في تطبيق أندرويد فقط.';
+
+  @override
+  String backupBannerAutoDone(String time) {
+    return 'أُنشئت نسخة احتياطية تلقائية بنجاح عند $time';
+  }
+
+  @override
+  String get backupBannerAutoFailed =>
+      'تعذّرت النسخة التلقائية — أنشئ نسخة يدوياً من الإعدادات.';
+
+  @override
+  String get backupBannerWebDue =>
+      'حان وقت نسخة احتياطية — ميزات النسخ الكاملة في تطبيق أندرويد.';
+
+  @override
+  String get backupBannerOpen => 'إدارة النسخ';
+
+  @override
+  String get settingsBackupTitle => 'النسخ الاحتياطي والاستعادة';
+
+  @override
+  String get settingsBackupDesc =>
+      'نسخة محلية مضغوطة بضغطة واحدة، جدولة واستعادة ومشاركة';
+
+  @override
+  String settingsAboutDbSize(String size) {
+    return 'حجم القاعدة: $size';
+  }
 }

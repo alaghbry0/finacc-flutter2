@@ -3394,4 +3394,222 @@ class AppLocalizationsEn extends AppLocalizations {
   String printingShareMessageStatement(Object balance, Object party) {
     return 'Account statement for $party — closing balance $balance';
   }
+
+  @override
+  String get backupScreenTitle => 'Backup & Restore';
+
+  @override
+  String get backupWebPreviewTitle => 'Web preview';
+
+  @override
+  String get backupWebPreviewBody =>
+      'This preview keeps its data inside your browser. Actual file backup — creating, restoring, and sharing — is available in the Android app.';
+
+  @override
+  String get backupLastBackupLabel => 'Last successful backup';
+
+  @override
+  String get backupLastNever => 'No backup yet';
+
+  @override
+  String get backupSavedCountLabel => 'Stored backups';
+
+  @override
+  String get backupCreateNow => 'Back up now';
+
+  @override
+  String get backupCreating => 'Creating backup…';
+
+  @override
+  String get backupCreateHint =>
+      'One dated, compressed file stored in the app\'s backups folder';
+
+  @override
+  String backupCreateSuccess(String fileName) {
+    return 'Backup created: $fileName';
+  }
+
+  @override
+  String get backupCreateFailed => 'Could not create the backup';
+
+  @override
+  String get backupScheduleTitle => 'Automatic schedule';
+
+  @override
+  String get backupScheduleDesc =>
+      'A silent backup runs when you open the app once the interval has passed';
+
+  @override
+  String get backupScheduleDaily => 'Daily';
+
+  @override
+  String get backupScheduleWeekly => 'Weekly';
+
+  @override
+  String get backupScheduleOff => 'Off';
+
+  @override
+  String get backupRetentionTitle => 'Retention';
+
+  @override
+  String backupRetentionDesc(int count) {
+    return 'Keeps the last $count backups and deletes older ones automatically';
+  }
+
+  @override
+  String get backupLogTitle => 'Backup history';
+
+  @override
+  String get backupLogEmptyTitle => 'No backups yet';
+
+  @override
+  String get backupLogEmptyBody =>
+      'Create your first backup with one tap — a single file that holds all your data.';
+
+  @override
+  String get backupKindManual => 'Manual';
+
+  @override
+  String get backupKindAuto => 'Automatic';
+
+  @override
+  String get backupKindSafety => 'Safety (before restore)';
+
+  @override
+  String get backupKindGeneric => 'Backup';
+
+  @override
+  String get backupStatusOk => 'OK';
+
+  @override
+  String get backupStatusFailed => 'Failed';
+
+  @override
+  String get backupFileMissing => 'File deleted';
+
+  @override
+  String get backupRestoreTooltip => 'Restore this backup';
+
+  @override
+  String get backupShareTooltip => 'Share the file';
+
+  @override
+  String get backupRestoreFromFile => 'Restore from external file';
+
+  @override
+  String get backupRestoreFromFileDesc =>
+      'Pick a .finbak file you received via sharing or a manual copy';
+
+  @override
+  String backupSizeKb(String value) {
+    return '$value KB';
+  }
+
+  @override
+  String backupSizeMb(String value) {
+    return '$value MB';
+  }
+
+  @override
+  String get backupShareFailed => 'Could not share the file';
+
+  @override
+  String get backupSettingSaveFailed => 'Could not save the setting';
+
+  @override
+  String get backupRestoreDialogTitle => 'Restore a backup';
+
+  @override
+  String get backupRestoreWarnBody =>
+      'This will replace ALL current data with the backup\'s data. A safety copy of your current data is created automatically before the replacement.';
+
+  @override
+  String get backupRestoreConfirm => 'Replace data';
+
+  @override
+  String get backupRestoreRunning => 'Restoring…';
+
+  @override
+  String get backupRestoreSuccessTitle => 'Restore completed';
+
+  @override
+  String get backupRestoreSuccessBody =>
+      'The backup\'s data is back in the app. You will now be asked for that backup\'s PIN.';
+
+  @override
+  String get backupRestoreFailedTitle => 'Restore failed';
+
+  @override
+  String get backupRestoreClose => 'Close';
+
+  @override
+  String get backupInspectFile => 'File';
+
+  @override
+  String get backupInspectCreated => 'Backup date';
+
+  @override
+  String get backupInspectSize => 'Size';
+
+  @override
+  String get backupInspectSchema => 'Schema version';
+
+  @override
+  String get backupInspectChecksum => 'Fingerprint (SHA-256)';
+
+  @override
+  String get backupInspectKind => 'Type';
+
+  @override
+  String get backupErrNotFile =>
+      'The selected file is not a valid FinAcc backup (.finbak).';
+
+  @override
+  String get backupErrChecksum =>
+      'Integrity check failed — the file is corrupted or was modified after creation.';
+
+  @override
+  String backupErrNewerSchema(int fileVersion, int appVersion) {
+    return 'This backup uses a newer schema (v$fileVersion) than this app (v$appVersion) — update the app first.';
+  }
+
+  @override
+  String get backupErrSafety =>
+      'Could not create the safety backup before restoring — the operation was cancelled and your data is untouched.';
+
+  @override
+  String get backupErrOpenFailed =>
+      'Could not open the restored database — your current data was restored as it was.';
+
+  @override
+  String get backupErrUnsupported =>
+      'Restore is available in the Android app only.';
+
+  @override
+  String backupBannerAutoDone(String time) {
+    return 'An automatic backup was created successfully at $time';
+  }
+
+  @override
+  String get backupBannerAutoFailed =>
+      'Automatic backup failed — create one manually from settings.';
+
+  @override
+  String get backupBannerWebDue =>
+      'A backup is due — full backup features are in the Android app.';
+
+  @override
+  String get backupBannerOpen => 'Manage';
+
+  @override
+  String get settingsBackupTitle => 'Backup & Restore';
+
+  @override
+  String get settingsBackupDesc =>
+      'One-tap local backup, scheduling, restore, and sharing';
+
+  @override
+  String settingsAboutDbSize(String size) {
+    return 'Database size: $size';
+  }
 }

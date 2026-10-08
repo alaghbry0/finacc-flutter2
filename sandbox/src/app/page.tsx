@@ -5,14 +5,23 @@ import { useCallback, useEffect, useState } from "react";
 import {
   BadgeCheck,
   Braces,
+  CalendarClock,
   CheckCircle2,
   CreditCard,
   Database,
+  DatabaseBackup,
+  Download,
   ExternalLink,
   Fingerprint,
+  FlaskConical,
+  HardDriveDownload,
+  Hash,
+  History,
   Info,
   Package,
+  PackageCheck,
   RefreshCw,
+  ShieldCheck,
   Smartphone,
   Sparkles,
   Terminal,
@@ -35,6 +44,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 /* ================================================================== */
 
 const PREVIEW_URL = "/mobile_app/index.html";
+
+/** رابط حزمة أندرويد الأولى — تُخدَّم من مجلد public/downloads. */
+const APK_URL = "/downloads/FinAcc-v0.7.0.apk";
+
+type ApkInfo = {
+  available: boolean;
+  sizeBytes?: number;
+  sha256?: string;
+  builtAt?: string;
+};
 
 /* لوحة الألوان — Premium Fintech داكن (أخضر مالي + ذهبي):             */
 /* خلفيات #0B1512 / #0F1D19 · بذرة #00695C · ذهبي #C9A96A · نص #E8F0EC */
@@ -230,10 +249,11 @@ const slices2to7Items: React.ReactNode[] = [
     مسحوبات وإيداع مالك، تحويل بعملتين، وإبطال بحركة معاكسة
   </>,
   <>
-    <b>الشريحة 7 (بدء)</b> — وحدة <Mono>PDF/الطباعة</Mono>: فاتورة المبيعات
-    <Mono>A4</Mono> بعربية مصيّرة كاملة (خط Almarai داخل المستند) + معاينة
-    حية بدقة <Mono>150dpi</Mono> + طباعة/مشاركة/واتساب دفاعية — وسندات
-    القبض والصرف <Mono>A5</Mono> (تحققها الحي للجولة القادمة)
+    <b>الشريحة 7 — كاملة</b> — وحدة <Mono>PDF/الطباعة</Mono>: فاتورة المبيعات
+    <Mono>A4</Mono> وسندات القبض/الصرف <Mono>A5</Mono> وكشف حساب الطرف
+    <Mono>A4</Mono> — بعربية مصيّرة كاملة (خط Almarai داخل المستند) + معاينة
+    حية بدقة <Mono>150dpi</Mono> بشريط حجم الملف + طباعة/مشاركة/واتساب دفاعية
+    — وتتوّج بأول حزمة <Mono>APK</Mono> لأندرويد
   </>,
 ];
 
@@ -244,19 +264,29 @@ const qualityGates = [
     result: "صفر أخطاء وصفر تحذيرات",
   },
   {
-    icon: BadgeCheck,
-    name: "التحقق الحي من المتصفح",
-    result: "البوابة الوحيدة للجودة",
+    icon: FlaskConical,
+    name: "flutter test",
+    result: "414/414 اختباراً خضراء",
   },
   {
     icon: Braces,
     name: "dart format",
-    result: "تنسيق قياسي",
+    result: "تنسيق قياسي نظيف",
   },
   {
     icon: Smartphone,
     name: "المعاينة الحية",
     result: "تعمل داخل إطار الهاتف",
+  },
+  {
+    icon: PackageCheck,
+    name: "flutter build apk",
+    result: "release v0.7.0+7 — موقّعة وجاهزة",
+  },
+  {
+    icon: BadgeCheck,
+    name: "التحقق الحي من المتصفح",
+    result: "البوابة الملزمة للجودة",
   },
 ] as const;
 
@@ -267,6 +297,8 @@ const qualityGates = [
 export default function FinAccStage1DeliveryPanel() {
   const [iframeKey, setIframeKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [apkInfo, setApkInfo] = useState<ApkInfo | null>(null);
+  const [shaCopied, setShaCopied] = useState(false);
 
   /**
    * منطق التحديث: رفع key الـ iframe يجعل React يفكّ العنصر القديم ويركّب
@@ -288,6 +320,31 @@ export default function FinAccStage1DeliveryPanel() {
     const timer = window.setTimeout(() => setLoading(false), 15_000);
     return () => window.clearTimeout(timer);
   }, [loading]);
+
+  /* جلب معلومات حزمة APK (الحجم/البصمة/تاريخ البناء) من مسار API. */
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/apk-info")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: ApkInfo | null) => {
+        if (!cancelled && data) setApkInfo(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const copySha = useCallback(() => {
+    if (!apkInfo?.sha256) return;
+    navigator.clipboard
+      ?.writeText(apkInfo.sha256)
+      .then(() => {
+        setShaCopied(true);
+        window.setTimeout(() => setShaCopied(false), 1600);
+      })
+      .catch(() => undefined);
+  }, [apkInfo]);
 
   return (
     <div
@@ -319,7 +376,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                v0.6.0 — الشرائح 0–6 كاملة + بدء 7 (PDF)
+                v0.7.0 — الشريحة 7 كاملة + أول APK
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -345,7 +402,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            v0.6.0 — الشرائح 0–6 + بدء 7 (PDF)
+            v0.7.0 — الشريحة 7 كاملة + أول APK
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -510,13 +567,143 @@ export default function FinAccStage1DeliveryPanel() {
           </div>
         </section>
 
+        {/* ================== التطبيق على أندرويد — أول APK ================== */}
+        <section className="mb-12">
+          <SectionHeading
+            icon={PackageCheck}
+            kicker="جاهز للتثبيت"
+            title="التطبيق على أندرويد — أول حزمة APK"
+            subtitle="نفس الكود الذي جرّبته في المعاينة أعلاه، مُترجم ترجمة أصلية (AOT) في حزمة تثبيت واحدة تعمل على كل الأجهزة"
+          />
+
+          <Card className="gap-0 border-[#1E332D] bg-[#0F1D19]/90 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
+            <CardContent className="grid grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)]">
+              {/* ------------------ التفاصيل ------------------ */}
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <PackageCheck className="h-3 w-3" aria-hidden="true" />
+                    الإصدار 0.7.0 (بناء 7)
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#9DB5AC]">
+                    <Smartphone className="h-3 w-3" aria-hidden="true" />
+                    أندرويد 7.0 أو أحدث
+                  </Badge>
+                  <Badge
+                    dir="ltr"
+                    className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 font-mono text-[11px] font-bold text-[#9DB5AC]"
+                  >
+                    app.finacc.mobile
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  <div className="rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#C9A96A]">
+                      <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                      حجم الحزمة
+                    </p>
+                    <p dir="ltr" className="mt-1 font-mono text-sm font-bold text-[#E8F0EC]">
+                      {apkInfo?.available && apkInfo.sizeBytes
+                        ? `${(apkInfo.sizeBytes / 1024 / 1024).toFixed(1)} MB`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#C9A96A]">
+                      <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
+                      تاريخ البناء
+                    </p>
+                    <p dir="ltr" className="mt-1 font-mono text-sm font-bold text-[#E8F0EC]">
+                      {apkInfo?.available && apkInfo.builtAt
+                        ? new Date(apkInfo.builtAt).toLocaleString("ar", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* بصمة التحقق SHA-256 */}
+                <div className="rounded-xl border border-[#1E332D] bg-[#0B1512]/70 p-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#C9A96A]">
+                      <Hash className="h-3.5 w-3.5" aria-hidden="true" />
+                      بصمة التحقق SHA-256
+                    </p>
+                    {apkInfo?.sha256 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={copySha}
+                        className="h-8 gap-1.5 border-[#2A4A42] bg-transparent px-2.5 text-[10px] font-bold text-[#8FD9C6] hover:border-[#4DBFA8]/50 hover:bg-[#4DBFA8]/10 focus-visible:ring-[#4DBFA8]/40"
+                      >
+                        {shaCopied ? "تم النسخ ✓" : "نسخ"}
+                      </Button>
+                    )}
+                  </div>
+                  <p dir="ltr" className="mt-1 break-all font-mono text-[11px] leading-5 text-[#9DB5AC]">
+                    {apkInfo?.sha256 ?? "—"}
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-[#D7E4DE]">
+                    موقّعة بمفاتيح التجربة (debug) لأغراض الاختبار — قبل أي نشر رسمي
+                    سننشئ مفتاح توقيع إنتاجياً باسمك. عند التثبيت فعّل «التثبيت من
+                    مصادر غير معروفة» من إعدادات أندرويد.
+                  </p>
+                </div>
+              </div>
+
+              {/* ------------------ زر التنزيل ------------------ */}
+              <div className="flex flex-col justify-center gap-4 rounded-2xl border border-[#C9A96A]/20 bg-gradient-to-b from-[#00695C]/[0.12] via-[#0B1512]/60 to-[#0B1512]/60 p-5">
+                {apkInfo?.available ? (
+                  <Button
+                    asChild
+                    className="h-14 gap-3 border-transparent bg-gradient-to-l from-[#C9A96A] to-[#E3C88F] text-base font-extrabold text-[#0B1512] shadow-lg shadow-[#C9A96A]/25 hover:from-[#D8B878] hover:to-[#EDD6A6] focus-visible:ring-[#C9A96A]/40"
+                  >
+                    <a href={APK_URL} download="FinAcc-v0.7.0.apk">
+                      <Download className="h-5 w-5" aria-hidden="true" />
+                      تنزيل حزمة APK
+                    </a>
+                  </Button>
+                ) : (
+                  <div className="flex h-14 items-center justify-center gap-3 rounded-xl border border-dashed border-[#2A4A42] bg-[#0B1512]/70 text-sm font-bold text-[#9DB5AC]">
+                    <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    الحزمة قيد الإعداد…
+                  </div>
+                )}
+
+                <div className="space-y-2 text-[11px] leading-relaxed text-[#9DB5AC]">
+                  <p className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    تحقّق من البصمة بعد التنزيل:{" "}
+                    <span dir="ltr" className="font-mono">sha256sum FinAcc-v0.7.0.apk</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Smartphone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    حزمة موحّدة (arm64 + arm + x86_64) تعمل على أي جهاز أندرويد 7.0+
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4DBFA8]" aria-hidden="true" />
+                    بياناتك لا تغادر جهازك — قاعدة بيانات محلية بالكامل
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* ================= ما تم إنجازه — حتى الشريحة 7 ================= */}
         <section className="mb-12">
           <SectionHeading
             icon={Database}
             kicker="حصاد الجولات"
-            title="ما تم إنجازه — حتى الشريحة 7 (بدء PDF)"
-            subtitle="سبع شريحات مكتملة أو جارية: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية وبدء الطباعة — كلها متحقق منها حياً من المتصفح"
+            title="ما تم إنجازه — حتى الشريحة 7 كاملة + أول APK"
+            subtitle="سبع شريحات مكتملة: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية والطباعة الكاملة — وكلها تتوّج الآن بأول حزمة تثبيت لأندرويد"
           />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -609,7 +796,7 @@ export default function FinAccStage1DeliveryPanel() {
             subtitle="كل بوابة اجتازها المشروع قبل عرض هذه اللوحة"
           />
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {qualityGates.map((gate) => (
               <Card
                 key={gate.name}
@@ -637,30 +824,37 @@ export default function FinAccStage1DeliveryPanel() {
         {/* ======================= الخطوة التالية ======================= */}
         <section className="mb-4">
           <SectionHeading
-            icon={Sparkles}
+            icon={DatabaseBackup}
             kicker="ما بعد الاعتماد"
-            title="الخطوة التالية"
-            subtitle="قرار واحد يفصلنا عن مواصلة البناء"
+            title="الخطوة التالية — الشريحة 8: النسخ الاحتياطي"
+            subtitle="بوابة MVP الأولى: نسخ محلي مجدول باحتفاظ تلقائي واستعادة موثوقة"
           />
 
           <Card className="gap-4 border-[#C9A96A]/25 bg-gradient-to-l from-[#C9A96A]/[0.07] via-[#0F1D19]/95 to-[#0F1D19]/95 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)]">
             <CardContent className="flex flex-col gap-5 px-6 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <p className="text-sm leading-relaxed text-[#D7E4DE] sm:text-base">
-                  بانتظار مراجعتك واعتمادك للمرحلة الأولى — ثم نبدأ{" "}
+                  الجولة القادمة تنطلق إلى{" "}
                   <span className="font-extrabold text-[#E3C88F]">
-                    الشريحة 2 (الأصناف والدفعات)
-                  </span>
-                  .
+                    الشريحة 8 — النسخ الاحتياطي
+                  </span>{" "}
+                  (FR-11): نسخ محلي بجدولة واحتفاظ تلقائي، واستعادة بتدقيق{" "}
+                  <span dir="ltr" className="font-mono text-xs">Checksum</span>،
+                  ومشاركة ملف النسخة — وصولاً إلى{" "}
+                  <span className="font-extrabold text-[#8FD9C6]">MVP بنهاية الأسبوع 8</span>.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <Package className="h-3.5 w-3.5" aria-hidden="true" />
-                    الأصناف
+                    <DatabaseBackup className="h-3.5 w-3.5" aria-hidden="true" />
+                    نسخ محلي
                   </Badge>
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
-                    الدفعات
+                    <History className="h-3.5 w-3.5" aria-hidden="true" />
+                    جدولة واحتفاظ
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <HardDriveDownload className="h-3.5 w-3.5" aria-hidden="true" />
+                    استعادة ومشاركة
                   </Badge>
                 </div>
               </div>
@@ -668,15 +862,15 @@ export default function FinAccStage1DeliveryPanel() {
               <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5 sm:max-w-[280px]">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
                 <p className="text-xs leading-relaxed text-[#D7E4DE]">
-                  لتجربة التطبيق بكامل الشاشة، استخدم زر{" "}
-                  <span className="font-bold text-[#E3C88F]">«فتح في تبويب جديد»</span> من{" "}
+                  لتجربة الأداء الكامل، ثبّت حزمة{" "}
+                  <span className="font-bold text-[#E3C88F]">APK</span> من قسم{" "}
                   <a
-                    href="#preview"
+                    href="#apk"
                     className="font-bold text-[#8FD9C6] underline decoration-[#4DBFA8]/40 underline-offset-4 hover:decoration-[#4DBFA8]"
                   >
-                    لوحة المعاينة الجانبية
+                    «التطبيق على أندرويد»
                   </a>{" "}
-                  بالأعلى.
+                  بالأعلى — المعاينة داخل الإطار تبقى نسخة الويب.
                 </p>
               </div>
             </CardContent>

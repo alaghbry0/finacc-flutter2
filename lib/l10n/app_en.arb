@@ -2,7 +2,6 @@
   "appTitle": "Personal Accountant",
   "appBrand": "FinAcc",
   "brandTagline": "Complete accounting & inventory system — works fully offline",
-
   "commonNext": "Next",
   "commonBack": "Back",
   "commonDone": "Done",
@@ -12,9 +11,7 @@
   "commonContinue": "Continue",
   "commonDetails": "Details",
   "commonViewAll": "View all",
-
   "splashLoading": "Preparing your local database…",
-
   "onboardWelcomeTitle": "Welcome to Personal Accountant",
   "onboardWelcomeMessage": "A complete accounting and inventory system for your shop — your data stays on your device, offline, no subscriptions.",
   "onboardFeature1Title": "Works 100% offline",
@@ -26,7 +23,6 @@
   "onboardStepCompany": "Company details",
   "onboardStepSecurity": "Security",
   "onboardStepReview": "Ready",
-
   "companyNameLabel": "Company name",
   "companyNameHint": "As it appears to customers on invoices",
   "companyPhoneLabel": "Phone (optional)",
@@ -35,7 +31,6 @@
   "baseCurrencyHint": "Fixed after setup — other currencies get daily rates",
   "baseCurrencyDecimalsNote": "{decimals, plural, zero{no decimals} one{one decimal place} other{decimal places: {decimals}}}",
   "companyFormInvalid": "Complete the company name and choose a base currency",
-
   "pinSetupTitle": "Your PIN code",
   "pinSetupSubtitle": "4 to 6 digits — asked every time the app opens",
   "pinConfirmTitle": "Confirm the code",
@@ -50,16 +45,13 @@
   "passphraseWarningTitle": "Important — read before continuing",
   "passphraseWarningBody": "Forgetting the passphrase means permanent loss of access; the only recovery is a backup file you keep. Store it safely and enable backups early.",
   "passphraseShort": "The passphrase must be at least 8 characters.",
-
   "creatingTitle": "Setting up your shop…",
   "creatingMessage": "Creating the company, main warehouse, main cashbox and fiscal year inside one safe transaction — any failure rolls everything back.",
   "createdTitle": "Setup complete",
   "createdMessage": "We created “{warehouse}” and “{cashbox}”, ready for your first invoice — no mandatory setup remains.",
   "startUsing": "Start using",
-
   "setupFailedTitle": "Setup could not complete",
   "setupFailedBody": "Review the details and try again — nothing was written to the database.",
-
   "lockTitle": "Enter your PIN",
   "lockSubtitle": "The app is locked to protect your financial data",
   "lockWrong": "Incorrect code",
@@ -73,7 +65,6 @@
   "lockUsePassphrase": "Use passphrase",
   "lockBackToPin": "Back to PIN",
   "lockVerifying": "Verifying…",
-
   "wipeDialogTitle": "Wipe all data?",
   "wipeDialogBody": "Everything will be permanently erased — invoices, items, balances and settings — and the app returns to first-install state. This cannot be undone.",
   "wipeConfirmWord": "wipe",
@@ -81,7 +72,6 @@
   "wipeFinalBody": "Type “wipe” exactly to confirm erasing the whole database. If you have a backup file it stays safe outside the app.",
   "wipeDoneTitle": "Data wiped",
   "wipeDoneBody": "The app will now reopen on the setup screen.",
-
   "dashboardTitle": "Home",
   "dashboardQuickAccess": "Quick access",
   "dashboardQuickRates": "Rates",
@@ -96,13 +86,11 @@
   "stockAlertsTitle": "Stock alerts",
   "stockAlertsEmpty": "No alerts — all items are above their minimum",
   "stockAlertsCount": "{count, plural, zero{no items} one{one item} other{{count} items}} below minimum",
-
   "tabHome": "Home",
   "tabSell": "Sell",
   "tabInventory": "Inventory",
   "tabCash": "Cash",
   "tabMore": "More",
-
   "comingSoonTitle": "Coming in the next slices",
   "comingSoonBody": "The “{feature}” module is built in its dedicated slice after phase one approval — the architecture and database are already ready for it.",
   "comingGatedBadge": "Awaiting phase-one approval",
@@ -118,7 +106,6 @@
   "comingCashH2": "Reconciliations and end-of-day balances in all currencies",
   "comingMoreH1": "Parties (customers/suppliers) with governed credit limits",
   "comingMoreH2": "Reports, analytics, and scheduled backups",
-
   "settingsBaseCurrency": "Base currency",
   "settingsAdmin": "Admin",
   "settingsAutolock": "Auto-lock after",
@@ -139,7 +126,6 @@
   "settingsAboutPhase1": "Phase 1 complete",
   "settingsAboutVersion": "Version 1.0.0 — Slice 0 + Slice 1",
   "settingsAboutSrs": "Built per the approved SRS v1.5 specification",
-
   "changePinStep1Label": "Current",
   "changePinStep2Label": "New",
   "changePinStep3Label": "Confirm",
@@ -151,20 +137,16 @@
   "changePinWrongCurrent": "Current PIN is incorrect — try again",
   "changePinSameAsCurrent": "The new PIN matches the current one — choose a different PIN",
   "changePinNoPin": "No PIN is configured — set up the app again",
-
   "dbOpenErrorTitle": "Could not open the database",
   "dbOpenErrorMessage": "The database file may be busy or storage is full. Try again — your data is unaffected.",
   "genericErrorTitle": "An unexpected error occurred",
   "loadingData": "Loading…",
-
   "settingsAutolockSheetTitle": "Auto-lock delay",
   "settingsAutolockSheetSubtitle": "The app locks after this idle period — allowed range is 1 to 60 minutes.",
-
   "settingsNumerals": "Numerals",
   "numeralsWestern": "Western",
   "numeralsArabicIndic": "Eastern Arabic",
   "settingsNumeralsNote": "Applies instantly to amounts and dates across the app — storage always stays in western digits.",
-
   "settingsAuditLog": "Audit log",
   "settingsAuditLogDesc": "Extended security events — append-only",
   "auditTitle": "Audit log",
@@ -182,7 +164,6 @@
   "auditActionSettingsChange": "Security setting changed",
   "auditActionUnknown": "Event: {action}",
   "auditLoadMore": "Load more ({shown} of {total})",
-
   "auditFilterAll": "All",
   "auditFilterSetup": "Setup",
   "auditFilterSecurity": "Security",
@@ -191,18 +172,14 @@
   "auditFilterEmptyTitle": "No events in this category",
   "auditFilterEmptyBody": "Pick another category or clear the filter to see all recorded events.",
   "auditCountsAll": "{count, plural, =0{No events} one{1 event} other{{count} events}}",
-
   "settingsLicenses": "Open-source licenses",
   "settingsLicensesDesc": "Open-source components inside the app",
-
   "dateSheetTitle": "Today's date",
   "dateSheetTodayBadge": "Today",
   "dateSheetHijriLabel": "Hijri calendar",
   "dateSheetGregorianLabel": "Gregorian calendar",
   "dateSheetWeekdayLabel": "Weekday",
-
   "commonAdd": "Add",
-
   "inventoryHomeHeroTitle": "Inventory management",
   "inventoryHomeHeroSubtitle": "Your items, batches and stock in one place — classify, track and get alerted before running out",
   "inventoryHubAddItem": "Add a new item",
@@ -217,7 +194,6 @@
   "inventoryHubImportDesc": "CSV or Excel with validation and review before insert",
   "inventoryHubCategoriesUnits": "Categories & units",
   "inventoryHubCategoriesUnitsDesc": "Two-level category tree and units with conversion factors",
-
   "itemsListTitle": "Available items",
   "itemsListSubtitleCount": "{count, plural, =0{No items yet} one{1 item} other{{count} items}}",
   "itemsListSubtitleApprox": "More than {count} items",
@@ -236,7 +212,6 @@
   "itemsListEmptyAction": "Add first item",
   "itemsListSearchEmptyTitle": "No matching results",
   "itemsListSearchEmptyBody": "Try another keyword or clear the search to see all items.",
-
   "itemFormAddTitle": "Add a new item",
   "itemFormEditTitle": "Edit item",
   "itemFormEditNote": "Stock is not edited here — the opening quantity is entered on creation only; afterwards it changes through purchase, sale and stocktake movements.",
@@ -276,7 +251,6 @@
   "itemFormSave": "Save data",
   "itemFormSaving": "Saving…",
   "itemFormSavedMessage": "Item saved successfully",
-
   "categoryNameLabel": "Category name",
   "categoryParentLabel": "Parent category",
   "categoryParentNone": "— top-level —",
@@ -284,7 +258,6 @@
   "unitFactorLabel": "Conversion factor",
   "unitFactorHint": "Example: 1 carton = 24 pieces → enter 24",
   "unitFactorInvalid": "The conversion factor must be a number greater than zero",
-
   "itemDetailTitle": "Item card",
   "itemDetailArchivedBadge": "Archived",
   "itemDetailBatchesBadge": "FEFO batches",
@@ -320,14 +293,12 @@
   "itemMovementTransferIn": "Transfer in",
   "itemMovementTransferOut": "Transfer out",
   "itemMovementUnknown": "Movement",
-
   "lowStockTitle": "Items running low",
   "lowStockThresholdLabel": "Minimum level",
   "lowStockSearchHint": "Search by name",
   "lowStockResultCount": "{count, plural, =0{No items} one{1 item} other{{count} items}}",
   "lowStockEmptyTitle": "No items match these criteria",
   "lowStockEmptyBody": "All items are above the set level — raise the level to see more, or change the search keyword.",
-
   "batchesTitle": "Batches & expiry dates",
   "batchesFilterAll": "All",
   "batchesBucketExpired": "Expired",
@@ -339,7 +310,6 @@
   "batchesEmptyBody": "Batches are created with purchase invoices for tracked items and are listed here ordered by earliest expiry.",
   "batchesQtyLabel": "Quantity",
   "batchesExpiryLabel": "Expiry",
-
   "importTitle": "Import items",
   "importModeFile": "File (CSV / Excel)",
   "importModePaste": "Paste CSV",
@@ -384,7 +354,6 @@
   "importResultSnackbar": "Inserted {inserted}, failed {failed}",
   "importFileReadError": "Could not read the file — make sure it is a valid CSV or Excel file",
   "importRestart": "Import another file",
-
   "categoriesUnitsTitle": "Categories & units",
   "categoriesSectionTitle": "Item categories",
   "categoriesAdd": "Add category",
@@ -397,7 +366,6 @@
   "unitsEmptyTitle": "No units yet",
   "unitsEmptyBody": "Piece, carton, kilogram — with a conversion factor for converting between units.",
   "unitFactorTimes": "× {factor}",
-
   "partiesTabTitle": "Parties",
   "partiesHomeHeroTitle": "Parties management",
   "partiesHomeHeroSubtitle": "Customers and suppliers with their balances — each currency on its own, never mixed",
@@ -419,7 +387,6 @@
   "partiesCountCustomers": "{count, plural, =0{No customers yet} one{1 customer} other{{count} customers}}",
   "partiesCountSuppliers": "{count, plural, =0{No suppliers yet} one{1 supplier} other{{count} suppliers}}",
   "partiesDuesCount": "{count, plural, =0{No parties} one{1 party} other{{count} parties}}",
-
   "partiesListCustomersTitle": "All customers",
   "partiesListSuppliersTitle": "All suppliers",
   "partiesListSearchHint": "Search by name or phone",
@@ -446,7 +413,6 @@
   "partiesArchiveHasMovements": "{name} cannot be archived — they have recorded financial movements kept in their reports.",
   "partiesArchivedDone": "Archived",
   "partiesNoPhone": "No phone on file",
-
   "partyFormAddCustomerTitle": "New customer",
   "partyFormEditCustomerTitle": "Edit customer",
   "partyFormAddSupplierTitle": "New supplier",
@@ -479,7 +445,6 @@
   "partyFormSaveLabel": "Save",
   "partyFormSavedCustomer": "Customer saved",
   "partyFormSavedSupplier": "Supplier saved",
-
   "partiesCreditLimitLabel": "Credit limit",
   "partiesCreditUnlimited": "No limit",
   "partiesCreditForbidden": "No credit",
@@ -513,7 +478,6 @@
   "statementKindCarryIn": "Prior balance",
   "statementBalanceColumn": "Balance",
   "statementAmountColumn": "Amount",
-
   "receivablesTitle": "Outstanding at customers",
   "payablesTitle": "Outstanding to suppliers",
   "receivablesEmptyTitle": "Nothing outstanding",
@@ -526,7 +490,6 @@
   "partiesDaysLateChip": "Late by {count, plural, one{1 day} other{{count} days}}",
   "partiesLastPaymentLabel": "Last payment {date}",
   "partiesNoMixNote": "Every balance is held in its own currency — a party with balances in two currencies appears as two separate rows, never summed.",
-
   "fxRatesTitle": "Daily exchange rates",
   "fxTodayCardTitle": "Today's rates",
   "fxTodayHijriDate": "Rates for {date}",
@@ -547,7 +510,6 @@
   "fxHideHistory": "Hide history",
   "fxAllComplete": "Today's rates are complete for all currencies",
   "fxMissingWarning": "Today's entry is incomplete — non-base invoices require a rate recorded for the day",
-
   "sellScreenTitle": "New sale invoice",
   "sellNewInvoiceLabel": "New invoice",
   "sellClearCartTooltip": "Clear cart",
@@ -800,7 +762,6 @@
   "retReceiptOriginal": "Against original invoice {no}",
   "retReceiptRefundCash": "Cash refunded",
   "retReceiptRefundCredit": "Deducted from account",
-
   "cashHomeTitle": "Cash",
   "cashHomeHeroTitle": "Net cash",
   "cashHomeHeroHint": "One line per currency — currencies never mix",
@@ -823,7 +784,6 @@
   "cashQuickBoxes": "Boxes",
   "cashQuickMovements": "Movements",
   "cashQuickCategories": "Categories",
-
   "cashQmSheetTitle": "Cash movement",
   "cashQmKindExpense": "Expense",
   "cashQmKindOwnerDraw": "Owner draw",
@@ -849,7 +809,6 @@
   "cashQmNewMovement": "Another movement",
   "cashQmNoBoxesTitle": "No boxes yet",
   "cashQmNoBoxesBody": "Create a box first from “Boxes”, then come back.",
-
   "cashVoucherReceiptTitle": "Receipt voucher",
   "cashVoucherReceiptSubtitle": "Collect from a customer — RVT number",
   "cashVoucherPaymentTitle": "Payment voucher",
@@ -884,7 +843,6 @@
   "cashVoucherPartyOwesYou": "Owes you",
   "cashVoucherPartyWeOwe": "We owe",
   "cashVoucherPartyCredit": "Credit balance",
-
   "cashMovementsTitle": "Cash movements log",
   "cashMovementsSearchHint": "Search description, voucher no., or party",
   "cashMovementsAllBoxes": "All boxes",
@@ -929,7 +887,6 @@
   "cashMovementVoidConfirm": "Void permanently",
   "cashMovementVoidedSnackBar": "Movement voided — reversing entry recorded.",
   "cashMovementNotVoidableNote": "This movement is tied to another document (invoice collection or return refund) — void it from its original document.",
-
   "cashBoxesTitle": "Manage cash boxes",
   "cashBoxesAddBox": "New box",
   "cashBoxesEmptyTitle": "No boxes yet",
@@ -945,7 +902,6 @@
   "cashBoxesArchiveNonZeroBody": "A non-zero balance keeps counting in net cash after archiving. Prefer clearing the balance first — or explicitly confirm archiving.",
   "cashBoxesArchiveForce": "Archive with balance",
   "cashBoxesDefaultDone": "“{name}” is now the default box.",
-
   "cashBoxFormNewTitle": "New cash box",
   "cashBoxFormEditTitle": "Edit cash box",
   "cashBoxFormNameLabel": "Box name",
@@ -957,7 +913,6 @@
   "cashBoxFormSave": "Save box",
   "cashBoxFormSaved": "Box saved.",
   "cashBoxFormNotFound": "The requested box does not exist.",
-
   "cashCategoriesTitle": "Expense categories",
   "cashCategoriesAdd": "New category",
   "cashCategoriesNameLabel": "Category name",
@@ -974,13 +929,14 @@
   "cashCategoriesArchiveBody": "It disappears from new-expense pickers while its history stays in the log.",
   "cashCategoriesUnarchive": "Unarchive",
   "cashCategoriesArchivedSection": "Archived categories",
-
   "printingPdfTooltip": "Print PDF",
   "printingPreviewTitle": "Print preview",
   "printingPreviewFileSize": "Size: {sizeKb} KB",
   "@printingPreviewFileSize": {
     "placeholders": {
-      "sizeKb": {"type": "int"}
+      "sizeKb": {
+        "type": "int"
+      }
     }
   },
   "printingPrint": "Print",
@@ -1029,5 +985,120 @@
   "printingStatementTotalCredit": "Total credit",
   "printingStatementClosing": "Closing balance",
   "printingStatementEmpty": "No entries in this period",
-  "printingShareMessageStatement": "Account statement for {party} — closing balance {balance}"
+  "printingShareMessageStatement": "Account statement for {party} — closing balance {balance}",
+  "backupScreenTitle": "Backup & Restore",
+  "backupWebPreviewTitle": "Web preview",
+  "backupWebPreviewBody": "This preview keeps its data inside your browser. Actual file backup — creating, restoring, and sharing — is available in the Android app.",
+  "backupLastBackupLabel": "Last successful backup",
+  "backupLastNever": "No backup yet",
+  "backupSavedCountLabel": "Stored backups",
+  "backupCreateNow": "Back up now",
+  "backupCreating": "Creating backup…",
+  "backupCreateHint": "One dated, compressed file stored in the app's backups folder",
+  "backupCreateSuccess": "Backup created: {fileName}",
+  "backupCreateFailed": "Could not create the backup",
+  "backupScheduleTitle": "Automatic schedule",
+  "backupScheduleDesc": "A silent backup runs when you open the app once the interval has passed",
+  "backupScheduleDaily": "Daily",
+  "backupScheduleWeekly": "Weekly",
+  "backupScheduleOff": "Off",
+  "backupRetentionTitle": "Retention",
+  "backupRetentionDesc": "Keeps the last {count} backups and deletes older ones automatically",
+  "backupLogTitle": "Backup history",
+  "backupLogEmptyTitle": "No backups yet",
+  "backupLogEmptyBody": "Create your first backup with one tap — a single file that holds all your data.",
+  "backupKindManual": "Manual",
+  "backupKindAuto": "Automatic",
+  "backupKindSafety": "Safety (before restore)",
+  "backupKindGeneric": "Backup",
+  "backupStatusOk": "OK",
+  "backupStatusFailed": "Failed",
+  "backupFileMissing": "File deleted",
+  "backupRestoreTooltip": "Restore this backup",
+  "backupShareTooltip": "Share the file",
+  "backupRestoreFromFile": "Restore from external file",
+  "backupRestoreFromFileDesc": "Pick a .finbak file you received via sharing or a manual copy",
+  "backupSizeKb": "{value} KB",
+  "backupSizeMb": "{value} MB",
+  "backupShareFailed": "Could not share the file",
+  "backupSettingSaveFailed": "Could not save the setting",
+  "backupRestoreDialogTitle": "Restore a backup",
+  "backupRestoreWarnBody": "This will replace ALL current data with the backup's data. A safety copy of your current data is created automatically before the replacement.",
+  "backupRestoreConfirm": "Replace data",
+  "backupRestoreRunning": "Restoring…",
+  "backupRestoreSuccessTitle": "Restore completed",
+  "backupRestoreSuccessBody": "The backup's data is back in the app. You will now be asked for that backup's PIN.",
+  "backupRestoreFailedTitle": "Restore failed",
+  "backupRestoreClose": "Close",
+  "backupInspectFile": "File",
+  "backupInspectCreated": "Backup date",
+  "backupInspectSize": "Size",
+  "backupInspectSchema": "Schema version",
+  "backupInspectChecksum": "Fingerprint (SHA-256)",
+  "backupInspectKind": "Type",
+  "backupErrNotFile": "The selected file is not a valid FinAcc backup (.finbak).",
+  "backupErrChecksum": "Integrity check failed — the file is corrupted or was modified after creation.",
+  "backupErrNewerSchema": "This backup uses a newer schema (v{fileVersion}) than this app (v{appVersion}) — update the app first.",
+  "backupErrSafety": "Could not create the safety backup before restoring — the operation was cancelled and your data is untouched.",
+  "backupErrOpenFailed": "Could not open the restored database — your current data was restored as it was.",
+  "backupErrUnsupported": "Restore is available in the Android app only.",
+  "backupBannerAutoDone": "An automatic backup was created successfully at {time}",
+  "backupBannerAutoFailed": "Automatic backup failed — create one manually from settings.",
+  "backupBannerWebDue": "A backup is due — full backup features are in the Android app.",
+  "backupBannerOpen": "Manage",
+  "settingsBackupTitle": "Backup & Restore",
+  "settingsBackupDesc": "One-tap local backup, scheduling, restore, and sharing",
+  "settingsAboutDbSize": "Database size: {size}",
+  "@backupCreateSuccess": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "@backupRetentionDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@backupSizeKb": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@backupSizeMb": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@backupErrNewerSchema": {
+    "placeholders": {
+      "fileVersion": {
+        "type": "int"
+      },
+      "appVersion": {
+        "type": "int"
+      }
+    }
+  },
+  "@backupBannerAutoDone": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "@settingsAboutDbSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  }
 }

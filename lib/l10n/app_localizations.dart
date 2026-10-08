@@ -5977,6 +5977,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account statement for {party} — closing balance {balance}'**
   String printingShareMessageStatement(Object balance, Object party);
+
+  /// No description provided for @backupScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupScreenTitle;
+
+  /// No description provided for @backupWebPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Web preview'**
+  String get backupWebPreviewTitle;
+
+  /// No description provided for @backupWebPreviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This preview keeps its data inside your browser. Actual file backup — creating, restoring, and sharing — is available in the Android app.'**
+  String get backupWebPreviewBody;
+
+  /// No description provided for @backupLastBackupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last successful backup'**
+  String get backupLastBackupLabel;
+
+  /// No description provided for @backupLastNever.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup yet'**
+  String get backupLastNever;
+
+  /// No description provided for @backupSavedCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored backups'**
+  String get backupSavedCountLabel;
+
+  /// No description provided for @backupCreateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up now'**
+  String get backupCreateNow;
+
+  /// No description provided for @backupCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating backup…'**
+  String get backupCreating;
+
+  /// No description provided for @backupCreateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One dated, compressed file stored in the app\'s backups folder'**
+  String get backupCreateHint;
+
+  /// No description provided for @backupCreateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup created: {fileName}'**
+  String backupCreateSuccess(String fileName);
+
+  /// No description provided for @backupCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the backup'**
+  String get backupCreateFailed;
+
+  /// No description provided for @backupScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic schedule'**
+  String get backupScheduleTitle;
+
+  /// No description provided for @backupScheduleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A silent backup runs when you open the app once the interval has passed'**
+  String get backupScheduleDesc;
+
+  /// No description provided for @backupScheduleDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get backupScheduleDaily;
+
+  /// No description provided for @backupScheduleWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get backupScheduleWeekly;
+
+  /// No description provided for @backupScheduleOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get backupScheduleOff;
+
+  /// No description provided for @backupRetentionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Retention'**
+  String get backupRetentionTitle;
+
+  /// No description provided for @backupRetentionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the last {count} backups and deletes older ones automatically'**
+  String backupRetentionDesc(int count);
+
+  /// No description provided for @backupLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup history'**
+  String get backupLogTitle;
+
+  /// No description provided for @backupLogEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No backups yet'**
+  String get backupLogEmptyTitle;
+
+  /// No description provided for @backupLogEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first backup with one tap — a single file that holds all your data.'**
+  String get backupLogEmptyBody;
+
+  /// No description provided for @backupKindManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get backupKindManual;
+
+  /// No description provided for @backupKindAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get backupKindAuto;
+
+  /// No description provided for @backupKindSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety (before restore)'**
+  String get backupKindSafety;
+
+  /// No description provided for @backupKindGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupKindGeneric;
+
+  /// No description provided for @backupStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get backupStatusOk;
+
+  /// No description provided for @backupStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get backupStatusFailed;
+
+  /// No description provided for @backupFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'File deleted'**
+  String get backupFileMissing;
+
+  /// No description provided for @backupRestoreTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this backup'**
+  String get backupRestoreTooltip;
+
+  /// No description provided for @backupShareTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share the file'**
+  String get backupShareTooltip;
+
+  /// No description provided for @backupRestoreFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from external file'**
+  String get backupRestoreFromFile;
+
+  /// No description provided for @backupRestoreFromFileDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a .finbak file you received via sharing or a manual copy'**
+  String get backupRestoreFromFileDesc;
+
+  /// No description provided for @backupSizeKb.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} KB'**
+  String backupSizeKb(String value);
+
+  /// No description provided for @backupSizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} MB'**
+  String backupSizeMb(String value);
+
+  /// No description provided for @backupShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the file'**
+  String get backupShareFailed;
+
+  /// No description provided for @backupSettingSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the setting'**
+  String get backupSettingSaveFailed;
+
+  /// No description provided for @backupRestoreDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a backup'**
+  String get backupRestoreDialogTitle;
+
+  /// No description provided for @backupRestoreWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will replace ALL current data with the backup\'s data. A safety copy of your current data is created automatically before the replacement.'**
+  String get backupRestoreWarnBody;
+
+  /// No description provided for @backupRestoreConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace data'**
+  String get backupRestoreConfirm;
+
+  /// No description provided for @backupRestoreRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring…'**
+  String get backupRestoreRunning;
+
+  /// No description provided for @backupRestoreSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore completed'**
+  String get backupRestoreSuccessTitle;
+
+  /// No description provided for @backupRestoreSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup\'s data is back in the app. You will now be asked for that backup\'s PIN.'**
+  String get backupRestoreSuccessBody;
+
+  /// No description provided for @backupRestoreFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore failed'**
+  String get backupRestoreFailedTitle;
+
+  /// No description provided for @backupRestoreClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get backupRestoreClose;
+
+  /// No description provided for @backupInspectFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get backupInspectFile;
+
+  /// No description provided for @backupInspectCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup date'**
+  String get backupInspectCreated;
+
+  /// No description provided for @backupInspectSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get backupInspectSize;
+
+  /// No description provided for @backupInspectSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Schema version'**
+  String get backupInspectSchema;
+
+  /// No description provided for @backupInspectChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint (SHA-256)'**
+  String get backupInspectChecksum;
+
+  /// No description provided for @backupInspectKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get backupInspectKind;
+
+  /// No description provided for @backupErrNotFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected file is not a valid FinAcc backup (.finbak).'**
+  String get backupErrNotFile;
+
+  /// No description provided for @backupErrChecksum.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity check failed — the file is corrupted or was modified after creation.'**
+  String get backupErrChecksum;
+
+  /// No description provided for @backupErrNewerSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup uses a newer schema (v{fileVersion}) than this app (v{appVersion}) — update the app first.'**
+  String backupErrNewerSchema(int fileVersion, int appVersion);
+
+  /// No description provided for @backupErrSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the safety backup before restoring — the operation was cancelled and your data is untouched.'**
+  String get backupErrSafety;
+
+  /// No description provided for @backupErrOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the restored database — your current data was restored as it was.'**
+  String get backupErrOpenFailed;
+
+  /// No description provided for @backupErrUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore is available in the Android app only.'**
+  String get backupErrUnsupported;
+
+  /// No description provided for @backupBannerAutoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'An automatic backup was created successfully at {time}'**
+  String backupBannerAutoDone(String time);
+
+  /// No description provided for @backupBannerAutoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic backup failed — create one manually from settings.'**
+  String get backupBannerAutoFailed;
+
+  /// No description provided for @backupBannerWebDue.
+  ///
+  /// In en, this message translates to:
+  /// **'A backup is due — full backup features are in the Android app.'**
+  String get backupBannerWebDue;
+
+  /// No description provided for @backupBannerOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get backupBannerOpen;
+
+  /// No description provided for @settingsBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get settingsBackupTitle;
+
+  /// No description provided for @settingsBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One-tap local backup, scheduling, restore, and sharing'**
+  String get settingsBackupDesc;
+
+  /// No description provided for @settingsAboutDbSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Database size: {size}'**
+  String settingsAboutDbSize(String size);
 }
 
 class _AppLocalizationsDelegate

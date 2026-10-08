@@ -41,6 +41,7 @@ import '../../features/sell/views/sales_invoices_screen.dart';
 import '../../features/sell/views/sell_home_screen.dart';
 import '../../features/sell/views/sell_screen.dart';
 import '../../features/settings/views/audit_log_screen.dart';
+import '../../features/settings/views/backup_screen.dart';
 import '../../features/settings/views/change_pin_screen.dart';
 import '../../features/settings/views/settings_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
@@ -375,6 +376,11 @@ GoRouter buildAppRouter(AppController controller) {
                   GoRoute(
                     path: 'audit-log',
                     builder: (context, state) => const AuditLogScreen(),
+                  ),
+                  // النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11).
+                  GoRoute(
+                    path: 'backup',
+                    builder: (context, state) => const BackupScreen(),
                   ),
                 ],
               ),

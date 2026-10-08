@@ -32,6 +32,9 @@ class SettingsRepository {
     'dating.max_backdate_days',
     // حالة نظامية (ليست إعداداً قابلاً للضبط — انظر CompanyRepository).
     'security.passphrase_hash',
+    // حالة نظامية: لحظة آخر نسخة ناجحة (وحدة 11 — FR-11-04) — تُحدَّث
+    // آلياً من خدمة النسخ ولا تُعدَّل من الواجهة.
+    'backup.last_backup_at',
     // حالة نظامية: تفضيل وضع الثيم المحفوظ محلياً (الإعداد نفسه
     // نظامي خارج ملحق هـ — يُدار من شاشة الإعدادات ويُخزَّن كنص).
     'ui.theme_mode',
@@ -136,5 +139,46 @@ class SettingsRepository {
       throw ArgumentError('وضع ثيم غير معروف: $mode');
     }
     await set('ui.theme_mode', mode);
+  }
+
+  // ── النسخ الاحتياطي (وحدة 11 — FR-11-04/05، ملحق هـ) ──
+
+  /// `backup.schedule` — `daily`/`weekly`/`off` (افتراضي weekly).
+  Future<String> backupSchedule() => getString('backup.schedule', 'weekly');
+
+  /// يثبّت الجدولة (قيم ملحق هـ حصراً).
+  Future<void> setBackupSchedule(String mode) async {
+    const allowed = {'daily', 'weekly', 'off'};
+    if (!allowed.contains(mode)) {
+      throw ArgumentError('جدولة نسخ غير معروفة: $mode');
+    }
+    await set('backup.schedule', mode);
+  }
+
+  /// `backup.retention_count` — عدد النسخ المحفوظة (افتراضي 7، نطاق 1–30).
+  Future<int> backupRetentionCount() => getInt('backup.retention_count', 7);
+
+  /// يثبّت عدد النسخ المحفوظة — النطاق الملزم 1–30 (ملحق هـ).
+  Future<void> setBackupRetentionCount(int count) async {
+    if (count < 1 || count > 30) {
+      throw ArgumentError('عدد النسخ المحفوظة خارج النطاق 1–30: $count');
+    }
+    await set('backup.retention_count', count);
+  }
+
+  /// `backup.last_backup_at` (حالة نظامية) — لحظة آخر نسخة ناجحة أو null.
+  Future<DateTime?> backupLastBackupAt() async {
+    final rawValue = await raw('backup.last_backup_at');
+    if (rawValue == null) return null;
+    try {
+      return DateTime.tryParse(jsonDecode(rawValue) as String);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  /// يثبّت لحظة آخر نسخة ناجحة (تستدعيها خدمة النسخ آلياً).
+  Future<void> setBackupLastBackupAt(DateTime at) async {
+    await set('backup.last_backup_at', at.toUtc().toIso8601String());
   }
 }
