@@ -1,0 +1,872 @@
+     1→     1→/// محرك ترحيل فاتورة البيع الذرّي — جداول `invoice` / `invoice_item` /
+     2→     2→/// `stock_level` / `stock_movement` / `batch` / `cash_tx` /
+     3→     3→/// `payment_allocation` / `quotation` — المرحلة 4 (FR-02 / FR-08-09).
+     4→     4→///
+     5→     5→/// **الخريطة الملزمة** (قاعدة 5.4-4 + ملحق و): الحفظ = (رقم INV ذرّي +
+     6→     6→/// الفاتورة + بنودها بـ line_cost=WAC + خصم المخزون مع FEFO + حركات
+     7→     7→/// المخزون + حركة الصندوق للجزء النقدي + تخصيص المدفوع + تعليم عرض
+     8→     8→/// السعر المحوَّل + قيد التدقيق) داخل **Transaction واحدة** — فشل أي خطوة
+     9→     9→/// يرجع الكل (AC-09-أ).
+    10→    10→///
+    11→    11→/// خطوط حمراء مطبَّقة هنا:
+    12→    12→/// - **منع السالب المخزوني** (5.4-5): فحص مسبق قبل المعاملة + حارس
+    13→    13→///   `WHERE qty >= ?` داخلها — رسالة الرفض تسمّي الصنف والكمية المتاحة.
+    14→    14→/// - **فصل العملات** (5.4-7): الفاتورة وسندها النقدي وتخصيصها كلها بعملة
+    15→    15→///   الفاتورة وسعر يومها (Snapshot FR-08-05)؛ الأساس بالعملة الأساسية
+    16→    16→///   يُخزَّن في `total_base` فقط.
+    17→    17→/// - **WAC** (5.4-3): البيع **يستهلك** `product.cost_price` ويخزنه في
+    18→    18→///   `line_cost` ولا يغيّره أبداً.
+    19→    19→/// - **سياسة FX المفقود** (FR-08-09 / AC-13): عملة غير أساس بلا سعر اليوم
+    20→    20→///   → رفض، إلا إذا فُعّل `fx.fallback=last_known` فيُستخدم آخر سعر مع
+    21→    21→///   `rate_is_fallback=1` (شارة FR-02-20).
+    22→    22→///
+    23→    23→/// ## قرارات موثقة (انظر worklog-parts/6-b.md للتفصيل):
+    24→    24→/// 1. **الباقي للعميل** (`changeDue`): الزيادة النقدية فوق الصافي تُعاد في
+    25→    25→///    الإيصال ولا تدخل الصندوق (`cash_tx.amount` = الصافي المدفوع حصراً
+    26→    26→///    لأن عموده CHECK(amount > 0) ولا معنى لسند بمبلغ الباقي) ولا الدين.
+    27→    27→/// 2. **payment_allocation**: العمود `cash_tx_id` NOT NULL فلا يمكن إدراجه
+    28→    28→///    لجزء آجل بلا سند — التخصيص يوثّق **الجزء المدفوع نقداً** وقت
+    29→    29→///    الإصدار (سند القبض ← الفاتورة)، والأثر الآجل محفوظ في
+    30→    30→///    `invoice.due_amount` وفق اصطلاح CustomerRepository (لا يُنقصه أحد).
+    31→    31→///    سند قبض الإصدار يُكتب بـ `customer_id = NULL` حتى لا تخصمه صيغة
+    32→    32→///    رصيد العميل (FR-03-02) مرتين.
+    33→    33→/// 3. **دفع متعدد الدفعات**: سطر فاتورة واحد لكل سطر سلة؛ تفصيل الدفعات
+    34→    34→///    يُسجَّل حركة مخزون مستقلة لكل دفعة (راجعة بالفاتورة) +
+    35→    35→///    `invoice_item.batch_id` = أول دفعة FEFO وملخص الدفعات في ملاحظة
+    36→    36→///    السطر (AC-05: «أسطر الفاتورة أظهرت رقم الدفعة»).
+    37→    37→/// 4. **المسودة (draft)** خارج نطاق هذا المحرك — البناء هنا للمكتملة فقط
+    38→    38→///    (`status='completed'` وفق آلة الحالات 5.4-2).
+    39→    39→/// 5. **الضريبة** 0% في V1 لهذا المحرك (`tax_rate=0`) — الأعمدة جاهزة
+    40→    40→///    بالمخطط ووحدة الضريبة لاحقة.
+    41→    41→/// 6. **userId** يُمرَّر صراحة (لا مساعد مستخدم حالي في طبقة البيانات —
+    42→    42→///    الطلب مسجَّل في التسليم للمنسّق).
+    43→    43→/// 7. **البونص/الكميات المجانية** (موجة UX-4 — القرار التحاسبي الملزم
+    44→    44→///    من UX-audit-invoice §3): `CartLine.freeQty` ≥ 0 عمود مستقل
+    45→    45→///    `invoice_item.free_qty` (هجرة v5). **المنصرف الكلي = qty + freeQty**
+    46→    46→///    (فحص التوفر + FEFO + `line_cost = roundCost(الكل×WAC)` + حركة
+    47→    47→///    المخزون −الكل + stock_level)، و**الإيراد من qty حصراً** —
+    48→    48→///    subtotal/total/total_base/الائتمان لا ترى البونص إطلاقاً (تسعير
+    49→    49→///    `SalePricing` فوق qty وحدها)، فCOGS يرتفع والربح ينخفض بالمقدار
+    50→    50→///    الحرفي للمجاني. حركة المخزون وملاحظة السطر تحملان «بونص: N»
+    51→    51→///    والتدقيق يسجل `free=`. رسائل العجز تشمل المجاني بالمطلوب.
+    52→    52→library;
+    53→    53→
+    54→    54→import 'package:sqflite/sqflite.dart';
+    55→    55→
+    56→    56→import '../../core/storage/doc_sequence.dart';
+    57→    57→import '../../domain/core/result.dart';
+    58→    58→import '../../domain/models/batch.dart';
+    59→    59→import '../../domain/models/sale.dart';
+    60→    60→import '../../domain/services/sale_pricing.dart';
+    61→    61→import 'batch_repository.dart';
+    62→    62→import 'customer_repository.dart';
+    63→    63→import 'exchange_rate_repository.dart';
+    64→    64→import 'settings_repository.dart';
+    65→    65→
+    66→    66→/// فشل تدفق داخلي برسالة عربية نظيفة — رميه داخل المعاملة يتراجعها
+    67→    67→/// كاملة (لا `return Err` داخلها أبداً بعد أول كتابة).
+    68→    68→class _FlowError implements Exception {
+    69→    69→  const _FlowError(this.message);
+    70→    70→  final String message;
+    71→    71→  @override
+    72→    72→  String toString() => message;
+    73→    73→}
+    74→    74→
+    75→    75→/// معلومات صنف مطلوبة للترحيل (حمولة قراءة خفيفة).
+    76→    76→class _ProductInfo {
+    77→    77→  const _ProductInfo({
+    78→    78→    required this.id,
+    79→    79→    required this.name,
+    80→    80→    required this.costPrice,
+    81→    81→    required this.isService,
+    82→    82→    required this.trackBatches,
+    83→    83→    required this.isArchived,
+    84→    84→    this.unitId,
+    85→    85→  });
+    86→    86→  final int id;
+    87→    87→  final String name;
+    88→    88→  final double costPrice;
+    89→    89→  final bool isService;
+    90→    90→  final bool trackBatches;
+    91→    91→
+    92→    92→  /// المؤرشف لا يُباع (البحث يستثنيه — نفس السلوك هنا عند الإدخال المباشر).
+    93→    93→  final bool isArchived;
+    94→    94→  final int? unitId;
+    95→    95→}
+    96→    96→
+    97→    97→/// مستودع المبيعات — ترحيل POS الذرّي وقراءات الفواتير.
+    98→    98→class SaleRepository {
+    99→    99→  /// يبنى فوق قاعدة مفتوحة؛ يركّب المستودعات الشريكة (تواقيعها ملزمة)
+   100→   100→  /// فوق نفس القاعدة دون إعادة إنشاء.
+   101→   101→  SaleRepository(Database db)
+   102→   102→    : _db = db,
+   103→   103→      _rates = ExchangeRateRepository(db),
+   104→   104→      _settings = SettingsRepository(db),
+   105→   105→      _customers = CustomerRepository(db),
+   106→   106→      _batches = BatchRepository(db);
+   107→   107→
+   108→   108→  final Database _db;
+   109→   109→  final ExchangeRateRepository _rates;
+   110→   110→  final SettingsRepository _settings;
+   111→   111→  final CustomerRepository _customers;
+   112→   112→  final BatchRepository _batches;
+   113→   113→
+   114→   114→  // ─────────────────────────────────────────────────────────────────────
+   115→   115→  // الترحيل الذرّي (FR-02-06 / 5.4-4)
+   116→   116→  // ─────────────────────────────────────────────────────────────────────
+   117→   117→
+   118→   118→  /// **ترحيل فاتورة بيع مكتملة** — معاملة واحدة (انظر رأس الملف للخريطة).
+   119→   119→  ///
+   120→   120→  /// [userId] منفّذ العملية (يُخزَّن في created_by والتدقيق).
+   121→   121→  /// [now] لحظة الكتابة الفعلية (created_at/updated_at/audit) — تاريخ
+   122→   122→  /// العمل `draft.issuedAt` وحده يحدد سنة الترقيم وسعر الصرف.
+   123→   123→  ///
+   124→   124→  /// الترتيب: تحقّق نقّي → تحميلات مسبقة (عملة/سياسة FX/أصناف/مخزون/
+   125→   125→  /// ائتمان/صندوق) → معاملة واحدة (رقم ← فاتورة ← بنود + WAC + FEFO +
+   126→   126→  /// مخزون ← نقدي ← تخصيص ← ربط عرض السعر ← تدقيق) → إيصال.
+   127→   127→  Future<Result<SalePostedReceipt, String>> postSale(
+   128→   128→    SaleDraft draft, {
+   129→   129→    required int userId,
+   130→   130→    DateTime? now,
+   131→   131→  }) async {
+   132→   132→    final at = now ?? DateTime.now();
+   133→   133→    final issuedAt = draft.issuedAt;
+   134→   134→    final issuedIso = issuedAt.toUtc().toIso8601String();
+   135→   135→
+   136→   136→    // (1) التسعير والتحقق النقي (خصومات/كميات/دفع) — قبل أي كتابة.
+   137→   137→    final cartFailure = SalePricing.validateCart(
+   138→   138→      draft.lines,
+   139→   139→      invoiceDiscountType: draft.invoiceDiscountType,
+   140→   140→      invoiceDiscountValue: draft.invoiceDiscountValue,
+   141→   141→    );
+   142→   142→    if (cartFailure != null) return Err(cartFailure);
+   143→   143→    final priced = SalePricing.priceCart(
+   144→   144→      draft.lines,
+   145→   145→      invoiceDiscountType: draft.invoiceDiscountType,
+   146→   146→      invoiceDiscountValue: draft.invoiceDiscountValue,
+   147→   147→    );
+   148→   148→    final totals = priced.totals;
+   149→   149→    final payFailure = SalePricing.validatePayment(
+   150→   150→      totals.grandTotal,
+   151→   151→      draft.paidCash,
+   152→   152→      draft.paymentMethod,
+   153→   153→    );
+   154→   154→    if (payFailure != null) return Err(payFailure);
+   155→   155→    final settlement = SalePricing.settlePayment(
+   156→   156→      totals.grandTotal,
+   157→   157→      draft.paidCash,
+   158→   158→    );
+   159→   159→    final netPaid = settlement.netPaid;
+   160→   160→    final changeDue = settlement.changeDue;
+   161→   161→    final remainingCredit = settlement.remainingCredit;
+   162→   162→    final payStatus = settlement.payStatus;
+   163→   163→
+   164→   164→    try {
+   165→   165→      // (2) العملة + سياسة FX (FR-08-09) — قراءة خارج المعاملة.
+   166→   166→      final currency = await _db.query(
+   167→   167→        'currency',
+   168→   168→        columns: ['id', 'code', 'is_base'],
+   169→   169→        where: 'id = ?',
+   170→   170→        whereArgs: [draft.currencyId],
+   171→   171→        limit: 1,
+   172→   172→      );
+   173→   173→      if (currency.isEmpty) {
+   174→   174→        return Err('العملة رقم #${draft.currencyId} غير موجودة.');
+   175→   175→      }
+   176→   176→      final isBase = (currency.first['is_base'] as int? ?? 0) == 1;
+   177→   177→      final currencyCode = currency.first['code'] as String;
+   178→   178→      var exchangeRate = 1.0;
+   179→   179→      var rateIsFallback = false;
+   180→   180→      if (!isBase) {
+   181→   181→        final todayRate = await _rates.rateFor(draft.currencyId, issuedAt);
+   182→   182→        if (todayRate != null && todayRate > 0) {
+   183→   183→          exchangeRate = todayRate;
+   184→   184→        } else {
+   185→   185→          final fallbackOn =
+   186→   186→              (await _settings.getString('fx.fallback', 'off')) == 'last_known';
+   187→   187→          if (!fallbackOn) {
+   188→   188→            return Err(
+   189→   189→              'لا يوجد سعر صرف لعملة $currencyCode بتاريخ اليوم — '
+   190→   190→              'أدخل سعر اليوم أولاً ثم احفظ (لا يُحفظ بسعر افتراضي).',
+   191→   191→            );
+   192→   192→          }
+   193→   193→          final lastKnown = await _rates.latestBefore(
+   194→   194→            draft.currencyId,
+   195→   195→            issuedAt,
+   196→   196→          );
+   197→   197→          if (lastKnown == null || lastKnown <= 0) {
+   198→   198→            return Err(
+   199→   199→              'لا يوجد أي سعر صرف معروف لعملة $currencyCode — '
+   200→   200→              'أدخل سعراً واحداً على الأقل قبل البيع بها.',
+   201→   201→            );
+   202→   202→          }
+   203→   203→          exchangeRate = lastKnown;
+   204→   204→          rateIsFallback = true; // شارة «سعر صرف تقديري» (FR-02-20).
+   205→   205→        }
+   206→   206→      }
+   207→   207→
+   208→   208→      // (3) الأصناف — تحميل واحد مجمّع + رفض المفقود/المؤرشف.
+   209→   209→      final productIds = draft.lines.map((l) => l.productId).toSet();
+   210→   210→      final products = await _loadProducts(productIds);
+   211→   211→      for (final id in productIds) {
+   212→   212→        final info = products[id];
+   213→   213→        if (info == null) {
+   214→   214→          return Err('الصنف رقم #$id غير موجود.');
+   215→   215→        }
+   216→   216→        if (info.isArchived) {
+   217→   217→          return Err('الصنف «${info.name}» مؤرشف — لا يُباع (FR-01-15).');
+   218→   218→        }
+   219→   219→      }
+   220→   220→
+   221→   221→      // (4) فحص المخزون المسبق (5.4-5): لكل صنف غير خدمي — المتاح من
+   222→   222→      //     stock_level (العادي) أو دفعات FEFO النشطة (المتتبع).
+   223→   223→      final stockFailure = await _checkAvailability(
+   224→   224→        draft.lines,
+   225→   225→        products,
+   226→   226→        draft.warehouseId,
+   227→   227→        issuedAt,
+   228→   228→      );
+   229→   229→      if (stockFailure != null) return Err(stockFailure);
+   230→   230→
+   231→   231→      // (5) العميل + حد الائتمان (FR-03-05) — الآجل فقط.
+   232→   232→      if (draft.customerId != null) {
+   233→   233→        final customerRows = await _db.query(
+   234→   234→          'customer',
+   235→   235→          columns: ['name', 'is_archived'],
+   236→   236→          where: 'id = ?',
+   237→   237→          whereArgs: [draft.customerId],
+   238→   238→          limit: 1,
+   239→   239→        );
+   240→   240→        if (customerRows.isEmpty) {
+   241→   241→          return Err('العميل رقم #${draft.customerId} غير موجود.');
+   242→   242→        }
+   243→   243→        if ((customerRows.first['is_archived'] as int? ?? 0) == 1) {
+   244→   244→          return Err(
+   245→   245→            'العميل «${customerRows.first['name']}» مؤرشف — '
+   246→   246→            'أزل الأرشفة أولاً أو اختر عميلاً آخر.',
+   247→   247→          );
+   248→   248→        }
+   249→   249→        if (remainingCredit > moneyEpsilon) {
+   250→   250→          final credit = await _customers.checkCredit(
+   251→   251→            draft.customerId!,
+   252→   252→            draft.currencyId,
+   253→   253→            remainingCredit,
+   254→   254→          );
+   255→   255→          if (credit.overLimit) {
+   256→   256→            // FR-03-05 (17-c): السلوك من إعداد parties.credit_limit_action
+   257→   257→            // — 'block' يرفض هنا نهائياً؛ 'warn' (الافتراضي) حواره في
+   258→   258→            // PaymentSheet («متابعة على أي حال») وقد أقرّه المستخدم،
+   259→   259→            // فلا يمنع الترحيل — هذا المستودع حارس 'block' حصراً.
+   260→   260→            final action = await _settings.getString(
+   261→   261→              'parties.credit_limit_action',
+   262→   262→              'warn',
+   263→   263→            );
+   264→   264→            if (action == 'block') {
+   265→   265→              return Err(
+   266→   266→                'تجاوز حد الائتمان: رصيد العميل الحالي ${_num(credit.balance)} '
+   267→   267→                '+ الآجل الجديد ${_num(remainingCredit)} يتجاوز الحد '
+   268→   268→                '${_num(credit.creditLimit ?? 0)} — قلّل الآجل أو استوفِ أولاً.',
+   269→   269→              );
+   270→   270→            }
+   271→   271→          }
+   272→   272→        }
+   273→   273→      }
+   274→   274→
+   275→   275→      // (6) الصندوق الافتراضي للمنشأة — للجزء النقدي فقط.
+   276→   276→      int? cashboxId;
+   277→   277→      if (netPaid > moneyEpsilon) {
+   278→   278→        final boxRows = await _db.query(
+   279→   279→          'cashbox',
+   280→   280→          columns: ['id'],
+   281→   281→          where: 'is_default = 1 AND is_archived = 0',
+   282→   282→          limit: 1,
+   283→   283→        );
+   284→   284→        if (boxRows.isEmpty) {
+   285→   285→          return Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
+   286→   286→        }
+   287→   287→        cashboxId = boxRows.first['id'] as int;
+   288→   288→      }
+   289→   289→
+   290→   290→      // (7) عرض السعر المصدر — تحقق مسبق (الحراسة النهائية داخل المعاملة).
+   291→   291→      if (draft.fromQuotationId != null) {
+   292→   292→        final quoteRows = await _db.query(
+   293→   293→          'quotation',
+   294→   294→          columns: ['status'],
+   295→   295→          where: 'id = ?',
+   296→   296→          whereArgs: [draft.fromQuotationId],
+   297→   297→          limit: 1,
+   298→   298→        );
+   299→   299→        if (quoteRows.isEmpty) {
+   300→   300→          return Err('عرض السعر رقم #${draft.fromQuotationId} غير موجود.');
+   301→   301→        }
+   302→   302→        final status = quoteRows.first['status'] as String;
+   303→   303→        if (status != 'draft' && status != 'sent') {
+   304→   304→          return Err('عرض السعر غير قابل للتحويل — حالته الحالية «$status».');
+   305→   305→        }
+   306→   306→      }
+   307→   307→
+   308→   308→      // (8) المعاملة الواحدة — كل الكتابات أو لا شيء (5.4-4).
+   309→   309→      return await _db.transaction((txn) async {
+   310→   310→        // 8-أ) رقم INV ذرّي داخل المعاملة نفسها (قاعدة 5.4-1).
+   311→   311→        final year = issuedAt.year; // سنة يوم العمل المحلية.
+   312→   312→        final seq = DocSequenceService(txn);
+   313→   313→        final number = await seq.nextNumber(DocSequenceType.invoice, year);
+   314→   314→        final invoiceNo = formatDocNumber(
+   315→   315→          DocSequenceType.invoice,
+   316→   316→          year,
+   317→   317→          number,
+   318→   318→        );
+   319→   319→
+   320→   320→        // 8-ب) رأس الفاتورة (كل الأعمدة وفق §5.3).
+   321→   321→        final totalBase = roundCost(totals.grandTotal * exchangeRate);
+   322→   322→        final invoiceId = await txn.insert('invoice', {
+   323→   323→          'invoice_no': invoiceNo,
+   324→   324→          'doc_type': 'sale',
+   325→   325→          'pay_status': payStatus.code,
+   326→   326→          'status': 'completed',
+   327→   327→          'issued_at': issuedIso,
+   328→   328→          'quotation_id': draft.fromQuotationId,
+   329→   329→          'customer_id': draft.customerId,
+   330→   330→          'cashbox_id': cashboxId,
+   331→   331→          'warehouse_id': draft.warehouseId,
+   332→   332→          'currency_id': draft.currencyId,
+   333→   333→          'exchange_rate': exchangeRate,
+   334→   334→          'rate_is_fallback': rateIsFallback ? 1 : 0,
+   335→   335→          'subtotal': totals.subtotal,
+   336→   336→          'discount_amount': roundMoney(totals.totalDiscount),
+   337→   337→          'tax_rate': 0,
+   338→   338→          'tax_amount': 0,
+   339→   339→          'total': totals.grandTotal,
+   340→   340→          'total_base': totalBase,
+   341→   341→          'paid_amount': netPaid,
+   342→   342→          'due_amount': remainingCredit,
+   343→   343→          'cost_total': 0, // يُجمَّع من الأسطر ثم يُحدَّث أدناه.
+   344→   344→          'notes_internal': draft.notesInternal,
+   345→   345→          'notes_printed': draft.notesPrinted,
+   346→   346→          'created_at': at.toUtc().toIso8601String(),
+   347→   347→          'updated_at': at.toUtc().toIso8601String(),
+   348→   348→          'created_by': userId,
+   349→   349→        });
+   350→   350→
+   351→   351→        // 8-ج) الأسطر: WAC داخل المعاملة قبل الاستهلاك (5.4-3) + FEFO +
+   352→   352→        //      المخزون + حركاته — سطراً سطراً. البونص (UX-4): المنصرف
+   353→   353→        //      الكلي = المدفوع + المجاني على المخزون/الدفعات/التكلفة.
+   354→   354→        var costTotal = 0.0;
+   355→   355→        var freeTotal = 0.0;
+   356→   356→        for (var i = 0; i < priced.lines.length; i++) {
+   357→   357→          final pricedLine = priced.lines[i];
+   358→   358→          final info = products[pricedLine.line.productId]!;
+   359→   359→          final lineQty = pricedLine.line.qty;
+   360→   360→          final freeQty = pricedLine.line.freeQty;
+   361→   361→          freeTotal += freeQty;
+   362→   362→          // المنصرف الكلي (القرار 7) — البونص وحدات حقيقية تخرج من
+   363→   363→          // المخزون وتكلفتها تدخل COGS.
+   364→   364→          final dispatchedQty = lineQty + freeQty;
+   365→   365→
+   366→   366→          // WAC الحالي يُقرأ داخل المعاملة (Snapshot لحظة البيع) — على
+   367→   367→          // المنصرف الكلي.
+   368→   368→          final costNow = await _readCostInside(txn, info.id);
+   369→   369→          final lineCost = info.isService
+   370→   370→              ? 0.0
+   371→   371→              : roundCost(dispatchedQty * costNow);
+   372→   372→          costTotal = roundCost(costTotal + lineCost);
+   373→   373→
+   374→   374→          // تخصيص FEFO للصنوف المتتبعة (AC-05) قبل كتابة السطر — على
+   375→   375→          // المنصرف الكلي.
+   376→   376→          FefoResult? fefo;
+   377→   377→          if (!info.isService && info.trackBatches) {
+   378→   378→            fefo = await _batches.allocateFefo(
+   379→   379→              txn,
+   380→   380→              productId: info.id,
+   381→   381→              warehouseId: draft.warehouseId,
+   382→   382→              qty: dispatchedQty,
+   383→   383→              asOf: issuedAt,
+   384→   384→            );
+   385→   385→            if (fefo.shorted) {
+   386→   386→              throw _FlowError(
+   387→   387→                'الكمية غير متوفرة للصنف «${info.name}»: المتاح '
+   388→   388→                '${_num(fefo.allocatedQty)} والمطلوب ${_num(dispatchedQty)}'
+   389→   389→                '${freeQty > _qtyEpsilon ? ' (منها ${_num(freeQty)} مجاني)' : ''} — '
+   390→   390→                'لا يسمح النظام بمخزون سالب.',
+   391→   391→              );
+   392→   392→            }
+   393→   393→          }
+   394→   394→
+   395→   395→          final batchSummary = fefo == null || fefo.allocations.isEmpty
+   396→   396→              ? null
+   397→   397→              : fefo.allocations
+   398→   398→                    .map((a) => '${a.batchNumber}×${_num(a.qty)}')
+   399→   399→                    .join('، ');
+   400→   400→          final lineNotes = [
+   401→   401→            if ((pricedLine.line.notes ?? '').trim().isNotEmpty)
+   402→   402→              pricedLine.line.notes!.trim(),
+   403→   403→            if (freeQty > _qtyEpsilon) 'بونص: ${_num(freeQty)}',
+   404→   404→            if (batchSummary != null) 'دفعة: $batchSummary',
+   405→   405→          ].join(' — ');
+   406→   406→
+   407→   407→          await txn.insert('invoice_item', {
+   408→   408→            'invoice_id': invoiceId,
+   409→   409→            'product_id': info.id,
+   410→   410→            'line_desc': info.name, // لقطة اسم الصنف للعرض/الطباعة.
+   411→   411→            'qty': lineQty,
+   412→   412→            'free_qty': freeQty, // البونص مستقل (UX-4 — القرار 7).
+   413→   413→            'unit_id': info.unitId,
+   414→   414→            'unit_factor': 1,
+   415→   415→            'unit_price': pricedLine.line.unitPrice,
+   416→   416→            'discount_percent':
+   417→   417→                pricedLine.line.lineDiscountType == SaleDiscountType.percent
+   418→   418→                ? pricedLine.line.lineDiscountValue
+   419→   419→                : 0,
+   420→   420→            'discount_amount': pricedLine.effectiveDiscount,
+   421→   421→            'tax_percent': 0,
+   422→   422→            'line_total': pricedLine.netFinal,
+   423→   423→            'line_cost': lineCost,
+   424→   424→            'batch_id': (fefo != null && fefo.allocations.isNotEmpty)
+   425→   425→                ? fefo.allocations.first.batchId
+   426→   426→                : null,
+   427→   427→            'notes': lineNotes.isEmpty ? null : lineNotes,
+   428→   428→            'created_at': at.toUtc().toIso8601String(),
+   429→   429→          });
+   430→   430→
+   431→   431→          // الأصناف الخدمية: لا مخزون ولا دفعات (التكلفة صفر أعلاه).
+   432→   432→          if (info.isService) continue;
+   433→   433→
+   434→   434→          if (fefo != null) {
+   435→   435→            // المتتبع: تطبيق الحصص على الدفعات (حارس السالب بداخلها
+   436→   436→            // يرمي فتتراجع المعاملة كاملة) + حركة لكل دفعة.
+   437→   437→            await _batches.applyAllocation(txn, fefo.allocations, now: at);
+   438→   438→            for (final allocation in fefo.allocations) {
+   439→   439→              await txn.insert('stock_movement', {
+   440→   440→                'product_id': info.id,
+   441→   441→                'warehouse_id': draft.warehouseId,
+   442→   442→                'movement_type': 'sale',
+   443→   443→                'qty': -allocation.qty, // الخروج سالب (اتجاه المخطط).
+   444→   444→                'unit_cost': costNow,
+   445→   445→                'ref_type': 'invoice',
+   446→   446→                'ref_id': invoiceId,
+   447→   447→                'moved_at': issuedIso,
+   448→   448→                'notes':
+   449→   449→                    'رقم الدفعة ${allocation.batchNumber} (تنتهي '
+   450→   450→                    '${_dateOnly(allocation.expiryDate)})'
+   451→   451→                    '${freeQty > _qtyEpsilon ? ' — بونص: ${_num(freeQty)}' : ''}',
+   452→   452→                'created_at': at.toUtc().toIso8601String(),
+   453→   453→                'created_by': userId,
+   454→   454→              });
+   455→   455→            }
+   456→   456→          } else {
+   457→   457→            // العادي: حركة واحدة للسطر — بمنصرفه الكلي وبوسم البونص.
+   458→   458→            await txn.insert('stock_movement', {
+   459→   459→              'product_id': info.id,
+   460→   460→              'warehouse_id': draft.warehouseId,
+   461→   461→              'movement_type': 'sale',
+   462→   462→              'qty': -dispatchedQty,
+   463→   463→              'unit_cost': costNow,
+   464→   464→              'ref_type': 'invoice',
+   465→   465→              'ref_id': invoiceId,
+   466→   466→              'moved_at': issuedIso,
+   467→   467→              'notes': freeQty > _qtyEpsilon
+   468→   468→                  ? '$invoiceNo — بونص: ${_num(freeQty)}'
+   469→   469→                  : invoiceNo,
+   470→   470→              'created_at': at.toUtc().toIso8601String(),
+   471→   471→              'created_by': userId,
+   472→   472→            });
+   473→   473→          }
+   474→   474→
+   475→   475→          // دفتر stock_level مشترك للنوعين — حارس السالب الصارم:
+   476→   476→          // (INSERT OR IGNORE يهيئ صفاً معدوماً ثم الشرط qty >= ? يمنع
+   477→   477→          // أي خصم تحت الصفر — بلا استثناء).
+   478→   478→          await txn.rawInsert(
+   479→   479→            'INSERT OR IGNORE INTO stock_level(product_id, warehouse_id, qty) '
+   480→   480→            'VALUES(?, ?, 0)',
+   481→   481→            [info.id, draft.warehouseId],
+   482→   482→          );
+   483→   483→          final consumed = await txn.rawUpdate(
+   484→   484→            'UPDATE stock_level SET qty = qty - ? '
+   485→   485→            'WHERE product_id = ? AND warehouse_id = ? AND qty >= ?',
+   486→   486→            [dispatchedQty, info.id, draft.warehouseId, dispatchedQty],
+   487→   487→          );
+   488→   488→          if (consumed == 0) {
+   489→   489→            throw _FlowError(
+   490→   490→              'الكمية غير متوفرة للصنف «${info.name}» بالمخزن — '
+   491→   491→              'الرصيد الدفتري أقل من المطلوب (${_num(dispatchedQty)}'
+   492→   492→              '${freeQty > _qtyEpsilon ? ' منها ${_num(freeQty)} مجاني' : ''}) — '
+   493→   493→              'لا يسمح النظام بمخزون سالب.',
+   494→   494→            );
+   495→   495→          }
+   496→   496→        }
+   497→   497→
+   498→   498→        // 8-د) تجميع التكلفة على رأس الفاتورة (COGS — ملحق و).
+   499→   499→        await txn.update(
+   500→   500→          'invoice',
+   501→   501→          {'cost_total': costTotal},
+   502→   502→          where: 'id = ?',
+   503→   503→          whereArgs: [invoiceId],
+   504→   504→        );
+   505→   505→
+   506→   506→        // 8-هـ) الجزء النقدي: سند قبض بالصندوق الافتراضي بعملة الفاتورة
+   507→   507→        //       وسعرها + تخصيصه للفاتورة (القرار 2 برأس الملف).
+   508→   508→        if (netPaid > moneyEpsilon) {
+   509→   509→          final cashTxId = await txn.insert('cash_tx', {
+   510→   510→            'tx_type': 'receipt',
+   511→   511→            'cashbox_id': cashboxId,
+   512→   512→            'currency_id': draft.currencyId,
+   513→   513→            'amount': netPaid, // الصافي فقط — الباقي خارج الصندوق.
+   514→   514→            'exchange_rate': exchangeRate,
+   515→   515→            'tx_date': issuedIso,
+   516→   516→            'ref_type': 'invoice',
+   517→   517→            'ref_id': invoiceId,
+   518→   518→            'customer_id': null, // لا يخصم من رصيد العميل (القرار 2).
+   519→   519→            'description': 'تحصيل نقدي عند إصدار $invoiceNo',
+   520→   520→            'created_at': at.toUtc().toIso8601String(),
+   521→   521→            'created_by': userId,
+   522→   522→          });
+   523→   523→          await txn.insert('payment_allocation', {
+   524→   524→            'cash_tx_id': cashTxId,
+   525→   525→            'invoice_id': invoiceId,
+   526→   526→            'allocated_amount': netPaid,
+   527→   527→            'allocated_at': at.toUtc().toIso8601String(),
+   528→   528→            'created_by': userId,
+   529→   529→          });
+   530→   530→        }
+   531→   531→        // الجزء الآجل لا يُدرج في payment_allocation (لا سند له) — دينه
+   532→   532→        // في invoice.due_amount تقرأه صيغة رصيد العميل (FR-03-02).
+   533→   533→
+   534→   534→        // 8-و) تحويل عرض السعر — ذرّياً داخل نفس المعاملة (FR-02-11).
+   535→   535→        if (draft.fromQuotationId != null) {
+   536→   536→          final converted = await txn.update(
+   537→   537→            'quotation',
+   538→   538→            {
+   539→   539→              'status': 'converted',
+   540→   540→              'converted_invoice_id': invoiceId,
+   541→   541→              'updated_at': at.toUtc().toIso8601String(),
+   542→   542→            },
+   543→   543→            where: "id = ? AND status IN ('draft','sent')",
+   544→   544→            whereArgs: [draft.fromQuotationId],
+   545→   545→          );
+   546→   546→          if (converted == 0) {
+   547→   547→            throw _FlowError(
+   548→   548→              'عرض السعر غير قابل للتحويل — حُوِّل أو أُلغي للتو من جهة أخرى.',
+   549→   549→            );
+   550→   550→          }
+   551→   551→        }
+   552→   552→
+   553→   553→        // 8-ز) قيد التدقيق (append-only — نمط المستودعات القائمة).
+   554→   554→        await txn.insert('audit_log', {
+   555→   555→          'user_id': userId,
+   556→   556→          'action': 'sale_post',
+   557→   557→          'entity': 'invoice',
+   558→   558→          'entity_id': invoiceId,
+   559→   559→          'details':
+   560→   560→              'no=$invoiceNo total=${totals.grandTotal} '
+   561→   561→              'paid=$netPaid due=$remainingCredit '
+   562→   562→              'currency=$currencyCode rate=$exchangeRate'
+   563→   563→              '${rateIsFallback ? ' fallback=1' : ''}'
+   564→   564→              '${freeTotal > _qtyEpsilon ? ' free=${_num(freeTotal)}' : ''}',
+   565→   565→          'at': at.toUtc().toIso8601String(),
+   566→   566→        });
+   567→   567→
+   568→   568→        return Ok<SalePostedReceipt, String>(
+   569→   569→          SalePostedReceipt(
+   570→   570→            invoiceId: invoiceId,
+   571→   571→            invoiceNo: invoiceNo,
+   572→   572→            totals: totals,
+   573→   573→            payStatus: payStatus,
+   574→   574→            exchangeRate: exchangeRate,
+   575→   575→            rateIsFallback: rateIsFallback,
+   576→   576→            changeDue: changeDue,
+   577→   577→            remainingCredit: remainingCredit,
+   578→   578→          ),
+   579→   579→        );
+   580→   580→      });
+   581→   581→    } on _FlowError catch (e) {
+   582→   582→      return Err(e.message);
+   583→   583→    } on StateError catch (e) {
+   584→   584→      // حراس المستودعات الشريكة (applyAllocation وغيره) — رسالتهم عربية
+   585→   585→      // جاهزة وتدحرج المعاملة قبل الوصول هنا.
+   586→   586→      return Err(e.message);
+   587→   587→    } on DatabaseException catch (e) {
+   588→   588→      return Err(_describeDbError(e));
+   589→   589→    }
+   590→   590→  }
+   591→   591→
+   592→   592→  // ─────────────────────────────────────────────────────────────────────
+   593→   593→  // القراءات
+   594→   594→  // ─────────────────────────────────────────────────────────────────────
+   595→   595→
+   596→   596→  /// تفاصيل فاتورة بيع كاملة: الرأس + البنود + اسم العميل + العملة.
+   597→   597→  ///
+   598→   598→  /// `null` إن لم توجد (أو ليست فاتورة بيع).
+   599→   599→  Future<SaleInvoiceDetail?> invoiceDetail(int invoiceId) async {
+   600→   600→    final rows = await _db.rawQuery(
+   601→   601→      '''
+   602→   602→      SELECT i.*, c.name AS customer_name, c.phone AS customer_phone,
+   603→   603→             cu.code AS currency_code, cu.symbol_svg AS currency_symbol
+   604→   604→      FROM invoice i
+   605→   605→      LEFT JOIN customer c ON c.id = i.customer_id
+   606→   606→      JOIN currency cu ON cu.id = i.currency_id
+   607→   607→      WHERE i.id = ? AND i.doc_type = 'sale'
+   608→   608→      LIMIT 1
+   609→   609→    ''',
+   610→   610→      [invoiceId],
+   611→   611→    );
+   612→   612→    if (rows.isEmpty) return null;
+   613→   613→    // اسم الوحدة يُقرأ للعرض فقط (قوالب الطباعة UX-3) — JOIN قراءة صرف
+   614→   614→    // فوق عمود موجود منذ v1، بلا أي مساس بمنطق الترحيل/الترحيل العكسي.
+   615→   615→    final itemRows = await _db.rawQuery(
+   616→   616→      '''
+   617→   617→      SELECT ii.*, u.name AS unit_name
+   618→   618→      FROM invoice_item ii
+   619→   619→      LEFT JOIN unit u ON u.id = ii.unit_id
+   620→   620→      WHERE ii.invoice_id = ?
+   621→   621→      ORDER BY ii.id ASC
+   622→   622→    ''',
+   623→   623→      [invoiceId],
+   624→   624→    );
+   625→   625→    return SaleInvoiceDetail(
+   626→   626→      invoice: SaleInvoice.fromRow(rows.first),
+   627→   627→      items: [for (final row in itemRows) SaleInvoiceItemLine.fromRow(row)],
+   628→   628→      customerName: rows.first['customer_name'] as String?,
+   629→   629→      customerPhone: rows.first['customer_phone'] as String?,
+   630→   630→      currencyCode: rows.first['currency_code'] as String?,
+   631→   631→      currencySymbol: rows.first['currency_symbol'] as String?,
+   632→   632→    );
+   633→   633→  }
+   634→   634→
+   635→   635→  /// آخر فواتير البيع (الأحدث أولاً) — لتقرير/بحث الشاشات.
+   636→   636→  Future<List<SaleInvoiceSummary>> recentSales({
+   637→   637→    int limit = 50,
+   638→   638→    int? customerId,
+   639→   639→  }) async {
+   640→   640→    final where = [
+   641→   641→      "i.doc_type = 'sale'",
+   642→   642→      if (customerId != null) 'i.customer_id = ?',
+   643→   643→    ].join(' AND ');
+   644→   644→    final rows = await _db.rawQuery(
+   645→   645→      '''
+   646→   646→      SELECT i.id, i.invoice_no, i.issued_at, i.customer_id, i.total,
+   647→   647→             i.paid_amount, i.due_amount, i.pay_status, i.status,
+   648→   648→             c.name AS customer_name, cu.code AS currency_code
+   649→   649→      FROM invoice i
+   650→   650→      LEFT JOIN customer c ON c.id = i.customer_id
+   651→   651→      JOIN currency cu ON cu.id = i.currency_id
+   652→   652→      WHERE $where
+   653→   653→      ORDER BY i.issued_at DESC, i.id DESC
+   654→   654→      LIMIT ?
+   655→   655→    ''',
+   656→   656→      [?customerId, limit],
+   657→   657→    );
+   658→   658→    return [
+   659→   659→      for (final row in rows)
+   660→   660→        SaleInvoiceSummary(
+   661→   661→          id: row['id'] as int,
+   662→   662→          invoiceNo: row['invoice_no'] as String,
+   663→   663→          issuedAt: DateTime.parse(row['issued_at'] as String),
+   664→   664→          customerId: row['customer_id'] as int?,
+   665→   665→          customerName: row['customer_name'] as String?,
+   666→   666→          currencyCode: row['currency_code'] as String?,
+   667→   667→          total: (row['total'] as num?)?.toDouble() ?? 0,
+   668→   668→          paidAmount: (row['paid_amount'] as num?)?.toDouble() ?? 0,
+   669→   669→          dueAmount: (row['due_amount'] as num?)?.toDouble() ?? 0,
+   670→   670→          payStatus: SalePaymentMethod.values.firstWhere(
+   671→   671→            (m) => m.code == (row['pay_status'] as String),
+   672→   672→          ),
+   673→   673→          status: row['status'] as String,
+   674→   674→        ),
+   675→   675→    ];
+   676→   676→  }
+   677→   677→
+   678→   678→  /// إجماليات مبيعات فترة (شاملة الطرفين) — بالعملة الأساسية عبر
+   679→   679→  /// `total_base` (نفس أساس DashboardRepository — FR-09-01).
+   680→   680→  Future<SalesPeriodTotals> salesTotals(DateTime from, DateTime to) async {
+   681→   681→    final salesRows = await _db.rawQuery(
+   682→   682→      '''
+   683→   683→      SELECT COUNT(*) AS n, COALESCE(SUM(total_base), 0) AS s,
+   684→   684→             COALESCE(SUM(cost_total), 0) AS c
+   685→   685→      FROM invoice
+   686→   686→      WHERE doc_type = 'sale' AND status = 'completed'
+   687→   687→        AND date(issued_at) >= ? AND date(issued_at) <= ?
+   688→   688→    ''',
+   689→   689→      [_dateOnly(from), _dateOnly(to)],
+   690→   690→    );
+   691→   691→    final cashRows = await _db.rawQuery(
+   692→   692→      '''
+   693→   693→      SELECT COALESCE(SUM(t.amount), 0) AS a
+   694→   694→      FROM cash_tx t
+   695→   695→      WHERE t.tx_type = 'receipt' AND t.is_voided = 0
+   696→   696→        AND t.ref_type = 'invoice'
+   697→   697→        AND EXISTS (
+   698→   698→          SELECT 1 FROM invoice i
+   699→   699→          WHERE i.id = t.ref_id AND i.doc_type = 'sale'
+   700→   700→            AND i.status = 'completed'
+   701→   701→            AND date(i.issued_at) >= ? AND date(i.issued_at) <= ?
+   702→   702→        )
+   703→   703→    ''',
+   704→   704→      [_dateOnly(from), _dateOnly(to)],
+   705→   705→    );
+   706→   706→    return SalesPeriodTotals(
+   707→   707→      invoiceCount: (salesRows.first['n'] as int?) ?? 0,
+   708→   708→      salesBase: (salesRows.first['s'] as num?)?.toDouble() ?? 0,
+   709→   709→      costTotal: (salesRows.first['c'] as num?)?.toDouble() ?? 0,
+   710→   710→      cashCollected: (cashRows.first['a'] as num?)?.toDouble() ?? 0,
+   711→   711→    );
+   712→   712→  }
+   713→   713→
+   714→   714→  // ─────────────────────────────────────────────────────────────────────
+   715→   715→  // مساعدات خاصة
+   716→   716→  // ─────────────────────────────────────────────────────────────────────
+   717→   717→
+   718→   718→  /// يحمل معلومات الأصناف المطلوبة (استعلام واحد).
+   719→   719→  Future<Map<int, _ProductInfo>> _loadProducts(Set<int> ids) async {
+   720→   720→    if (ids.isEmpty) return const {};
+   721→   721→    final rows = await _db.rawQuery(
+   722→   722→      'SELECT id, name, cost_price, is_service, track_batches, is_archived, '
+   723→   723→      'unit_id FROM product '
+   724→   724→      'WHERE id IN (${List.filled(ids.length, '?').join(',')})',
+   725→   725→      ids.toList(),
+   726→   726→    );
+   727→   727→    return {
+   728→   728→      for (final row in rows)
+   729→   729→        row['id'] as int: _ProductInfo(
+   730→   730→          id: row['id'] as int,
+   731→   731→          name: row['name'] as String,
+   732→   732→          costPrice: (row['cost_price'] as num?)?.toDouble() ?? 0,
+   733→   733→          isService: (row['is_service'] as int? ?? 0) == 1,
+   734→   734→          trackBatches: (row['track_batches'] as int? ?? 0) == 1,
+   735→   735→          isArchived: (row['is_archived'] as int? ?? 0) == 1,
+   736→   736→          unitId: row['unit_id'] as int?,
+   737→   737→        ),
+   738→   738→    };
+   739→   739→  }
+   740→   740→
+   741→   741→  /// يقرأ WAC (cost_price) داخل المعاملة — لحظة الاستهلاك (5.4-3).
+   742→   742→  Future<double> _readCostInside(DatabaseExecutor txn, int productId) async {
+   743→   743→    final rows = await txn.query(
+   744→   744→      'product',
+   745→   745→      columns: ['cost_price'],
+   746→   746→      where: 'id = ?',
+   747→   747→      whereArgs: [productId],
+   748→   748→      limit: 1,
+   749→   749→    );
+   750→   750→    return (rows.first['cost_price'] as num?)?.toDouble() ?? 0;
+   751→   751→  }
+   752→   752→
+   753→   753→  /// فحص توفر المخزون المسبق (قاعدة 5.4-5): يجمع المطلوب لكل صنف غير
+   754→   754→  /// خدمي عبر الأسطر (الأسطر المكررة تُجمع) ويقارنه بالمتاح:
+   755→   755→  /// العادي من `stock_level`، والمتتبع من دفعات FEFO النشطة غير المنتهية.
+   756→   756→  ///
+   757→   757→  /// البونص (UX-4): المجموع **بالمنصرف الكلي** qty + freeQty — المجاني
+   758→   758→  /// وحدات تخرج من المخزون مثل المدفوع تماماً.
+   759→   759→  Future<String?> _checkAvailability(
+   760→   760→    List<CartLine> lines,
+   761→   761→    Map<int, _ProductInfo> products,
+   762→   762→    int warehouseId,
+   763→   763→    DateTime asOf,
+   764→   764→  ) async {
+   765→   765→    final requested = <int, double>{};
+   766→   766→    final requestedFree = <int, double>{};
+   767→   767→    for (final line in lines) {
+   768→   768→      final info = products[line.productId]!;
+   769→   769→      if (info.isService) continue;
+   770→   770→      requested[info.id] =
+   771→   771→          (requested[info.id] ?? 0) + line.qty + line.freeQty;
+   772→   772→      if (line.freeQty > _qtyEpsilon) {
+   773→   773→        requestedFree[info.id] = (requestedFree[info.id] ?? 0) + line.freeQty;
+   774→   774→      }
+   775→   775→    }
+   776→   776→    if (requested.isEmpty) return null;
+   777→   777→
+   778→   778→    final cutoff = _dateOnly(asOf);
+   779→   779→    final ids = requested.keys.toList();
+   780→   780→    final inClause = List.filled(ids.length, '?').join(',');
+   781→   781→
+   782→   782→    // العادي: دفتر stock_level هو الحقيقة.
+   783→   783→    final plainRows = await _db.rawQuery(
+   784→   784→      'SELECT product_id, qty FROM stock_level '
+   785→   785→      'WHERE warehouse_id = ? AND product_id IN ($inClause)',
+   786→   786→      [warehouseId, ...ids],
+   787→   787→    );
+   788→   788→    final plainQty = {
+   789→   789→      for (final row in plainRows)
+   790→   790→        row['product_id'] as int: (row['qty'] as num?)?.toDouble() ?? 0,
+   791→   791→    };
+   792→   792→
+   793→   793→    // المتتبع: مجموع الدفعات النشطة غير المنتهية (نفس شرط FEFO).
+   794→   794→    final batchRows = await _db.rawQuery(
+   795→   795→      'SELECT product_id, SUM(qty) AS q FROM batch '
+   796→   796→      'WHERE warehouse_id = ? AND product_id IN ($inClause) '
+   797→   797→      '  AND qty > 0 AND is_archived = 0 AND expiry_date >= ? '
+   798→   798→      'GROUP BY product_id',
+   799→   799→      [warehouseId, ...ids, cutoff],
+   800→   800→    );
+   801→   801→    final batchQty = {
+   802→   802→      for (final row in batchRows)
+   803→   803→        row['product_id'] as int: (row['q'] as num?)?.toDouble() ?? 0,
+   804→   804→    };
+   805→   805→
+   806→   806→    for (final entry in requested.entries) {
+   807→   807→      final info = products[entry.key]!;
+   808→   808→      final available = info.trackBatches
+   809→   809→          ? (batchQty[entry.key] ?? 0)
+   810→   810→          : (plainQty[entry.key] ?? 0);
+   811→   811→      if (available + _qtyEpsilon < entry.value) {
+   812→   812→        final free = requestedFree[entry.key] ?? 0;
+   813→   813→        return 'الكمية غير متوفرة للصنف «${info.name}»: المتاح '
+   814→   814→            '${_num(available)} والمطلوب ${_num(entry.value)}'
+   815→   815→            '${free > _qtyEpsilon ? ' (منها ${_num(free)} مجاني)' : ''} — '
+   816→   816→            'لا يسمح النظام بمخزون سالب.';
+   817→   817→      }
+   818→   818→    }
+   819→   819→    return null;
+   820→   820→  }
+   821→   821→
+   822→   822→  /// يصوغ خطأ قاعدة البيانات بكلمات المستخدم (نمط item_repository).
+   823→   823→  String _describeDbError(DatabaseException e) {
+   824→   824→    if (e.isUniqueConstraintError()) {
+   825→   825→      final text = e.toString();
+   826→   826→      if (text.contains('invoice_no')) {
+   827→   827→        return 'تعارض في رقم الفاتورة — أعد الحفظ';
+   828→   828→      }
+   829→   829→      if (text.contains('payment_allocation')) {
+   830→   830→        return 'تخصيص مدفوعات مكرر لنفس السند والفاتورة';
+   831→   831→      }
+   832→   832→      return 'قيمة مكررة تخالف قيد التفرد في القاعدة';
+   833→   833→    }
+   834→   834→    if (_isCheckFailure(e)) {
+   835→   835→      final text = e.toString();
+   836→   836→      if (text.contains('stock_level')) {
+   837→   837→        return 'المخزون لا يسمح بخصم بهذه الكمية (رصيد سالب ممنوع)';
+   838→   838→      }
+   839→   839→      if (text.contains('due_amount') || text.contains('paid_amount')) {
+   840→   840→        return 'مبالغ الدفع غير متسقة مع إجمالي الفاتورة';
+   841→   841→      }
+   842→   842→      return 'قيمة تخالف قيد سلامة محاسبي في القاعدة';
+   843→   843→    }
+   844→   844→    return 'تعذر حفظ الفاتورة في القاعدة: $e';
+   845→   845→  }
+   846→   846→}
+   847→   847→
+   848→   848→/// هل الخطأ خرقاً لقيد CHECK؟ (لا مساعد جاهز في sqflite — نقرأ الرسالة).
+   849→   849→bool _isCheckFailure(DatabaseException e) =>
+   850→   850→    e.toString().toUpperCase().contains('CHECK');
+   851→   851→
+   852→   852→/// تفاوت الكميات (NUMERIC(12,3) بالمخطط).
+   853→   853→const double _qtyEpsilon = 0.000001;
+   854→   854→
+   855→   855→/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
+   856→   856→String _num(double v) {
+   857→   857→  if (v.isNaN || v.isInfinite) {
+   858→   858→    return v.toString();
+   859→   859→  }
+   860→   860→  final rounded = (v * 1000).round() / 1000;
+   861→   861→  if (rounded == rounded.round()) {
+   862→   862→    return rounded.toInt().toString();
+   863→   863→  }
+   864→   864→  return rounded.toStringAsFixed(3);
+   865→   865→}
+   866→   866→
+   867→   867→/// `YYYY-MM-DD` بتاريخ التقويم المحلي ليوم العمل (نمط المستودعات).
+   868→   868→String _dateOnly(DateTime d) =>
+   869→   869→    '${d.year.toString().padLeft(4, '0')}-'
+   870→   870→    '${d.month.toString().padLeft(2, '0')}-'
+   871→   871→    '${d.day.toString().padLeft(2, '0')}';
+   872→   872→

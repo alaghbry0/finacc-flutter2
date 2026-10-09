@@ -21,6 +21,8 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
+import '../../../core/widgets/status_chip.dart';
+import '../../../core/widgets/void_invoice_confirm.dart';
 import '../view_models/purchases_list_view_model.dart';
 import 'widgets/purchase_widgets.dart';
 
@@ -200,6 +202,12 @@ class _PurchaseCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // FR-02-15: الملغاة تبقى ظاهرة بالقائمة بشارة «ملغاة»
+              // (بطاقتها لا تُحذف — حركاتها معكوسة والرقم لا يُعاد).
+              if (invoice.status == 'void') ...[
+                const VoidedBadge(),
+                const SizedBox(width: 6),
+              ],
               PurchasePayStatusChip(method: invoice.payStatus),
             ],
           ),
@@ -307,6 +315,7 @@ class PurchaseDetailScreen extends StatelessWidget {
     final app = context.read<AppController>();
     final vm = PurchaseDetailViewModel(
       purchaseRepo: app.purchases!,
+      companyRepo: app.companies!,
       invoiceId: invoiceId,
     );
     unawaited(vm.load());
@@ -363,15 +372,16 @@ class _PurchaseDetailBody extends StatelessWidget {
                 ),
               ],
             )
-          : _PurchaseDetailContent(detail: state.detail!),
+          : _PurchaseDetailContent(detail: state.detail!, vm: vm),
     );
   }
 }
 
 class _PurchaseDetailContent extends StatelessWidget {
-  const _PurchaseDetailContent({required this.detail});
+  const _PurchaseDetailContent({required this.detail, required this.vm});
 
   final PurchaseInvoiceDetail detail;
+  final PurchaseDetailViewModel vm;
 
   @override
   Widget build(BuildContext context) {
@@ -379,6 +389,7 @@ class _PurchaseDetailContent extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final invoice = detail.invoice;
     final local = invoice.issuedAt.toLocal();
+    final isVoided = invoice.status == 'void';
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -400,6 +411,10 @@ class _PurchaseDetailContent extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (isVoided) ...[
+                    const VoidedBadge(dense: false),
+                    const SizedBox(width: 6),
+                  ],
                   PurchasePayStatusChip(
                     method: invoice.payStatus,
                     dense: false,
@@ -407,6 +422,18 @@ class _PurchaseDetailContent extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
+              if (isVoided) ...[
+                // تنويه الإبطال (FR-02-15): الوارد والمخزون وWAC والصندوق
+                // ودين المورد عُكست كاملة — الفاتورة تبقى للتدقيق.
+                Text(
+                  l10n.invoiceVoidedNote,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: FinColors.of(context).negative,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               if (invoice.rateIsFallback) ...[
                 const PurchaseFallbackRateBadge(dense: false),
                 const SizedBox(height: 8),
@@ -526,23 +553,83 @@ class _PurchaseDetailContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        // الإجراءات — مرتجع شراء PRN عن هذه الفاتورة.
-        OutlinedButton.icon(
-          key: const Key('pur_detail_return_button'),
-          onPressed: () =>
-              context.go('/purchases/returns/purchase?purchase=${invoice.id}'),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(52),
+        // الإجراءات — مرتجع شراء PRN عن هذه الفاتورة (الملغاة لا
+        // تُرتجَع — حركاتها معكوسة أصلاً FR-02-15).
+        if (!isVoided)
+          OutlinedButton.icon(
+            key: const Key('pur_detail_return_button'),
+            onPressed: () => context.go(
+              '/purchases/returns/purchase?purchase=${invoice.id}',
+            ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+            ),
+            icon: const Icon(Icons.assignment_return_rounded, size: 20),
+            label: Text(l10n.purDetailReturnAction),
           ),
-          icon: const Icon(Icons.assignment_return_rounded, size: 20),
-          label: Text(l10n.purDetailReturnAction),
-        ),
+        // إبطال فاتورة الشراء (FR-02-15 — R17-c): للمكتملة فقط، بصلاحية
+        // المدير (الجلسة مديرية حصراً في V1)، نمط تدميري سالب.
+        if (!isVoided) ...[
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const Key('pur_detail_void_button'),
+            onPressed: vm.state.voiding
+                ? null
+                : () => unawaited(_confirmAndVoidPurchaseInvoice(context, vm)),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              side: BorderSide(
+                color: FinColors.of(context).negative.withValues(alpha: 0.5),
+              ),
+            ),
+            icon: vm.state.voiding
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.block_rounded, size: 20),
+            label: Text(
+              l10n.invoiceVoidButton,
+              style: TextStyle(color: FinColors.of(context).negative),
+            ),
+          ),
+        ],
       ],
     );
   }
 
   static int _decimals(double value) =>
       value == value.truncateToDouble() ? 0 : 2;
+}
+
+/// مسار إبطال فاتورة الشراء: تأكيد مزدوج (تحذير ← سبب اختياري) ←
+/// تنفيذ عبر المتحكم ← رسالة نجاح/فشل (ScaffoldMessenger — رسالة
+/// المستودع تُعرض كما هي بنمط الشاشات القائمة).
+Future<void> _confirmAndVoidPurchaseInvoice(
+  BuildContext context,
+  PurchaseDetailViewModel vm,
+) async {
+  final invoiceNo = vm.state.detail?.invoice.invoiceNo ?? '';
+  final reason = await showVoidInvoiceConfirm(context, invoiceNo: invoiceNo);
+  if (reason == null || !context.mounted) return;
+  final ok = await vm.voidInvoice(reason: reason);
+  if (!context.mounted) return;
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = AppLocalizations.of(context)!;
+  if (ok) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(l10n.invoiceVoidedSnackBar(invoiceNo))),
+      );
+  } else {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(vm.state.voidError ?? l10n.genericErrorTitle)),
+      );
+  }
 }
 
 class _InfoRow extends StatelessWidget {

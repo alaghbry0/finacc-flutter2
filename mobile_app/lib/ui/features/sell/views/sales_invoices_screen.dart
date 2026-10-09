@@ -19,6 +19,8 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
+import '../../../core/widgets/status_chip.dart';
+import '../../../core/widgets/void_invoice_confirm.dart';
 import '../view_models/sales_invoices_view_model.dart';
 import 'widgets/invoice_pdf_preview.dart';
 import 'widgets/sell_widgets.dart';
@@ -207,6 +209,12 @@ class _InvoiceCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // FR-02-15: الملغاة تبقى ظاهرة بالقائمة بشارة «ملغاة»
+              // (بطاقتها لا تُحذف — حركاتها معكوسة والرقم لا يُعاد).
+              if (invoice.status == 'void') ...[
+                const VoidedBadge(),
+                const SizedBox(width: 6),
+              ],
               PayStatusChip(method: invoice.payStatus),
             ],
           ),
@@ -314,6 +322,7 @@ class SaleInvoiceDetailScreen extends StatelessWidget {
     final app = context.read<AppController>();
     final vm = SaleInvoiceDetailViewModel(
       saleRepo: app.sales!,
+      companyRepo: app.companies!,
       invoiceId: invoiceId,
     );
     unawaited(vm.load());
@@ -382,15 +391,16 @@ class _InvoiceDetailBody extends StatelessWidget {
                 ),
               ],
             )
-          : _InvoiceDetailContent(detail: state.detail!),
+          : _InvoiceDetailContent(detail: state.detail!, vm: vm),
     );
   }
 }
 
 class _InvoiceDetailContent extends StatelessWidget {
-  const _InvoiceDetailContent({required this.detail});
+  const _InvoiceDetailContent({required this.detail, required this.vm});
 
   final SaleInvoiceDetail detail;
+  final SaleInvoiceDetailViewModel vm;
 
   @override
   Widget build(BuildContext context) {
@@ -398,6 +408,7 @@ class _InvoiceDetailContent extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final invoice = detail.invoice;
     final local = invoice.issuedAt.toLocal();
+    final isVoided = invoice.status == 'void';
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -419,10 +430,26 @@ class _InvoiceDetailContent extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (isVoided) ...[
+                    const VoidedBadge(dense: false),
+                    const SizedBox(width: 6),
+                  ],
                   PayStatusChip(method: invoice.payStatus, dense: false),
                 ],
               ),
               const SizedBox(height: 6),
+              if (isVoided) ...[
+                // تنويه الإبطال (FR-02-15): حركاتها معكوسة كاملة والرقم
+                // لا يُعاد — الفاتورة تبقى ظاهرة للتدقيق والطباعة بحالتها.
+                Text(
+                  l10n.invoiceVoidedNote,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: FinColors.of(context).negative,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               if (invoice.rateIsFallback) ...[
                 const FallbackRateBadge(dense: false),
                 const SizedBox(height: 8),
@@ -531,22 +558,82 @@ class _InvoiceDetailContent extends StatelessWidget {
         const SizedBox(height: 14),
         // P1-1: مرتجع بيع SRN عن هذه الفاتورة — الربط العميق ?invoice=
         // جاهز في الموجّه (نفس نمط مرتجع الشراء في قائمة الشراء).
-        OutlinedButton.icon(
-          key: const Key('sell_detail_return_button'),
-          onPressed: () =>
-              context.go('/purchases/returns/sale?invoice=${invoice.id}'),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(52),
+        // الملغاة لا تُرتجَع (حركاتها معكوسة أصلاً — FR-02-15).
+        if (!isVoided)
+          OutlinedButton.icon(
+            key: const Key('sell_detail_return_button'),
+            onPressed: () =>
+                context.go('/purchases/returns/sale?invoice=${invoice.id}'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+            ),
+            icon: const Icon(Icons.assignment_return_rounded, size: 20),
+            label: Text(l10n.sellFixDetailReturnAction),
           ),
-          icon: const Icon(Icons.assignment_return_rounded, size: 20),
-          label: Text(l10n.sellFixDetailReturnAction),
-        ),
+        // إبطال الفاتورة (FR-02-15 — R17-c): للفاتورة المكتملة فقط،
+        // بصلاحية المدير (الجلسة مديرية حصراً في V1 — قرار موثّق بنمط
+        // قسم الربح أعلاه)، نمط تدميري (ألوان سالبة + أيقونة block).
+        if (!isVoided) ...[
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const Key('sell_detail_void_button'),
+            onPressed: vm.state.voiding
+                ? null
+                : () => unawaited(_confirmAndVoidSaleInvoice(context, vm)),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              side: BorderSide(
+                color: FinColors.of(context).negative.withValues(alpha: 0.5),
+              ),
+            ),
+            icon: vm.state.voiding
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.block_rounded, size: 20),
+            label: Text(
+              l10n.invoiceVoidButton,
+              style: TextStyle(color: FinColors.of(context).negative),
+            ),
+          ),
+        ],
       ],
     );
   }
 
   static int _decimals(double value) =>
       value == value.truncateToDouble() ? 0 : 2;
+}
+
+/// مسار إبطال فاتورة البيع: تأكيد مزدوج (تحذير ← سبب اختياري) ←
+/// تنفيذ عبر المتحكم ← رسالة نجاح/فشل بنمط رسائل الشاشات القائمة
+/// (ScaffoldMessenger — رسالة المستودع تُعرض كما هي).
+Future<void> _confirmAndVoidSaleInvoice(
+  BuildContext context,
+  SaleInvoiceDetailViewModel vm,
+) async {
+  final invoiceNo = vm.state.detail?.invoice.invoiceNo ?? '';
+  final reason = await showVoidInvoiceConfirm(context, invoiceNo: invoiceNo);
+  if (reason == null || !context.mounted) return;
+  final ok = await vm.voidInvoice(reason: reason);
+  if (!context.mounted) return;
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = AppLocalizations.of(context)!;
+  if (ok) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(l10n.invoiceVoidedSnackBar(invoiceNo))),
+      );
+  } else {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(vm.state.voidError ?? l10n.genericErrorTitle)),
+      );
+  }
 }
 
 class _InfoRow extends StatelessWidget {

@@ -66,16 +66,22 @@ class _PurchaseScreenBodyState extends State<_PurchaseScreenBody> {
   bool _fxGateOpen = false;
   bool _noticeShown = false;
 
+  /// النموذج يُخزَّن حقلاً — قراءة context داخل dispose غير آمنة (عنصر
+  /// معطّل) وتكسر تفكيك الشجرة عند مغادرة الفاتورة. نفس علة/علاج شاشة
+  /// البيع الموثّقة (أصل استثناء Hero أثناء الرجوع من /sell/new) —
+  /// كشفتها هنا اختبارات R17-a عند تفكيك الشجرة.
+  late final PurchaseCartViewModel _vm;
+
   @override
   void initState() {
     super.initState();
-    final vm = context.read<PurchaseCartViewModel>();
-    vm.addListener(_onCartChanged);
+    _vm = context.read<PurchaseCartViewModel>();
+    _vm.addListener(_onCartChanged);
   }
 
   @override
   void dispose() {
-    context.read<PurchaseCartViewModel>().removeListener(_onCartChanged);
+    _vm.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -593,6 +599,22 @@ class _PurchaseLineCard extends StatelessWidget {
                 PurchaseQtyStepper(
                   qty: line.qty,
                   onChanged: (qty) => vm.setQty(index, qty),
+                  // R17-a — نقرة قيمة الكمية: تحرير رقمي فوري بنفس قيود
+                  // setQty (> 0) — الكاشير يكتب 7 أو 2.5 مباشرة.
+                  onValueTap: () async {
+                    final value = await showPurchaseNumberEditSheet(
+                      context,
+                      title: l10n.purchaseQtyEditTitle(line.name),
+                      initial: line.qty,
+                      confirmLabel: l10n.commonConfirm,
+                      allowZero: false,
+                      decimals: 3,
+                      icon: Icons.edit_outlined,
+                    );
+                    if (value != null && value > 0) {
+                      vm.setQty(index, value);
+                    }
+                  },
                 ),
                 const SizedBox(width: 8),
                 _PurchaseBonusChip(

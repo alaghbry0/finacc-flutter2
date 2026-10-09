@@ -4998,4 +4998,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String purBonusEditTitle(Object name) {
     return 'Free quantity (bonus): $name';
   }
+
+  @override
+  String sellQtyEditTitle(Object name) {
+    return 'Edit quantity: $name';
+  }
+
+  @override
+  String purchaseQtyEditTitle(Object name) {
+    return 'Edit quantity: $name';
+  }
+
+  @override
+  String get invoiceVoidBadge => 'Voided';
+
+  @override
+  String get invoiceVoidButton => 'Void invoice';
+
+  @override
+  String get invoiceVoidConfirmTitle => 'Void this invoice?';
+
+  @override
+  String invoiceVoidConfirmBody(Object no) {
+    return 'Voiding $no creates full counter movements (stock, cash and balances) in one transaction — nothing is deleted: the invoice stays visible with «Voided» status and its number is never reused.';
+  }
+
+  @override
+  String get invoiceVoidConfirmContinue => 'Continue';
+
+  @override
+  String get invoiceVoidFinalTitle => 'Final confirmation — void invoice';
+
+  @override
+  String invoiceVoidFinalBody(Object no) {
+    return 'Are you sure you want to void $no? This cannot be undone.';
+  }
+
+  @override
+  String get invoiceVoidReasonLabel => 'Reason (optional)';
+
+  @override
+  String get invoiceVoidConfirmAction => 'Void now';
+
+  @override
+  String invoiceVoidedSnackBar(Object no) {
+    return 'Invoice $no voided — full counter movements recorded.';
+  }
+
+  @override
+  String get invoiceVoidedNote =>
+      'Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused.';
 }

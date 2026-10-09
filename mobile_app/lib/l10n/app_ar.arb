@@ -1465,5 +1465,18 @@
   "sellLineEditQtyError": "أدخل كمية أكبر من صفر",
   "sellLineEditBonusError": "أدخل كمية بونص سليمة (صفر فأكثر وبلا دقة أعلى من ثلاث منازل)",
   "sellLineEditPriceError": "أدخل سعراً سليماً لا يقل عن صفر",
-  "purBonusEditTitle": "الكمية المجانية (بونص): {name}"
+  "purBonusEditTitle": "الكمية المجانية (بونص): {name}",
+  "sellQtyEditTitle": "تعديل الكمية: {name}",
+  "purchaseQtyEditTitle": "تعديل الكمية: {name}",
+  "invoiceVoidBadge": "ملغاة",
+  "invoiceVoidButton": "إبطال الفاتورة",
+  "invoiceVoidConfirmTitle": "إبطال هذه الفاتورة؟",
+  "invoiceVoidConfirmBody": "إبطال {no} ينشئ حركات معاكسة كاملة (مخزون وصندوق وأرصدة) داخل معاملة واحدة — لا يُحذف شيء: تبقى الفاتورة ظاهرة بحالة «ملغاة» ورقمها لا يُعاد استخدامه أبداً.",
+  "invoiceVoidConfirmContinue": "متابعة",
+  "invoiceVoidFinalTitle": "تأكيد نهائي — إبطال الفاتورة",
+  "invoiceVoidFinalBody": "هل أنت متأكد من إبطال {no} نهائياً؟ لا يمكن التراجع بعد الإبطال.",
+  "invoiceVoidReasonLabel": "سبب الإبطال (اختياري)",
+  "invoiceVoidConfirmAction": "إبطال نهائي",
+  "invoiceVoidedSnackBar": "أُبطلت الفاتورة {no} وسُجِّلت الحركات المعاكسة كاملة.",
+  "invoiceVoidedNote": "فاتورة ملغاة — حركات مخزونها وصندوقها وأرصدتها عُكست بالكامل، ورقمها لا يُعاد استخدامه."
 }

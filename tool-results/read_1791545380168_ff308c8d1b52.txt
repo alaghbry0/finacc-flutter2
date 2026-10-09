@@ -1,0 +1,793 @@
+     1→/// قائمة فواتير المبيعات — آخر الفواتير برقم/تاريخ/عميل/عملة/إجمالي/
+     2→/// مدفوع/متبقي + رقائق الحالة، بحث نصي بسيط، وفتح التفاصيل الكاملة.
+     3→library;
+     4→
+     5→import 'dart:async';
+     6→
+     7→import 'package:flutter/material.dart';
+     8→import 'package:go_router/go_router.dart';
+     9→import 'package:provider/provider.dart';
+    10→
+    11→import '../../../../domain/models/sale.dart';
+    12→import '../../../../l10n/app_localizations.dart';
+    13→import '../../../core/session/app_controller.dart';
+    14→import '../../../core/theme/app_colors.dart';
+    15→import '../../../core/theme/app_typography.dart';
+    16→import '../../../core/widgets/amount_text.dart';
+    17→import '../../../core/widgets/empty_state.dart';
+    18→import '../../../core/widgets/error_state.dart';
+    19→import '../../../core/widgets/fin_card.dart';
+    20→import '../../../core/widgets/loading_state.dart';
+    21→import '../../../core/widgets/refresh_on_active.dart';
+    22→import '../view_models/sales_invoices_view_model.dart';
+    23→import 'widgets/invoice_pdf_preview.dart';
+    24→import 'widgets/sell_widgets.dart';
+    25→
+    26→/// قائمة فواتير المبيعات (مسار مقترح `/sell/invoices`).
+    27→class SalesInvoicesScreen extends StatelessWidget {
+    28→  const SalesInvoicesScreen({super.key, this.viewModel});
+    29→
+    30→  /// Seam اختبار: نموذج محمّل مسبقاً.
+    31→  final SalesInvoicesViewModel? viewModel;
+    32→
+    33→  @override
+    34→  Widget build(BuildContext context) {
+    35→    final app = context.read<AppController>();
+    36→    late final SalesInvoicesViewModel vm;
+    37→    if (viewModel != null) {
+    38→      vm = viewModel!;
+    39→    } else {
+    40→      vm = SalesInvoicesViewModel(saleRepo: app.sales!);
+    41→      unawaited(vm.load());
+    42→    }
+    43→    return ChangeNotifierProvider<SalesInvoicesViewModel>.value(
+    44→      value: vm,
+    45→      // تحديث حي عند تبديل التبويب/الرجوع: فاتورة جديدة تُرحَّل في الكاشير
+    46→      // (نفس فرع التبويب أو غيره) والقائمة تُستعاد من IndexedStack بلا rebuild.
+    47→      child: RefreshOnActive(
+    48→        routePattern: RegExp(r'^/sell/invoices$'),
+    49→        onActivate: vm.load,
+    50→        child: const _SalesInvoicesBody(),
+    51→      ),
+    52→    );
+    53→  }
+    54→}
+    55→
+    56→class _SalesInvoicesBody extends StatefulWidget {
+    57→  const _SalesInvoicesBody();
+    58→
+    59→  @override
+    60→  State<_SalesInvoicesBody> createState() => _SalesInvoicesBodyState();
+    61→}
+    62→
+    63→class _SalesInvoicesBodyState extends State<_SalesInvoicesBody> {
+    64→  final TextEditingController _searchController = TextEditingController();
+    65→
+    66→  @override
+    67→  void dispose() {
+    68→    _searchController.dispose();
+    69→    super.dispose();
+    70→  }
+    71→
+    72→  @override
+    73→  Widget build(BuildContext context) {
+    74→    final vm = context.watch<SalesInvoicesViewModel>();
+    75→    final l10n = AppLocalizations.of(context)!;
+    76→
+    77→    return Scaffold(
+    78→      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    79→      appBar: AppBar(
+    80→        leading: BackButton(onPressed: () => context.go('/sell')),
+    81→        title: Text(l10n.sellInvoicesTitle),
+    82→      ),
+    83→      body: Column(
+    84→        children: [
+    85→          Padding(
+    86→            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+    87→            child: TextField(
+    88→              key: const Key('sell_invoices_search_field'),
+    89→              controller: _searchController,
+    90→              onChanged: vm.setFilter,
+    91→              textInputAction: TextInputAction.search,
+    92→              decoration: InputDecoration(
+    93→                hintText: l10n.sellInvoicesSearchHint,
+    94→                prefixIcon: const Icon(Icons.search_rounded),
+    95→                suffixIcon: _searchController.text.isEmpty
+    96→                    ? null
+    97→                    : IconButton(
+    98→                        icon: const Icon(Icons.close_rounded, size: 20),
+    99→                        onPressed: () {
+   100→                          _searchController.clear();
+   101→                          vm.setFilter('');
+   102→                        },
+   103→                      ),
+   104→              ),
+   105→            ),
+   106→          ),
+   107→          const SizedBox(height: 10),
+   108→          Expanded(child: _buildContent(context, vm)),
+   109→        ],
+   110→      ),
+   111→    );
+   112→  }
+   113→
+   114→  Widget _buildContent(BuildContext context, SalesInvoicesViewModel vm) {
+   115→    final l10n = AppLocalizations.of(context)!;
+   116→    final state = vm.state;
+   117→    if (state.loading) {
+   118→      return ListView(
+   119→        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   120→        children: const [ListSkeleton(rows: 7)],
+   121→      );
+   122→    }
+   123→    if (state.error != null) {
+   124→      return ListView(
+   125→        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   126→        children: [
+   127→          ErrorState(
+   128→            title: l10n.genericErrorTitle,
+   129→            message: l10n.dbOpenErrorMessage,
+   130→            technicalDetails: state.error.toString(),
+   131→            retryLabel: l10n.commonRetry,
+   132→            onRetry: vm.load,
+   133→            compact: true,
+   134→          ),
+   135→        ],
+   136→      );
+   137→    }
+   138→    if (state.invoices.isEmpty) {
+   139→      return ListView(
+   140→        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   141→        children: [
+   142→          EmptyState(
+   143→            icon: Icons.receipt_long_rounded,
+   144→            title: l10n.sellInvoicesEmptyTitle,
+   145→            message: l10n.sellInvoicesEmptyBody,
+   146→            actionLabel: l10n.sellHomeNewInvoice,
+   147→            onAction: () => context.go('/sell/new'),
+   148→            compact: true,
+   149→          ),
+   150→        ],
+   151→      );
+   152→    }
+   153→    final visible = state.visible;
+   154→    if (visible.isEmpty) {
+   155→      return ListView(
+   156→        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   157→        children: [
+   158→          EmptyState(
+   159→            icon: Icons.search_off_rounded,
+   160→            title: l10n.sellInvoicesNoResultsTitle,
+   161→            message: l10n.sellInvoicesNoResultsBody,
+   162→            compact: true,
+   163→          ),
+   164→        ],
+   165→      );
+   166→    }
+   167→    return ListView(
+   168→      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   169→      children: [
+   170→        for (final invoice in visible)
+   171→          Padding(
+   172→            padding: const EdgeInsets.only(bottom: 12),
+   173→            child: _InvoiceCard(invoice: invoice),
+   174→          ),
+   175→      ],
+   176→    );
+   177→  }
+   178→}
+   179→
+   180→/// بطاقة فاتورة واحدة في القائمة.
+   181→class _InvoiceCard extends StatelessWidget {
+   182→  const _InvoiceCard({required this.invoice});
+   183→
+   184→  final SaleInvoiceSummary invoice;
+   185→
+   186→  @override
+   187→  Widget build(BuildContext context) {
+   188→    final l10n = AppLocalizations.of(context)!;
+   189→    final scheme = Theme.of(context).colorScheme;
+   190→    final colors = FinColors.of(context);
+   191→    final local = invoice.issuedAt.toLocal();
+   192→
+   193→    return FinCard(
+   194→      onTap: () => context.go('/sell/invoices/${invoice.id}'),
+   195→      padding: const EdgeInsets.all(14),
+   196→      child: Column(
+   197→        crossAxisAlignment: CrossAxisAlignment.stretch,
+   198→        children: [
+   199→          Row(
+   200→            children: [
+   201→              Expanded(
+   202→                child: Text(
+   203→                  invoice.invoiceNo,
+   204→                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+   205→                    fontWeight: FontWeight.w800,
+   206→                    fontFeatures: FinText.tabularNums,
+   207→                  ),
+   208→                ),
+   209→              ),
+   210→              PayStatusChip(method: invoice.payStatus),
+   211→            ],
+   212→          ),
+   213→          const SizedBox(height: 4),
+   214→          Row(
+   215→            children: [
+   216→              Expanded(
+   217→                child: Text(
+   218→                  invoice.customerName ?? l10n.sellCashCustomer,
+   219→                  style: Theme.of(context).textTheme.bodyMedium,
+   220→                  maxLines: 1,
+   221→                  overflow: TextOverflow.ellipsis,
+   222→                ),
+   223→              ),
+   224→              Text(
+   225→                '${sellFormatDate(local)} · ${sellFormatTime(local)}',
+   226→                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   227→                  color: scheme.onSurfaceVariant,
+   228→                  fontFeatures: FinText.tabularNums,
+   229→                ),
+   230→              ),
+   231→            ],
+   232→          ),
+   233→          const SizedBox(height: 10),
+   234→          Row(
+   235→            crossAxisAlignment: CrossAxisAlignment.end,
+   236→            children: [
+   237→              Expanded(
+   238→                child: Column(
+   239→                  crossAxisAlignment: CrossAxisAlignment.start,
+   240→                  children: [
+   241→                    Text(
+   242→                      l10n.sellInvoicesPaidLabel,
+   243→                      style: Theme.of(context).textTheme.labelSmall,
+   244→                    ),
+   245→                    AmountText(
+   246→                      amount: invoice.paidAmount,
+   247→                      sign: FinSign.incoming,
+   248→                      decimals: _decimals(invoice.paidAmount),
+   249→                    ),
+   250→                  ],
+   251→                ),
+   252→              ),
+   253→              if (invoice.dueAmount > 0)
+   254→                Expanded(
+   255→                  child: Column(
+   256→                    crossAxisAlignment: CrossAxisAlignment.start,
+   257→                    children: [
+   258→                      Text(
+   259→                        l10n.sellInvoicesDueLabel,
+   260→                        style: Theme.of(context).textTheme.labelSmall,
+   261→                      ),
+   262→                      AmountText(
+   263→                        amount: invoice.dueAmount,
+   264→                        sign: FinSign.outgoing,
+   265→                        decimals: _decimals(invoice.dueAmount),
+   266→                      ),
+   267→                    ],
+   268→                  ),
+   269→                ),
+   270→              Column(
+   271→                crossAxisAlignment: CrossAxisAlignment.end,
+   272→                children: [
+   273→                  Row(
+   274→                    children: [
+   275→                      AmountText(
+   276→                        amount: invoice.total,
+   277→                        decimals: _decimals(invoice.total),
+   278→                      ),
+   279→                      if (invoice.currencyCode != null) ...[
+   280→                        const SizedBox(width: 4),
+   281→                        Text(
+   282→                          invoice.currencyCode!,
+   283→                          style: Theme.of(context).textTheme.labelSmall
+   284→                              ?.copyWith(color: colors.gold),
+   285→                        ),
+   286→                      ],
+   287→                    ],
+   288→                  ),
+   289→                  Text(
+   290→                    l10n.sellInvoicesTotalLabel,
+   291→                    style: Theme.of(context).textTheme.labelSmall,
+   292→                  ),
+   293→                ],
+   294→              ),
+   295→            ],
+   296→          ),
+   297→        ],
+   298→      ),
+   299→    );
+   300→  }
+   301→
+   302→  static int _decimals(double value) =>
+   303→      value == value.truncateToDouble() ? 0 : 2;
+   304→}
+   305→
+   306→/// شاشة تفاصيل فاتورة البيع (مسار مقترح `/sell/invoices/:id`).
+   307→class SaleInvoiceDetailScreen extends StatelessWidget {
+   308→  const SaleInvoiceDetailScreen({super.key, required this.invoiceId});
+   309→
+   310→  final int invoiceId;
+   311→
+   312→  @override
+   313→  Widget build(BuildContext context) {
+   314→    final app = context.read<AppController>();
+   315→    final vm = SaleInvoiceDetailViewModel(
+   316→      saleRepo: app.sales!,
+   317→      invoiceId: invoiceId,
+   318→    );
+   319→    unawaited(vm.load());
+   320→    return ChangeNotifierProvider<SaleInvoiceDetailViewModel>.value(
+   321→      value: vm,
+   322→      child: const _InvoiceDetailBody(),
+   323→    );
+   324→  }
+   325→}
+   326→
+   327→class _InvoiceDetailBody extends StatelessWidget {
+   328→  const _InvoiceDetailBody();
+   329→
+   330→  @override
+   331→  Widget build(BuildContext context) {
+   332→    final vm = context.watch<SaleInvoiceDetailViewModel>();
+   333→    final l10n = AppLocalizations.of(context)!;
+   334→    final state = vm.state;
+   335→
+   336→    return Scaffold(
+   337→      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+   338→      appBar: AppBar(
+   339→        leading: BackButton(onPressed: () => context.go('/sell/invoices')),
+   340→        title: Text(
+   341→          state.detail?.invoice.invoiceNo ?? l10n.sellInvoiceDetailTitle,
+   342→        ),
+   343→        actions: [
+   344→          // طباعة/مشاركة PDF (الشريحة 7) — متاح فور اكتمال التفاصيل.
+   345→          if (state.detail != null)
+   346→            IconButton(
+   347→              icon: const Icon(Icons.picture_as_pdf_rounded),
+   348→              tooltip: l10n.printingPdfTooltip,
+   349→              onPressed: () =>
+   350→                  openLoadedInvoicePdfPreview(context, state.detail!),
+   351→            ),
+   352→        ],
+   353→      ),
+   354→      body: state.loading
+   355→          ? ListView(
+   356→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   357→              children: const [ListSkeleton(rows: 6)],
+   358→            )
+   359→          : state.error != null
+   360→          ? ListView(
+   361→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   362→              children: [
+   363→                ErrorState(
+   364→                  title: l10n.genericErrorTitle,
+   365→                  message: l10n.dbOpenErrorMessage,
+   366→                  technicalDetails: state.error.toString(),
+   367→                  retryLabel: l10n.commonRetry,
+   368→                  onRetry: vm.load,
+   369→                  compact: true,
+   370→                ),
+   371→              ],
+   372→            )
+   373→          : state.detail == null
+   374→          ? ListView(
+   375→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   376→              children: [
+   377→                EmptyState(
+   378→                  icon: Icons.receipt_long_rounded,
+   379→                  title: l10n.sellInvoiceNotFoundTitle,
+   380→                  message: l10n.sellInvoiceNotFoundBody,
+   381→                  compact: true,
+   382→                ),
+   383→              ],
+   384→            )
+   385→          : _InvoiceDetailContent(detail: state.detail!),
+   386→    );
+   387→  }
+   388→}
+   389→
+   390→class _InvoiceDetailContent extends StatelessWidget {
+   391→  const _InvoiceDetailContent({required this.detail});
+   392→
+   393→  final SaleInvoiceDetail detail;
+   394→
+   395→  @override
+   396→  Widget build(BuildContext context) {
+   397→    final l10n = AppLocalizations.of(context)!;
+   398→    final scheme = Theme.of(context).colorScheme;
+   399→    final invoice = detail.invoice;
+   400→    final local = invoice.issuedAt.toLocal();
+   401→
+   402→    return ListView(
+   403→      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   404→      children: [
+   405→        // رأس الفاتورة.
+   406→        FinCard(
+   407→          padding: const EdgeInsets.all(14),
+   408→          child: Column(
+   409→            crossAxisAlignment: CrossAxisAlignment.stretch,
+   410→            children: [
+   411→              Row(
+   412→                children: [
+   413→                  Expanded(
+   414→                    child: Text(
+   415→                      invoice.invoiceNo,
+   416→                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+   417→                        fontWeight: FontWeight.w800,
+   418→                        fontFeatures: FinText.tabularNums,
+   419→                      ),
+   420→                    ),
+   421→                  ),
+   422→                  PayStatusChip(method: invoice.payStatus, dense: false),
+   423→                ],
+   424→              ),
+   425→              const SizedBox(height: 6),
+   426→              if (invoice.rateIsFallback) ...[
+   427→                const FallbackRateBadge(dense: false),
+   428→                const SizedBox(height: 8),
+   429→              ],
+   430→              Text(
+   431→                '${sellFormatDate(local)} · ${sellFormatTime(local)}',
+   432→                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   433→                  color: scheme.onSurfaceVariant,
+   434→                  fontFeatures: FinText.tabularNums,
+   435→                ),
+   436→              ),
+   437→              const SizedBox(height: 8),
+   438→              _InfoRow(
+   439→                label: l10n.sellDetailCustomer,
+   440→                value: detail.customerName ?? l10n.sellCashCustomer,
+   441→              ),
+   442→              if (detail.customerPhone != null &&
+   443→                  detail.customerPhone!.isNotEmpty)
+   444→                _InfoRow(
+   445→                  label: l10n.sellDetailPhone,
+   446→                  value: detail.customerPhone!,
+   447→                ),
+   448→              _InfoRow(
+   449→                label: l10n.sellDetailCurrency,
+   450→                value:
+   451→                    '${detail.currencyCode ?? ''}'
+   452→                    '${detail.currencySymbol != null ? ' · ${detail.currencySymbol}' : ''}',
+   453→              ),
+   454→              if (invoice.exchangeRate != 1)
+   455→                _InfoRow(
+   456→                  label: l10n.sellDetailExchangeRate,
+   457→                  value: AmountText.format(invoice.exchangeRate, 4),
+   458→                ),
+   459→            ],
+   460→          ),
+   461→        ),
+   462→        const SizedBox(height: 14),
+   463→        // البنود.
+   464→        FinCard(
+   465→          padding: const EdgeInsets.all(14),
+   466→          child: Column(
+   467→            crossAxisAlignment: CrossAxisAlignment.stretch,
+   468→            children: [
+   469→              Text(
+   470→                l10n.sellDetailItemsSection,
+   471→                style: Theme.of(context).textTheme.titleMedium,
+   472→              ),
+   473→              const SizedBox(height: 6),
+   474→              for (final item in detail.items) _ItemRow(item: item),
+   475→            ],
+   476→          ),
+   477→        ),
+   478→        const SizedBox(height: 14),
+   479→        // الإجماليات.
+   480→        FinCard(
+   481→          padding: const EdgeInsets.all(14),
+   482→          child: Column(
+   483→            crossAxisAlignment: CrossAxisAlignment.stretch,
+   484→            children: [
+   485→              _AmountRow(
+   486→                label: l10n.sellTotalsSubtotal,
+   487→                value: invoice.subtotal,
+   488→              ),
+   489→              if (invoice.discountAmount > 0)
+   490→                _AmountRow(
+   491→                  label: l10n.sellDetailTotalDiscount,
+   492→                  value: invoice.discountAmount,
+   493→                  sign: FinSign.outgoing,
+   494→                ),
+   495→              Divider(
+   496→                height: 18,
+   497→                color: scheme.outlineVariant.withValues(alpha: 0.4),
+   498→              ),
+   499→              Row(
+   500→                children: [
+   501→                  Expanded(
+   502→                    child: Text(
+   503→                      l10n.sellTotalsGrandTotal,
+   504→                      style: Theme.of(context).textTheme.titleMedium
+   505→                          ?.copyWith(fontWeight: FontWeight.w800),
+   506→                    ),
+   507→                  ),
+   508→                  AmountText(
+   509→                    amount: invoice.total,
+   510→                    size: AmountSize.large,
+   511→                    decimals: _decimals(invoice.total),
+   512→                  ),
+   513→                ],
+   514→              ),
+   515→              const SizedBox(height: 6),
+   516→              _AmountRow(
+   517→                label: l10n.sellInvoicesPaidLabel,
+   518→                value: invoice.paidAmount,
+   519→                sign: FinSign.incoming,
+   520→              ),
+   521→              _AmountRow(
+   522→                label: l10n.sellInvoicesDueLabel,
+   523→                value: invoice.dueAmount,
+   524→              ),
+   525→            ],
+   526→          ),
+   527→        ),
+   528→        const SizedBox(height: 14),
+   529→        // ربح الفاتورة (FR-09-11) — قسم إداري صغير أسفل الإجماليات.
+   530→        _ManagerProfitCard(invoice: invoice),
+   531→        const SizedBox(height: 14),
+   532→        // P1-1: مرتجع بيع SRN عن هذه الفاتورة — الربط العميق ?invoice=
+   533→        // جاهز في الموجّه (نفس نمط مرتجع الشراء في قائمة الشراء).
+   534→        OutlinedButton.icon(
+   535→          key: const Key('sell_detail_return_button'),
+   536→          onPressed: () =>
+   537→              context.go('/purchases/returns/sale?invoice=${invoice.id}'),
+   538→          style: OutlinedButton.styleFrom(
+   539→            minimumSize: const Size.fromHeight(52),
+   540→          ),
+   541→          icon: const Icon(Icons.assignment_return_rounded, size: 20),
+   542→          label: Text(l10n.sellFixDetailReturnAction),
+   543→        ),
+   544→      ],
+   545→    );
+   546→  }
+   547→
+   548→  static int _decimals(double value) =>
+   549→      value == value.truncateToDouble() ? 0 : 2;
+   550→}
+   551→
+   552→class _InfoRow extends StatelessWidget {
+   553→  const _InfoRow({required this.label, required this.value});
+   554→
+   555→  final String label;
+   556→  final String value;
+   557→
+   558→  @override
+   559→  Widget build(BuildContext context) {
+   560→    final scheme = Theme.of(context).colorScheme;
+   561→    return Padding(
+   562→      padding: const EdgeInsets.symmetric(vertical: 2),
+   563→      child: Row(
+   564→        children: [
+   565→          Text(
+   566→            label,
+   567→            style: Theme.of(context).textTheme.bodySmall
+   568→                ?.copyWith(color: scheme.onSurfaceVariant),
+   569→          ),
+   570→          const Spacer(),
+   571→          // درع الفيض: القيمة الطويلة تُقتطع بلطف بدل فيض الصف
+   572→          // (توحيداً مع صفوف معلومات عرض السعر).
+   573→          Flexible(
+   574→            child: Text(
+   575→              value,
+   576→              maxLines: 1,
+   577→              overflow: TextOverflow.ellipsis,
+   578→              style: Theme.of(context).textTheme.bodySmall
+   579→                  ?.copyWith(fontWeight: FontWeight.w700),
+   580→            ),
+   581→          ),
+   582→        ],
+   583→      ),
+   584→    );
+   585→  }
+   586→}
+   587→
+   588→class _ItemRow extends StatelessWidget {
+   589→  const _ItemRow({required this.item});
+   590→
+   591→  final SaleInvoiceItemLine item;
+   592→
+   593→  @override
+   594→  Widget build(BuildContext context) {
+   595→    final scheme = Theme.of(context).colorScheme;
+   596→    final colors = FinColors.of(context);
+   597→    final l10n = AppLocalizations.of(context)!;
+   598→    return Padding(
+   599→      padding: const EdgeInsets.symmetric(vertical: 6),
+   600→      child: Row(
+   601→        crossAxisAlignment: CrossAxisAlignment.start,
+   602→        children: [
+   603→          Expanded(
+   604→            flex: 3,
+   605→            child: Column(
+   606→              crossAxisAlignment: CrossAxisAlignment.start,
+   607→              children: [
+   608→                Text(
+   609→                  item.lineDesc ?? l10n.sellDetailUnknownItem,
+   610→                  style: Theme.of(context).textTheme.bodyMedium
+   611→                      ?.copyWith(fontWeight: FontWeight.w700),
+   612→                  maxLines: 2,
+   613→                  overflow: TextOverflow.ellipsis,
+   614→                ),
+   615→                const SizedBox(height: 2),
+   616→                Text(
+   617→                  '${l10n.sellDetailQtyLabel} ${sellQtyText(item.qty)} × '
+   618→                  '${AmountText.format(item.unitPrice, _decimals(item.unitPrice))}'
+   619→                  '${item.discountAmount > 0 ? ' · ${l10n.sellDetailDiscountLabel} ${AmountText.format(item.discountAmount, 2)}' : ''}'
+   620→                  // UX-4: البونص يظهر بجوار الكمية «+N مجاني» عند وجوده.
+   621→                  '${item.freeQty > 0.000001 ? ' · ${l10n.bonusDetailSuffix(sellQtyText(item.freeQty))}' : ''}',
+   622→                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   623→                    color: scheme.onSurfaceVariant,
+   624→                    fontFeatures: FinText.tabularNums,
+   625→                  ),
+   626→                ),
+   627→                if ((item.notes ?? '').isNotEmpty)
+   628→                  Text(
+   629→                    item.notes!,
+   630→                    style: Theme.of(context).textTheme.labelSmall
+   631→                        ?.copyWith(color: colors.gold),
+   632→                    maxLines: 1,
+   633→                    overflow: TextOverflow.ellipsis,
+   634→                  ),
+   635→              ],
+   636→            ),
+   637→          ),
+   638→          Expanded(
+   639→            child: Align(
+   640→              alignment: AlignmentDirectional.centerEnd,
+   641→              child: AmountText(
+   642→                amount: item.lineTotal,
+   643→                decimals: _decimals(item.lineTotal),
+   644→              ),
+   645→            ),
+   646→          ),
+   647→        ],
+   648→      ),
+   649→    );
+   650→  }
+   651→
+   652→  static int _decimals(double value) =>
+   653→      value == value.truncateToDouble() ? 0 : 2;
+   654→}
+   655→
+   656→class _AmountRow extends StatelessWidget {
+   657→  const _AmountRow({
+   658→    required this.label,
+   659→    required this.value,
+   660→    this.sign = FinSign.neutral,
+   661→  });
+   662→
+   663→  final String label;
+   664→  final double value;
+   665→  final FinSign sign;
+   666→
+   667→  @override
+   668→  Widget build(BuildContext context) {
+   669→    final scheme = Theme.of(context).colorScheme;
+   670→    return Padding(
+   671→      padding: const EdgeInsets.symmetric(vertical: 2),
+   672→      child: Row(
+   673→        children: [
+   674→          Expanded(
+   675→            child: Text(
+   676→              label,
+   677→              style: Theme.of(context).textTheme.bodyMedium
+   678→                  ?.copyWith(color: scheme.onSurfaceVariant),
+   679→            ),
+   680→          ),
+   681→          AmountText(
+   682→            amount: value,
+   683→            sign: sign,
+   684→            decimals: value == value.truncateToDouble() ? 0 : 2,
+   685→          ),
+   686→        ],
+   687→      ),
+   688→    );
+   689→  }
+   690→}
+   691→
+   692→/// قسم ربح الفاتورة الإداري (FR-09-11): التكلفة + الربح + هامش الربح ٪.
+   693→///
+   694→/// **قرار موثق**: V1 فيها مدير واحد حصراً (بلا أدوار متعددة) → القسم
+   695→/// يُعرض **دائماً** في تفاصيل فاتورة البيع (بلا بوابة صلاحيات). الربح
+   696→/// = `total_base − cost_total` — كلا الطرفان بالعملة الأساسية أصلاً
+   697→/// (cost_total يُجمَّع من line_cost بالأساس — sale_repository 8-د)،
+   698→/// والهامش يظهر فقط عند تكلفة موجبة (لا قسمة على صفر).
+   699→class _ManagerProfitCard extends StatelessWidget {
+   700→  const _ManagerProfitCard({required this.invoice});
+   701→
+   702→  final SaleInvoice invoice;
+   703→
+   704→  @override
+   705→  Widget build(BuildContext context) {
+   706→    final l10n = AppLocalizations.of(context)!;
+   707→    final scheme = Theme.of(context).colorScheme;
+   708→    final colors = FinColors.of(context);
+   709→    final cost = invoice.costTotal;
+   710→    // كلا الطرفين بالعملة الأساسية أصلاً — لا خلط عملات (5.4-7).
+   711→    final profit = invoice.totalBase - cost;
+   712→    final sign = profit > 0.005
+   713→        ? FinSign.incoming
+   714→        : profit < -0.005
+   715→        ? FinSign.outgoing
+   716→        : FinSign.neutral;
+   717→    final margin = cost > 0.005 ? profit / cost * 100 : null;
+   718→    return FinCard(
+   719→      key: const Key('invoice_profit_card'),
+   720→      padding: const EdgeInsets.all(14),
+   721→      child: Column(
+   722→        crossAxisAlignment: CrossAxisAlignment.stretch,
+   723→        children: [
+   724→          Row(
+   725→            children: [
+   726→              Icon(Icons.lock_outline_rounded, size: 16, color: colors.gold),
+   727→              const SizedBox(width: 6),
+   728→              Text(
+   729→                l10n.invoiceProfitSectionTitle,
+   730→                style: Theme.of(context).textTheme.titleMedium
+   731→                    ?.copyWith(fontWeight: FontWeight.w800),
+   732→              ),
+   733→              const Spacer(),
+   734→              Container(
+   735→                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+   736→                decoration: BoxDecoration(
+   737→                  color: colors.gold.withValues(alpha: 0.14),
+   738→                  borderRadius: BorderRadius.circular(8),
+   739→                ),
+   740→                child: Text(
+   741→                  l10n.invoiceProfitManagerHint,
+   742→                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   743→                    color: colors.gold,
+   744→                    fontWeight: FontWeight.w800,
+   745→                  ),
+   746→                ),
+   747→              ),
+   748→            ],
+   749→          ),
+   750→          const SizedBox(height: 6),
+   751→          _InfoRow(
+   752→            label: l10n.invoiceCostLabel,
+   753→            value: AmountText.format(cost, _decimalsValue(cost)),
+   754→          ),
+   755→          Padding(
+   756→            padding: const EdgeInsets.symmetric(vertical: 2),
+   757→            child: Row(
+   758→              children: [
+   759→                Expanded(
+   760→                  child: Text(
+   761→                    l10n.invoiceProfitLabel,
+   762→                    style: Theme.of(context).textTheme.bodyMedium
+   763→                        ?.copyWith(color: scheme.onSurfaceVariant),
+   764→                  ),
+   765→                ),
+   766→                AmountText(
+   767→                  amount: profit.abs(),
+   768→                  sign: sign,
+   769→                  decimals: _decimalsValue(profit),
+   770→                ),
+   771→              ],
+   772→            ),
+   773→          ),
+   774→          if (margin != null)
+   775→            _InfoRow(
+   776→              label: l10n.invoiceMarginLabel,
+   777→              value: '${margin.toStringAsFixed(1)}%',
+   778→            ),
+   779→          const SizedBox(height: 6),
+   780→          Text(
+   781→            l10n.profitBaseCurrencyNote,
+   782→            style: Theme.of(context).textTheme.labelSmall
+   783→                ?.copyWith(color: scheme.onSurfaceVariant),
+   784→          ),
+   785→        ],
+   786→      ),
+   787→    );
+   788→  }
+   789→
+   790→  static int _decimalsValue(double value) =>
+   791→      value == value.truncateToDouble() ? 0 : 2;
+   792→}
+   793→

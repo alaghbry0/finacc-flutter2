@@ -8688,6 +8688,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Free quantity (bonus): {name}'**
   String purBonusEditTitle(Object name);
+
+  /// No description provided for @sellQtyEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quantity: {name}'**
+  String sellQtyEditTitle(Object name);
+
+  /// No description provided for @purchaseQtyEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit quantity: {name}'**
+  String purchaseQtyEditTitle(Object name);
+
+  /// No description provided for @invoiceVoidBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Voided'**
+  String get invoiceVoidBadge;
+
+  /// No description provided for @invoiceVoidButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Void invoice'**
+  String get invoiceVoidButton;
+
+  /// No description provided for @invoiceVoidConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void this invoice?'**
+  String get invoiceVoidConfirmTitle;
+
+  /// No description provided for @invoiceVoidConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Voiding {no} creates full counter movements (stock, cash and balances) in one transaction — nothing is deleted: the invoice stays visible with «Voided» status and its number is never reused.'**
+  String invoiceVoidConfirmBody(Object no);
+
+  /// No description provided for @invoiceVoidConfirmContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get invoiceVoidConfirmContinue;
+
+  /// No description provided for @invoiceVoidFinalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Final confirmation — void invoice'**
+  String get invoiceVoidFinalTitle;
+
+  /// No description provided for @invoiceVoidFinalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to void {no}? This cannot be undone.'**
+  String invoiceVoidFinalBody(Object no);
+
+  /// No description provided for @invoiceVoidReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get invoiceVoidReasonLabel;
+
+  /// No description provided for @invoiceVoidConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Void now'**
+  String get invoiceVoidConfirmAction;
+
+  /// No description provided for @invoiceVoidedSnackBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice {no} voided — full counter movements recorded.'**
+  String invoiceVoidedSnackBar(Object no);
+
+  /// No description provided for @invoiceVoidedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused.'**
+  String get invoiceVoidedNote;
 }
 
 class _AppLocalizationsDelegate
