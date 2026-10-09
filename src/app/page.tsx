@@ -292,13 +292,16 @@ const slices2toPre1Items: React.ReactNode[] = [
     وتباين عالٍ) + أرقام جدولية <Mono>tnum</Mono> بخط Noto — و<b>قوالب
     الفواتير القابلة للتخصيص</b>: كلاسيكي <Mono>A4</Mono> أفقي بنموذج
     المالك حرفياً (إطار/شعار وسط/شارة زرقاء/رقم أحمر/جدول سميك برأس
-    مظلل/إجماليات كريمية وباقٍ أحمر/تواقيع ثلاث/ختم) + بسيط + حراري{" "}
-    <Mono>80mm</Mono> بباركود <Mono>Code128</Mono> + شاشة تخصيص بألوان
-    ومعاينة حية — و<b>الكميات المجانية/بونص</b>: تُفعّل وتُخفى من
-    التفضيلات، لاحقة <span dir="ltr">(+N مجاني)</span> بالفواتير
-    والقوالب، تحاسب سليم (<Mono>COGS</Mono> على الكلي، الإيراد المدفوع
-    فقط) — هجرات <Mono>v3/v4/v5</Mono> و149 اختباراً جديداً ترفع الحزمة
-    إلى 752
+    مظلل/إجماليات كريمية وباقٍ أحمر/تواقيع ثلاث/ختم) + بسيط + شاشة
+    تخصيص بألوان ومعاينة حية — و<b>الكميات المجانية/بونص</b> ديناميكية
+    بلا أي إعدادات: لاحقة <span dir="ltr">(+N مجاني)</span> تظهر حصراً
+    عند وجود بونص بالبيع والشراء، تحاسب سليم (<Mono>COGS</Mono> على
+    الكلي، الإيراد المدفوع فقط، <Mono>WAC</Mono> على المستلم الكلي) —
+    ثم <b>جولة R16</b>: شفاء معاينة الطباعة جذرياً (تحميل{" "}
+    <Mono>pdf.js</Mono> قبل الإقلاع)، محرر سطر موحد (كمية/مجانية/سعر/
+    خصم)، حذف القالب الحراري بقرار المالك، زر عودة لشاشة التقارير،
+    نموذج صنف قابل للتمرير، و<b>CI يبني APK آلياً مع كل إصدار</b> —
+    هجرات <Mono>v3→v6</Mono> و165 اختباراً جديداً ترفع الحزمة إلى 768
   </>,
 ];
 
@@ -311,7 +314,7 @@ const qualityGates = [
   {
     icon: FlaskConical,
     name: "flutter test",
-    result: "752/752 اختباراً خضراء (+149 منذ v0.10.0)",
+    result: "768/768 اختباراً خضراء (+16 بجولة R16 — مجموع +165 منذ v0.10.0)",
   },
   {
     icon: Braces,
@@ -421,7 +424,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                v0.11.0 — التخصيص والقوالب والبونص
+                v0.11.1 — علاج شامل وCI للإصدارات
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -447,7 +450,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            v0.11.0 — التخصيص والقوالب والبونص
+            v0.11.1 — علاج شامل وCI للإصدارات
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -528,7 +531,7 @@ export default function FinAccStage1DeliveryPanel() {
 
             {/* ------------------ بطاقة حالة المعاينة ------------------ */}
             <div className="space-y-4">
-              {/* جديد هذا البناء — التخصيص والقوالب والبونص */}
+              {/* جديد هذا البناء — علاج شكاوى المالك الست */}
               <Card className="gap-4 border-[#C9A96A]/30 bg-gradient-to-l from-[#C9A96A]/[0.08] via-[#0F1D19]/95 to-[#0F1D19]/95 py-5 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
                 <CardHeader className="px-5">
                   <CardTitle className="flex flex-wrap items-center gap-2.5 text-sm font-extrabold">
@@ -536,9 +539,9 @@ export default function FinAccStage1DeliveryPanel() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E3C88F] opacity-60" />
                       <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#E3C88F]" />
                     </span>
-                    جديد هذا البناء — التخصيص والقوالب والبونص
+                    جديد هذا البناء — علاج شكاوى المالك الست
                     <Badge className="gap-1 border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
-                      v0.11.0
+                      v0.11.1
                     </Badge>
                   </CardTitle>
                   <CardDescription className="text-xs text-[#9DB5AC]">
@@ -937,7 +940,7 @@ export default function FinAccStage1DeliveryPanel() {
                   الشرائح 2–10 وما قبل 1.0 — النواة التشغيلية والتخصيص والقوالب والبونص
                   <Badge className="ml-auto gap-1 border-[#C9A96A]/30 bg-[#C9A96A]/10 text-[10px] font-bold text-[#E3C88F]">
                     <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-                    v0.4.0 → v0.11.0
+                    v0.4.0 → v0.11.1
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-sm text-[#9DB5AC]">
