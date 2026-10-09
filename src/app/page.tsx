@@ -301,7 +301,15 @@ const slices2toPre1Items: React.ReactNode[] = [
     <Mono>pdf.js</Mono> قبل الإقلاع)، محرر سطر موحد (كمية/مجانية/سعر/
     خصم)، حذف القالب الحراري بقرار المالك، زر عودة لشاشة التقارير،
     نموذج صنف قابل للتمرير، و<b>CI يبني APK آلياً مع كل إصدار</b> —
-    هجرات <Mono>v3→v6</Mono> و165 اختباراً جديداً ترفع الحزمة إلى 768
+    هجرات <Mono>v3→v6</Mono> — ثم <b>جولة R17 (الشريحة 11)</b>:
+    <b>كتابة الكميات مباشرة بسطور الفواتير</b> (نقرة قيمة الكمية ←
+    تحرير فوري للبيع والشراء — طلب المالك المباشر) + <b>إبطال الفاتورة
+    FR-02-15</b> بحركات معاكسة كاملة داخل معاملة واحدة (مخزون بدفعات
+    <Mono>FEFO</Mono> + <Mono>WAC</Mono> + صندوق <Mono>reversal_of</Mono> +
+    أرصدة + قيد تدقيق، بتأكيد مزدوج وسبب) + <b>تنفيذ تدقيق التنقل
+    كاملاً</b>: تقليم نقاط الوصول الزائدة بالمحورّ (5←1 لقائمة
+    الفواتير)، دمج بلاطات الأطراف بواحدة، حذف الشاشة الميتة، واستخراج 7
+    ويدجت موحدة — +24 اختباراً ترفع الحزمة إلى 792
   </>,
 ];
 
@@ -314,7 +322,7 @@ const qualityGates = [
   {
     icon: FlaskConical,
     name: "flutter test",
-    result: "768/768 اختباراً خضراء (+16 بجولة R16 — مجموع +165 منذ v0.10.0)",
+    result: "792/792 اختباراً خضراء (+24 بجولة R17 — مجموع +189 منذ v0.10.0)",
   },
   {
     icon: Braces,
@@ -424,7 +432,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                v0.11.1 — علاج شامل وCI للإصدارات
+                v0.11.2 — كميات مباشرة وإبطال وتنقل نظيف
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -450,7 +458,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            v0.11.1 — علاج شامل وCI للإصدارات
+            v0.11.2 — كميات مباشرة وإبطال وتنقل نظيف
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -539,9 +547,9 @@ export default function FinAccStage1DeliveryPanel() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E3C88F] opacity-60" />
                       <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#E3C88F]" />
                     </span>
-                    جديد هذا البناء — علاج شكاوى المالك الست
+                    جديد هذا البناء — جولة R17 (الشريحة 11)
                     <Badge className="gap-1 border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
-                      v0.11.1
+                      v0.11.2
                     </Badge>
                   </CardTitle>
                   <CardDescription className="text-xs text-[#9DB5AC]">
@@ -553,16 +561,16 @@ export default function FinAccStage1DeliveryPanel() {
                     {[
                       {
                         icon: Sparkles,
-                        title: "قوالب الفواتير القابلة للتخصيص",
-                        desc: "كلاسيكي A4 أفقي بنموذج المالك حرفياً (إطار/شعار وسط/شارة زرقاء/رقم أحمر/جدول سميك برأس مظلل/إجماليات كريمية وباقٍ أحمر/تواقيع ثلاث/ختم) + بسيط + حراري 80mm بباركود Code128 — بألوان ومفاتيح إظهار ومعاينة حية",
-                        path: "المسار: المزيد ← الطباعة والفواتير",
+                        title: "كتابة الكميات مباشرة بسطور الفواتير",
+                        desc: "نقرة قيمة الكمية بسطر السلة (بيعاً وشراءً) تفتح تحريراً فورياً — اكتب 7 أو 2.5 بدل التنقل بمحرر السطر الكامل — طلب المالك المباشر",
+                        path: "المسار: البيع ← أضف صنفاً ← انقر قيمة الكمية بالسطر",
                         gold: true,
                       },
                       {
                         icon: PackageCheck,
-                        title: "الكميات المجانية (بونص)",
-                        desc: "تُفعّل وتُخفى من تفضيلات البيع — لاحقة (\u200E+N مجاني) بجوار الكمية بالفاتورة والقوالب الثلاثة، وتحاسب سليم: COGS على المنصرف الكلي والإيراد المدفوع حصراً",
-                        path: "المسار: المزيد ← تفضيلات البيع ← فعّل الكميات المجانية ثم أضف \u200E+N بسطر بالسلة",
+                        title: "إبطال الفاتورة (FR-02-15)",
+                        desc: "للفاتورة المكتملة فقط وبتأكيد مزدوج وسبب: حركات معاكسة كاملة داخل معاملة واحدة (مخزون FEFO + WAC + صندوق reversal_of + أرصدة) مع قيد تدقيق — تبقى بحالة «ملغاة» ورقمها لا يُعاد",
+                        path: "المسار: البيع ← فواتير المبيعات ← فاتورة مكتملة ← إبطال الفاتورة",
                         gold: true,
                       },
                       {
@@ -940,7 +948,7 @@ export default function FinAccStage1DeliveryPanel() {
                   الشرائح 2–10 وما قبل 1.0 — النواة التشغيلية والتخصيص والقوالب والبونص
                   <Badge className="ml-auto gap-1 border-[#C9A96A]/30 bg-[#C9A96A]/10 text-[10px] font-bold text-[#E3C88F]">
                     <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-                    v0.4.0 → v0.11.1
+                    v0.4.0 → v0.11.2
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-sm text-[#9DB5AC]">
