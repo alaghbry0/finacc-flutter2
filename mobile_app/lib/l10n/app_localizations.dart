@@ -8604,6 +8604,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tax number'**
   String get tmplTaxNumber;
+
+  /// No description provided for @bonusPrefsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free quantities (bonus)'**
+  String get bonusPrefsTitle;
+
+  /// No description provided for @bonusPrefsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A bonus field next to the quantity on sale invoice lines — stock dispatch includes the free units while revenue counts only the paid quantity'**
+  String get bonusPrefsDesc;
+
+  /// No description provided for @bonusQtyEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free quantity (bonus): {name}'**
+  String bonusQtyEditTitle(Object name);
+
+  /// No description provided for @bonusQtyChipEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus'**
+  String get bonusQtyChipEmpty;
+
+  /// No description provided for @bonusQtyChipValue.
+  ///
+  /// In en, this message translates to:
+  /// **'+{n} free'**
+  String bonusQtyChipValue(Object n);
+
+  /// No description provided for @bonusDetailSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'+{n} free'**
+  String bonusDetailSuffix(Object n);
+
+  /// No description provided for @bonusPrintSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'(+{n} free)'**
+  String bonusPrintSuffix(Object n);
 }
 
 class _AppLocalizationsDelegate

@@ -323,4 +323,91 @@ void main() {
       expect(roundCost(1.23454), 1.2345);
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // البونص/الكميات المجانية (UX-4) — الإيراد من qty حصراً
+  // ─────────────────────────────────────────────────────────────────────
+
+  group('البونص (UX-4) — التسعير لا يرى freeQty إطلاقاً', () {
+    test('نفس السلة ببونص وبلا بونص: كل المبالغ متطابقة حرفياً', () {
+      final plain = SalePricing.priceCart([
+        line(1, 10, 25),
+        line(2, 2, 100, type: SaleDiscountType.percent, discount: 10),
+      ]);
+      final withBonus = SalePricing.priceCart([
+        CartLine(
+          productId: 1,
+          qty: 10,
+          unitPrice: 25,
+          freeQty: 2, // بونص على السطر الأول.
+        ),
+        CartLine(
+          productId: 2,
+          qty: 2,
+          unitPrice: 100,
+          lineDiscountType: SaleDiscountType.percent,
+          lineDiscountValue: 10,
+          freeQty: 0.5,
+        ),
+      ]);
+      for (var i = 0; i < plain.lines.length; i++) {
+        expect(withBonus.lines[i].gross, plain.lines[i].gross);
+        expect(
+          withBonus.lines[i].lineDiscountAmount,
+          plain.lines[i].lineDiscountAmount,
+        );
+        expect(withBonus.lines[i].netFinal, plain.lines[i].netFinal);
+      }
+      expect(withBonus.totals.subtotal, plain.totals.subtotal);
+      expect(withBonus.totals.grandTotal, plain.totals.grandTotal);
+      // 10×25 + 200−20 = 430 كأن البونص غير موجود.
+      expect(withBonus.totals.grandTotal, 430);
+      // والتحقق يقبلها (بونص سليم ≥ 0).
+      expect(SalePricing.validateCart(withBonus.lines.map((l) => l.line).toList()), isNull);
+    });
+
+    test('validateCart يرفض بونص سالباً وغير الرقمي برسالة تحدد السطر', () {
+      expect(
+        SalePricing.validateCart([
+          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: -0.5),
+        ]),
+        contains('كمية البونص للسطر 1 لا يمكن أن تكون سالبة'),
+      );
+      expect(
+        SalePricing.validateCart([
+          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: double.nan),
+        ]),
+        contains('كمية البونص للسطر 1 غير صالحة'),
+      );
+      expect(
+        SalePricing.validateCart([
+          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: double.infinity),
+        ]),
+        contains('كمية البونص للسطر 1 غير صالحة'),
+      );
+    });
+
+    test('validateCart: ثالث منزلة مقبولة والرابعة مرفوضة (NUMERIC 12,3)', () {
+      // 0.333 سليمة (ضجيج النقطة العائمة 332.99999…94 ضمن التفاوت).
+      expect(
+        SalePricing.validateCart([
+          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 0.333),
+        ]),
+        isNull,
+      );
+      expect(
+        SalePricing.validateCart([
+          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 2.5),
+        ]),
+        isNull,
+      );
+      // 2.0005 أدق من الثالثة → رفض.
+      expect(
+        SalePricing.validateCart([
+          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 2.0005),
+        ]),
+        contains('ثلاث منازل عشرية'),
+      );
+    });
+  });
 }

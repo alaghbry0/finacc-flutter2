@@ -4945,4 +4945,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tmplTaxNumber => 'Tax number';
+
+  @override
+  String get bonusPrefsTitle => 'Free quantities (bonus)';
+
+  @override
+  String get bonusPrefsDesc =>
+      'A bonus field next to the quantity on sale invoice lines — stock dispatch includes the free units while revenue counts only the paid quantity';
+
+  @override
+  String bonusQtyEditTitle(Object name) {
+    return 'Free quantity (bonus): $name';
+  }
+
+  @override
+  String get bonusQtyChipEmpty => 'Bonus';
+
+  @override
+  String bonusQtyChipValue(Object n) {
+    return '+$n free';
+  }
+
+  @override
+  String bonusDetailSuffix(Object n) {
+    return '+$n free';
+  }
+
+  @override
+  String bonusPrintSuffix(Object n) {
+    return '(+$n free)';
+  }
 }

@@ -1293,4 +1293,135 @@ void main() {
       expect(await stockQty(item), 8);
     });
   });
+
+  // ═════════════════════════════════════════════════════════════════
+  // البونص والمرتجع (UX-4) — الاسترداد بأصل qty المدفوع حصراً
+  // ═════════════════════════════════════════════════════════════════
+
+  group('SRN — البونص غير قابل للاسترداد (V1)', () {
+    test(
+      'بيع 10+2: الاسترداد قيمة 10 والسقف 10 — إرجاع 12 (بالمجاني) يُرفض',
+      () async {
+        final item = await makeProduct('شامبو');
+        await postPurchase([
+          PurchaseLine(productId: item, qty: 20, unitCost: 100),
+        ]);
+        // بيع 10 + 2 مجاني: الإيراد 1500 والتكلفة 12×100 = 1200.
+        final saleId = await postSale([
+          CartLine(productId: item, qty: 10, unitPrice: 150, freeQty: 2),
+        ], paidCash: 1500);
+        final saleItem = await handle.db.rawQuery(
+          'SELECT free_qty, line_cost FROM invoice_item WHERE invoice_id = ?',
+          [saleId],
+        );
+        expect((saleItem.first['free_qty'] as num).toDouble(), 2);
+        expect((saleItem.first['line_cost'] as num).toDouble(), 1200);
+
+        // البنود القابلة للإرجاع: المتاح = المدفوع 10 حصراً (لا 12).
+        final returnable = await returns.saleReturnableLines(saleId);
+        expect(returnable.single.availableQty, 10);
+        expect(returnable.single.originalQty, 10);
+        expect(
+          returnable.single.unitCostSnapshot,
+          100, // 1200 / (10+2) — تكلفة الوحدة الفعلية.
+        );
+
+        // إرجاع 12 (محاولة استرداد المجاني) يُرفض بسقف المدفوع.
+        final rejected = await returns.postSaleReturn(
+          SaleReturnDraft(
+            originalInvoiceId: saleId,
+            lines: [
+              ReturnLineInput(
+                invoiceItemId: await firstItemId(saleId),
+                qty: 12,
+              ),
+            ],
+            refundMethod: ReturnRefundMethod.cash,
+            refundCash: 1800,
+            issuedAt: at,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(rejected.isErr, isTrue);
+        expect(rejected.errorOrNull, contains('تتجاوز المتاح للإرجاع'));
+        expect(rejected.errorOrNull, contains('10'));
+
+        // إرجاع المدفوع 10 كاملة: قيمة الاسترداد 10×150 = 1500 (لا
+        // أي قيمة عن المجاني) والتكلفة المستردة 10×100 = 1000.
+        final accepted = await returns.postSaleReturn(
+          SaleReturnDraft(
+            originalInvoiceId: saleId,
+            lines: [
+              ReturnLineInput(
+                invoiceItemId: await firstItemId(saleId),
+                qty: 10,
+              ),
+            ],
+            refundMethod: ReturnRefundMethod.cash,
+            refundCash: 1500,
+            issuedAt: at,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(accepted.isOk, isTrue, reason: '${accepted.errorOrNull}');
+        expect(accepted.valueOrNull!.refundTotal, 1500);
+        final srnItem = await handle.db.rawQuery(
+          'SELECT line_cost, qty FROM invoice_item WHERE invoice_id = ?',
+          [accepted.valueOrNull!.invoiceId],
+        );
+        expect((srnItem.first['qty'] as num).toDouble(), 10);
+        expect((srnItem.first['line_cost'] as num).toDouble(), 1000);
+
+        // المخزون: 20 − 12 (البيع الكلي) + 10 (العودة) = 18.
+        expect(await stockQty(item), 18);
+      },
+    );
+
+    test(
+      'تكلفة عودة البونص بوحدة WAC الفعلية لا المتضخمة (قرار 8)',
+      () async {
+        final item = await makeProduct('زيت');
+        await postPurchase([
+          PurchaseLine(productId: item, qty: 12, unitCost: 50),
+        ]);
+        // بيع 10 + 2 مجاني: line_cost = 12×50 = 600 — لو قُسمت على
+        // المدفوع (10) لتضخمت تكلفة الوحدة إلى 60 ولأفسدت المخزون.
+        final saleId = await postSale([
+          CartLine(productId: item, qty: 10, unitPrice: 80, freeQty: 2),
+        ], paidCash: 800);
+
+        // إرجاع جزئي 4 من المدفوع: التكلفة 4×50 = 200 (لا 4×60=240).
+        final result = await returns.postSaleReturn(
+          SaleReturnDraft(
+            originalInvoiceId: saleId,
+            lines: [
+              ReturnLineInput(invoiceItemId: await firstItemId(saleId), qty: 4),
+            ],
+            refundMethod: ReturnRefundMethod.cash,
+            refundCash: 320, // 4 × 80.
+            issuedAt: at,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        final srnItem = await handle.db.rawQuery(
+          'SELECT line_cost FROM invoice_item WHERE invoice_id = ?',
+          [result.valueOrNull!.invoiceId],
+        );
+        expect((srnItem.first['line_cost'] as num).toDouble(), 200);
+        // حركة العودة بتكلفة الوحدة الصحيحة 50.
+        final movement = await handle.db.rawQuery(
+          "SELECT unit_cost, qty FROM stock_movement "
+          "WHERE movement_type = 'sale_return'",
+        );
+        expect((movement.first['qty'] as num).toDouble(), 4);
+        expect((movement.first['unit_cost'] as num).toDouble(), 50);
+        // المخزون: 12 − 12 + 4 = 4 (بقيمة صحيحة لا متضخمة).
+        expect(await stockQty(item), 4);
+      },
+    );
+  });
 }

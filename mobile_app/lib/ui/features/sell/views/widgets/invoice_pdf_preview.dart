@@ -86,6 +86,11 @@ InvoicePrintDoc buildInvoicePrintDoc(
         InvoicePrintLine(
           desc: item.lineDesc ?? l10n.sellDetailUnknownItem,
           qtyLabel: sellQtyText(item.qty),
+          // UX-4: لاحقة «(+N مجاني)» بجوار الكمية عند وجود بونص — تصل
+          // القوالب عبر المسقط فترسمها مع الكمية (qtyCellLabel).
+          freeQtyLabel: item.freeQty > 0.000001
+              ? l10n.bonusPrintSuffix(sellQtyText(item.freeQty))
+              : null,
           priceLabel: AmountText.format(item.unitPrice, decimals),
           discountLabel: item.discountAmount > 0.005
               ? AmountText.format(item.discountAmount, 2)

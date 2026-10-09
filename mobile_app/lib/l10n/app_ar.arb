@@ -1451,5 +1451,12 @@
   "tmplSignCollector": "المحصل",
   "tmplSignSeller": "البائع",
   "tmplStampArea": "مكان الختم",
-  "tmplTaxNumber": "الرقم الضريبي"
+  "tmplTaxNumber": "الرقم الضريبي",
+  "bonusPrefsTitle": "الكميات المجانية (بونص)",
+  "bonusPrefsDesc": "حقل بونص بجوار الكمية ببنود فاتورة البيع — المنصرف من المخزون يشمل المجاني والإيراد من الكمية المدفوعة فقط",
+  "bonusQtyEditTitle": "الكمية المجانية (بونص): {name}",
+  "bonusQtyChipEmpty": "بونص",
+  "bonusQtyChipValue": "+{n} مجاني",
+  "bonusDetailSuffix": "+{n} مجاني",
+  "bonusPrintSuffix": "(+{n} مجاني)"
 }

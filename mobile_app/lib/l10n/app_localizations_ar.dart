@@ -4961,4 +4961,34 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tmplTaxNumber => 'الرقم الضريبي';
+
+  @override
+  String get bonusPrefsTitle => 'الكميات المجانية (بونص)';
+
+  @override
+  String get bonusPrefsDesc =>
+      'حقل بونص بجوار الكمية ببنود فاتورة البيع — المنصرف من المخزون يشمل المجاني والإيراد من الكمية المدفوعة فقط';
+
+  @override
+  String bonusQtyEditTitle(Object name) {
+    return 'الكمية المجانية (بونص): $name';
+  }
+
+  @override
+  String get bonusQtyChipEmpty => 'بونص';
+
+  @override
+  String bonusQtyChipValue(Object n) {
+    return '+$n مجاني';
+  }
+
+  @override
+  String bonusDetailSuffix(Object n) {
+    return '+$n مجاني';
+  }
+
+  @override
+  String bonusPrintSuffix(Object n) {
+    return '(+$n مجاني)';
+  }
 }

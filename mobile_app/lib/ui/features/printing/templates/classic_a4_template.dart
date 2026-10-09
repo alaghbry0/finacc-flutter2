@@ -397,7 +397,8 @@ class ClassicA4InvoiceTemplate {
           line.totalLabel,
           if (spec.showDiscount) line.discountLabel,
           line.priceLabel,
-          line.qtyLabel,
+          // UX-4: لاحقة البونص بجوار الكمية (qtyCellLabel) — لا عمود جديد.
+          line.qtyCellLabel,
           if (spec.showUnit)
             (line.unitLabel ?? '').trim().isEmpty ? '—' : line.unitLabel!.trim(),
           line.desc,

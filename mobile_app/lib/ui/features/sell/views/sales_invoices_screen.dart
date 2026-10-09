@@ -616,7 +616,9 @@ class _ItemRow extends StatelessWidget {
                 Text(
                   '${l10n.sellDetailQtyLabel} ${sellQtyText(item.qty)} × '
                   '${AmountText.format(item.unitPrice, _decimals(item.unitPrice))}'
-                  '${item.discountAmount > 0 ? ' · ${l10n.sellDetailDiscountLabel} ${AmountText.format(item.discountAmount, 2)}' : ''}',
+                  '${item.discountAmount > 0 ? ' · ${l10n.sellDetailDiscountLabel} ${AmountText.format(item.discountAmount, 2)}' : ''}'
+                  // UX-4: البونص يظهر بجوار الكمية «+N مجاني» عند وجوده.
+                  '${item.freeQty > 0.000001 ? ' · ${l10n.bonusDetailSuffix(sellQtyText(item.freeQty))}' : ''}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontFeatures: FinText.tabularNums,

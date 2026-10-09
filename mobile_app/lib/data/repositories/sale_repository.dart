@@ -40,6 +40,15 @@
 ///    بالمخطط ووحدة الضريبة لاحقة.
 /// 6. **userId** يُمرَّر صراحة (لا مساعد مستخدم حالي في طبقة البيانات —
 ///    الطلب مسجَّل في التسليم للمنسّق).
+/// 7. **البونص/الكميات المجانية** (موجة UX-4 — القرار التحاسبي الملزم
+///    من UX-audit-invoice §3): `CartLine.freeQty` ≥ 0 عمود مستقل
+///    `invoice_item.free_qty` (هجرة v5). **المنصرف الكلي = qty + freeQty**
+///    (فحص التوفر + FEFO + `line_cost = roundCost(الكل×WAC)` + حركة
+///    المخزون −الكل + stock_level)، و**الإيراد من qty حصراً** —
+///    subtotal/total/total_base/الائتمان لا ترى البونص إطلاقاً (تسعير
+///    `SalePricing` فوق qty وحدها)، فCOGS يرتفع والربح ينخفض بالمقدار
+///    الحرفي للمجاني. حركة المخزون وملاحظة السطر تحملان «بونص: N»
+///    والتدقيق يسجل `free=`. رسائل العجز تشمل المجاني بالمطلوب.
 library;
 
 import 'package:sqflite/sqflite.dart';
@@ -340,32 +349,44 @@ class SaleRepository {
         });
 
         // 8-ج) الأسطر: WAC داخل المعاملة قبل الاستهلاك (5.4-3) + FEFO +
-        //      المخزون + حركاته — سطراً سطراً.
+        //      المخزون + حركاته — سطراً سطراً. البونص (UX-4): المنصرف
+        //      الكلي = المدفوع + المجاني على المخزون/الدفعات/التكلفة.
         var costTotal = 0.0;
+        var freeTotal = 0.0;
         for (var i = 0; i < priced.lines.length; i++) {
           final pricedLine = priced.lines[i];
           final info = products[pricedLine.line.productId]!;
           final lineQty = pricedLine.line.qty;
+          final freeQty = pricedLine.line.freeQty;
+          freeTotal += freeQty;
+          // المنصرف الكلي (القرار 7) — البونص وحدات حقيقية تخرج من
+          // المخزون وتكلفتها تدخل COGS.
+          final dispatchedQty = lineQty + freeQty;
 
-          // WAC الحالي يُقرأ داخل المعاملة (Snapshot لحظة البيع).
+          // WAC الحالي يُقرأ داخل المعاملة (Snapshot لحظة البيع) — على
+          // المنصرف الكلي.
           final costNow = await _readCostInside(txn, info.id);
-          final lineCost = info.isService ? 0.0 : roundCost(lineQty * costNow);
+          final lineCost = info.isService
+              ? 0.0
+              : roundCost(dispatchedQty * costNow);
           costTotal = roundCost(costTotal + lineCost);
 
-          // تخصيص FEFO للصنوف المتتبعة (AC-05) قبل كتابة السطر.
+          // تخصيص FEFO للصنوف المتتبعة (AC-05) قبل كتابة السطر — على
+          // المنصرف الكلي.
           FefoResult? fefo;
           if (!info.isService && info.trackBatches) {
             fefo = await _batches.allocateFefo(
               txn,
               productId: info.id,
               warehouseId: draft.warehouseId,
-              qty: lineQty,
+              qty: dispatchedQty,
               asOf: issuedAt,
             );
             if (fefo.shorted) {
               throw _FlowError(
                 'الكمية غير متوفرة للصنف «${info.name}»: المتاح '
-                '${_num(fefo.allocatedQty)} والمطلوب ${_num(lineQty)} — '
+                '${_num(fefo.allocatedQty)} والمطلوب ${_num(dispatchedQty)}'
+                '${freeQty > _qtyEpsilon ? ' (منها ${_num(freeQty)} مجاني)' : ''} — '
                 'لا يسمح النظام بمخزون سالب.',
               );
             }
@@ -379,6 +400,7 @@ class SaleRepository {
           final lineNotes = [
             if ((pricedLine.line.notes ?? '').trim().isNotEmpty)
               pricedLine.line.notes!.trim(),
+            if (freeQty > _qtyEpsilon) 'بونص: ${_num(freeQty)}',
             if (batchSummary != null) 'دفعة: $batchSummary',
           ].join(' — ');
 
@@ -387,6 +409,7 @@ class SaleRepository {
             'product_id': info.id,
             'line_desc': info.name, // لقطة اسم الصنف للعرض/الطباعة.
             'qty': lineQty,
+            'free_qty': freeQty, // البونص مستقل (UX-4 — القرار 7).
             'unit_id': info.unitId,
             'unit_factor': 1,
             'unit_price': pricedLine.line.unitPrice,
@@ -424,23 +447,26 @@ class SaleRepository {
                 'moved_at': issuedIso,
                 'notes':
                     'رقم الدفعة ${allocation.batchNumber} (تنتهي '
-                    '${_dateOnly(allocation.expiryDate)})',
+                    '${_dateOnly(allocation.expiryDate)})'
+                    '${freeQty > _qtyEpsilon ? ' — بونص: ${_num(freeQty)}' : ''}',
                 'created_at': at.toUtc().toIso8601String(),
                 'created_by': userId,
               });
             }
           } else {
-            // العادي: حركة واحدة للسطر.
+            // العادي: حركة واحدة للسطر — بمنصرفه الكلي وبوسم البونص.
             await txn.insert('stock_movement', {
               'product_id': info.id,
               'warehouse_id': draft.warehouseId,
               'movement_type': 'sale',
-              'qty': -lineQty,
+              'qty': -dispatchedQty,
               'unit_cost': costNow,
               'ref_type': 'invoice',
               'ref_id': invoiceId,
               'moved_at': issuedIso,
-              'notes': invoiceNo,
+              'notes': freeQty > _qtyEpsilon
+                  ? '$invoiceNo — بونص: ${_num(freeQty)}'
+                  : invoiceNo,
               'created_at': at.toUtc().toIso8601String(),
               'created_by': userId,
             });
@@ -457,12 +483,13 @@ class SaleRepository {
           final consumed = await txn.rawUpdate(
             'UPDATE stock_level SET qty = qty - ? '
             'WHERE product_id = ? AND warehouse_id = ? AND qty >= ?',
-            [lineQty, info.id, draft.warehouseId, lineQty],
+            [dispatchedQty, info.id, draft.warehouseId, dispatchedQty],
           );
           if (consumed == 0) {
             throw _FlowError(
               'الكمية غير متوفرة للصنف «${info.name}» بالمخزن — '
-              'الرصيد الدفتري أقل من المطلوب (${_num(lineQty)}) — '
+              'الرصيد الدفتري أقل من المطلوب (${_num(dispatchedQty)}'
+              '${freeQty > _qtyEpsilon ? ' منها ${_num(freeQty)} مجاني' : ''}) — '
               'لا يسمح النظام بمخزون سالب.',
             );
           }
@@ -533,7 +560,8 @@ class SaleRepository {
               'no=$invoiceNo total=${totals.grandTotal} '
               'paid=$netPaid due=$remainingCredit '
               'currency=$currencyCode rate=$exchangeRate'
-              '${rateIsFallback ? ' fallback=1' : ''}',
+              '${rateIsFallback ? ' fallback=1' : ''}'
+              '${freeTotal > _qtyEpsilon ? ' free=${_num(freeTotal)}' : ''}',
           'at': at.toUtc().toIso8601String(),
         });
 
@@ -725,6 +753,9 @@ class SaleRepository {
   /// فحص توفر المخزون المسبق (قاعدة 5.4-5): يجمع المطلوب لكل صنف غير
   /// خدمي عبر الأسطر (الأسطر المكررة تُجمع) ويقارنه بالمتاح:
   /// العادي من `stock_level`، والمتتبع من دفعات FEFO النشطة غير المنتهية.
+  ///
+  /// البونص (UX-4): المجموع **بالمنصرف الكلي** qty + freeQty — المجاني
+  /// وحدات تخرج من المخزون مثل المدفوع تماماً.
   Future<String?> _checkAvailability(
     List<CartLine> lines,
     Map<int, _ProductInfo> products,
@@ -732,10 +763,15 @@ class SaleRepository {
     DateTime asOf,
   ) async {
     final requested = <int, double>{};
+    final requestedFree = <int, double>{};
     for (final line in lines) {
       final info = products[line.productId]!;
       if (info.isService) continue;
-      requested[info.id] = (requested[info.id] ?? 0) + line.qty;
+      requested[info.id] =
+          (requested[info.id] ?? 0) + line.qty + line.freeQty;
+      if (line.freeQty > _qtyEpsilon) {
+        requestedFree[info.id] = (requestedFree[info.id] ?? 0) + line.freeQty;
+      }
     }
     if (requested.isEmpty) return null;
 
@@ -773,8 +809,10 @@ class SaleRepository {
           ? (batchQty[entry.key] ?? 0)
           : (plainQty[entry.key] ?? 0);
       if (available + _qtyEpsilon < entry.value) {
+        final free = requestedFree[entry.key] ?? 0;
         return 'الكمية غير متوفرة للصنف «${info.name}»: المتاح '
-            '${_num(available)} والمطلوب ${_num(entry.value)} — '
+            '${_num(available)} والمطلوب ${_num(entry.value)}'
+            '${free > _qtyEpsilon ? ' (منها ${_num(free)} مجاني)' : ''} — '
             'لا يسمح النظام بمخزون سالب.';
       }
     }

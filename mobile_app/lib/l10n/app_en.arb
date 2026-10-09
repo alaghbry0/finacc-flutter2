@@ -1568,5 +1568,12 @@
   "tmplSignCollector": "Collector",
   "tmplSignSeller": "Seller",
   "tmplStampArea": "Stamp area",
-  "tmplTaxNumber": "Tax number"
+  "tmplTaxNumber": "Tax number",
+  "bonusPrefsTitle": "Free quantities (bonus)",
+  "bonusPrefsDesc": "A bonus field next to the quantity on sale invoice lines — stock dispatch includes the free units while revenue counts only the paid quantity",
+  "bonusQtyEditTitle": "Free quantity (bonus): {name}",
+  "bonusQtyChipEmpty": "Bonus",
+  "bonusQtyChipValue": "+{n} free",
+  "bonusDetailSuffix": "+{n} free",
+  "bonusPrintSuffix": "(+{n} free)"
 }

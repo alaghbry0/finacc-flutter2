@@ -51,6 +51,12 @@ class SalePricing {
   ///
   /// يعيد رسالة الخطأ أو `null` عند السلامة. لا يتحقق من الدفع
   /// (انظر [validatePayment]) ولا من المخزون (مسؤولية المستودع — 5.4-5).
+  ///
+  /// **البونص** (موجة UX-4): يتحقق من سلامة `freeQty` حصراً (رقم سليم /
+  /// غير سالب / لا أدق من ثلاث منازل NUMERIC(12,3)) — **ولا يغيّر أي حساب
+  /// إطلاقاً**: gross والخصومات والصافي كلها من `qty` المدفوعة وحدها
+  /// (الإيراد من المدفوع حصراً — القرار التحاسبي UX-audit-invoice §3؛
+  /// البونص يُحسب مخزونياً في `SaleRepository.postSale`).
   static String? validateCart(
     List<CartLine> lines, {
     SaleDiscountType invoiceDiscountType = SaleDiscountType.amount,
@@ -65,6 +71,21 @@ class SalePricing {
       }
       if (line.qty <= 0) {
         return 'كمية السطر $no يجب أن تكون أكبر من صفر.';
+      }
+      if (_isBadNumber(line.freeQty)) {
+        return 'كمية البونص للسطر $no غير صالحة — أدخل رقماً سليماً.';
+      }
+      if (line.freeQty < 0) {
+        return 'كمية البونص للسطر $no لا يمكن أن تكون سالبة.';
+      }
+      // دقة NUMERIC(12,3): يقبل ثالث منزلة كاملة (مع تفاوت ضجيج النقطة
+      // العائمة: 0.333×1000 = 332.99999…94) ويرفض الرابعة فصاعداً
+      // (2.0005×1000 = 2000.5 — نصف خطوة بعيد عن أي مضاعف).
+      if (((line.freeQty * 1000).roundToDouble() - line.freeQty * 1000)
+              .abs() >
+          0.001) {
+        return 'كمية البونص للسطر $no لا تقبل دقة أعلى من ثلاث منازل '
+            'عشرية — راجع الكمية.';
       }
       if (_isBadNumber(line.unitPrice) || line.unitPrice < 0) {
         return 'سعر وحدة السطر $no لا يمكن أن يكون سالباً.';

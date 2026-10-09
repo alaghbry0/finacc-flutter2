@@ -44,6 +44,7 @@ class InvoicePrintLine {
     required this.priceLabel,
     required this.discountLabel,
     required this.totalLabel,
+    this.freeQtyLabel,
     this.unitLabel,
   });
 
@@ -52,6 +53,16 @@ class InvoicePrintLine {
 
   /// الكمية منسَّقة (سلسلة جاهزة).
   final String qtyLabel;
+
+  /// لاحقة الكمية المجانية «(+N مجاني)» (UX-4 — مبنية من l10n عند
+  /// المستدعي حصراً عند freeQty > 0). غيابها = بلا بونص فتُرسم الكمية
+  /// وحدها كما اليوم — لا يعدّل شيء بسلوك المتاجر القائمة.
+  final String? freeQtyLabel;
+
+  /// خلية الكمية كما ترسمها القوالب: الكمية + لاحقة البونص إن وُجدت
+  /// (الامتداد البسيط المعتمد — لاحقة بجوار الكمية لا عمود مستقل).
+  String get qtyCellLabel =>
+      (freeQtyLabel ?? '').isEmpty ? qtyLabel : '$qtyLabel $freeQtyLabel';
 
   /// سعر الوحدة منسَّق (سلسلة جاهزة).
   final String priceLabel;
