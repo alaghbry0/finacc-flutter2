@@ -824,6 +824,25 @@ class _CartLineCard extends StatelessWidget {
                   }
                 }
 
+                Future<void> editQty() async {
+                  // R17-a — نقرة قيمة الكمية: تحرير رقمي فوري (نقرة واحدة +
+                  // كتابة) بدل فتح محرر السطر الكامل — نفس قيود setQty
+                  // (> 0 ورقم سليم) وتجاوز المتاح يبقى بسياسة التفضيلات
+                  // (warn بصرياً / block عند الترحيل) كما بمحرر السطر.
+                  final value = await showNumberEditSheet(
+                    context,
+                    title: l10n.sellQtyEditTitle(line.name),
+                    initial: line.qty,
+                    confirmLabel: l10n.commonConfirm,
+                    allowZero: false,
+                    decimals: 3,
+                    icon: Icons.edit_outlined,
+                  );
+                  if (value != null && value > 0) {
+                    vm.setQty(index, value);
+                  }
+                }
+
                 Future<void> editPrice() async {
                   final value = await showNumberEditSheet(
                     context,
@@ -856,6 +875,7 @@ class _CartLineCard extends StatelessWidget {
                         QtyStepper(
                           qty: line.qty,
                           onChanged: (qty) => vm.setQty(index, qty),
+                          onValueTap: editQty,
                         ),
                         // الشارة الديناميكية: عند وجود بونص حصراً — نقرة
                         // تفتح محرر السطر (الحقل دائم التوفر هناك).

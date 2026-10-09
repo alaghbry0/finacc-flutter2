@@ -1,0 +1,687 @@
+  1090→  1090→          unitPrice: (item['unit_price'] as num?)?.toDouble() ?? 0,
+  1091→  1091→          unitPriceEffective: roundMoney(
+  1092→  1092→            ((item['line_total'] as num?)?.toDouble() ?? 0) /
+  1093→  1093→                ((item['qty'] as num?)?.toDouble() ?? 1),
+  1094→  1094→          ),
+  1095→  1095→          // تكلفة الوحدة على المنصرف الكلي — البونص داخل line_cost
+  1096→  1096→          // (القرار 8) فلا تتضخم تكلفة العودة بنسبة المجاني.
+  1097→  1097→          unitCostSnapshot: roundCost(
+  1098→  1098→            ((item['line_cost'] as num?)?.toDouble() ?? 0) /
+  1099→  1099→                _dispatchedDivisor(item),
+  1100→  1100→          ),
+  1101→  1101→          batchId: item['batch_id'] as int?,
+  1102→  1102→        ),
+  1103→  1103→    ];
+  1104→  1104→  }
+  1105→  1105→
+  1106→  1106→  // ───────────────────────────────────────────────────────────────────
+  1107→  1107→  // مساعدات خاصة — التحميل والتحقق المشترك
+  1108→  1108→  // ───────────────────────────────────────────────────────────────────
+  1109→  1109→
+  1110→  1110→  /// تحقق نقي من بنود المرتجع (كميات وأرقام).
+  1111→  1111→  String? _validateLines(List<ReturnLineInput> lines) {
+  1112→  1112→    if (lines.isEmpty) {
+  1113→  1113→      return 'أضف بنداً واحداً على الأقل إلى المرتجع.';
+  1114→  1114→    }
+  1115→  1115→    for (var i = 0; i < lines.length; i++) {
+  1116→  1116→      final line = lines[i];
+  1117→  1117→      final no = i + 1;
+  1118→  1118→      if (line.qty.isNaN || line.qty.isInfinite) {
+  1119→  1119→        return 'كمية البند $no غير صالحة — أدخل رقماً سليماً.';
+  1120→  1120→      }
+  1121→  1121→      if (line.qty <= 0) {
+  1122→  1122→        return 'كمية البند $no يجب أن تكون أكبر من صفر.';
+  1123→  1123→      }
+  1124→  1124→    }
+  1125→  1125→    return null;
+  1126→  1126→  }
+  1127→  1127→
+  1128→  1128→  /// يحمل الفاتورة الأصلية ويتحقق من نوعها وحالتها (FR-02-07).
+  1129→  1129→  Future<({Map<String, Object?> row, String? error})> _loadOriginal(
+  1130→  1130→    int invoiceId,
+  1131→  1131→    String expectedType,
+  1132→  1132→  ) async {
+  1133→  1133→    final rows = await _db.query(
+  1134→  1134→      'invoice',
+  1135→  1135→      where: 'id = ?',
+  1136→  1136→      whereArgs: [invoiceId],
+  1137→  1137→      limit: 1,
+  1138→  1138→    );
+  1139→  1139→    if (rows.isEmpty) {
+  1140→  1140→      return (
+  1141→  1141→        row: const <String, Object?>{},
+  1142→  1142→        error: 'الفاتورة رقم #$invoiceId غير موجودة.',
+  1143→  1143→      );
+  1144→  1144→    }
+  1145→  1145→    final row = rows.first;
+  1146→  1146→    final docType = row['doc_type'] as String;
+  1147→  1147→    if (docType != expectedType) {
+  1148→  1148→      final label = expectedType == 'sale' ? 'بيع' : 'شراء';
+  1149→  1149→      return (
+  1150→  1150→        row: row,
+  1151→  1151→        error:
+  1152→  1152→            'الفاتورة رقم #$invoiceId ليست فاتورة $label (نوعها '
+  1153→  1153→            '«$docType») — لا يُنشأ مرتجع إلا عن النوع المطابق.',
+  1154→  1154→      );
+  1155→  1155→    }
+  1156→  1156→    final status = row['status'] as String;
+  1157→  1157→    if (status == 'void') {
+  1158→  1158→      return (
+  1159→  1159→        row: row,
+  1160→  1160→        error:
+  1161→  1161→            'الفاتورة ${row['invoice_no']} ملغاة — لا يُنشأ مرتجع عن '
+  1162→  1162→            'فاتورة ملغاة (FR-02-07).',
+  1163→  1163→      );
+  1164→  1164→    }
+  1165→  1165→    if (status != 'completed') {
+  1166→  1166→      return (
+  1167→  1167→        row: row,
+  1168→  1168→        error:
+  1169→  1169→            'الفاتورة ${row['invoice_no']} ليست مكتملة (حالتها '
+  1170→  1170→            '«$status») — لا يُنشأ مرتجع إلا عن فاتورة مكتملة.',
+  1171→  1171→      );
+  1172→  1172→    }
+  1173→  1173→    return (row: row, error: null);
+  1174→  1174→  }
+  1175→  1175→
+  1176→  1176→  /// فحص انتساب البنود للفاتورة الأصلية + سقف الكميات لكل بند
+  1177→  1177→  /// (المباع/المشترى − المرتجع سابقاً) — القرار 1.
+  1178→  1178→  Future<({Map<int, Map<String, Object?>> items, String? error})>
+  1179→  1179→  _checkMembershipAndCaps(
+  1180→  1180→    int originalInvoiceId,
+  1181→  1181→    String returnType,
+  1182→  1182→    List<ReturnLineInput> lines,
+  1183→  1183→  ) async {
+  1184→  1184→    final itemRows = await _db.query(
+  1185→  1185→      'invoice_item',
+  1186→  1186→      where: 'invoice_id = ?',
+  1187→  1187→      whereArgs: [originalInvoiceId],
+  1188→  1188→      orderBy: 'id ASC',
+  1189→  1189→    );
+  1190→  1190→    final items = {for (final row in itemRows) row['id'] as int: row};
+  1191→  1191→    final returned = await _returnedByLine(originalInvoiceId, returnType);
+  1192→  1192→    final requested = <int, double>{};
+  1193→  1193→    for (final line in lines) {
+  1194→  1194→      final item = items[line.invoiceItemId];
+  1195→  1195→      if (item == null) {
+  1196→  1196→        return (
+  1197→  1197→          items: items,
+  1198→  1198→          error:
+  1199→  1199→              'البند رقم #${line.invoiceItemId} لا ينتمي إلى الفاتورة '
+  1200→  1200→              'الأصلية — اختر بنوداً من الفاتورة نفسها.',
+  1201→  1201→        );
+  1202→  1202→      }
+  1203→  1203→      requested[line.invoiceItemId] =
+  1204→  1204→          (requested[line.invoiceItemId] ?? 0) + line.qty;
+  1205→  1205→    }
+  1206→  1206→    for (final entry in requested.entries) {
+  1207→  1207→      final item = items[entry.key]!;
+  1208→  1208→      final origQty = (item['qty'] as num?)?.toDouble() ?? 0;
+  1209→  1209→      final alreadyReturned = returned[entry.key] ?? 0;
+  1210→  1210→      final available = _available(origQty, alreadyReturned);
+  1211→  1211→      if (entry.value > available + _qtyEpsilon) {
+  1212→  1212→        return (
+  1213→  1213→          items: items,
+  1214→  1214→          error:
+  1215→  1215→              'الكمية المطلوب إرجاعها من البند '
+  1216→  1216→              '«${item['line_desc'] ?? entry.key}» (${_num(entry.value)}) '
+  1217→  1217→              'تتجاوز المتاح للإرجاع (${_num(available)}) — الأصلي '
+  1218→  1218→              '${_num(origQty)} والمرتجع سابقاً ${_num(alreadyReturned)}.',
+  1219→  1219→        );
+  1220→  1220→      }
+  1221→  1221→    }
+  1222→  1222→    return (items: items, error: null);
+  1223→  1223→  }
+  1224→  1224→
+  1225→  1225→  /// حراسة السقف داخل المعاملة (كتابات متوازية) — القرار 1.
+  1226→  1226→  Future<void> _assertCapsInside(
+  1227→  1227→    DatabaseExecutor txn,
+  1228→  1228→    int originalInvoiceId,
+  1229→  1229→    String returnType,
+  1230→  1230→    List<ReturnLineInput> lines,
+  1231→  1231→  ) async {
+  1232→  1232→    final itemRows = await txn.query(
+  1233→  1233→      'invoice_item',
+  1234→  1234→      columns: ['id', 'qty', 'line_desc'],
+  1235→  1235→      where: 'invoice_id = ?',
+  1236→  1236→      whereArgs: [originalInvoiceId],
+  1237→  1237→    );
+  1238→  1238→    final origQty = {
+  1239→  1239→      for (final row in itemRows)
+  1240→  1240→        row['id'] as int: (row['qty'] as num?)?.toDouble() ?? 0,
+  1241→  1241→    };
+  1242→  1242→    final names = {
+  1243→  1243→      for (final row in itemRows) row['id'] as int: row['line_desc'] as String?,
+  1244→  1244→    };
+  1245→  1245→    final returned = await _returnedByLineInside(
+  1246→  1246→      txn,
+  1247→  1247→      originalInvoiceId,
+  1248→  1248→      returnType,
+  1249→  1249→    );
+  1250→  1250→    final requested = <int, double>{};
+  1251→  1251→    for (final line in lines) {
+  1252→  1252→      requested[line.invoiceItemId] =
+  1253→  1253→          (requested[line.invoiceItemId] ?? 0) + line.qty;
+  1254→  1254→    }
+  1255→  1255→    for (final entry in requested.entries) {
+  1256→  1256→      final available = _available(
+  1257→  1257→        origQty[entry.key] ?? 0,
+  1258→  1258→        returned[entry.key] ?? 0,
+  1259→  1259→      );
+  1260→  1260→      if (entry.value > available + _qtyEpsilon) {
+  1261→  1261→        throw _FlowError(
+  1262→  1262→          'تغيّر المتبقي للإرجاع من البند '
+  1263→  1263→          '«${names[entry.key] ?? entry.key}» قبل الحفظ — المتاح الآن '
+  1264→  1264→          '${_num(available)} والمطلوب ${_num(entry.value)}. أعد المحاولة.',
+  1265→  1265→        );
+  1266→  1266→      }
+  1267→  1267→    }
+  1268→  1268→  }
+  1269→  1269→
+  1270→  1270→  /// قيمة بنود المرتجع Snapshot من البنود الأصلية (القرار 6):
+  1271→  1271→  /// gross = round2(qty_ret × unit_price الأصلي)، خصم تناسبي،
+  1272→  1272→  /// line_total = gross − الخصم — والتكلفة الأصلية منقولة تناسبياً
+  1273→  1273→  /// **بتكلفة الوحدة على المنصرف الكلي** (البونص داخل line_cost —
+  1274→  1274→  /// القرار 8 برأس الملف).
+  1275→  1275→  _ValuedReturn _valueReturnLines(
+  1276→  1276→    Map<int, Map<String, Object?>> origItems,
+  1277→  1277→    List<ReturnLineInput> lines,
+  1278→  1278→  ) {
+  1279→  1279→    var subtotal = 0.0;
+  1280→  1280→    var discountTotal = 0.0;
+  1281→  1281→    var refundTotal = 0.0;
+  1282→  1282→    var costTotal = 0.0;
+  1283→  1283→    final lineTotals = <double>[];
+  1284→  1284→    final discounts = <double>[];
+  1285→  1285→    for (final line in lines) {
+  1286→  1286→      final item = origItems[line.invoiceItemId]!;
+  1287→  1287→      final origQty = (item['qty'] as num?)?.toDouble() ?? 1;
+  1288→  1288→      final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0;
+  1289→  1289→      final origDiscount = (item['discount_amount'] as num?)?.toDouble() ?? 0;
+  1290→  1290→      final origLineCost = (item['line_cost'] as num?)?.toDouble() ?? 0;
+  1291→  1291→
+  1292→  1292→      final gross = roundMoney(line.qty * unitPrice);
+  1293→  1293→      final discount = roundMoney(line.qty * origDiscount / origQty);
+  1294→  1294→      final lineTotal = roundMoney(gross - discount);
+  1295→  1295→      final lineCost = roundCost(
+  1296→  1296→        line.qty * roundCost(origLineCost / _dispatchedDivisor(item)),
+  1297→  1297→      );
+  1298→  1298→
+  1299→  1299→      lineTotals.add(lineTotal);
+  1300→  1300→      discounts.add(discount);
+  1301→  1301→      subtotal = roundMoney(subtotal + gross);
+  1302→  1302→      discountTotal = roundMoney(discountTotal + discount);
+  1303→  1303→      refundTotal = roundMoney(refundTotal + lineTotal);
+  1304→  1304→      costTotal = roundCost(costTotal + lineCost);
+  1305→  1305→    }
+  1306→  1306→    return _ValuedReturn(
+  1307→  1307→      subtotal: subtotal,
+  1308→  1308→      discountTotal: discountTotal,
+  1309→  1309→      refundTotal: refundTotal,
+  1310→  1310→      costTotal: costTotal,
+  1311→  1311→      lineTotals: lineTotals,
+  1312→  1312→      discounts: discounts,
+  1313→  1313→    );
+  1314→  1314→  }
+  1315→  1315→
+  1316→  1316→  /// يتحقق من اتجاه رد القيمة مقابل الأرقام (القرار 2) — مرآة نمط
+  1317→  1317→  /// `PurchasePricing.validatePayment` بصياغة المرتجع.
+  1318→  1318→  String? _validateRefund(
+  1319→  1319→    double refundTotal,
+  1320→  1320→    double refundCash,
+  1321→  1321→    ReturnRefundMethod declared,
+  1322→  1322→  ) {
+  1323→  1323→    if (refundCash.isNaN || refundCash.isInfinite || refundCash < 0) {
+  1324→  1324→      return 'المبلغ النقدي المرتجع لا يمكن أن يكون سالباً.';
+  1325→  1325→    }
+  1326→  1326→    if (refundCash > refundTotal + moneyEpsilon) {
+  1327→  1327→      return 'المبلغ النقدي المرتجع ($refundCash) يتجاوز قيمة المرتجع '
+  1328→  1328→          '($refundTotal) — المرتجع لا يقبل الرد الزائد؛ اترك الباقي على '
+  1329→  1329→          'الحساب.';
+  1330→  1330→    }
+  1331→  1331→    final derived = _deriveMethod(refundTotal, refundCash);
+  1332→  1332→    if (derived == declared) return null;
+  1333→  1333→    switch (declared) {
+  1334→  1334→      case ReturnRefundMethod.cash:
+  1335→  1335→        return 'الرد النقدي يتطلب رد قيمة المرتجع كاملة نقداً '
+  1336→  1336→            '($refundTotal) — أو اختر الخصم من الحساب/المختلط.';
+  1337→  1337→      case ReturnRefundMethod.credit:
+  1338→  1338→        return 'الخصم من الحساب يتطلب عدم إدخال أي مبلغ نقدي — المدخل '
+  1339→  1339→            '$refundCash.';
+  1340→  1340→      case ReturnRefundMethod.mixed:
+  1341→  1341→        return 'الرد المختلط يتطلب مبلغاً نقدياً بين صفر وقيمة المرتجع '
+  1342→  1342→            '($refundTotal) حصراً — المدخل $refundCash.';
+  1343→  1343→    }
+  1344→  1344→  }
+  1345→  1345→
+  1346→  1346→  /// يستنتج اتجاه الرد من الأرقام: نقدي عند رد الكامل، على الحساب عند
+  1347→  1347→  /// الصفر، مختلط بينهما.
+  1348→  1348→  ReturnRefundMethod _deriveMethod(double refundTotal, double refundCash) {
+  1349→  1349→    if (refundCash <= moneyEpsilon) return ReturnRefundMethod.credit;
+  1350→  1350→    if (refundCash >= refundTotal - moneyEpsilon) {
+  1351→  1351→      return ReturnRefundMethod.cash;
+  1352→  1352→    }
+  1353→  1353→    return ReturnRefundMethod.mixed;
+  1354→  1354→  }
+  1355→  1355→
+  1356→  1356→  /// يفصل الرد: الجزء النقدي + الجزء المخصوم من حساب الطرف.
+  1357→  1357→  ({double netCash, double credit, ReturnRefundMethod method}) _settleRefund(
+  1358→  1358→    double refundTotal,
+  1359→  1359→    double refundCash,
+  1360→  1360→  ) {
+  1361→  1361→    final netCash = roundMoney(
+  1362→  1362→      refundCash < refundTotal ? refundCash : refundTotal,
+  1363→  1363→    );
+  1364→  1364→    final credit = roundMoney(refundTotal - netCash);
+  1365→  1365→    return (
+  1366→  1366→      netCash: netCash,
+  1367→  1367→      credit: credit,
+  1368→  1368→      method: _deriveMethod(refundTotal, refundCash),
+  1369→  1369→    );
+  1370→  1370→  }
+  1371→  1371→
+  1372→  1372→  /// يحل سعر الصرف وفق FR-08-09 (نفس نمط البيع/الشراء حرفياً).
+  1373→  1373→  Future<({double rate, bool isFallback, String? error})> _resolveRate(
+  1374→  1374→    int currencyId,
+  1375→  1375→    DateTime issuedAt,
+  1376→  1376→  ) async {
+  1377→  1377→    final currencyRows = await _db.query(
+  1378→  1378→      'currency',
+  1379→  1379→      columns: ['code', 'is_base'],
+  1380→  1380→      where: 'id = ?',
+  1381→  1381→      whereArgs: [currencyId],
+  1382→  1382→      limit: 1,
+  1383→  1383→    );
+  1384→  1384→    if (currencyRows.isEmpty) {
+  1385→  1385→      return (rate: 1.0, isFallback: false, error: 'عملة الفاتورة غير موجودة.');
+  1386→  1386→    }
+  1387→  1387→    if ((currencyRows.first['is_base'] as int? ?? 0) == 1) {
+  1388→  1388→      return (rate: 1.0, isFallback: false, error: null);
+  1389→  1389→    }
+  1390→  1390→    final code = currencyRows.first['code'] as String;
+  1391→  1391→    final todayRate = await _rates.rateFor(currencyId, issuedAt);
+  1392→  1392→    if (todayRate != null && todayRate > 0) {
+  1393→  1393→      return (rate: todayRate, isFallback: false, error: null);
+  1394→  1394→    }
+  1395→  1395→    final fallbackOn =
+  1396→  1396→        (await _settings.getString('fx.fallback', 'off')) == 'last_known';
+  1397→  1397→    if (!fallbackOn) {
+  1398→  1398→      return (
+  1399→  1399→        rate: 1.0,
+  1400→  1400→        isFallback: false,
+  1401→  1401→        error:
+  1402→  1402→            'لا يوجد سعر صرف لعملة $code بتاريخ اليوم — أدخل سعر اليوم '
+  1403→  1403→            'أولاً ثم احفظ (لا يُحفظ بسعر افتراضي).',
+  1404→  1404→      );
+  1405→  1405→    }
+  1406→  1406→    final lastKnown = await _rates.latestBefore(currencyId, issuedAt);
+  1407→  1407→    if (lastKnown == null || lastKnown <= 0) {
+  1408→  1408→      return (
+  1409→  1409→        rate: 1.0,
+  1410→  1410→        isFallback: false,
+  1411→  1411→        error:
+  1412→  1412→            'لا يوجد أي سعر صرف معروف لعملة $code — أدخل سعراً واحداً '
+  1413→  1413→            'على الأقل قبل الحفظ بها.',
+  1414→  1414→      );
+  1415→  1415→    }
+  1416→  1416→    return (rate: lastKnown, isFallback: true, error: null);
+  1417→  1417→  }
+  1418→  1418→
+  1419→  1419→  /// الصندوق الافتراضي أو null.
+  1420→  1420→  Future<int?> _defaultCashboxId() async {
+  1421→  1421→    final rows = await _db.query(
+  1422→  1422→      'cashbox',
+  1423→  1423→      columns: ['id'],
+  1424→  1424→      where: 'is_default = 1 AND is_archived = 0',
+  1425→  1425→      limit: 1,
+  1426→  1426→    );
+  1427→  1427→    return rows.isEmpty ? null : rows.first['id'] as int;
+  1428→  1428→  }
+  1429→  1429→
+  1430→  1430→  /// معلومات الأصناف لبنود الفاتورة الأصلية (خدمي/متتبع).
+  1431→  1431→  Future<Map<int, _ReturnProductInfo>> _loadProductsForItems(
+  1432→  1432→    Map<int, Map<String, Object?>> items,
+  1433→  1433→  ) async {
+  1434→  1434→    final ids = {
+  1435→  1435→      for (final item in items.values)
+  1436→  1436→        if (item['product_id'] != null) item['product_id'] as int,
+  1437→  1437→    };
+  1438→  1438→    if (ids.isEmpty) return const {};
+  1439→  1439→    final rows = await _db.rawQuery(
+  1440→  1440→      'SELECT id, name, is_service, track_batches FROM product '
+  1441→  1441→      'WHERE id IN (${List.filled(ids.length, '?').join(',')})',
+  1442→  1442→      ids.toList(),
+  1443→  1443→    );
+  1444→  1444→    return {
+  1445→  1445→      for (final row in rows)
+  1446→  1446→        row['id'] as int: _ReturnProductInfo(
+  1447→  1447→          id: row['id'] as int,
+  1448→  1448→          name: row['name'] as String,
+  1449→  1449→          isService: (row['is_service'] as int? ?? 0) == 1,
+  1450→  1450→          trackBatches: (row['track_batches'] as int? ?? 0) == 1,
+  1451→  1451→        ),
+  1452→  1452→    };
+  1453→  1453→  }
+  1454→  1454→
+  1455→  1455→  /// فحص توفر المخزون مسبقاً لمرتجع الشراء (5.4-5): العادي من
+  1456→  1456→  /// `stock_level` والمتتبع من مجموع دفعاته غير المؤرشفة.
+  1457→  1457→  Future<String?> _checkReturnStock(
+  1458→  1458→    Map<int, Map<String, Object?>> origItems,
+  1459→  1459→    Map<int, _ReturnProductInfo> products,
+  1460→  1460→    List<ReturnLineInput> lines,
+  1461→  1461→    int warehouseId,
+  1462→  1462→  ) async {
+  1463→  1463→    final requested = <int, double>{};
+  1464→  1464→    final names = <int, String>{};
+  1465→  1465→    for (final line in lines) {
+  1466→  1466→      final item = origItems[line.invoiceItemId]!;
+  1467→  1467→      final productId = item['product_id'] as int?;
+  1468→  1468→      if (productId == null) continue;
+  1469→  1469→      final info = products[productId];
+  1470→  1470→      if (info == null || info.isService) continue;
+  1471→  1471→      requested[productId] = (requested[productId] ?? 0) + line.qty;
+  1472→  1472→      names[productId] = info.name;
+  1473→  1473→    }
+  1474→  1474→    if (requested.isEmpty) return null;
+  1475→  1475→    final ids = requested.keys.toList();
+  1476→  1476→    final inClause = List.filled(ids.length, '?').join(',');
+  1477→  1477→
+  1478→  1478→    final plainRows = await _db.rawQuery(
+  1479→  1479→      'SELECT product_id, qty FROM stock_level '
+  1480→  1480→      'WHERE warehouse_id = ? AND product_id IN ($inClause)',
+  1481→  1481→      [warehouseId, ...ids],
+  1482→  1482→    );
+  1483→  1483→    final plainQty = {
+  1484→  1484→      for (final row in plainRows)
+  1485→  1485→        row['product_id'] as int: (row['qty'] as num?)?.toDouble() ?? 0,
+  1486→  1486→    };
+  1487→  1487→    final batchRows = await _db.rawQuery(
+  1488→  1488→      'SELECT product_id, SUM(qty) AS q FROM batch '
+  1489→  1489→      'WHERE warehouse_id = ? AND product_id IN ($inClause) '
+  1490→  1490→      '  AND qty > 0 AND is_archived = 0 GROUP BY product_id',
+  1491→  1491→      [warehouseId, ...ids],
+  1492→  1492→    );
+  1493→  1493→    final batchQty = {
+  1494→  1494→      for (final row in batchRows)
+  1495→  1495→        row['product_id'] as int: (row['q'] as num?)?.toDouble() ?? 0,
+  1496→  1496→    };
+  1497→  1497→    for (final entry in requested.entries) {
+  1498→  1498→      final tracked = products[entry.key]!.trackBatches;
+  1499→  1499→      final available = tracked
+  1500→  1500→          ? (batchQty[entry.key] ?? 0)
+  1501→  1501→          : (plainQty[entry.key] ?? 0);
+  1502→  1502→      if (available + _qtyEpsilon < entry.value) {
+  1503→  1503→        return 'الكمية غير متوفرة للصنف «${names[entry.key]}»: المتاح '
+  1504→  1504→            '${_num(available)} والمطلوب إرجاعه ${_num(entry.value)} — '
+  1505→  1505→            'لا يسمح النظام بمخزون سالب.';
+  1506→  1506→      }
+  1507→  1507→    }
+  1508→  1508→    return null;
+  1509→  1509→  }
+  1510→  1510→
+  1511→  1511→  /// يقرأ حالة WAC (التكلفة + الكمية الكلية عبر المخازن) داخل المعاملة.
+  1512→  1512→  Future<({double cost, double qty})> _readWacState(
+  1513→  1513→    DatabaseExecutor txn,
+  1514→  1514→    int productId,
+  1515→  1515→  ) async {
+  1516→  1516→    final rows = await txn.rawQuery(
+  1517→  1517→      'SELECT p.cost_price AS cost, '
+  1518→  1518→      '       COALESCE((SELECT SUM(sl.qty) FROM stock_level sl '
+  1519→  1519→      '                 WHERE sl.product_id = p.id), 0) AS qty '
+  1520→  1520→      'FROM product p WHERE p.id = ?',
+  1521→  1521→      [productId],
+  1522→  1522→    );
+  1523→  1523→    return (
+  1524→  1524→      cost: (rows.first['cost'] as num?)?.toDouble() ?? 0,
+  1525→  1525→      qty: (rows.first['qty'] as num?)?.toDouble() ?? 0,
+  1526→  1526→    );
+  1527→  1527→  }
+  1528→  1528→
+  1529→  1529→  // ───────────────────────────────────────────────────────────────────
+  1530→  1530→  // مساعدات الدفعات
+  1531→  1531→  // ───────────────────────────────────────────────────────────────────
+  1532→  1532→
+  1533→  1533→  /// **سعات عودة دفعات مرتجع البيع** (القرار 3): لكل دفعة استُهلكت في
+  1534→  1534→  /// البيع الأصلي — السعة = ما استُهلك منها − ما أُعيد إليها سابقاً
+  1535→  1535→  /// (حركات SRN سابقة بنفس صيغة الملاحظة)، مع مطابقة صف `batch` الحي
+  1536→  1536→  /// بالرقم والتاريخ معاً؛ الدفعات غير القابلة للتتبع تُتخطى (كميتها
+  1537→  1537→  /// تذهب للمخزون العام عبر «المتبقي»).
+  1538→  1538→  Future<List<_BatchCap>> _loadBatchReturnCaps(
+  1539→  1539→    DatabaseExecutor txn, {
+  1540→  1540→    required int productId,
+  1541→  1541→    required int warehouseId,
+  1542→  1542→    required int originalInvoiceId,
+  1543→  1543→  }) async {
+  1544→  1544→    // استهلاك البيع الأصلي لكل دفعة (حركة لكل دفعة برجوع للفاتورة).
+  1545→  1545→    final saleMoves = await txn.rawQuery(
+  1546→  1546→      'SELECT notes, qty FROM stock_movement '
+  1547→  1547→      "WHERE movement_type = 'sale' AND ref_type = 'invoice' AND ref_id = ? "
+  1548→  1548→      'AND product_id = ? AND warehouse_id = ? ORDER BY id ASC',
+  1549→  1549→      [originalInvoiceId, productId, warehouseId],
+  1550→  1550→    );
+  1551→  1551→    // (رقم الدفعة، تاريخ الصلاحية) → الكمية المستهلكة.
+  1552→  1552→    final consumed = <String, double>{};
+  1553→  1553→    final order = <String>[];
+  1554→  1554→    for (final move in saleMoves) {
+  1555→  1555→      final match = _batchNotePattern.firstMatch(
+  1556→  1556→        (move['notes'] as String?) ?? '',
+  1557→  1557→      );
+  1558→  1558→      if (match == null) continue; // حركة غير دفعية (مخزون عام).
+  1559→  1559→      final key = '${match.group(1)!.trim()}|${match.group(2)!}';
+  1560→  1560→      consumed[key] =
+  1561→  1561→          (consumed[key] ?? 0) - ((move['qty'] as num?)?.toDouble() ?? 0);
+  1562→  1562→      if (!order.contains(key)) order.add(key);
+  1563→  1563→    }
+  1564→  1564→    // ما أُعيد سابقاً لكل دفعة (حركات SRN مكتملة سابقة بنفس الصيغة).
+  1565→  1565→    final priorMoves = await txn.rawQuery(
+  1566→  1566→      'SELECT sm.notes AS notes, sm.qty AS qty FROM stock_movement sm '
+  1567→  1567→      "WHERE sm.movement_type = 'sale_return' AND sm.ref_type = 'invoice' "
+  1568→  1568→      'AND sm.ref_id IN (SELECT id FROM invoice '
+  1569→  1569→      "  WHERE doc_type = 'sale_return' AND status = 'completed' "
+  1570→  1570→      '    AND original_invoice_id = ?) '
+  1571→  1571→      'AND sm.product_id = ? AND sm.warehouse_id = ?',
+  1572→  1572→      [originalInvoiceId, productId, warehouseId],
+  1573→  1573→    );
+  1574→  1574→    final priorReturned = <String, double>{};
+  1575→  1575→    for (final move in priorMoves) {
+  1576→  1576→      final match = _batchNotePattern.firstMatch(
+  1577→  1577→        (move['notes'] as String?) ?? '',
+  1578→  1578→      );
+  1579→  1579→      if (match == null) continue; // عودة سابقة بلا دفعة (مخزون عام).
+  1580→  1580→      final key = '${match.group(1)!.trim()}|${match.group(2)!}';
+  1581→  1581→      priorReturned[key] =
+  1582→  1582→          (priorReturned[key] ?? 0) + ((move['qty'] as num?)?.toDouble() ?? 0);
+  1583→  1583→    }
+  1584→  1584→
+  1585→  1585→    // السعة الفعالة لكل دفعة (بترتيب استهلاك FEFO الأصلي) مع مطابقة
+  1586→  1586→    // الصف الحي — نفس ترتيب allocateFefo الأصلي (id ASC) عند التكرار.
+  1587→  1587→    final caps = <_BatchCap>[];
+  1588→  1588→    for (final key in order) {
+  1589→  1589→      final effective = (consumed[key] ?? 0) - (priorReturned[key] ?? 0);
+  1590→  1590→      if (effective <= _qtyEpsilon) continue;
+  1591→  1591→      final parts = key.split('|');
+  1592→  1592→      final batchRows = await txn.query(
+  1593→  1593→        'batch',
+  1594→  1594→        columns: ['id'],
+  1595→  1595→        where:
+  1596→  1596→            'product_id = ? AND warehouse_id = ? AND batch_number = ? '
+  1597→  1597→            'AND expiry_date = ? AND is_archived = 0',
+  1598→  1598→        whereArgs: [productId, warehouseId, parts[0], parts[1]],
+  1599→  1599→        orderBy: 'id ASC',
+  1600→  1600→        limit: 1,
+  1601→  1601→      );
+  1602→  1602→      if (batchRows.isEmpty) continue; // غير قابلة للتتبع → متبقٍ عام.
+  1603→  1603→      caps.add(
+  1604→  1604→        _BatchCap(
+  1605→  1605→          batchId: batchRows.first['id'] as int,
+  1606→  1606→          batchNumber: parts[0],
+  1607→  1607→          expiryDate: parts[1],
+  1608→  1608→          qty: effective,
+  1609→  1609→        ),
+  1610→  1610→      );
+  1611→  1611→    }
+  1612→  1612→    return caps;
+  1613→  1613→  }
+  1614→  1614→
+  1615→  1615→  // ───────────────────────────────────────────────────────────────────
+  1616→  1616→  // مساعدات العلامة والعدّ
+  1617→  1617→  // ───────────────────────────────────────────────────────────────────
+  1618→  1618→
+  1619→  1619→  /// المرتجع سابقاً لكل بند أصلي (خارج المعاملة) — عبر علامة «أصل البند».
+  1620→  1620→  Future<Map<int, double>> _returnedByLine(
+  1621→  1621→    int originalInvoiceId,
+  1622→  1622→    String returnType,
+  1623→  1623→  ) async {
+  1624→  1624→    final rows = await _db.rawQuery(
+  1625→  1625→      'SELECT ii.notes AS notes, ii.qty AS qty '
+  1626→  1626→      'FROM invoice_item ii JOIN invoice i ON i.id = ii.invoice_id '
+  1627→  1627→      'WHERE i.doc_type = ? AND i.status = ? AND i.original_invoice_id = ?',
+  1628→  1628→      [returnType, 'completed', originalInvoiceId],
+  1629→  1629→    );
+  1630→  1630→    return _sumByOriginMarker(rows);
+  1631→  1631→  }
+  1632→  1632→
+  1633→  1633→  /// مثلها داخل معاملة نشطة (حراسة التزامن).
+  1634→  1634→  Future<Map<int, double>> _returnedByLineInside(
+  1635→  1635→    DatabaseExecutor txn,
+  1636→  1636→    int originalInvoiceId,
+  1637→  1637→    String returnType,
+  1638→  1638→  ) async {
+  1639→  1639→    final rows = await txn.rawQuery(
+  1640→  1640→      'SELECT ii.notes AS notes, ii.qty AS qty '
+  1641→  1641→      'FROM invoice_item ii JOIN invoice i ON i.id = ii.invoice_id '
+  1642→  1642→      'WHERE i.doc_type = ? AND i.status = ? AND i.original_invoice_id = ?',
+  1643→  1643→      [returnType, 'completed', originalInvoiceId],
+  1644→  1644→    );
+  1645→  1645→    return _sumByOriginMarker(rows);
+  1646→  1646→  }
+  1647→  1647→
+  1648→  1648→  static Map<int, double> _sumByOriginMarker(List<Map<String, Object?>> rows) {
+  1649→  1649→    final sums = <int, double>{};
+  1650→  1650→    for (final row in rows) {
+  1651→  1651→      final match = _originItemPattern.firstMatch(
+  1652→  1652→        (row['notes'] as String?) ?? '',
+  1653→  1653→      );
+  1654→  1654→      if (match == null) continue;
+  1655→  1655→      final id = int.parse(match.group(1)!);
+  1656→  1656→      sums[id] = (sums[id] ?? 0) + ((row['qty'] as num?)?.toDouble() ?? 0);
+  1657→  1657→    }
+  1658→  1658→    return sums;
+  1659→  1659→  }
+  1660→  1660→
+  1661→  1661→  /// المتاح للإرجاع مع تثبيت التجاذب العددي (لا سالب أبداً).
+  1662→  1662→  static double _available(double originalQty, double returnedQty) {
+  1663→  1663→    final available = originalQty - returnedQty;
+  1664→  1664→    if (available <= 0) return 0;
+  1665→  1665→    if ((available * 1000).round() / 1000 <= 0) return 0;
+  1666→  1666→    return available;
+  1667→  1667→  }
+  1668→  1668→
+  1669→  1669→  /// مقسوم تكلفة الوحدة الأصلية = المنصرف الكلي (qty + free_qty) —
+  1670→  1670→  /// البونص وحدات خرجت وتكلفتها داخل line_cost (القرار 8 برأس الملف).
+  1671→  1671→  /// حارس القسمة: المجموع ≤ 0 يعيد 1 (صف شاذ نظري).
+  1672→  1672→  static double _dispatchedDivisor(Map<String, Object?> origItem) {
+  1673→  1673→    final qty = (origItem['qty'] as num?)?.toDouble() ?? 0;
+  1674→  1674→    final free = (origItem['free_qty'] as num?)?.toDouble() ?? 0;
+  1675→  1675→    final total = qty + free;
+  1676→  1676→    return total > 0 ? total : 1;
+  1677→  1677→  }
+  1678→  1678→
+  1679→  1679→  /// يصوغ خطأ قاعدة البيانات بكلمات المستخدم (نمط المستودعات القائمة).
+  1680→  1680→  String _describeDbError(DatabaseException e) {
+  1681→  1681→    if (e.isUniqueConstraintError()) {
+  1682→  1682→      final text = e.toString();
+  1683→  1683→      if (text.contains('invoice_no')) {
+  1684→  1684→        return 'تعارض في رقم المرتجع — أعد الحفظ';
+  1685→  1685→      }
+  1686→  1686→      if (text.contains('payment_allocation')) {
+  1687→  1687→        return 'تخصيص مدفوعات مكرر لنفس السند والمرتجع';
+  1688→  1688→      }
+  1689→  1689→      return 'قيمة مكررة تخالف قيد التفرد في القاعدة';
+  1690→  1690→    }
+  1691→  1691→    if (_isCheckFailure(e)) {
+  1692→  1692→      final text = e.toString();
+  1693→  1693→      if (text.contains('stock_level')) {
+  1694→  1694→        return 'المخزون لا يسمح بهذه الكمية (رصيد سالب ممنوع)';
+  1695→  1695→      }
+  1696→  1696→      if (text.contains('due_amount') || text.contains('paid_amount')) {
+  1697→  1697→        return 'مبالغ الرد غير متسقة مع قيمة المرتجع';
+  1698→  1698→      }
+  1699→  1699→      return 'قيمة تخالف قيد سلامة محاسبي في القاعدة';
+  1700→  1700→    }
+  1701→  1701→    return 'تعذر حفظ المرتجع في القاعدة: $e';
+  1702→  1702→  }
+  1703→  1703→}
+  1704→  1704→
+  1705→  1705→/// هل الخطأ خرقاً لقيد CHECK؟
+  1706→  1706→bool _isCheckFailure(DatabaseException e) =>
+  1707→  1707→    e.toString().toUpperCase().contains('CHECK');
+  1708→  1708→
+  1709→  1709→// ─────────────────────────────────────────────────────────────────────
+  1710→  1710→// أنواع داخلية
+  1711→  1711→// ─────────────────────────────────────────────────────────────────────
+  1712→  1712→
+  1713→  1713→/// معلومات صنف داخل مستودع المرتجعات.
+  1714→  1714→class _ReturnProductInfo {
+  1715→  1715→  const _ReturnProductInfo({
+  1716→  1716→    required this.id,
+  1717→  1717→    required this.name,
+  1718→  1718→    required this.isService,
+  1719→  1719→    required this.trackBatches,
+  1720→  1720→  });
+  1721→  1721→  final int id;
+  1722→  1722→  final String name;
+  1723→  1723→  final bool isService;
+  1724→  1724→  final bool trackBatches;
+  1725→  1725→}
+  1726→  1726→
+  1727→  1727→/// قيمة بنود المرتجع المحسوبة (Snapshot).
+  1728→  1728→class _ValuedReturn {
+  1729→  1729→  const _ValuedReturn({
+  1730→  1730→    required this.subtotal,
+  1731→  1731→    required this.discountTotal,
+  1732→  1732→    required this.refundTotal,
+  1733→  1733→    required this.costTotal,
+  1734→  1734→    required this.lineTotals,
+  1735→  1735→    required this.discounts,
+  1736→  1736→  });
+  1737→  1737→  final double subtotal;
+  1738→  1738→  final double discountTotal;
+  1739→  1739→  final double refundTotal;
+  1740→  1740→  final double costTotal;
+  1741→  1741→  final List<double> lineTotals;
+  1742→  1742→  final List<double> discounts;
+  1743→  1743→}
+  1744→  1744→
+  1745→  1745→/// حصة/سعة دفعة — رقم الدفعة وتاريخ صلاحيتها بصيغة القاعدة (YYYY-MM-DD).
+  1746→  1746→class _BatchCap {
+  1747→  1747→  _BatchCap({
+  1748→  1748→    required this.batchId,
+  1749→  1749→    required this.batchNumber,
+  1750→  1750→    required this.expiryDate,
+  1751→  1751→    required this.qty,
+  1752→  1752→  });
+  1753→  1753→  final int batchId;
+  1754→  1754→  final String batchNumber;
+  1755→  1755→  final String expiryDate;
+  1756→  1756→  double qty;
+  1757→  1757→}
+  1758→  1758→
+  1759→  1759→/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
+  1760→  1760→String _num(double v) {
+  1761→  1761→  if (v.isNaN || v.isInfinite) {
+  1762→  1762→    return v.toString();
+  1763→  1763→  }
+  1764→  1764→  final rounded = (v * 1000).round() / 1000;
+  1765→  1765→  if (rounded == rounded.round()) {
+  1766→  1766→    return rounded.toInt().toString();
+  1767→  1767→  }
+  1768→  1768→  return rounded.toStringAsFixed(3);
+  1769→  1769→}
+  1770→  1770→
+  1771→  1771→/// `YYYY-MM-DD` (صيغة `batch.expiry_date`).
+  1772→  1772→String _dateOnly(DateTime d) =>
+  1773→  1773→    '${d.year.toString().padLeft(4, '0')}-'
+  1774→  1774→    '${d.month.toString().padLeft(2, '0')}-'
+  1775→  1775→    '${d.day.toString().padLeft(2, '0')}';
+  1776→  1776→

@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 /// نبرة الحالة.
@@ -75,6 +76,25 @@ class StatusChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// شارة «ملغاة» للمستندات المُبطلة (FR-02-15 — R17-c): ويدجت مشتركة
+/// واحدة لقائمتي البيع والشراء وتفاصيلهما (نفس النمط البصري لرقائق
+/// الحالة القائمة — نبرة سالبة بنص لا لون فقط، DS-26).
+class VoidedBadge extends StatelessWidget {
+  const VoidedBadge({super.key, this.dense = true});
+
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    return StatusChip(
+      label: AppLocalizations.of(context)!.invoiceVoidBadge,
+      tone: ChipTone.negative,
+      icon: Icons.block_rounded,
+      dense: dense,
     );
   }
 }

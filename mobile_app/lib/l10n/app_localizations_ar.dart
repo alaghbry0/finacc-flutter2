@@ -5014,4 +5014,54 @@ class AppLocalizationsAr extends AppLocalizations {
   String purBonusEditTitle(Object name) {
     return 'الكمية المجانية (بونص): $name';
   }
+
+  @override
+  String sellQtyEditTitle(Object name) {
+    return 'تعديل الكمية: $name';
+  }
+
+  @override
+  String purchaseQtyEditTitle(Object name) {
+    return 'تعديل الكمية: $name';
+  }
+
+  @override
+  String get invoiceVoidBadge => 'ملغاة';
+
+  @override
+  String get invoiceVoidButton => 'إبطال الفاتورة';
+
+  @override
+  String get invoiceVoidConfirmTitle => 'إبطال هذه الفاتورة؟';
+
+  @override
+  String invoiceVoidConfirmBody(Object no) {
+    return 'إبطال $no ينشئ حركات معاكسة كاملة (مخزون وصندوق وأرصدة) داخل معاملة واحدة — لا يُحذف شيء: تبقى الفاتورة ظاهرة بحالة «ملغاة» ورقمها لا يُعاد استخدامه أبداً.';
+  }
+
+  @override
+  String get invoiceVoidConfirmContinue => 'متابعة';
+
+  @override
+  String get invoiceVoidFinalTitle => 'تأكيد نهائي — إبطال الفاتورة';
+
+  @override
+  String invoiceVoidFinalBody(Object no) {
+    return 'هل أنت متأكد من إبطال $no نهائياً؟ لا يمكن التراجع بعد الإبطال.';
+  }
+
+  @override
+  String get invoiceVoidReasonLabel => 'سبب الإبطال (اختياري)';
+
+  @override
+  String get invoiceVoidConfirmAction => 'إبطال نهائي';
+
+  @override
+  String invoiceVoidedSnackBar(Object no) {
+    return 'أُبطلت الفاتورة $no وسُجِّلت الحركات المعاكسة كاملة.';
+  }
+
+  @override
+  String get invoiceVoidedNote =>
+      'فاتورة ملغاة — حركات مخزونها وصندوقها وأرصدتها عُكست بالكامل، ورقمها لا يُعاد استخدامه.';
 }

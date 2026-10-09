@@ -1582,5 +1582,18 @@
   "sellLineEditQtyError": "Enter a quantity greater than zero",
   "sellLineEditBonusError": "Enter a valid bonus quantity (zero or more, up to three decimals)",
   "sellLineEditPriceError": "Enter a valid price (zero or more)",
-  "purBonusEditTitle": "Free quantity (bonus): {name}"
+  "purBonusEditTitle": "Free quantity (bonus): {name}",
+  "sellQtyEditTitle": "Edit quantity: {name}",
+  "purchaseQtyEditTitle": "Edit quantity: {name}",
+  "invoiceVoidBadge": "Voided",
+  "invoiceVoidButton": "Void invoice",
+  "invoiceVoidConfirmTitle": "Void this invoice?",
+  "invoiceVoidConfirmBody": "Voiding {no} creates full counter movements (stock, cash and balances) in one transaction — nothing is deleted: the invoice stays visible with «Voided» status and its number is never reused.",
+  "invoiceVoidConfirmContinue": "Continue",
+  "invoiceVoidFinalTitle": "Final confirmation — void invoice",
+  "invoiceVoidFinalBody": "Are you sure you want to void {no}? This cannot be undone.",
+  "invoiceVoidReasonLabel": "Reason (optional)",
+  "invoiceVoidConfirmAction": "Void now",
+  "invoiceVoidedSnackBar": "Invoice {no} voided — full counter movements recorded.",
+  "invoiceVoidedNote": "Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused."
 }

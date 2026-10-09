@@ -1,4 +1,5 @@
-/// مكونات مشتركة لواجهات البيع — منتقي العملة، مدرّج الكمية، محرر الخصم،
+/// مكونات مشتركة لواجهات البيع — منتقي العملة، مدرّج الكمية (وقيمته
+/// قابلة للنقر لتحرير رقمي مباشر — R17-a)، محرر الخصم،
 /// شارة سعر الصرف التقديري (FR-02-20)، رقائق حالة الدفع، وإيصال النجاح،
 /// ومحرر السطر الموحّد (R16-a: كمية/كمية مجانية/سعر/خصم في BottomSheet
 /// واحد قابل للتمرير).
@@ -12,6 +13,7 @@ import '../../../../../domain/services/sale_pricing.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/theme/fin_tokens.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/fin_card.dart';
 import '../../../../core/widgets/status_chip.dart';
@@ -215,23 +217,52 @@ class _CurrencyChip extends StatelessWidget {
 }
 
 /// مدرّج الكمية — أزرار ± بأهداف لمس ≥ 48 (DS-29) وقيمة بأرقام جدولية.
+///
+/// **R17-a — كتابة الكمية مباشرة**: عند تمرير [onValueTap] تصبح قيمة
+/// الكمية نفسها زراً قابلاً للنقر (فتح المحرر الرقمي السريع «تعديل
+/// الكمية» بكتابة 7 أو 2.5 مباشرة) — بخلفية خفيفة وأيقونة قلم صغيرة
+/// توحي بالقابلية؛ وبدون المعامل تبقى القيمة نصاً ساكناً كسلوكها
+/// القديم حصراً (لا مستخدم آخر حالياً لكن المعامل اختياري للأمان).
 class QtyStepper extends StatelessWidget {
   const QtyStepper({
     super.key,
     required this.qty,
     required this.onChanged,
     this.enabled = true,
+    this.onValueTap,
   });
 
   final double qty;
   final ValueChanged<double> onChanged;
   final bool enabled;
 
+  /// R17-a — نقرة قيمة الكمية تفتح تحريراً رقمياً فورياً (null = قيمة
+  /// ساكنة غير قابلة للنقر — السلوك القديم).
+  final VoidCallback? onValueTap;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = FinColors.of(context);
     final decimals = qty == qty.truncateToDouble() ? 0 : 3;
+    // R17-a: تقليم الأصفار الزائدة (2.500 → 2.5) — صف الكمية ضيق على
+    // 390dp وأيقونة القلم تشاركه المساحة؛ العرض الأقصر يسع الجميع.
+    var qtyText = AmountText.format(qty, decimals);
+    if (decimals > 0 && qtyText.contains('.')) {
+      qtyText = qtyText
+          .replaceFirst(RegExp(r'0+$'), '')
+          .replaceFirst(RegExp(r'\.$'), '');
+    }
+    final value = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(qtyText, style: FinText.amountRow(scheme.onSurface)),
+        if (onValueTap != null) ...[
+          const SizedBox(width: FinSpacing.xs),
+          Icon(Icons.edit_rounded, size: 14, color: scheme.onSurfaceVariant),
+        ],
+      ],
+    );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -240,21 +271,53 @@ class QtyStepper extends StatelessWidget {
           color: colors.negative,
           onPressed: enabled && qty > 1 ? () => onChanged(qty - 1) : null,
         ),
-        Container(
-          constraints: const BoxConstraints(minWidth: 52),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            AmountText.format(qty, decimals),
-            style: FinText.amountRow(scheme.onSurface),
+        if (onValueTap == null)
+          Container(
+            constraints: const BoxConstraints(minWidth: 52),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: value,
+          )
+        else
+          _QtyValueButton(
+            key: const Key('sell_line_qty_value'),
+            onTap: enabled ? onValueTap : null,
+            child: value,
           ),
-        ),
         _RoundStepButton(
           icon: Icons.add_rounded,
           color: colors.positive,
           onPressed: enabled ? () => onChanged(qty + 1) : null,
         ),
       ],
+    );
+  }
+}
+
+/// هدف نقر قيمة الكمية (R17-a): خلفية خفيفة + نصف قطر تحكم FinRadius +
+/// رجل ملموسة ≥ 36 — يميّزها بصرياً عن النص الساكن ويدل على القابلية.
+class _QtyValueButton extends StatelessWidget {
+  const _QtyValueButton({super.key, required this.onTap, required this.child});
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(FinRadius.control),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 52, minHeight: 36),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: child,
+        ),
+      ),
     );
   }
 }
@@ -291,6 +354,7 @@ class _RoundStepButton extends StatelessWidget {
 }
 
 /// محرر رقم عشري بنافذة سفلية — للسعر/الكمية/الخصم/المبلغ النقدي.
+/// R17-a: هو بوابة «تعديل الكمية» الفورية من نقرة قيمة QtyStepper.
 Future<double?> showNumberEditSheet(
   BuildContext context, {
   required String title,
@@ -300,105 +364,152 @@ Future<double?> showNumberEditSheet(
   bool allowZero = true,
   int decimals = 2,
   IconData? icon,
-}) {
-  final controller = TextEditingController(
-    text: initial == initial.truncateToDouble()
-        ? initial.truncate().toString()
-        : initial.toStringAsFixed(decimals),
-  );
-  String? error;
-  return showModalBottomSheet<double>(
-    context: context,
-    isScrollControlled: true,
-    // فوق شريط التبويبات: تُفتح على متصفح الفرع لا الجذر — تنزلق
-    // من فوق الشريط السفلي بدل أن تغطيه من أسفل الشاشة.
-    useRootNavigator: false,
-    builder: (sheetContext) {
-      final l10n = AppLocalizations.of(sheetContext)!;
-      final scheme = Theme.of(sheetContext).colorScheme;
-      return StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      if (icon != null) ...[
-                        Icon(icon, color: scheme.primary, size: 22),
-                        const SizedBox(width: 10),
-                      ],
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: Theme.of(sheetContext).textTheme.titleMedium,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: false,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d*[\.,]?\d{0,4}'),
-                      ),
-                    ],
-                    onChanged: (_) {
-                      if (error != null) {
-                        setSheetState(() => error = null);
-                      }
-                    },
-                    onSubmitted: (_) =>
-                        Navigator.of(sheetContext).pop(_parse(controller.text)),
-                    decoration: InputDecoration(
-                      hintText: hint,
-                      errorText: error == null ? null : l10n.sellInvalidNumber,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  FilledButton(
-                    onPressed: () {
-                      final value = _parse(controller.text);
-                      if (value == null || value.isNaN || value.isInfinite) {
-                        setSheetState(() => error = 'invalid');
-                        return;
-                      }
-                      if (value < 0 || (!allowZero && value == 0)) {
-                        setSheetState(() => error = 'invalid');
-                        return;
-                      }
-                      Navigator.of(sheetContext).pop(value);
-                    },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                    ),
-                    child: Text(confirmLabel),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(),
-                    child: Text(l10n.commonCancel),
-                  ),
+}) => showModalBottomSheet<double>(
+  context: context,
+  isScrollControlled: true,
+  // فوق شريط التبويبات: تُفتح على متصفح الفرع لا الجذر — تنزلق
+  // من فوق الشريط السفلي بدل أن تغطيه من أسفل الشاشة.
+  useRootNavigator: false,
+  builder: (sheetContext) => _NumberEditSheet(
+    title: title,
+    initial: initial,
+    confirmLabel: confirmLabel,
+    hint: hint,
+    allowZero: allowZero,
+    decimals: decimals,
+    icon: icon,
+  ),
+);
+
+/// جسم محرر الرقم — StatefulWidget يملك متحكمه (يُنشأ بـ initState
+/// ويُدمَّر بـ dispose): المتحكم يبقى حياً طوال حياة النافذة **بما فيها
+/// حركة الخروج** (دماره عند اكتمال مستقبل showModalBottomSheet مبكراً
+/// كان يفجر «used after being disposed» بإعادة بناء الحقل أثناء
+/// الحركة — نفس علة محرر السطر الموحّد المكتشفة باختبارات R16-a،
+/// كشفتها هنا اختبارات R17-a بفتح النافذة من قيمة الكمية).
+class _NumberEditSheet extends StatefulWidget {
+  const _NumberEditSheet({
+    required this.title,
+    required this.initial,
+    required this.confirmLabel,
+    required this.allowZero,
+    required this.decimals,
+    this.hint,
+    this.icon,
+  });
+
+  final String title;
+  final double initial;
+  final String confirmLabel;
+  final String? hint;
+  final bool allowZero;
+  final int decimals;
+  final IconData? icon;
+
+  @override
+  State<_NumberEditSheet> createState() => _NumberEditSheetState();
+}
+
+class _NumberEditSheetState extends State<_NumberEditSheet> {
+  late final TextEditingController _controller;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.initial == widget.initial.truncateToDouble()
+          ? widget.initial.truncate().toString()
+          : widget.initial.toStringAsFixed(widget.decimals),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _parse(_controller.text);
+    if (value == null || value.isNaN || value.isInfinite) {
+      setState(() => _error = 'invalid');
+      return;
+    }
+    if (value < 0 || (!widget.allowZero && value == 0)) {
+      setState(() => _error = 'invalid');
+      return;
+    }
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, color: scheme.primary, size: 22),
+                  const SizedBox(width: 10),
                 ],
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
+              ],
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              onSubmitted: (_) =>
+                  Navigator.of(context).pop(_parse(_controller.text)),
+              decoration: InputDecoration(
+                hintText: widget.hint,
+                errorText: _error == null ? null : l10n.sellInvalidNumber,
               ),
             ),
-          );
-        },
-      );
-    },
-  ).whenComplete(controller.dispose);
+            const SizedBox(height: 18),
+            FilledButton(
+              onPressed: _submit,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+              child: Text(widget.confirmLabel),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.commonCancel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 double? _parse(String text) {
@@ -409,8 +520,7 @@ double? _parse(String text) {
 
 /// نتيجة محرر السطر الموحّد (R16-a): (الكمية، الكمية المجانية، السعر،
 /// نوع الخصم، قيمة الخصم) — null عند الإلغاء.
-typedef SellLineEditResult =
-    (double, double, double, SaleDiscountType, double);
+typedef SellLineEditResult = (double, double, double, SaleDiscountType, double);
 
 /// **محرر سطر السلة الموحّد** (R16-a — قرار المالك: إدخال دائم التوفر):
 /// BottomSheet يجمع الكمية المدفوعة + **الكمية المجانية (بونص — متاح
@@ -429,21 +539,20 @@ Future<SellLineEditResult?> showSellLineEditSheet(
   required double initialPrice,
   required SaleDiscountType initialDiscountType,
   required double initialDiscountValue,
-}) =>
-    showModalBottomSheet<SellLineEditResult>(
-      context: context,
-      isScrollControlled: true,
-      // فوق شريط التبويبات (متصفح الفرع) — نفس قرار بقية نوافذ البيع.
-      useRootNavigator: false,
-      builder: (sheetContext) => _SellLineEditSheet(
-        title: title,
-        initialQty: initialQty,
-        initialFreeQty: initialFreeQty,
-        initialPrice: initialPrice,
-        initialDiscountType: initialDiscountType,
-        initialDiscountValue: initialDiscountValue,
-      ),
-    );
+}) => showModalBottomSheet<SellLineEditResult>(
+  context: context,
+  isScrollControlled: true,
+  // فوق شريط التبويبات (متصفح الفرع) — نفس قرار بقية نوافذ البيع.
+  useRootNavigator: false,
+  builder: (sheetContext) => _SellLineEditSheet(
+    title: title,
+    initialQty: initialQty,
+    initialFreeQty: initialFreeQty,
+    initialPrice: initialPrice,
+    initialDiscountType: initialDiscountType,
+    initialDiscountValue: initialDiscountValue,
+  ),
+);
 
 /// جسم محرر السطر — StatefulWidget يملك متحكماته (تُنشأ بـ initState
 /// وتُدمَّر بـ dispose): المتحكمات تبقى حية طوال حياة النافذة **بما فيها
@@ -490,7 +599,9 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
   @override
   void initState() {
     super.initState();
-    _qtyController = TextEditingController(text: _initialText(widget.initialQty));
+    _qtyController = TextEditingController(
+      text: _initialText(widget.initialQty),
+    );
     _bonusController = TextEditingController(
       text: _initialText(widget.initialFreeQty),
     );
@@ -519,7 +630,9 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         child: ListView(
@@ -548,9 +661,7 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
                 signed: false,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d*[\.,]?\d{0,4}'),
-                ),
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
               ],
               onChanged: (_) {
                 if (_qtyError != null) setState(() => _qtyError = null);
@@ -571,9 +682,7 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
                 signed: false,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d*[\.,]?\d{0,4}'),
-                ),
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
               ],
               onChanged: (_) {
                 if (_bonusError != null) setState(() => _bonusError = null);
@@ -593,9 +702,7 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
                 signed: false,
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d*[\.,]?\d{0,4}'),
-                ),
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
               ],
               onChanged: (_) {
                 if (_priceError != null) setState(() => _priceError = null);
@@ -691,8 +798,7 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
       setState(() => _priceError = l10n.sellLineEditPriceError);
       return;
     }
-    final rawDiscount =
-        _discountController.text.trim().replaceAll(',', '.');
+    final rawDiscount = _discountController.text.trim().replaceAll(',', '.');
     final discount = rawDiscount.isEmpty ? 0.0 : double.tryParse(rawDiscount);
     if (discount == null ||
         discount.isNaN ||

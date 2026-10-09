@@ -67,14 +67,39 @@
 ///    (`status='completed'` وفق آلة الحالات 5.4-2).
 /// 9. **الضريبة** 0% في V1 لهذا المحرك (`tax_rate=0`) — الأعمدة جاهزة
 ///    بالمخطط ووحدة الضريبة لاحقة.
+///
+/// ## الإبطال (FR-02-15 — R17-c):
+/// `voidInvoice` تُنشئ **حركات معاكسة كاملة** داخل Transaction واحدة —
+/// لا حذف فيزيائي لأي صف (مرآة `sale_repository` § الإبطال):
+/// - **المخزون**: **المستلم الكلي** (qty + freeQty — البونص دخل المخزون
+///   وقت الشراء فيخرج كاملاً — قرار R16-a معكوساً) يُخصم من مخزن
+///   الفاتورة **بسعر حركة الشراء الأصلية Snapshot** `line_cost ÷ الكلي`
+///   (مرآة PRN — قاعدة 5.4-3)، من الدفعة الواردة الأصلية
+///   (`invoice_item.batch_id`) أولاً ثم دفعات الصنف النشطة FEFO
+///   (المنتهية مشمولة — إرجاعها للمورد جائز)؛ **رفض قاطع عند نقص
+///   المخزون** (5.4-5 — فما بِيع من الوارد لا يُبطَل شراؤه).
+/// - **WAC**: يُعاد حسابه على المتبقي بصيغة مرتجع الشراء حرفياً:
+///   `(qty_old×cost_old − مستلم×snapshot) ÷ (qty_old − مستلم)` مع
+///   حماية القسمة (المتبقي ≤ 0 → 0) ومنع السالب — فتعود التكلفة
+///   الوحدوية لما قبل الفاتورة.
+/// - **الصندوق**: سند صرف الإصدار يُبطَل بنمط `cash_repository.
+///   voidMovement` (`is_voided=1` + سطر معاكس معفى بـ `reversal_of`)؛
+///   تخصيصات سندات الصرف اللاحقة (PMT FIFO) تُسترد بحركة حقيقية
+///   معاكسة + حذف روابط التخصيص + عكس نصيب fx — الصندوق يعود كاملاً.
+/// - **رصيد المورد**: `status='void'` يستبعده من صيغة FR-03-03 (تعدّ
+///   `status='completed'` حصراً) — لا `due_amount` يُمسّ.
+/// - **الحارسان**: مكتملة حصراً + **رفض إن وُجدت مرتجعات شراء مكتملة
+///   مرتبطة** (PRN يُلغى أولاً) + حرارة الحالة داخل المعاملة.
 library;
 
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/storage/doc_sequence.dart';
 import '../../domain/core/result.dart';
+import '../../domain/models/invoice_void.dart';
 import '../../domain/models/purchase.dart';
 import '../../domain/services/purchase_pricing.dart';
+import 'batch_repository.dart';
 import 'exchange_rate_repository.dart';
 import 'settings_repository.dart';
 
@@ -114,11 +139,15 @@ class PurchaseRepository {
   PurchaseRepository(Database db)
     : _db = db,
       _rates = ExchangeRateRepository(db),
-      _settings = SettingsRepository(db);
+      _settings = SettingsRepository(db),
+      _batches = BatchRepository(db);
 
   final Database _db;
   final ExchangeRateRepository _rates;
   final SettingsRepository _settings;
+
+  /// دفعات FEFO — لخصم الوارد عند الإبطال (نفس تركيبة محرك المرتجعات).
+  final BatchRepository _batches;
 
   // ─────────────────────────────────────────────────────────────────────
   // الترحيل الذرّي (FR-02-08 / 5.4-3 / 5.4-4)
@@ -508,6 +537,436 @@ class PurchaseRepository {
   }
 
   // ─────────────────────────────────────────────────────────────────────
+  // الإبطال (FR-02-15 — R17-c) — حركات معاكسة كاملة، لا حذف فيزيائي
+  // ─────────────────────────────────────────────────────────────────────
+
+  /// **إبطال فاتورة شراء مكتملة** — معاملة واحدة (انظر رأس الملف
+  /// § الإبطال). [userId] منفّذ الإبطال و[reason] سبب اختياري للتدقيق.
+  ///
+  /// الترتيب: تحققات مسبقة (نوع/حالة/مرتجعات/توفر المخزون) → معاملة
+  /// واحدة (حرارة الحالة ← خصم الوارد الكلي ودفعاته Snapshot ← إعادة
+  /// حساب WAC ← إبطال سند الإصدار وسطره المعاكس ← استرداد تخصيصات
+  /// السندات اللاحقة ← `status='void'` ← تدقيق) → إيصال.
+  Future<Result<VoidInvoiceReceipt, String>> voidInvoice(
+    int invoiceId, {
+    required int userId,
+    String? reason,
+    DateTime? now,
+  }) async {
+    final at = now ?? DateTime.now();
+    final atIso = at.toUtc().toIso8601String();
+    final cleanReason = (reason ?? '').trim();
+
+    try {
+      // (1) الفاتورة: وجود + نوع + حالة (آلة الحالات 5.4-2).
+      final rows = await _db.query(
+        'invoice',
+        where: 'id = ?',
+        whereArgs: [invoiceId],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        return Err('الفاتورة رقم #$invoiceId غير موجودة.');
+      }
+      final orig = rows.first;
+      final docType = orig['doc_type'] as String;
+      if (docType != 'purchase') {
+        return Err(
+          'الفاتورة رقم #$invoiceId ليست فاتورة شراء (نوعها «$docType») — '
+          'لا يُبطَل من محرك المشتريات إلا شراء.',
+        );
+      }
+      final status = orig['status'] as String;
+      if (status == 'void') {
+        return Err(
+          'الفاتورة ${orig['invoice_no']} ملغاة سابقاً — لا تُبطل مرتين '
+          '(FR-02-15).',
+        );
+      }
+      if (status != 'completed') {
+        return Err(
+          'الفاتورة ${orig['invoice_no']} ليست مكتملة (حالتها «$status») — '
+          'لا يُبطَل إلا فاتورة مكتملة.',
+        );
+      }
+
+      // (2) الحارس الملزم: لا إبطال لفاتورة عليها مرتجعات شراء مكتملة.
+      final returnCount =
+          Sqflite.firstIntValue(
+            await _db.rawQuery(
+              "SELECT COUNT(*) FROM invoice WHERE original_invoice_id = ? "
+              "AND doc_type = 'purchase_return' AND status = 'completed'",
+              [invoiceId],
+            ),
+          ) ??
+          0;
+      if (returnCount > 0) {
+        return Err(
+          'على الفاتورة ${orig['invoice_no']} مرتجعات شراء مكتملة '
+          '($returnCount مرتجع PRN) — عالِج المرتجعات أولاً ثم أبطل '
+          'الفاتورة (لا يُبطل مستند وعليه مرتجعات — FR-02-15).',
+        );
+      }
+
+      // (3) البنود + الأصناف + فحص توفر المخزون مسبقاً (5.4-5 — مرآة
+      //     PRN: العادي من stock_level والمتتبع من مجموع دفعاته).
+      final itemRows = await _db.query(
+        'invoice_item',
+        where: 'invoice_id = ?',
+        whereArgs: [invoiceId],
+        orderBy: 'id ASC',
+      );
+      final productIds = {
+        for (final item in itemRows)
+          if (item['product_id'] != null) item['product_id'] as int,
+      };
+      final products = await _loadProducts(productIds);
+      final warehouseId = orig['warehouse_id'] as int;
+      final stockFailure = await _checkVoidStock(
+        itemRows,
+        products,
+        warehouseId,
+      );
+      if (stockFailure != null) return Err(stockFailure);
+
+      // (4) المعاملة الواحدة — كل الكتابات أو لا شيء (5.4-4).
+      return await _db.transaction((txn) async {
+        // 4-أ) حرارة الحالة داخل المعاملة (التزامن — لا إبطال مزدوج).
+        final guard = await txn.rawQuery(
+          'SELECT status, invoice_no FROM invoice WHERE id = ? LIMIT 1',
+          [invoiceId],
+        );
+        final liveStatus = guard.first['status'] as String;
+        if (liveStatus != 'completed') {
+          throw _FlowError(
+            'الفاتورة ${guard.first['invoice_no']} تغيّرت حالتها إلى '
+            '«$liveStatus» قبل الإبطال — أعد المحاولة.',
+          );
+        }
+        final invoiceNo = guard.first['invoice_no'] as String;
+
+        var stockMoves = 0;
+        var reversedQtyTotal = 0.0;
+        var reversalCash = 0.0;
+        var cashReversals = 0;
+        var voucherRefunds = 0;
+
+        // 4-ب) عكس المخزون بنداً بنداً: المستلم الكلي (qty + freeQty)
+        //      يخرج بسعر حركة الشراء الأصلية + إعادة حساب WAC (مرآة PRN).
+        for (final item in itemRows) {
+          final productId = item['product_id'] as int?;
+          if (productId == null) continue;
+          final info = products[productId];
+          if (info == null || info.isService) continue;
+
+          final qty = (item['qty'] as num?)?.toDouble() ?? 0;
+          final freeQty = (item['free_qty'] as num?)?.toDouble() ?? 0;
+          final received = roundCost(qty + freeQty);
+          if (received <= _qtyEpsilon) continue;
+          final divisor = received > 0 ? received : 1;
+          final snapshotUnit = roundCost(
+            ((item['line_cost'] as num?)?.toDouble() ?? 0) / divisor,
+          );
+          reversedQtyTotal = roundCost(reversedQtyTotal + received);
+
+          // WAC قبل الخصم: المخزون الكلي والتكلفة داخل المعاملة (القرار 1).
+          final wacBefore = await _readWacState(txn, productId);
+
+          // خصم الدفعات (مرآة PRN — القرار 4): الواردة الأصلية أولاً
+          // (بمعرّفها المخزَّن وقت الشراء) ثم FEFO للمتبقي (المنتهية
+          // مشمولة — إرجاعها للمورد جائز) — حارس السالب بداخلها يرمي.
+          final deductions =
+              <
+                ({
+                  int batchId,
+                  String batchNumber,
+                  String expiryDate,
+                  double qty,
+                })
+              >[];
+          if (info.trackBatches) {
+            var remaining = received;
+            final originalBatchId = item['batch_id'] as int?;
+            if (originalBatchId != null) {
+              final batchRows = await txn.query(
+                'batch',
+                columns: ['id', 'batch_number', 'expiry_date', 'qty'],
+                where: 'id = ?',
+                whereArgs: [originalBatchId],
+                limit: 1,
+              );
+              if (batchRows.isNotEmpty) {
+                final available =
+                    (batchRows.first['qty'] as num?)?.toDouble() ?? 0;
+                final take = available < remaining ? available : remaining;
+                if (take > _qtyEpsilon) {
+                  final affected = await txn.rawUpdate(
+                    'UPDATE batch SET qty = qty - ?, updated_at = ? '
+                    'WHERE id = ? AND qty >= ?',
+                    [take, atIso, originalBatchId, take],
+                  );
+                  if (affected > 0) {
+                    deductions.add((
+                      batchId: originalBatchId,
+                      batchNumber: batchRows.first['batch_number'] as String,
+                      expiryDate: batchRows.first['expiry_date'] as String,
+                      qty: take,
+                    ));
+                    remaining = roundCost(remaining - take);
+                  }
+                }
+              }
+            }
+            if (remaining > _qtyEpsilon) {
+              final fefo = await _batches.allocateFefo(
+                txn,
+                productId: productId,
+                warehouseId: warehouseId,
+                qty: remaining,
+                asOf: at,
+                includeExpired: true,
+              );
+              if (fefo.shorted) {
+                throw _FlowError(
+                  'الكمية غير متوفرة بدفعات الصنف «${info.name}»: المتاح '
+                  '${_num(received - remaining + fefo.allocatedQty)} '
+                  'والمطلوب ${_num(received)} — لا يسمح النظام بمخزون سالب.',
+                );
+              }
+              await _batches.applyAllocation(txn, fefo.allocations, now: at);
+              for (final a in fefo.allocations) {
+                deductions.add((
+                  batchId: a.batchId,
+                  batchNumber: a.batchNumber,
+                  expiryDate: _dateOnly(a.expiryDate),
+                  qty: a.qty,
+                ));
+              }
+            }
+          }
+
+          // حركات الخروج: لكل دفعة خصماً (بسعر Snapshot) أو واحدة للعادي.
+          if (deductions.isNotEmpty) {
+            for (final d in deductions) {
+              await txn.insert('stock_movement', {
+                'product_id': productId,
+                'warehouse_id': warehouseId,
+                'movement_type': 'purchase_return',
+                'qty': -d.qty, // الخروج سالب (اتجاه المخطط).
+                'unit_cost': snapshotUnit,
+                'ref_type': 'invoice',
+                'ref_id': invoiceId,
+                'moved_at': atIso,
+                'notes':
+                    'رقم الدفعة ${d.batchNumber} '
+                    '(تنتهي ${d.expiryDate}) — إبطال $invoiceNo',
+                'created_at': atIso,
+                'created_by': userId,
+              });
+              stockMoves++;
+            }
+          } else {
+            await txn.insert('stock_movement', {
+              'product_id': productId,
+              'warehouse_id': warehouseId,
+              'movement_type': 'purchase_return',
+              'qty': -received,
+              'unit_cost': snapshotUnit,
+              'ref_type': 'invoice',
+              'ref_id': invoiceId,
+              'moved_at': atIso,
+              'notes':
+                  '$invoiceNo — إبطال'
+                  '${freeQty > _qtyEpsilon ? ' (بونص خارج: ${_num(freeQty)})' : ''}',
+              'created_at': atIso,
+              'created_by': userId,
+            });
+            stockMoves++;
+          }
+
+          // خصم دفتر stock_level — حارس السالب الصارم (5.4-5).
+          final consumed = await txn.rawUpdate(
+            'UPDATE stock_level SET qty = qty - ? '
+            'WHERE product_id = ? AND warehouse_id = ? AND qty >= ?',
+            [received, productId, warehouseId, received],
+          );
+          if (consumed == 0) {
+            throw _FlowError(
+              'الكمية غير متوفرة للصنف «${info.name}» بالمخزن — الرصيد '
+              'الدفتري أقل من المطلوب إخراجه (${_num(received)}) — لا '
+              'يسمح النظام بمخزون سالب (ما بِيع من الوارد لا يُبطَل شراؤه).',
+            );
+          }
+
+          // إعادة حساب WAC على المتبقي (بصيغة PRN حرفياً — قاعدة 5.4-3).
+          final remainingQty = wacBefore.qty - received;
+          double newCost;
+          if (remainingQty <= _qtyEpsilon) {
+            newCost = 0; // خرج كل المخزون — قيمة المخزون صفر.
+          } else {
+            newCost = roundCost(
+              (wacBefore.qty * wacBefore.cost - received * snapshotUnit) /
+                  remainingQty,
+            );
+            if (newCost < 0) newCost = 0; // حارس نظرية نادرة.
+          }
+          await txn.update(
+            'product',
+            {'cost_price': newCost, 'updated_at': atIso},
+            where: 'id = ?',
+            whereArgs: [productId],
+          );
+        }
+
+        // 4-ج) عكس الصندوق (أ) سند الإصدار: نمط voidMovement حرفياً —
+        //      is_voided=1 على الأصل + سطر معاكس معفى من الأرصدة عبر
+        //      reversal_of + حذف روابط التخصيص (رابط لا حركة).
+        final issuanceTxs = await txn.rawQuery(
+          "SELECT * FROM cash_tx WHERE ref_type = 'invoice' AND ref_id = ? "
+          'AND voucher_no IS NULL AND is_voided = 0 AND reversal_of IS NULL',
+          [invoiceId],
+        );
+        for (final tx in issuanceTxs) {
+          final txId = tx['id'] as int;
+          final isReceipt = tx['tx_type'] == 'receipt';
+          await txn.rawUpdate(
+            'UPDATE cash_tx SET is_voided = 1 WHERE id = ? AND is_voided = 0',
+            [txId],
+          );
+          await txn.rawDelete(
+            'DELETE FROM payment_allocation WHERE cash_tx_id = ?',
+            [txId],
+          );
+          await txn.insert('cash_tx', {
+            'tx_type': isReceipt ? 'payment' : 'receipt',
+            'cashbox_id': tx['cashbox_id'],
+            'currency_id': tx['currency_id'],
+            'amount': tx['amount'],
+            'exchange_rate': tx['exchange_rate'],
+            'settlement_rate': tx['settlement_rate'],
+            'fx_gain_loss': -((tx['fx_gain_loss'] as num?)?.toDouble() ?? 0),
+            'voucher_no': null, // رقم الأصل لا يُنسخ (استمرارية الترقيم).
+            'tx_date': atIso,
+            'ref_type': 'invoice',
+            'ref_id': null,
+            'customer_id': tx['customer_id'],
+            'supplier_id': tx['supplier_id'],
+            'is_voided': 0,
+            'reversal_of': txId,
+            'description':
+                'إبطال دفع $invoiceNo'
+                '${cleanReason.isEmpty ? '' : ' — $cleanReason'}',
+            'created_at': atIso,
+            'created_by': userId,
+          });
+          reversalCash = roundMoney(
+            reversalCash + ((tx['amount'] as num?)?.toDouble() ?? 0),
+          );
+          cashReversals++;
+        }
+
+        // 4-د) عكس الصندوق (ب) تخصيصات سندات الصرف اللاحقة (PMT FIFO):
+        //      حركة استرداد حقيقية معاكسة (محسوبة في الأرصدة) + حذف
+        //      رابط التخصيص + عكس نصيب الفاتورة من فرق الصرف.
+        final invoiceRate = (orig['exchange_rate'] as num?)?.toDouble() ?? 1;
+        final allocations = await txn.rawQuery(
+          'SELECT pa.cash_tx_id AS tx_id, pa.allocated_amount AS alloc, '
+          '       ct.tx_type, ct.cashbox_id, ct.currency_id, ct.exchange_rate, '
+          '       ct.settlement_rate, ct.voucher_no '
+          'FROM payment_allocation pa '
+          'JOIN cash_tx ct ON ct.id = pa.cash_tx_id '
+          'WHERE pa.invoice_id = ? AND ct.voucher_no IS NOT NULL '
+          '  AND ct.is_voided = 0 AND ct.reversal_of IS NULL',
+          [invoiceId],
+        );
+        for (final alloc in allocations) {
+          final amount = (alloc['alloc'] as num?)?.toDouble() ?? 0;
+          if (amount <= moneyEpsilon) continue;
+          final isReceipt = alloc['tx_type'] == 'receipt';
+          final voucherRate = (alloc['exchange_rate'] as num?)?.toDouble() ?? 1;
+          final fxShare = roundMoney(
+            amount *
+                (isReceipt
+                    ? voucherRate - invoiceRate
+                    : invoiceRate - voucherRate),
+          );
+          await txn.insert('cash_tx', {
+            'tx_type': isReceipt ? 'payment' : 'receipt',
+            'cashbox_id': alloc['cashbox_id'],
+            'currency_id': alloc['currency_id'],
+            'amount': amount,
+            'exchange_rate': voucherRate,
+            'settlement_rate': alloc['settlement_rate'],
+            'fx_gain_loss': roundMoney(-fxShare),
+            'voucher_no': null,
+            'tx_date': atIso,
+            'ref_type': 'invoice',
+            'ref_id': invoiceId,
+            'customer_id': null,
+            'supplier_id': null,
+            'is_voided': 0,
+            'reversal_of': null, // حركة حقيقية — تحسب في الأرصدة.
+            'description':
+                'استرداد تخصيص سند ${alloc['voucher_no']} '
+                '— إبطال $invoiceNo',
+            'created_at': atIso,
+            'created_by': userId,
+          });
+          await txn.rawDelete(
+            'DELETE FROM payment_allocation '
+            'WHERE cash_tx_id = ? AND invoice_id = ?',
+            [alloc['tx_id'], invoiceId],
+          );
+          reversalCash = roundMoney(reversalCash + amount);
+          voucherRefunds++;
+        }
+
+        // 4-هـ) الحالة: completed → void (السجل يبقى — لا حذف فيزيائي).
+        await txn.rawUpdate(
+          "UPDATE invoice SET status = 'void', updated_at = ? WHERE id = ?",
+          [atIso, invoiceId],
+        );
+
+        // 4-و) قيد التدقيق (append-only — نمط المستودعات القائمة).
+        await txn.insert('audit_log', {
+          'user_id': userId,
+          'action': 'void_invoice',
+          'entity': 'invoice',
+          'entity_id': invoiceId,
+          'details':
+              'no=$invoiceNo doc_type=purchase '
+              'reason=${cleanReason.isEmpty ? '-' : cleanReason} '
+              'reversed_cash=${_num(reversalCash)} '
+              'reversed_qty=${_num(reversedQtyTotal)} '
+              'stock_moves=$stockMoves cash_reversals=$cashReversals '
+              'voucher_refunds=$voucherRefunds total=${orig['total']} '
+              'paid=${orig['paid_amount']} due=${orig['due_amount']}',
+          'at': atIso,
+        });
+
+        return Ok<VoidInvoiceReceipt, String>(
+          VoidInvoiceReceipt(
+            invoiceId: invoiceId,
+            invoiceNo: invoiceNo,
+            docType: 'purchase',
+            stockMovementCount: stockMoves,
+            cashReversalCount: cashReversals,
+            voucherRefundCount: voucherRefunds,
+            reversedCash: reversalCash,
+            reversedQty: reversedQtyTotal,
+          ),
+        );
+      });
+    } on _FlowError catch (e) {
+      return Err(e.message);
+    } on StateError catch (e) {
+      return Err(e.message);
+    } on DatabaseException catch (e) {
+      return Err(_describeDbError(e));
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
   // القراءات
   // ─────────────────────────────────────────────────────────────────────
 
@@ -655,6 +1114,85 @@ class PurchaseRepository {
           unitId: row['unit_id'] as int?,
         ),
     };
+  }
+
+  /// فحص توفر المخزون مسبقاً لإبطال الشراء (5.4-5 — مرآة PRN): لكل صنف
+  /// غير خدمي، المستلم الكلي (qty + free_qty) لا يتجاوز المتاح بمخزن
+  /// الفاتورة: العادي من `stock_level` والمتتبع من مجموع دفعاته غير
+  /// المؤرشفة (المنتهية مشمولة — الخروج منها جائز للمورد).
+  Future<String?> _checkVoidStock(
+    List<Map<String, Object?>> itemRows,
+    Map<int, _ProductInfo> products,
+    int warehouseId,
+  ) async {
+    final requested = <int, double>{};
+    final names = <int, String>{};
+    for (final item in itemRows) {
+      final productId = item['product_id'] as int?;
+      if (productId == null) continue;
+      final info = products[productId];
+      if (info == null || info.isService) continue;
+      final qty = (item['qty'] as num?)?.toDouble() ?? 0;
+      final free = (item['free_qty'] as num?)?.toDouble() ?? 0;
+      requested[productId] = (requested[productId] ?? 0) + qty + free;
+      names[productId] = info.name;
+    }
+    if (requested.isEmpty) return null;
+    final ids = requested.keys.toList();
+    final inClause = List.filled(ids.length, '?').join(',');
+
+    final plainRows = await _db.rawQuery(
+      'SELECT product_id, qty FROM stock_level '
+      'WHERE warehouse_id = ? AND product_id IN ($inClause)',
+      [warehouseId, ...ids],
+    );
+    final plainQty = {
+      for (final row in plainRows)
+        row['product_id'] as int: (row['qty'] as num?)?.toDouble() ?? 0,
+    };
+    final batchRows = await _db.rawQuery(
+      'SELECT product_id, SUM(qty) AS q FROM batch '
+      'WHERE warehouse_id = ? AND product_id IN ($inClause) '
+      '  AND qty > 0 AND is_archived = 0 GROUP BY product_id',
+      [warehouseId, ...ids],
+    );
+    final batchQty = {
+      for (final row in batchRows)
+        row['product_id'] as int: (row['q'] as num?)?.toDouble() ?? 0,
+    };
+
+    for (final entry in requested.entries) {
+      final tracked = products[entry.key]!.trackBatches;
+      final available = tracked
+          ? (batchQty[entry.key] ?? 0)
+          : (plainQty[entry.key] ?? 0);
+      if (available + _qtyEpsilon < entry.value) {
+        return 'لا يمكن إبطال الفاتورة: الكمية غير متوفرة للصنف '
+            '«${names[entry.key]}» — المتاح ${_num(available)} والمطلوب '
+            'إخراجه ${_num(entry.value)} (ما بِيع من الوارد لا يُبطَل '
+            'شراؤه — لا يسمح النظام بمخزون سالب).';
+      }
+    }
+    return null;
+  }
+
+  /// يقرأ حالة WAC (التكلفة + الكمية الكلية عبر المخازن) داخل المعاملة —
+  /// نفس استعلام `_applyWac` (القرار 1) بصيغة `return_repository`.
+  Future<({double cost, double qty})> _readWacState(
+    DatabaseExecutor txn,
+    int productId,
+  ) async {
+    final rows = await txn.rawQuery(
+      'SELECT p.cost_price AS cost, '
+      '       COALESCE((SELECT SUM(sl.qty) FROM stock_level sl '
+      '                 WHERE sl.product_id = p.id), 0) AS qty '
+      'FROM product p WHERE p.id = ?',
+      [productId],
+    );
+    return (
+      cost: (rows.first['cost'] as num?)?.toDouble() ?? 0,
+      qty: (rows.first['qty'] as num?)?.toDouble() ?? 0,
+    );
   }
 
   /// يركّب الملاحظة الداخلية: مرجع فاتورة المورد كبادئة موثَّقة ثم ملاحظة
