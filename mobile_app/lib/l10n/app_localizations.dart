@@ -8310,6 +8310,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New item'**
   String get visFixItemsAddFabShort;
+
+  /// No description provided for @tmplSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Printing & invoices'**
+  String get tmplSectionTitle;
+
+  /// No description provided for @tmplSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice template, colors and elements — with live preview'**
+  String get tmplSectionSubtitle;
+
+  /// No description provided for @tmplScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Printing & invoices'**
+  String get tmplScreenTitle;
+
+  /// No description provided for @tmplTemplateSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice template'**
+  String get tmplTemplateSectionTitle;
+
+  /// No description provided for @tmplClassicName.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic A4 landscape'**
+  String get tmplClassicName;
+
+  /// No description provided for @tmplClassicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Government-form mimicry: outer frame, centered logo, three signature boxes and stamp area'**
+  String get tmplClassicDesc;
+
+  /// No description provided for @tmplSimpleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple A4 portrait'**
+  String get tmplSimpleName;
+
+  /// No description provided for @tmplSimpleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The app\'s current template — colored band, clean table and totals card'**
+  String get tmplSimpleDesc;
+
+  /// No description provided for @tmplThermalName.
+  ///
+  /// In en, this message translates to:
+  /// **'Thermal 80mm'**
+  String get tmplThermalName;
+
+  /// No description provided for @tmplThermalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Roll receipt for thermal printers with an invoice-number barcode'**
+  String get tmplThermalDesc;
+
+  /// No description provided for @tmplColorsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice colors'**
+  String get tmplColorsTitle;
+
+  /// No description provided for @tmplColorTableHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Table header'**
+  String get tmplColorTableHead;
+
+  /// No description provided for @tmplColorBorders.
+  ///
+  /// In en, this message translates to:
+  /// **'Borders'**
+  String get tmplColorBorders;
+
+  /// No description provided for @tmplColorAccentRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red accent'**
+  String get tmplColorAccentRed;
+
+  /// No description provided for @tmplTogglesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice elements'**
+  String get tmplTogglesTitle;
+
+  /// No description provided for @tmplShowDiscountCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount column'**
+  String get tmplShowDiscountCol;
+
+  /// No description provided for @tmplShowDiscountColDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiding it simplifies the items table for discount-free shops'**
+  String get tmplShowDiscountColDesc;
+
+  /// No description provided for @tmplShowUnitCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit column'**
+  String get tmplShowUnitCol;
+
+  /// No description provided for @tmplShowUnitColDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows each item\'s selling unit (carton/box…) where available'**
+  String get tmplShowUnitColDesc;
+
+  /// No description provided for @tmplShowBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice-number barcode'**
+  String get tmplShowBarcode;
+
+  /// No description provided for @tmplShowBarcodeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A scannable Code128 mark under the invoice or receipt'**
+  String get tmplShowBarcodeDesc;
+
+  /// No description provided for @tmplShowTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax details'**
+  String get tmplShowTax;
+
+  /// No description provided for @tmplShowTaxDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Prints the company tax number if present in its profile'**
+  String get tmplShowTaxDesc;
+
+  /// No description provided for @tmplShowSignatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Three signature boxes'**
+  String get tmplShowSignatures;
+
+  /// No description provided for @tmplShowSignaturesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiver, collector and seller in horizontal boxes (classic template)'**
+  String get tmplShowSignaturesDesc;
+
+  /// No description provided for @tmplShowStamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stamp area'**
+  String get tmplShowStamp;
+
+  /// No description provided for @tmplShowStampDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved blank space for the company stamp (classic template)'**
+  String get tmplShowStampDesc;
+
+  /// No description provided for @tmplShowFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice footer'**
+  String get tmplShowFooter;
+
+  /// No description provided for @tmplShowFooterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Company text and thanks line at the bottom of the document'**
+  String get tmplShowFooterDesc;
+
+  /// No description provided for @tmplShowNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes box'**
+  String get tmplShowNotes;
+
+  /// No description provided for @tmplShowNotesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The invoice\'s printed notes inside a dedicated frame'**
+  String get tmplShowNotesDesc;
+
+  /// No description provided for @tmplBadgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy badge'**
+  String get tmplBadgeTitle;
+
+  /// No description provided for @tmplBadgeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No badge'**
+  String get tmplBadgeNone;
+
+  /// No description provided for @tmplBadgeOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get tmplBadgeOriginal;
+
+  /// No description provided for @tmplBadgeCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get tmplBadgeCopy;
+
+  /// No description provided for @tmplPreviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get tmplPreviewButton;
+
+  /// No description provided for @tmplResetButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get tmplResetButton;
+
+  /// No description provided for @tmplWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the template setting — current value unchanged.'**
+  String get tmplWriteFailed;
+
+  /// No description provided for @tmplNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes apply to the next print instantly — no save button.'**
+  String get tmplNote;
+
+  /// No description provided for @tmplTitleCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash sales invoice'**
+  String get tmplTitleCash;
+
+  /// No description provided for @tmplTitleCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit sales invoice'**
+  String get tmplTitleCredit;
+
+  /// No description provided for @tmplTitleMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash & credit sales invoice'**
+  String get tmplTitleMixed;
+
+  /// No description provided for @tmplUnitCol.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get tmplUnitCol;
+
+  /// No description provided for @tmplNotesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get tmplNotesTitle;
+
+  /// No description provided for @tmplSignReceiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiver'**
+  String get tmplSignReceiver;
+
+  /// No description provided for @tmplSignCollector.
+  ///
+  /// In en, this message translates to:
+  /// **'Collector'**
+  String get tmplSignCollector;
+
+  /// No description provided for @tmplSignSeller.
+  ///
+  /// In en, this message translates to:
+  /// **'Seller'**
+  String get tmplSignSeller;
+
+  /// No description provided for @tmplStampArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Stamp area'**
+  String get tmplStampArea;
+
+  /// No description provided for @tmplTaxNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax number'**
+  String get tmplTaxNumber;
 }
 
 class _AppLocalizationsDelegate

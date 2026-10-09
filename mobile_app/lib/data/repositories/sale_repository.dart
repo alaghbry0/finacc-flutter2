@@ -582,11 +582,17 @@ class SaleRepository {
       [invoiceId],
     );
     if (rows.isEmpty) return null;
-    final itemRows = await _db.query(
-      'invoice_item',
-      where: 'invoice_id = ?',
-      whereArgs: [invoiceId],
-      orderBy: 'id ASC',
+    // اسم الوحدة يُقرأ للعرض فقط (قوالب الطباعة UX-3) — JOIN قراءة صرف
+    // فوق عمود موجود منذ v1، بلا أي مساس بمنطق الترحيل/الترحيل العكسي.
+    final itemRows = await _db.rawQuery(
+      '''
+      SELECT ii.*, u.name AS unit_name
+      FROM invoice_item ii
+      LEFT JOIN unit u ON u.id = ii.unit_id
+      WHERE ii.invoice_id = ?
+      ORDER BY ii.id ASC
+    ''',
+      [invoiceId],
     );
     return SaleInvoiceDetail(
       invoice: SaleInvoice.fromRow(rows.first),

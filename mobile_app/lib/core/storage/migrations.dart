@@ -46,6 +46,12 @@ int get currentSchemaVersion => migrations.last.version;
 /// `company` (قرار المنسق: الشعار BLOB داخل القاعدة لينجو مع ملف النسخة
 /// الاحتياطي) + بذر مفاتيح التخصيص الجديدة في `settings`
 /// (`sale.default_payment` / `sale.show_discounts` / `display.font_scale`).
+///
+/// **الإصدار 4** (موجة UX-3 — قوالب الفواتير القابلة للتخصيص): جدول
+/// `print_template` (صف لكل قالب × نوع مستند): كلاسيكي A4 أفقي (محاكاة
+/// نموذج المالك) + بسيط A4 عمودي (سلوك البنّاء القائم — **هو الافتراضي**
+/// حفاظاً على مخرجات المتاجر القائمة) + حراري 80مم. الشعار نفسه يبقى
+/// في `company.logo_png` (لا تكرار هنا — قرار المنسق UX-audit-synthesis).
 const List<DbMigration> migrations = <DbMigration>[
   DbMigration(version: 1, statements: schemaV1Ddl, seeds: _seedStatements),
   DbMigration(version: 2, statements: <String>[repairOpeningBatchesV2]),
@@ -53,6 +59,11 @@ const List<DbMigration> migrations = <DbMigration>[
     version: 3,
     statements: <String>[alterCompanyLogoPngV3],
     seeds: _seedStatementsV3,
+  ),
+  DbMigration(
+    version: 4,
+    statements: <String>[createPrintTemplateV4],
+    seeds: _seedStatementsV4,
   ),
 ];
 
@@ -143,6 +154,45 @@ const List<String> _seedStatementsV3 = <String>[
     ('sale.default_payment', '"cash"', strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     ('sale.show_discounts', '"on"', strftime('%Y-%m-%dT%H:%M:%SZ','now')),
     ('display.font_scale', '"normal"', strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  ''',
+];
+
+/// عبارة DDL للإصدار 4 — جدول قوالب الطباعة (موجة UX-3).
+///
+/// (علنية لتُختبر مباشرة.) صف لكل (نوع مستند × قالب) بإعدادات JSON في
+/// `config` — المفتاح `doc_type='sale'` في V1 (أنواع أخرى لاحقاً)،
+/// و`is_default` يحدد القالب النشط الذي تمر عبره الطباعة/المعاينة.
+const String createPrintTemplateV4 = '''
+  CREATE TABLE print_template (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_type TEXT NOT NULL DEFAULT 'sale',
+    code TEXT NOT NULL,
+    is_default INTEGER NOT NULL DEFAULT 0,
+    config TEXT,
+    created_at TEXT, updated_at TEXT, created_by INTEGER,
+    UNIQUE(doc_type, code)
+  )
+''';
+
+/// بذور الإصدار 4 — القوالب الثلاثة لفواتير البيع (موجة UX-3).
+///
+/// `INSERT OR IGNORE` (نمط v3): إعادة التشغيل لا تكرر ولا تدوس تخصيصاً
+/// كتبه المستخدم. البسيط A4 هو الافتراضي — سلوك المتاجر القائمة كما هو
+/// حتى يختار المالك التغيير بنفسه من شاشة «الطباعة والفواتير».
+const List<String> _seedStatementsV4 = <String>[
+  '''
+  INSERT OR IGNORE INTO print_template(doc_type, code, is_default, config,
+                                      created_at, updated_at)
+  VALUES
+    ('sale', 'classic_a4', 0,
+     '{"templateId":"classic_a4","tableHeadArgb":4288529382,"borderArgb":4281812815,"accentRedArgb":4291176488,"showDiscountColumn":true,"showUnitColumn":true,"showBarcode":false,"showTax":false,"showSignatures":true,"showStampArea":true,"showFooter":true,"showNotes":true,"badge":"none"}',
+     strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    ('sale', 'simple_a4', 1,
+     '{"templateId":"simple_a4","tableHeadArgb":4292864999,"borderArgb":4292667361,"accentRedArgb":4291176488,"showDiscountColumn":true,"showUnitColumn":false,"showBarcode":false,"showTax":false,"showSignatures":true,"showStampArea":true,"showFooter":true,"showNotes":true,"badge":"none"}',
+     strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    ('sale', 'thermal_80', 0,
+     '{"templateId":"thermal_80","tableHeadArgb":4278190080,"borderArgb":4278190080,"accentRedArgb":4291176488,"showDiscountColumn":true,"showUnitColumn":false,"showBarcode":true,"showTax":false,"showSignatures":false,"showStampArea":false,"showFooter":true,"showNotes":true,"badge":"none"}',
+     strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   ''',
 ];
 

@@ -4803,4 +4803,162 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get visFixItemsAddFabShort => 'صنف جديد';
+
+  @override
+  String get tmplSectionTitle => 'الطباعة والفواتير';
+
+  @override
+  String get tmplSectionSubtitle =>
+      'قالب الفاتورة والألوان والعناصر — بمعاينة حية';
+
+  @override
+  String get tmplScreenTitle => 'الطباعة والفواتير';
+
+  @override
+  String get tmplTemplateSectionTitle => 'قالب الفاتورة';
+
+  @override
+  String get tmplClassicName => 'كلاسيكي A4 أفقي';
+
+  @override
+  String get tmplClassicDesc =>
+      'محاكاة النموذج الحكومي: إطار خارجي وشعار بالوسط وخانات توقيع ثلاث ومكان ختم';
+
+  @override
+  String get tmplSimpleName => 'بسيط A4 عمودي';
+
+  @override
+  String get tmplSimpleDesc =>
+      'قالب التطبيق الحالي — ترويسة ملونة وجدول أنيق وبطاقة إجماليات';
+
+  @override
+  String get tmplThermalName => 'حراري 80مم';
+
+  @override
+  String get tmplThermalDesc =>
+      'إيصال رول للطابعات الحرارية بباركود رقم الفاتورة';
+
+  @override
+  String get tmplColorsTitle => 'ألوان الفاتورة';
+
+  @override
+  String get tmplColorTableHead => 'رأس الجدول';
+
+  @override
+  String get tmplColorBorders => 'الحدود';
+
+  @override
+  String get tmplColorAccentRed => 'التمييز الأحمر';
+
+  @override
+  String get tmplTogglesTitle => 'عناصر الفاتورة';
+
+  @override
+  String get tmplShowDiscountCol => 'عمود الخصم';
+
+  @override
+  String get tmplShowDiscountColDesc =>
+      'إخفاؤه يبسّط جدول الأصناف للمتاجر بلا خصومات';
+
+  @override
+  String get tmplShowUnitCol => 'عمود الوحدة';
+
+  @override
+  String get tmplShowUnitColDesc =>
+      'يعرض وحدة بيع كل صنف (كرتونة/علبة…) حيث تتوفر';
+
+  @override
+  String get tmplShowBarcode => 'باركود رقم الفاتورة';
+
+  @override
+  String get tmplShowBarcodeDesc =>
+      'رمز Code128 قابل للمسح أسفل الفاتورة أو الإيصال';
+
+  @override
+  String get tmplShowTax => 'بيانات الضريبة';
+
+  @override
+  String get tmplShowTaxDesc => 'يطبع الرقم الضريبي للمنشأة إن وُجد ببياناتها';
+
+  @override
+  String get tmplShowSignatures => 'خانات التوقيع الثلاث';
+
+  @override
+  String get tmplShowSignaturesDesc =>
+      'المستلم والمحصل والبائع بخانات أفقية (القالب الكلاسيكي)';
+
+  @override
+  String get tmplShowStamp => 'مكان الختم';
+
+  @override
+  String get tmplShowStampDesc =>
+      'مساحة فارغة محجوزة بختم المنشأة (القالب الكلاسيكي)';
+
+  @override
+  String get tmplShowFooter => 'تذييل الفاتورة';
+
+  @override
+  String get tmplShowFooterDesc => 'نص المنشأة وعبارة الشكر أسفل المستند';
+
+  @override
+  String get tmplShowNotes => 'خانة الملاحظات';
+
+  @override
+  String get tmplShowNotesDesc => 'ملاحظات الفاتورة المطبوعة داخل إطار مخصص';
+
+  @override
+  String get tmplBadgeTitle => 'شارة النسخة';
+
+  @override
+  String get tmplBadgeNone => 'بلا شارة';
+
+  @override
+  String get tmplBadgeOriginal => 'أصل';
+
+  @override
+  String get tmplBadgeCopy => 'صورة';
+
+  @override
+  String get tmplPreviewButton => 'معاينة حية';
+
+  @override
+  String get tmplResetButton => 'استعادة الافتراضي';
+
+  @override
+  String get tmplWriteFailed =>
+      'تعذّر حفظ إعداد القالب — القيمة الحالية بلا تغيير.';
+
+  @override
+  String get tmplNote =>
+      'التغييرات تُطبَّق على الطباعة القادمة فوراً — بلا زر حفظ.';
+
+  @override
+  String get tmplTitleCash => 'فاتورة مبيعات نقد';
+
+  @override
+  String get tmplTitleCredit => 'فاتورة مبيعات آجل';
+
+  @override
+  String get tmplTitleMixed => 'فاتورة مبيعات نقد وآجل';
+
+  @override
+  String get tmplUnitCol => 'الوحدة';
+
+  @override
+  String get tmplNotesTitle => 'ملاحظات';
+
+  @override
+  String get tmplSignReceiver => 'المستلم';
+
+  @override
+  String get tmplSignCollector => 'المحصل';
+
+  @override
+  String get tmplSignSeller => 'البائع';
+
+  @override
+  String get tmplStampArea => 'مكان الختم';
+
+  @override
+  String get tmplTaxNumber => 'الرقم الضريبي';
 }

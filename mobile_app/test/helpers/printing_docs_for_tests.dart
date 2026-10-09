@@ -10,6 +10,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -50,6 +51,38 @@ int pdfPageCount(Uint8List bytes) =>
         .allMatches(latin1.decode(bytes, allowInvalid: true))
         .length;
 
+/// صناديق صفحات PDF (`MediaBox`) كسلاسل خام — يثبت اتجاه الورق
+/// (أفقي/عمودي) وعرض رول الطابعات الحرارية بلا فتح المستند.
+List<String> pdfMediaBoxes(Uint8List bytes) => RegExp(
+  r'/MediaBox\s*\[([^\]]+)\]',
+).allMatches(latin1.decode(bytes, allowInvalid: true))
+    .map((m) => m.group(1)!)
+    .toList();
+
+/// عدد عمليات إظهار النص (`TJ`) في مستخلصات المحتوى بعد فك ضغط zlib —
+/// عدّاد دلالي لمواضع النص المرسومة فعلاً: إخفاء عمود جدول يُنقصه بعدد
+/// خاناته المحذوفة تماماً، بمعزل عن طوابع الوقت أو ترتيب الخطوط.
+int pdfTextOpCount(Uint8List bytes) {
+  final raw = latin1.decode(bytes, allowInvalid: true);
+  var count = 0;
+  for (final m in RegExp(r'stream\r?\n').allMatches(raw)) {
+    final start = m.end;
+    final end = raw.indexOf('endstream', start);
+    if (end < 0) continue;
+    try {
+      final inflated = ZLibDecoder().convert(
+        Uint8List.fromList(latin1.encode(raw.substring(start, end))),
+      );
+      count += 'TJ'.allMatches(
+        latin1.decode(inflated, allowInvalid: true),
+      ).length;
+    } catch (_) {
+      // ليس مستخلص zlib (برنامج خط مثلاً) — تجاهل.
+    }
+  }
+  return count;
+}
+
 /// رأس منشأة موحد لكل مستندات الاختبار (عربي + هاتف + عنوان).
 PrintHeader probeHeader() => const PrintHeader(
   name: 'متجر النور للأدوية',
@@ -58,12 +91,33 @@ PrintHeader probeHeader() => const PrintHeader(
   footerText: 'الأسعار شاملة الضريبة',
 );
 
+/// تسميات عناصر القوالب القابلة للتخصيص من l10n — نفس ما تبنيه الشاشات
+/// الحقيقية (`invoiceTemplateLabelsFor`) للاختبار بنفس المسقط.
+InvoiceTemplateLabels templateLabelsForTests(AppLocalizations l10n) =>
+    InvoiceTemplateLabels(
+      unitCol: l10n.tmplUnitCol,
+      notesTitle: l10n.tmplNotesTitle,
+      signatureReceiver: l10n.tmplSignReceiver,
+      signatureCollector: l10n.tmplSignCollector,
+      signatureSeller: l10n.tmplSignSeller,
+      stampArea: l10n.tmplStampArea,
+      taxNumber: l10n.tmplTaxNumber,
+      badgeOriginal: l10n.tmplBadgeOriginal,
+      badgeCopy: l10n.tmplBadgeCopy,
+    );
+
 /// فاتورة اختبار — التسميات من l10n كما في sales_invoices_screen،
-/// واسم العميل قابل للتبديل لاختبار الأسماء الكاسرة.
+/// واسم العميل قابل للتبديل لاختبار الأسماء الكاسرة، وحقول قوالب UX-3
+/// (وحدة البنود/تسميات العناصر/وضع الدفع/الضريبة/الملاحظات) اختيارية.
 InvoicePrintDoc invoiceDocForTests(
   AppLocalizations l10n, {
   String partyName = 'أحمد محمد الشرعبي',
   int itemCount = 2,
+  String? unitLabel,
+  InvoiceTemplateLabels? templateLabels,
+  String? payStatusLabel,
+  String? taxNumber,
+  String? notesPrinted,
 }) {
   return InvoicePrintDoc(
     header: probeHeader(),
@@ -81,6 +135,7 @@ InvoicePrintDoc invoiceDocForTests(
           priceLabel: '1,500',
           discountLabel: '0',
           totalLabel: '4,500',
+          unitLabel: unitLabel,
         ),
     ],
     subtotal: 12500,
@@ -88,6 +143,10 @@ InvoicePrintDoc invoiceDocForTests(
     total: 12300,
     paidAmount: 5000,
     dueAmount: 7300,
+    payStatusLabel: payStatusLabel,
+    taxNumber: taxNumber,
+    notesPrinted: notesPrinted,
+    templateLabels: templateLabels,
     labels: InvoiceLabels(
       title: l10n.printingInvoiceDocTitle,
       customer: l10n.printingLblCustomer,

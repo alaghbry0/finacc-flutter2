@@ -5,6 +5,12 @@
 /// يتشكّل نص كل خلية نفسه RTL عبر محرك حزمة pdf (تشكيل عربي + BiDi).
 /// كل تسمية داخل المستند تأتي مسبقة التعريب من `InvoiceLabels` — لا نص
 /// حرفي هنا غير اسم المنتج الثابت في التذييل.
+///
+/// موجة UX-3: البنّاء نفسه صار قالب «simple_a4» تحت المحرك
+/// ([`InvoiceTemplateEngine`]) — `[settings]` اختياري: غيابه = السلوك
+/// التاريخي حرفياً؛ ومروره يطبّق مفاتيح الإظهار/الإخفاء والألوان حيث
+/// يوفرها هذا التخطيط (أعمدة خصم/وحدة + تذييل + ضريبة + باركود)،
+/// والإعدادات المبذورة له مطابقة لهويته الحالية فلا يتغير شيء افتراضاً.
 library;
 
 import 'package:pdf/pdf.dart' as pw;
@@ -14,6 +20,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../core/print_fonts.dart';
 import '../core/print_palette.dart';
 import '../print_docs.dart';
+import '../templates/invoice_template_settings.dart';
+import '../templates/template_colors.dart';
 
 /// يحوّل [InvoicePrintDoc] إلى `pw.Document` جاهز للمعاينة/الطباعة/
 /// المشاركة (استدعِ `PrintFonts.load()` أولاً — يحدث داخل [build]).
@@ -22,7 +30,10 @@ class InvoicePdfBuilder {
 
   /// البناء الكامل — A4 عمودي، MultiPage (البضائع الكثيرة تتدفق لصفحة
   /// ثانية بنفس الشريط والتذييل).
-  Future<pw.Document> build(InvoicePrintDoc doc) async {
+  Future<pw.Document> build(
+    InvoicePrintDoc doc, {
+    InvoiceTemplateSettings? settings,
+  }) async {
     await PrintFonts.load();
     final pdf = pw.Document(
       title: doc.docNo,
@@ -35,7 +46,7 @@ class InvoicePdfBuilder {
         bold: PrintFonts.bold,
       ),
     );
-    pdf.addPage(_sheetPage(doc));
+    pdf.addPage(_sheetPage(doc, settings));
     return pdf;
   }
 
@@ -43,7 +54,11 @@ class InvoicePdfBuilder {
   // الصفحة
   // -------------------------------------------------------------------
 
-  pw.MultiPage _sheetPage(InvoicePrintDoc doc) {
+  pw.MultiPage _sheetPage(
+    InvoicePrintDoc doc,
+    InvoiceTemplateSettings? settings,
+  ) {
+    final showFooter = settings?.showFooter ?? true;
     return pw.MultiPage(
       pageFormat: pw.PdfPageFormat(
         pw.PdfPageFormat.a4.width,
@@ -54,12 +69,13 @@ class InvoicePdfBuilder {
         marginRight: 12 * pw.PdfPageFormat.mm,
       ),
       header: (context) => _brandBand(doc),
-      footer: (context) => _footerLine(doc),
+      footer: (context) =>
+          showFooter ? _footerLine(doc) : pw.SizedBox(height: 4),
       build: (context) => [
         pw.SizedBox(height: 4 * pw.PdfPageFormat.mm),
         _titleRow(doc),
         pw.SizedBox(height: 4 * pw.PdfPageFormat.mm),
-        _metaGrid(doc),
+        _metaGrid(doc, settings),
         pw.SizedBox(height: 6 * pw.PdfPageFormat.mm),
         // عنوان القسم والجدول عنصران مستقلان في قائمة البناء (لا داخل
         // Column واحدة): الجدول SpanningWidget يتدفق عبر الصفحات عبر
@@ -68,9 +84,13 @@ class InvoicePdfBuilder {
         // ذات البنود الكثيرة — إصلاح موجة 1-a فوق تدقيق UX-audit A5.
         _itemsTitle(doc),
         pw.SizedBox(height: 2 * pw.PdfPageFormat.mm),
-        _itemsTable(doc),
+        _itemsTable(doc, settings),
         pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
         _totalsCard(doc),
+        if (settings?.showBarcode ?? false) ...[
+          pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
+          _barcodeBlock(doc),
+        ],
       ],
     );
   }
@@ -160,9 +180,18 @@ class InvoicePdfBuilder {
   }
 
   /// شبكة البيانات: العميل والتاريخ يميناً (أساسية)، العملة وهاتف
-  /// العميل يساراً — داخل إطار مستدير خفيف.
-  pw.Widget _metaGrid(InvoicePrintDoc doc) {
+  /// العميل يساراً — داخل إطار مستدير خفيف. (UX-3: الرقم الضريبي تحت
+  /// العملة حين يطلبه المالك ويتوفر.)
+  pw.Widget _metaGrid(
+    InvoicePrintDoc doc,
+    InvoiceTemplateSettings? settings,
+  ) {
     final partyPhone = (doc.partyPhone ?? '').trim();
+    final taxNumber = (doc.taxNumber ?? '').trim();
+    final showTax =
+        (settings?.showTax ?? false) &&
+        taxNumber.isNotEmpty &&
+        doc.templateLabels?.taxNumber != null;
     return pw.Container(
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PrintPalette.rule, width: 0.7),
@@ -180,6 +209,8 @@ class InvoicePdfBuilder {
                   doc.labels.currency,
                   doc.currencyCode.isEmpty ? '—' : doc.currencyCode,
                 ),
+                if (showTax)
+                  _kvLine(doc.templateLabels!.taxNumber!, taxNumber),
               ],
             ),
           ),
@@ -224,40 +255,87 @@ class InvoicePdfBuilder {
   }
 
   /// جدول البنود — الأعمدة مُصاغة فيزيائياً يسار→يمين بحيث يكون «الصنف»
-  /// في أقصى اليمين: [الإجمالي، خصم، السعر، كمية، الصنف].
-  pw.Widget _itemsTable(InvoicePrintDoc doc) {
+  /// في أقصى اليمين: [الإجمالي، خصم، السعر، كمية، الصنف]. (UX-3: عمود
+  /// الخصم يسقط بطلب المالك، وعمود الوحدة يُدرج عند توفر أسماء الوحدات.)
+  pw.Widget _itemsTable(
+    InvoicePrintDoc doc,
+    InvoiceTemplateSettings? settings,
+  ) {
     final labels = doc.labels;
+    final showDiscount = settings?.showDiscountColumn ?? true;
+    final showUnit =
+        (settings?.showUnitColumn ?? false) &&
+        doc.templateLabels?.unitCol != null &&
+        doc.items.any((line) => (line.unitLabel ?? '').trim().isNotEmpty);
     final headers = <String>[
       labels.grandTotal,
-      labels.discount,
+      if (showDiscount) labels.discount,
       labels.price,
       labels.qty,
+      if (showUnit) doc.templateLabels!.unitCol!,
       labels.item,
     ];
     final data = <List<String>>[
       for (final line in doc.items)
         [
           line.totalLabel,
-          line.discountLabel,
+          if (showDiscount) line.discountLabel,
           line.priceLabel,
           line.qtyLabel,
+          if (showUnit)
+            (line.unitLabel ?? '').trim().isEmpty
+                ? '—'
+                : line.unitLabel!.trim(),
           line.desc,
         ],
     ];
+    final tableHead = settings == null
+        ? PrintPalette.tableHead
+        : templatePdfColor(settings.tableHeadArgb);
+    final border = settings == null
+        ? PrintPalette.rule
+        : templatePdfColor(settings.borderArgb);
+    final numericCount = headers.length - 1;
+    // محاذاة كل عمود فيزيائي بمعناه (المبالغ يساراً، الخصم/الكمية/
+    // الوحدة وسطاً، الصنف أقصى اليمين).
+    final aligns = <pw.AlignmentGeometry>[
+      pw.Alignment.centerLeft, // الإجمالي — رقمي
+      if (showDiscount) pw.Alignment.center, // خصم
+      pw.Alignment.centerLeft, // السعر — رقمي
+      pw.Alignment.center, // كمية
+      if (showUnit) pw.Alignment.center, // الوحدة
+    ];
+    final alignmentMap = <int, pw.AlignmentGeometry>{
+      for (var i = 0; i < aligns.length; i++) i: aligns[i],
+      aligns.length: pw.Alignment.centerRight, // الصنف — نص RTL
+    };
+    // عروض الأعمدة بترتيبها الفيزيائي نفسه (الصنف آخراً يستولي على الباقي).
+    final widths = <double>[
+      1.5, // الإجمالي — رقمي
+      if (showDiscount) 0.9, // خصم
+      1.2, // السعر — رقمي
+      0.75, // كمية
+      if (showUnit) 0.85, // الوحدة
+    ];
+    final columnWidths = <int, pw.TableColumnWidth>{
+      for (var i = 0; i < widths.length; i++)
+        i: pw.FractionColumnWidth(widths[i]),
+      widths.length: const pw.FractionColumnWidth(3.1), // الصنف — نص عربي
+    };
     return pw.TableHelper.fromTextArray(
       headers: headers,
       data: data,
-      border: pw.TableBorder.all(color: PrintPalette.rule, width: 0.5),
-      headerDecoration: const pw.BoxDecoration(color: PrintPalette.tableHead),
+      border: pw.TableBorder.all(color: border, width: 0.5),
+      headerDecoration: pw.BoxDecoration(color: tableHead),
       headerStyle: PrintText.head(color: PrintPalette.brandDeep, size: 9.5),
-      headerAlignments: _columnAlignments(),
-      cellAlignments: _columnAlignments(),
+      headerAlignments: alignmentMap,
+      cellAlignments: alignmentMap,
       cellStyle: PrintText.body(size: 9.5),
-      // أعمدة المبالغ (الإجمالي/الخصم/السعر/الكمية = 0..3) بالخط المرافق
+      // أعمدة المبالغ (الإجمالي/الخصم/السعر/الكمية) بالخط المرافق
       // الجدولي (UX-2b): أرقام متساوية العرض تستقيم بها الأعمدة على
-      // الورق — عمود الصنف (4) يبقى Almarai لهوية النص العربي.
+      // الورق — عمود الصنف يبقى Almarai لهوية النص العربي.
       textStyleBuilder: (column, cell, rowNum) =>
-          column < 4 ? PrintText.tabular(size: 9.5) : null,
+          column < numericCount ? PrintText.tabular(size: 9.5) : null,
       oddRowDecoration: const pw.BoxDecoration(color: PrintPalette.zebra),
       headerDirection: pw.TextDirection.rtl,
       tableDirection: pw.TextDirection.rtl,
@@ -266,26 +344,13 @@ class InvoicePdfBuilder {
         horizontal: 4.5,
         vertical: 4,
       ),
-      columnWidths: const {
-        0: pw.FractionColumnWidth(1.5), // الإجمالي — رقمي
-        1: pw.FractionColumnWidth(0.9), // خصم
-        2: pw.FractionColumnWidth(1.2), // السعر — رقمي
-        3: pw.FractionColumnWidth(0.75), // كمية
-        4: pw.FractionColumnWidth(3.1), // الصنف — نص عربي
-      },
+      columnWidths: columnWidths,
     );
   }
 
-  Map<int, pw.AlignmentGeometry> _columnAlignments() => {
-    0: pw.Alignment.centerLeft, // الإجمالي — رقمي
-    1: pw.Alignment.center, // خصم
-    2: pw.Alignment.centerLeft, // السعر — رقمي
-    3: pw.Alignment.center, // كمية
-    4: pw.Alignment.centerRight, // الصنف — نص RTL
-  };
-
   /// بطاقة الإجماليات: قبل الخصم / الخصم / **الإجمالي النهائي** (شريط
-  /// بارز) / المدفوع / المتبقي.
+  /// بارز) / المدفوع / المتبقي — كما هي منذ الشريحة 7 (سلوك simple_a4
+  /// «كما هو» — لا يُعاد تلوينها بإعدادات UX-3).
   pw.Widget _totalsCard(InvoicePrintDoc doc) {
     final labels = doc.labels;
     final rows = <(String, String, bool)>[
@@ -376,6 +441,32 @@ class InvoicePdfBuilder {
   // -------------------------------------------------------------------
   // مساعدات
   // -------------------------------------------------------------------
+
+  /// باركود Code128 لرقم الفاتورة أسفل بطاقة الإجماليات (UX-3 — يظهر
+  /// فقط بطلب المالك `showBarcode`، والرقم اللاتيني دائماً قابل للترميز).
+  pw.Widget _barcodeBlock(InvoicePrintDoc doc) {
+    if (!RegExp(r'^[\x00-\x7F]*$').hasMatch(doc.docNo)) {
+      return pw.SizedBox(height: 0);
+    }
+    return pw.Center(
+      child: pw.Column(
+        children: [
+          pw.BarcodeWidget(
+            data: doc.docNo,
+            barcode: pw.Barcode.code128(),
+            drawText: false,
+            height: 13 * pw.PdfPageFormat.mm,
+            width: 62 * pw.PdfPageFormat.mm,
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            doc.docNo,
+            style: PrintText.tabular(color: PrintPalette.inkSoft, size: 9),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// سطر «تسمية يميناً : قيمة يساراً» — النمط العربي الأساسي للمعلومات.
   ///
