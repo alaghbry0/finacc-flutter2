@@ -53,11 +53,11 @@ int pdfPageCount(Uint8List bytes) =>
 
 /// صناديق صفحات PDF (`MediaBox`) كسلاسل خام — يثبت اتجاه الورق
 /// (أفقي/عمودي) وعرض رول الطابعات الحرارية بلا فتح المستند.
-List<String> pdfMediaBoxes(Uint8List bytes) => RegExp(
-  r'/MediaBox\s*\[([^\]]+)\]',
-).allMatches(latin1.decode(bytes, allowInvalid: true))
-    .map((m) => m.group(1)!)
-    .toList();
+List<String> pdfMediaBoxes(Uint8List bytes) =>
+    RegExp(r'/MediaBox\s*\[([^\]]+)\]')
+        .allMatches(latin1.decode(bytes, allowInvalid: true))
+        .map((m) => m.group(1)!)
+        .toList();
 
 /// عدد عمليات إظهار النص (`TJ`) في مستخلصات المحتوى بعد فك ضغط zlib —
 /// عدّاد دلالي لمواضع النص المرسومة فعلاً: إخفاء عمود جدول يُنقصه بعدد
@@ -73,9 +73,9 @@ int pdfTextOpCount(Uint8List bytes) {
       final inflated = ZLibDecoder().convert(
         Uint8List.fromList(latin1.encode(raw.substring(start, end))),
       );
-      count += 'TJ'.allMatches(
-        latin1.decode(inflated, allowInvalid: true),
-      ).length;
+      count += 'TJ'
+          .allMatches(latin1.decode(inflated, allowInvalid: true))
+          .length;
     } catch (_) {
       // ليس مستخلص zlib (برنامج خط مثلاً) — تجاهل.
     }
@@ -108,12 +108,14 @@ InvoiceTemplateLabels templateLabelsForTests(AppLocalizations l10n) =>
 
 /// فاتورة اختبار — التسميات من l10n كما في sales_invoices_screen،
 /// واسم العميل قابل للتبديل لاختبار الأسماء الكاسرة، وحقول قوالب UX-3
-/// (وحدة البنود/تسميات العناصر/وضع الدفع/الضريبة/الملاحظات) اختيارية.
+/// (وحدة البنود/تسميات العناصر/وضع الدفع/الضريبة/الملاحظات) اختيارية،
+/// و[freeQtyLabel] لاحقة بونص UX-4 كما تبنيها `buildInvoicePrintDoc`.
 InvoicePrintDoc invoiceDocForTests(
   AppLocalizations l10n, {
   String partyName = 'أحمد محمد الشرعبي',
   int itemCount = 2,
   String? unitLabel,
+  String? freeQtyLabel,
   InvoiceTemplateLabels? templateLabels,
   String? payStatusLabel,
   String? taxNumber,
@@ -132,6 +134,7 @@ InvoicePrintDoc invoiceDocForTests(
         InvoicePrintLine(
           desc: 'شامبو كلير 400 مل — زيت Head & Shoulders 250مل رقم $i',
           qtyLabel: '3',
+          freeQtyLabel: freeQtyLabel,
           priceLabel: '1,500',
           discountLabel: '0',
           totalLabel: '4,500',

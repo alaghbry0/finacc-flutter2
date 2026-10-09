@@ -76,7 +76,7 @@ void main() {
 
     expect(
       (await db.query('_migrations')).map((r) => r['version']).toList(),
-      [1, 2, 3, 4],
+      [1, 2, 3, 4, 5],
     );
     final templates = await db.query('print_template');
     expect(templates, hasLength(3));
@@ -95,7 +95,7 @@ void main() {
     expect(await app.db.query('print_template'), hasLength(3));
     await applyMigrations(app.db);
     expect(await app.db.query('print_template'), hasLength(3));
-    expect(await app.db.query('_migrations'), hasLength(4));
+    expect(await app.db.query('_migrations'), hasLength(5));
   });
 
   test('بذور v4 بـ INSERT OR IGNORE لا تدوس تخصيص المستخدم ولا تكرر', () async {

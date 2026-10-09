@@ -1,9 +1,11 @@
-/// شاشة تفضيلات البيع (UX-2a) — مسار `/more/sale-prefs`: خمس سياسات في
+/// شاشة تفضيلات البيع (UX-2a) — مسار `/more/sale-prefs`: ست سياسات في
 /// بطاقات FinCard: طريقة الدفع الافتراضية (`sale.default_payment` — شرائح
 /// ثلاثية) + إظهار الخصومات (`sale.show_discounts` — مفتاح تبديل) +
 /// سياسة حد الائتمان (`parties.credit_limit_action` — كانت مستهلكة بلا
 /// واجهة) + البيع فوق المتاح (`sale.over_avail_policy` — block يمنع
-/// الترحيل فعلياً) + تحذير البيع تحت التكلفة (`invoicing.discount_below_margin`).
+/// الترحيل فعلياً) + تحذير البيع تحت التكلفة (`invoicing.discount_below_margin`)
+/// + الكميات المجانية/بونص (`sale.free_qty` — UX-4: حقل بونص بجوار
+/// الكمية عند التفعيل).
 ///
 /// كل تبديل يُكتب فوراً في المستودع (إعداد لحظي بلا زر حفظ).
 library;
@@ -239,6 +241,19 @@ class _SalePrefsList extends StatelessWidget {
             subtitle: l10n.settings2SaleBelowMarginPolicyDesc,
             value: state.warnBelowMargin,
             onChanged: vm.setWarnBelowMargin,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ── الكميات المجانية (بونص) — UX-4 ──
+        FinCard(
+          child: _SwitchRow(
+            icon: Icons.redeem_rounded,
+            iconColor: colors.positive,
+            title: l10n.bonusPrefsTitle,
+            subtitle: l10n.bonusPrefsDesc,
+            value: state.bonusQtyEnabled,
+            onChanged: vm.setBonusQtyEnabled,
           ),
         ),
 

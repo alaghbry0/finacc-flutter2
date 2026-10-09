@@ -52,6 +52,17 @@ int get currentSchemaVersion => migrations.last.version;
 /// نموذج المالك) + بسيط A4 عمودي (سلوك البنّاء القائم — **هو الافتراضي**
 /// حفاظاً على مخرجات المتاجر القائمة) + حراري 80مم. الشعار نفسه يبقى
 /// في `company.logo_png` (لا تكرار هنا — قرار المنسق UX-audit-synthesis).
+///
+/// **الإصدار 5** (موجة UX-4 — الكميات المجانية/بونص): عمود `free_qty`
+/// في `invoice_item` (NUMERIC(12,3) NOT NULL DEFAULT 0 — صفوف اليوم
+/// القديمة تعني «بلا بونص» تلقائياً) + بذر مفتاح `sale.free_qty`
+/// ('off' — التفعيل من «تفضيلات البيع»). **القرار التحاسبي الملزم**
+/// (UX-audit-invoice §3 + المنسق): المنصرف الكلي = qty + free_qty
+/// (حركة المخزون/stock_level/FEFO/COGS على الكلي)، والإيراد من qty
+/// حصراً (subtotal/total/total_base/الائتمان بلا أثر للبونص) — فالبونص
+/// يرفع COGS ويخفض الربح بالمقدار الحرفي، والبدائل (سطر بسعر صفر /
+/// خصم 100%) تُشوّه التقارير وتفشل مع فاتورة مجانية بالكامل
+/// (CHECK(total > 0)).
 const List<DbMigration> migrations = <DbMigration>[
   DbMigration(version: 1, statements: schemaV1Ddl, seeds: _seedStatements),
   DbMigration(version: 2, statements: <String>[repairOpeningBatchesV2]),
@@ -64,6 +75,11 @@ const List<DbMigration> migrations = <DbMigration>[
     version: 4,
     statements: <String>[createPrintTemplateV4],
     seeds: _seedStatementsV4,
+  ),
+  DbMigration(
+    version: 5,
+    statements: <String>[alterInvoiceItemFreeQtyV5],
+    seeds: _seedStatementsV5,
   ),
 ];
 
@@ -193,6 +209,30 @@ const List<String> _seedStatementsV4 = <String>[
     ('sale', 'thermal_80', 0,
      '{"templateId":"thermal_80","tableHeadArgb":4278190080,"borderArgb":4278190080,"accentRedArgb":4291176488,"showDiscountColumn":true,"showUnitColumn":false,"showBarcode":true,"showTax":false,"showSignatures":false,"showStampArea":false,"showFooter":true,"showNotes":true,"badge":"none"}',
      strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  ''',
+];
+
+/// عبارة DDL للإصدار 5 — عمود الكمية المجانية (بونص) في بنود الفواتير
+/// (موجة UX-4).
+///
+/// (علنية لتُختبر مباشرة.) `DEFAULT 0` يجعل كل صف قديم (فواتير ما قبل
+/// البونص وكل بنود الشراء/المرتجعات) بلا بونص تلقائياً — لا هجرة بيانات
+/// لازمة ولا مساس بالقيود القائمة (CHECK(qty > 0) يبقى على المدفوع
+/// حصراً؛ البونص ≥ 0 يُتحقق منه في طبقة النطاق قبل الكتابة).
+const String alterInvoiceItemFreeQtyV5 =
+    'ALTER TABLE invoice_item ADD COLUMN free_qty NUMERIC(12,3) '
+    'NOT NULL DEFAULT 0';
+
+/// بذور الإصدار 5 — مفتاح تفعيل البونص (موجة UX-4).
+///
+/// `INSERT OR IGNORE` (نمط v3/v4): إعادة التشغيل لا تكرر ولا تدوس قيمة
+/// كتبها المستخدم. المزروع 'off' — سلوك المتاجر القائمة كما هو حتى
+/// يفعّله المالك بنفسه من «تفضيلات البيع» (درس المفاتيح الميتة مطبّق:
+/// المفتاح موصول فعلياً بالكاشير من لحظة البذر).
+const List<String> _seedStatementsV5 = <String>[
+  '''
+  INSERT OR IGNORE INTO settings(key, value, updated_at) VALUES
+    ('sale.free_qty', '"off"', strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   ''',
 ];
 

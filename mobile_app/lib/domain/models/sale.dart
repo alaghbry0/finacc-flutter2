@@ -48,6 +48,7 @@ class CartLine {
     required this.unitPrice,
     this.lineDiscountType = SaleDiscountType.amount,
     this.lineDiscountValue = 0,
+    this.freeQty = 0,
     this.notes,
   });
 
@@ -56,6 +57,14 @@ class CartLine {
 
   /// الكمية (> 0 — NUMERIC(12,3)).
   final double qty;
+
+  /// الكمية المجانية/بونص (≥ 0 — NUMERIC(12,3)، موجة UX-4).
+  ///
+  /// **القرار التحاسبي الملزم** (UX-audit-invoice §3): المنصرف الكلي
+  /// = `qty + freeQty` (المخزون/الدفعات/COGS على الكلي) والإيراد من
+  /// `qty` حصراً — هذا الحقل لا يدخل أي حساب تسعير هنا إطلاقاً
+  /// (`SalePricing` يقرأ `qty` وحدها؛ يستهلكه المستودع بالمخزون).
+  final double freeQty;
 
   /// سعر الوحدة بعملة الفاتورة (≥ 0).
   final double unitPrice;
@@ -258,6 +267,7 @@ class SaleInvoiceItemLine {
     required this.discountAmount,
     required this.lineTotal,
     required this.lineCost,
+    this.freeQty = 0,
     this.unitName,
     this.batchId,
     this.notes,
@@ -270,6 +280,11 @@ class SaleInvoiceItemLine {
 
   final double qty;
   final double unitPrice;
+
+  /// الكمية المجانية/بونص المرفقة بالسطر (≥ 0 — عمود `free_qty` هجرة
+  /// v5، موجة UX-4): المنصرف الكلي = qty + freeQty. غياب العمود بصفوف
+  /// قديمة القاعدة = 0 (بلا بونص — سلوك ما قبل الترقية).
+  final double freeQty;
 
   /// اسم وحدة البيع (عرض فقط — عمود الوحدة بقوالب الطباعة UX-3؛
   /// `invoice_item.unit_id` موجود بالمخطط منذ v1 ولم يكن يُقرأ).
@@ -298,6 +313,7 @@ class SaleInvoiceItemLine {
         lineDesc: row['line_desc'] as String?,
         qty: (row['qty'] as num?)?.toDouble() ?? 0,
         unitPrice: (row['unit_price'] as num?)?.toDouble() ?? 0,
+        freeQty: (row['free_qty'] as num?)?.toDouble() ?? 0,
         unitName: row['unit_name'] as String?,
         discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
         discountAmount: (row['discount_amount'] as num?)?.toDouble() ?? 0,

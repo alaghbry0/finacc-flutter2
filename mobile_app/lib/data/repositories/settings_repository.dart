@@ -30,6 +30,7 @@ class SettingsRepository {
     'ui.high_contrast',
     'sale.default_payment',
     'sale.show_discounts',
+    'sale.free_qty',
     'backup.schedule',
     'backup.retention_count',
     'security.autolock_minutes',
@@ -146,6 +147,17 @@ class SettingsRepository {
   /// يثبّت إظهار/إخفاء الخصومات بالكاشير.
   Future<void> setShowDiscounts(bool show) =>
       set('sale.show_discounts', show ? 'on' : 'off');
+
+  /// `sale.free_qty` — إظهار حقل الكمية المجانية (بونص) ببنود الكاشير
+  /// (موجة UX-4 — مزروعة 'off' بهجرة v5: سلوك المتاجر القائمة حتى
+  /// يفعّلها المالك). ON = حقل بونص بجوار الكمية؛ OFF = مخفي تماماً
+  /// والسلوك كما هو اليوم.
+  Future<bool> bonusQtyEnabled() async =>
+      (await getString('sale.free_qty', 'off')) == 'on';
+
+  /// يثبّت إظهار/إخفاء حقل البونص بالكاشير.
+  Future<void> setBonusQtyEnabled(bool on) =>
+      set('sale.free_qty', on ? 'on' : 'off');
 
   /// `display.font_scale` — حجم خط التطبيق
   /// (`normal` / `large` / `xlarge` — افتراضي normal بذر v3).

@@ -799,49 +799,107 @@ class _CartLineCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                QtyStepper(
-                  qty: line.qty,
-                  onChanged: (qty) => vm.setQty(index, qty),
-                ),
-                const Spacer(),
-                _PriceButton(
+            Builder(
+              // UX-4 — `sale.free_qty`: حقل البونص بجوار الكمية عند التفعيل،
+              // والسعر (ومعه الخصم) ينتقل لسطر مستقل — صف الكمية + البونص
+              // + السعر معاً يفيض 35px على 390dp (خلل كشفه اختبار الشاشة
+              // UX-4-finish)؛ بلا بونص يبقى الصف الواحد كما اليوم حرفياً.
+              builder: (context) {
+                Future<void> editDiscount() async {
+                  final result = await showDiscountEditSheet(
+                    context,
+                    title: l10n.sellLineDiscountTitle(line.name),
+                    initialType: line.discountType,
+                    initialValue: line.discountValue,
+                  );
+                  if (result != null) {
+                    vm.setLineDiscount(index, result.$1, result.$2);
+                  }
+                }
+
+                Future<void> editPrice() async {
+                  final value = await showNumberEditSheet(
+                    context,
+                    title: l10n.sellEditPriceTitle(line.name),
+                    initial: line.unitPrice,
+                    confirmLabel: l10n.commonConfirm,
+                    icon: Icons.sell_outlined,
+                  );
+                  if (value != null) {
+                    vm.setUnitPrice(index, value);
+                  }
+                }
+
+                final priceButton = _PriceButton(
                   price: line.unitPrice,
-                  onTap: () async {
-                    final value = await showNumberEditSheet(
-                      context,
-                      title: l10n.sellEditPriceTitle(line.name),
-                      initial: line.unitPrice,
-                      confirmLabel: l10n.commonConfirm,
-                      icon: Icons.sell_outlined,
-                    );
-                    if (value != null) {
-                      vm.setUnitPrice(index, value);
-                    }
-                  },
-                ),
-                // UX-2a — `sale.show_discounts` = off: خصم السطر يختفي
-                // (الكاشير المبسّط بلا خصومات) والحسابات مستمرة كالمعتاد.
-                if (state.showDiscounts) ...[
-                  const SizedBox(width: 8),
-                  _LineDiscountChip(
-                    type: line.discountType,
-                    value: line.discountValue,
-                    onTap: () async {
-                      final result = await showDiscountEditSheet(
-                        context,
-                        title: l10n.sellLineDiscountTitle(line.name),
-                        initialType: line.discountType,
-                        initialValue: line.discountValue,
-                      );
-                      if (result != null) {
-                        vm.setLineDiscount(index, result.$1, result.$2);
-                      }
-                    },
-                  ),
-                ],
-              ],
+                  onTap: editPrice,
+                );
+                final discountChip = _LineDiscountChip(
+                  type: line.discountType,
+                  value: line.discountValue,
+                  onTap: editDiscount,
+                );
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        QtyStepper(
+                          qty: line.qty,
+                          onChanged: (qty) => vm.setQty(index, qty),
+                        ),
+                        if (state.bonusQtyEnabled) ...[
+                          const SizedBox(width: 8),
+                          _BonusQtyChip(
+                            freeQty: line.freeQty,
+                            onTap: () async {
+                              final value = await showNumberEditSheet(
+                                context,
+                                title: l10n.bonusQtyEditTitle(line.name),
+                                initial: line.freeQty,
+                                confirmLabel: l10n.commonConfirm,
+                                allowZero: true,
+                                decimals: 3,
+                                icon: Icons.redeem_outlined,
+                              );
+                              if (value != null) {
+                                vm.setFreeQty(index, value);
+                              }
+                            },
+                          ),
+                        ],
+                        if (!state.bonusQtyEnabled) ...[
+                          const Spacer(),
+                          priceButton,
+                          // UX-2a — `sale.show_discounts` = off: خصم السطر
+                          // يختفي (الكاشير المبسّط بلا خصومات) والحسابات
+                          // مستمرة كالمعتاد.
+                          if (state.showDiscounts) ...[
+                            const SizedBox(width: 8),
+                            discountChip,
+                          ],
+                        ],
+                      ],
+                    ),
+                    // مع البونص: السعر والخصم بسطر مستقل — السعر بنهاية
+                    // الصف (نفس موضعه دائماً) والخصم بجواره.
+                    if (state.bonusQtyEnabled) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Spacer(),
+                          priceButton,
+                          if (state.showDiscounts) ...[
+                            const SizedBox(width: 8),
+                            discountChip,
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -851,6 +909,58 @@ class _CartLineCard extends StatelessWidget {
 
   static int _decimals(double value) =>
       value == value.truncateToDouble() ? 0 : 2;
+}
+
+/// رقاقة الكمية المجانية (بونص — UX-4): «بونص» عند الصفر و«+N مجاني»
+/// عند وجوده — نقرة تفتح محرر الرقم السفلي (الصفر يمسح البونص).
+/// تظهر حصراً حين يكون `sale.free_qty` مفعّلاً من تفضيلات البيع.
+class _BonusQtyChip extends StatelessWidget {
+  const _BonusQtyChip({required this.freeQty, required this.onTap});
+
+  final double freeQty;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = FinColors.of(context);
+    final hasBonus = freeQty > 0.000001;
+    final label = hasBonus
+        ? l10n.bonusQtyChipValue(sellQtyText(freeQty))
+        : l10n.bonusQtyChipEmpty;
+    return InkWell(
+      key: const Key('sell_line_bonus_chip'),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: hasBonus
+              ? colors.positiveContainer
+              : Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.redeem_rounded,
+              size: 15,
+              color: hasBonus ? colors.onPositiveContainer : null,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: hasBonus ? colors.onPositiveContainer : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PriceButton extends StatelessWidget {

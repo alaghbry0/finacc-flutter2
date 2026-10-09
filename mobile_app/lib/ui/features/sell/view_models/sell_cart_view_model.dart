@@ -71,6 +71,7 @@ class CartUiLine {
     required this.isService,
     this.barcode,
     this.costPrice = 0,
+    this.freeQty = 0,
   });
 
   final int productId;
@@ -79,6 +80,11 @@ class CartUiLine {
 
   /// الكمية (> 0 دائماً — القيم غير الصالحة ترفض قبل الدخول).
   final double qty;
+
+  /// الكمية المجانية/بونص (≥ 0 — موجة UX-4): تُدخل من حقل البونص بجوار
+  /// الكمية حين يكون `sale.free_qty` مفعّلاً. لا تدخل أي تسعير —
+  /// المنصرف الكلي (qty + freeQty) يُحسب مخزونياً وقت الترحيل.
+  final double freeQty;
 
   /// سعر الوحدة بعملة الفاتورة (≥ 0).
   final double unitPrice;
@@ -96,11 +102,15 @@ class CartUiLine {
   final double costPrice;
 
   /// تجاوز الكمية للمتاح؟ (FR-02-02 — تحذير بصري بلون تحذيري).
+  /// UX-4: المقارنة بالمنصرف الكلي (مدفوع + مجاني) — البونص يخرج من
+  /// المخزون مثل المدفوع.
   bool get exceedsAvailable =>
-      availableQty != null && qty > availableQty! + _qtyEpsilon;
+      availableQty != null &&
+      qty + freeQty > availableQty! + _qtyEpsilon;
 
   CartUiLine copyWith({
     double? qty,
+    double? freeQty,
     double? unitPrice,
     SaleDiscountType? discountType,
     double? discountValue,
@@ -109,6 +119,7 @@ class CartUiLine {
     name: name,
     barcode: barcode,
     qty: qty ?? this.qty,
+    freeQty: freeQty ?? this.freeQty,
     unitPrice: unitPrice ?? this.unitPrice,
     discountType: discountType ?? this.discountType,
     discountValue: discountValue ?? this.discountValue,
@@ -123,6 +134,7 @@ class CartUiLine {
     unitPrice: unitPrice,
     lineDiscountType: discountType,
     lineDiscountValue: discountValue,
+    freeQty: freeQty,
   );
 }
 
@@ -150,6 +162,7 @@ class SellCartState {
     this.overAvailPolicy = 'warn',
     this.showDiscounts = true,
     this.warnBelowMargin = false,
+    this.bonusQtyEnabled = false,
   });
 
   final bool loading;
@@ -204,6 +217,12 @@ class SellCartState {
   /// تحذير البيع تحت التكلفة مفعّل؟ (UX-2a —
   /// `invoicing.discount_below_margin`).
   final bool warnBelowMargin;
+
+  /// حقل البونص (الكمية المجانية) ظاهر بالكاشير؟ (UX-4 — `sale.free_qty`,
+  /// مزروعة 'off' بهجرة v5): ON = حقل بونص بجوار الكمية بسطر السلة؛
+  /// OFF = مخفي تماماً وسلوك اليوم. غياب مستودع الإعدادات = off
+  /// (القيمة المحافظة — سلوك v0.x).
+  final bool bonusQtyEnabled;
 
   Currency? get selectedCurrency {
     for (final currency in currencies) {
@@ -285,15 +304,20 @@ class SellCartViewModel extends ChangeNotifier {
       var overAvailPolicy = 'warn';
       var showDiscounts = true;
       var warnBelowMargin = false;
+      // UX-4 — بوابة البونص (`sale.free_qty`، بنمط print_on_save عبر
+      // مستودع إعدادات AppController): off المحافظة هي الافتراضية.
+      var bonusQtyEnabled = false;
       if (_settings != null) {
         final policyResults = await Future.wait<Object?>([
           _settings.overAvailPolicy(),
           _settings.showDiscounts(),
           _settings.discountBelowMargin(),
+          _settings.bonusQtyEnabled(),
         ]);
         overAvailPolicy = policyResults[0]! as String;
         showDiscounts = policyResults[1]! as bool;
         warnBelowMargin = policyResults[2]! as bool;
+        bonusQtyEnabled = policyResults[3]! as bool;
       }
       final results = await Future.wait<Object?>([
         _companies.listActiveCurrencies(),
@@ -324,6 +348,7 @@ class SellCartViewModel extends ChangeNotifier {
         overAvailPolicy: overAvailPolicy,
         showDiscounts: showDiscounts,
         warnBelowMargin: warnBelowMargin,
+        bonusQtyEnabled: bonusQtyEnabled,
       );
     } catch (error) {
       _state = SellCartState(
@@ -572,6 +597,20 @@ class SellCartViewModel extends ChangeNotifier {
       return;
     }
     _updateLine(index, qty: qty);
+  }
+
+  /// تعديل الكمية المجانية (بونص — UX-4): ≥ 0 وبرقم سليم وبلا دقة
+  /// أعلى من ثلاث منازل (NUMERIC(12,3)). الصفر يمسح البونص.
+  void setFreeQty(int index, double freeQty) {
+    if (freeQty.isNaN || freeQty.isInfinite || freeQty < 0) {
+      _notice('كمية البونص لا يمكن أن تكون سالبة — أدخل رقماً سليماً.');
+      return;
+    }
+    if (((freeQty * 1000).roundToDouble() - freeQty * 1000).abs() > 0.001) {
+      _notice('كمية البونص لا تقبل دقة أعلى من ثلاث منازل عشرية.');
+      return;
+    }
+    _updateLine(index, freeQty: freeQty);
   }
 
   /// تعديل سعر الوحدة (≥ 0).
@@ -835,6 +874,7 @@ class SellCartViewModel extends ChangeNotifier {
   void _updateLine(
     int index, {
     double? qty,
+    double? freeQty,
     double? unitPrice,
     SaleDiscountType? discountType,
     double? discountValue,
@@ -843,6 +883,7 @@ class SellCartViewModel extends ChangeNotifier {
     final lines = [..._state.lines];
     lines[index] = lines[index].copyWith(
       qty: qty,
+      freeQty: freeQty,
       unitPrice: unitPrice,
       discountType: discountType,
       discountValue: discountValue,
@@ -900,6 +941,7 @@ class SellCartViewModel extends ChangeNotifier {
     String? overAvailPolicy,
     bool? showDiscounts,
     bool? warnBelowMargin,
+    bool? bonusQtyEnabled,
   }) => SellCartState(
     loading: loading ?? _state.loading,
     error: _state.error,
@@ -932,5 +974,6 @@ class SellCartViewModel extends ChangeNotifier {
     overAvailPolicy: overAvailPolicy ?? _state.overAvailPolicy,
     showDiscounts: showDiscounts ?? _state.showDiscounts,
     warnBelowMargin: warnBelowMargin ?? _state.warnBelowMargin,
+    bonusQtyEnabled: bonusQtyEnabled ?? _state.bonusQtyEnabled,
   );
 }

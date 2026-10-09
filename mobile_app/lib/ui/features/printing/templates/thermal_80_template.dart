@@ -321,12 +321,13 @@ class Thermal80InvoiceTemplate {
   }
 
   /// سطر تفاصيل البند: الكمية × السعر (والوحدة إن أُظهرت ووُجدت).
+  /// UX-4: لاحقة البونص بجوار الكمية (qtyCellLabel) — لا بنية جديدة.
   String _lineDetail(
     InvoicePrintLine line,
     InvoicePrintDoc doc,
     InvoiceTemplateSettings settings,
   ) {
-    final qtyPrice = '${line.qtyLabel} × ${line.priceLabel}';
+    final qtyPrice = '${line.qtyCellLabel} × ${line.priceLabel}';
     final unit = (line.unitLabel ?? '').trim();
     if (!settings.showUnitColumn || unit.isEmpty) return qtyPrice;
     return '$qtyPrice · $unit';

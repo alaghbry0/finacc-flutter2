@@ -71,6 +71,14 @@
 ///    الرأس الموزَّع وقت الشراء/البيع المخزَّن في `discount_amount`).
 /// 7. **المخزن**: حركات المرتجع على مخزن الفاتورة الأصلية حصراً (حيث
 ///    خرجت/دخلت البضاعة أصلاً).
+/// 8. **البونص غير قابل للاسترداد في V1** (موجة UX-4 — قرار المنسّق
+///    عن حدوده): سقف الإرجاع لكل بند = أصل `qty` **المدفوعة** حصراً —
+///    `free_qty` خارج السقف (لا رد نقدي ولا خصم حساب عن المجاني:
+///    لم يُدفع عنه شيء أصلاً)، بينما **تكلفة الوحدة المنقولة** =
+///    `line_cost / (qty + free_qty)` — تكلفة الوحدة الفعلية وقت البيع
+///    (إذ `line_cost = المنصرف الكلي × WAC` من قرار postSale 7) —
+///    فتعود الوحدات المرتجعة للمخزون بقيمتها الصحيحة بلا تضخيم بنسبة
+///    البونص، والخارج من التكلفة عند الاسترداد يخص المدفوع المرتجع فقط.
 library;
 
 import 'package:sqflite/sqflite.dart';
@@ -430,10 +438,10 @@ class ReturnRepository {
           final info = productId == null ? null : products[productId];
           final lineQty = input.qty;
 
-          // Snapshot تكلفة الوحدة الأصلية (بالعملة الأساسية).
+          // Snapshot تكلفة الوحدة الأصلية (بالعملة الأساسية) — على
+          // المنصرف الكلي (البونص داخل line_cost — القرار 8).
           final snapshotUnit = roundCost(
-            (origItem['line_cost'] as num? ?? 0) /
-                (origItem['qty'] as num? ?? 1),
+            (origItem['line_cost'] as num? ?? 0) / _dispatchedDivisor(origItem),
           );
           final lineCost = roundCost(lineQty * snapshotUnit);
 
@@ -773,10 +781,10 @@ class ReturnRepository {
           final info = productId == null ? null : products[productId];
           final lineQty = input.qty;
 
-          // Snapshot تكلفة الوحدة الأصلية (بالعملة الأساسية).
+          // Snapshot تكلفة الوحدة الأصلية (بالعملة الأساسية) — مقسوم
+          // المنصرف الكلي (free_qty = 0 ببنود الشراء دائماً — حيادي).
           final snapshotUnit = roundCost(
-            (origItem['line_cost'] as num? ?? 0) /
-                (origItem['qty'] as num? ?? 1),
+            (origItem['line_cost'] as num? ?? 0) / _dispatchedDivisor(origItem),
           );
           final lineCost = roundCost(lineQty * snapshotUnit);
 
@@ -1083,9 +1091,11 @@ class ReturnRepository {
             ((item['line_total'] as num?)?.toDouble() ?? 0) /
                 ((item['qty'] as num?)?.toDouble() ?? 1),
           ),
+          // تكلفة الوحدة على المنصرف الكلي — البونص داخل line_cost
+          // (القرار 8) فلا تتضخم تكلفة العودة بنسبة المجاني.
           unitCostSnapshot: roundCost(
             ((item['line_cost'] as num?)?.toDouble() ?? 0) /
-                ((item['qty'] as num?)?.toDouble() ?? 1),
+                _dispatchedDivisor(item),
           ),
           batchId: item['batch_id'] as int?,
         ),
@@ -1258,7 +1268,9 @@ class ReturnRepository {
 
   /// قيمة بنود المرتجع Snapshot من البنود الأصلية (القرار 6):
   /// gross = round2(qty_ret × unit_price الأصلي)، خصم تناسبي،
-  /// line_total = gross − الخصم — والتكلفة الأصلية منقولة تناسبياً.
+  /// line_total = gross − الخصم — والتكلفة الأصلية منقولة تناسبياً
+  /// **بتكلفة الوحدة على المنصرف الكلي** (البونص داخل line_cost —
+  /// القرار 8 برأس الملف).
   _ValuedReturn _valueReturnLines(
     Map<int, Map<String, Object?>> origItems,
     List<ReturnLineInput> lines,
@@ -1279,7 +1291,9 @@ class ReturnRepository {
       final gross = roundMoney(line.qty * unitPrice);
       final discount = roundMoney(line.qty * origDiscount / origQty);
       final lineTotal = roundMoney(gross - discount);
-      final lineCost = roundCost(line.qty * roundCost(origLineCost / origQty));
+      final lineCost = roundCost(
+        line.qty * roundCost(origLineCost / _dispatchedDivisor(item)),
+      );
 
       lineTotals.add(lineTotal);
       discounts.add(discount);
@@ -1649,6 +1663,16 @@ class ReturnRepository {
     if (available <= 0) return 0;
     if ((available * 1000).round() / 1000 <= 0) return 0;
     return available;
+  }
+
+  /// مقسوم تكلفة الوحدة الأصلية = المنصرف الكلي (qty + free_qty) —
+  /// البونص وحدات خرجت وتكلفتها داخل line_cost (القرار 8 برأس الملف).
+  /// حارس القسمة: المجموع ≤ 0 يعيد 1 (صف شاذ نظري).
+  static double _dispatchedDivisor(Map<String, Object?> origItem) {
+    final qty = (origItem['qty'] as num?)?.toDouble() ?? 0;
+    final free = (origItem['free_qty'] as num?)?.toDouble() ?? 0;
+    final total = qty + free;
+    return total > 0 ? total : 1;
   }
 
   /// يصوغ خطأ قاعدة البيانات بكلمات المستخدم (نمط المستودعات القائمة).

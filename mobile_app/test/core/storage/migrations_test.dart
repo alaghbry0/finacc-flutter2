@@ -20,11 +20,11 @@ void main() {
     await app.close();
   });
 
-  test('الهجرات 1..4 مسجّلات في _migrations بإصدار المخطط الحالي', () async {
+  test('الهجرات 1..5 مسجّلات في _migrations بإصدار المخطط الحالي', () async {
     final rows = await app.db.query('_migrations');
-    expect(rows, hasLength(4));
+    expect(rows, hasLength(5));
     expect(rows.last['version'], currentSchemaVersion);
-    expect(currentSchemaVersion, 4);
+    expect(currentSchemaVersion, 5);
   });
 
   test('بذور العملات: 4 عملات وYER أساسية بلا كسور (قاعدة 5.4-9)', () async {

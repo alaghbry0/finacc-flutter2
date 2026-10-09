@@ -281,7 +281,8 @@ class InvoicePdfBuilder {
           line.totalLabel,
           if (showDiscount) line.discountLabel,
           line.priceLabel,
-          line.qtyLabel,
+          // UX-4: لاحقة البونص بجوار الكمية (qtyCellLabel) — لا عمود جديد.
+          line.qtyCellLabel,
           if (showUnit)
             (line.unitLabel ?? '').trim().isEmpty
                 ? '—'
