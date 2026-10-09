@@ -224,7 +224,7 @@ const slice1Items: React.ReactNode[] = [
   </>,
 ];
 
-const slices2to10Items: React.ReactNode[] = [
+const slices2toPre1Items: React.ReactNode[] = [
   <>
     <b>الشريحة 2–3</b> — المخزون الكامل: الأصناف والباركود (EAN-13/Code128
     بمعاينة حية) والدفعات <Mono>FEFO</Mono> واستيراد Excel/CSV + الأطراف
@@ -280,6 +280,26 @@ const slices2to10Items: React.ReactNode[] = [
     حركة (الداشبورد 8–16ms &lt; 3s، البحث 19–27ms &lt; 100ms، تقرير
     الشهر 29ms &lt; 3s) — 95 اختباراً جديداً ترفع الحزمة إلى 603
   </>,
+  <>
+    <b>ما قبل v1.0.0 — كاملة</b> — مرحلة التخصيص والقوالب والبونص (خمس
+    موجات بعد مراجعة UI/UX شاملة): <b>الإصلاحات الساخنة</b> — شفاء عرض
+    العربية بمستندات <Mono>PDF</Mono> وانهيار الأسماء + <Mono>pdf.js</Mono>{" "}
+    محلي + معاينة متعددة الصفحات + جلسة الجرد واستعادة موقع القفل + طباعة
+    فورية من الإيصال + حماية المسح والنماذج + عميل سريع وزر مرتجع + 12
+    تحسيناً — و<b>التخصيص الشامل</b>: مركز أقسام بإعدادات (محرر منشأة
+    بشعار + تفضيلات بيع: ائتمان <Mono>warn/block</Mono>، فوق المتاح{" "}
+    <Mono>block</Mono>، تحت التكلفة، دفع افتراضي + عرض: حجم خط 3 مستويات
+    وتباين عالٍ) + أرقام جدولية <Mono>tnum</Mono> بخط Noto — و<b>قوالب
+    الفواتير القابلة للتخصيص</b>: كلاسيكي <Mono>A4</Mono> أفقي بنموذج
+    المالك حرفياً (إطار/شعار وسط/شارة زرقاء/رقم أحمر/جدول سميك برأس
+    مظلل/إجماليات كريمية وباقٍ أحمر/تواقيع ثلاث/ختم) + بسيط + حراري{" "}
+    <Mono>80mm</Mono> بباركود <Mono>Code128</Mono> + شاشة تخصيص بألوان
+    ومعاينة حية — و<b>الكميات المجانية/بونص</b>: تُفعّل وتُخفى من
+    التفضيلات، لاحقة <span dir="ltr">(+N مجاني)</span> بالفواتير
+    والقوالب، تحاسب سليم (<Mono>COGS</Mono> على الكلي، الإيراد المدفوع
+    فقط) — هجرات <Mono>v3/v4/v5</Mono> و149 اختباراً جديداً ترفع الحزمة
+    إلى 752
+  </>,
 ];
 
 const qualityGates = [
@@ -291,7 +311,7 @@ const qualityGates = [
   {
     icon: FlaskConical,
     name: "flutter test",
-    result: "603/603 اختباراً خضراء (95 جديدة للشريحة 10)",
+    result: "752/752 اختباراً خضراء (+149 منذ v0.10.0)",
   },
   {
     icon: Braces,
@@ -401,7 +421,7 @@ export default function FinAccStage1DeliveryPanel() {
             <div className="hidden items-center gap-2 md:flex">
               <Badge className="gap-1.5 border-transparent bg-[#00695C]/30 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                v0.10.0 — الشريحة 10: الرقابة والحقيقة
+                v0.11.0 — التخصيص والقوالب والبونص
               </Badge>
               <Badge className="gap-1.5 border-[#C9A96A]/30 bg-[#C9A96A]/10 px-3 py-1 text-[11px] font-bold text-[#E3C88F]">
                 <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -427,7 +447,7 @@ export default function FinAccStage1DeliveryPanel() {
         {/* شارتا المرحلة على الشاشات الصغيرة */}
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 pb-2.5 md:hidden sm:px-6">
           <Badge className="border-transparent bg-[#00695C]/30 px-2.5 py-0.5 text-[10px] font-bold text-[#8FD9C6]">
-            v0.10.0 — الشريحة 10: الرقابة والحقيقة
+            v0.11.0 — التخصيص والقوالب والبونص
           </Badge>
           <Badge className="border-[#C9A96A]/30 bg-[#C9A96A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#E3C88F]">
             <BadgeCheck className="h-3 w-3" aria-hidden="true" />
@@ -508,7 +528,7 @@ export default function FinAccStage1DeliveryPanel() {
 
             {/* ------------------ بطاقة حالة المعاينة ------------------ */}
             <div className="space-y-4">
-              {/* جديد هذا البناء — الشريحة 10 */}
+              {/* جديد هذا البناء — التخصيص والقوالب والبونص */}
               <Card className="gap-4 border-[#C9A96A]/30 bg-gradient-to-l from-[#C9A96A]/[0.08] via-[#0F1D19]/95 to-[#0F1D19]/95 py-5 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-inset ring-[#E8F0EC]/[0.04]">
                 <CardHeader className="px-5">
                   <CardTitle className="flex flex-wrap items-center gap-2.5 text-sm font-extrabold">
@@ -516,9 +536,9 @@ export default function FinAccStage1DeliveryPanel() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E3C88F] opacity-60" />
                       <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#E3C88F]" />
                     </span>
-                    جديد هذا البناء — الشريحة 10
+                    جديد هذا البناء — التخصيص والقوالب والبونص
                     <Badge className="gap-1 border-transparent bg-[#00695C]/30 text-[10px] font-bold text-[#8FD9C6]">
-                      v0.10.0
+                      v0.11.0
                     </Badge>
                   </CardTitle>
                   <CardDescription className="text-xs text-[#9DB5AC]">
@@ -529,52 +549,59 @@ export default function FinAccStage1DeliveryPanel() {
                   <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                     {[
                       {
-                        icon: PackageCheck,
-                        title: "الجرد الفعلي",
-                        desc: "الرصيد الدفتري مقابل الفعلي + تسوية ذرّية واحدة بتكلفة لقطة وقت الجرد + توحيد الدفعات FEFO + سجل جرد كامل",
-                        path: "المسار: المخزون ← الجرد الفعلي (أو مركز التقارير)",
-                        gold: true,
-                      },
-                      {
                         icon: Sparkles,
-                        title: "الأرباح والخسائر عبر خريطة الترحيل",
-                        desc: "الصيغة الملزمة (المبيعات − المرتجع) − (COGS − تكلفة المرتجع) + زيادات الجرد − عجز الجرد − المصاريف ± فروق الصرف — ومسحوبات المالك بنداً مستقلاً و«صافي ما بقي للمالك» ختاماً + تصدير PDF عربي",
-                        path: "المسار: المزيد ← مركز التقارير ← الأرباح والخسائر",
+                        title: "قوالب الفواتير القابلة للتخصيص",
+                        desc: "كلاسيكي A4 أفقي بنموذج المالك حرفياً (إطار/شعار وسط/شارة زرقاء/رقم أحمر/جدول سميك برأس مظلل/إجماليات كريمية وباقٍ أحمر/تواقيع ثلاث/ختم) + بسيط + حراري 80mm بباركود Code128 — بألوان ومفاتيح إظهار ومعاينة حية",
+                        path: "المسار: المزيد ← الطباعة والفواتير",
                         gold: true,
                       },
                       {
-                        icon: Database,
-                        title: "مركز التقارير الجديد",
-                        desc: "جذر /reports صار مركزاً بأقسام (المالية/الحركة/الديون/الرقابة) مع مدخل بارز في تبويب «المزيد»",
-                        path: "المسار: المزيد ← مركز التقارير",
-                        gold: false,
+                        icon: PackageCheck,
+                        title: "الكميات المجانية (بونص)",
+                        desc: "تُفعّل وتُخفى من تفضيلات البيع — لاحقة (\u200E+N مجاني) بجوار الكمية بالفاتورة والقوالب الثلاثة، وتحاسب سليم: COGS على المنصرف الكلي والإيراد المدفوع حصراً",
+                        path: "المسار: المزيد ← تفضيلات البيع ← فعّل الكميات المجانية ثم أضف \u200E+N بسطر بالسلة",
+                        gold: true,
                       },
                       {
-                        icon: History,
-                        title: "حركة صنف",
-                        desc: "بطاقة الصنف بالباقي التراكمي لكل حركة (وارد/صادر/مرتجع/تسوية ملوّنة) + رصيد افتتاحي وتكلفة WAC",
-                        path: "المسار: مركز التقارير ← حركة صنف",
-                        gold: false,
-                      },
-                      {
-                        icon: Package,
-                        title: "ملخص حركة المخزون",
-                        desc: "وارد/صادر/مرتجع/تسوية لكل صنف مع قيمة المخزون بالتكلفة",
-                        path: "المسار: مركز التقارير ← ملخص حركة المخزون",
-                        gold: false,
-                      },
-                      {
-                        icon: CalendarClock,
-                        title: "المبيعات حسب",
-                        desc: "العميل/الفئة/الصنف/اليوم مع نسب التغير عن الفترة السابقة",
-                        path: "المسار: مركز التقارير ← المبيعات حسب",
+                        icon: Fingerprint,
+                        title: "محرر بيانات المنشأة برفع شعار",
+                        desc: "الاسم/الهاتف/واتساب/العنوان/الضريبة/تذييل الفاتورة + رفع شعار يُخزّن BLOB داخل القاعدة ويظهر وسط القالب الكلاسيكي",
+                        path: "المسار: المزيد ← بيانات المنشأة",
                         gold: false,
                       },
                       {
                         icon: CreditCard,
-                        title: "ربح كل فاتورة",
-                        desc: "التكلفة والربح وهامش ٪ داخل تفاصيل فاتورة البيع (للمدير)",
-                        path: "المسار: المبيعات ← تفاصيل فاتورة البيع",
+                        title: "تفضيلات البيع الحارسة",
+                        desc: "ائتمان warn/block، وفوق المتاح block يمنع ترحيل سلة زائدة، وتحذير البيع تحت التكلفة بعملة الأساس، وطريقة الدفع الافتراضية",
+                        path: "المسار: المزيد ← تفضيلات البيع",
+                        gold: false,
+                      },
+                      {
+                        icon: Smartphone,
+                        title: "العرض والأرقام الجدولية",
+                        desc: "حجم خط بثلاثة مستويات + تباين عالٍ فوري + أرقام جدولية tnum بخط Noto مرافق — أعمدة المبالغ تستقيم على الشاشة والورق",
+                        path: "المسار: المزيد ← المظهر",
+                        gold: false,
+                      },
+                      {
+                        icon: Package,
+                        title: "عربية سليمة في مستندات PDF",
+                        desc: "rtl على القيم بالبناة الأربعة يشفي التفكيك وانهيار الأسماء معاً + pdf.js محلي بلا شبكة + معاينة متعددة الصفحات بمؤشر ترقيم معرّب",
+                        path: "المسار: أي فاتورة/سند/كشف ← معاينة أو مشاركة PDF",
+                        gold: false,
+                      },
+                      {
+                        icon: History,
+                        title: "تدفقات أسرع ومحمية",
+                        desc: "طباعة فورية من إيصال النجاح + عميل سريع داخل منتقي الكاشير + زر مرتجع من تفاصيل الفاتورة + جلسة جرد تنجو من التنقل والقفل مع استعادة موقعك بعد الفتح",
+                        path: "المسار: البيع ← الكاشير / المخزون ← الجرد الفعلي",
+                        gold: false,
+                      },
+                      {
+                        icon: ShieldCheck,
+                        title: "حماية المسح والنماذج",
+                        desc: "المسح الكامل بكلمة تأكيد مكتوبة ونسخة أمان إجبارية قبل أي مسح + حماية مغادرة النماذج غير المحفوظة (صنف/طرف/سند)",
+                        path: "المسار: الإعدادات ← البيانات",
                         gold: false,
                       },
                     ].map((feature) => (
@@ -838,13 +865,13 @@ export default function FinAccStage1DeliveryPanel() {
           </Card>
         </section>
 
-        {/* ================= ما تم إنجازه — حتى الشريحة 10 ================= */}
+        {/* ================= ما تم إنجازه — حتى ما قبل 1.0 ================= */}
         <section className="mb-12">
           <SectionHeading
             icon={Database}
             kicker="حصاد الجولات"
-            title="ما تم إنجازه — حتى الشريحة 10"
-            subtitle="عشر شريحات مكتملة: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية والطباعة والنسخ الاحتياطي — ثم الوردية وأعمار الديون في الرقابة اليومية، وختاماً الجرد الفعلي والأرباح عبر خريطة الترحيل ومركز التقارير في جولة الرقابة والحقيقة"
+            title="ما تم إنجازه — حتى ما قبل 1.0"
+            subtitle="عشر شريحات مكتملة ثم مرحلة ما قبل الإطلاق بموجاتها الخمس: من محرك التخزين الذري حتى الكاشير والمشتريات والنقدية والطباعة والنسخ الاحتياطي — ثم الوردية وأعمار الديون والجرد الفعلي والأرباح ومركز التقارير — وختاماً الإصلاحات الساخنة والتخصيص الشامل وقوالب الفواتير والكميات المجانية"
           />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -907,19 +934,19 @@ export default function FinAccStage1DeliveryPanel() {
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C9A96A]/25 bg-[#00695C]/15 text-[#4DBFA8]">
                     <Sparkles className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  الشرائح 2–10 — النواة التشغيلية والرقابة والحقيقة
+                  الشرائح 2–10 وما قبل 1.0 — النواة التشغيلية والتخصيص والقوالب والبونص
                   <Badge className="ml-auto gap-1 border-[#C9A96A]/30 bg-[#C9A96A]/10 text-[10px] font-bold text-[#E3C88F]">
                     <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-                    v0.4.0 → v0.10.0
+                    v0.4.0 → v0.11.0
                   </Badge>
                 </CardTitle>
                 <CardDescription className="text-sm text-[#9DB5AC]">
-                  المخزون والدفعات والأطراف والكاشير والمشتريات والنقدية والسندات والطباعة والنسخ — ثم الوردية وأعمار الديون، فالجرد الفعلي والأرباح والتقارير
+                  المخزون والدفعات والأطراف والكاشير والمشتريات والنقدية والسندات والطباعة والنسخ — ثم الوردية وأعمار الديون، فالجرد الفعلي والأرباح والتقارير — ثم موجات ما قبل الإطلاق: الإصلاحات الساخنة والتخصيص والقوالب والبونص
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-6">
                 <ul className="space-y-2.5">
-                  {slices2to10Items.map((item, i) => (
+                  {slices2toPre1Items.map((item, i) => (
                     <DoneItem key={i}>{item}</DoneItem>
                   ))}
                 </ul>
@@ -940,8 +967,8 @@ export default function FinAccStage1DeliveryPanel() {
                 { label: "7", title: "الطباعة", done: true },
                 { label: "8", title: "النسخ MVP", done: true },
                 { label: "9", title: "الديون والوردية", done: true },
-                { label: "10", title: "الجرد والأرباح", done: true, current: true },
-                { label: "11", title: "الإطلاق 1.0", done: false },
+                { label: "10", title: "الجرد والأرباح", done: true },
+                { label: "11", title: "التصلب والإطلاق 1.0", done: false, current: true },
               ].map((stage) => (
                 <li
                   key={stage.label}
@@ -1024,27 +1051,26 @@ export default function FinAccStage1DeliveryPanel() {
         <section className="mb-4">
           <SectionHeading
             icon={CreditCard}
-            kicker="ما بعد الرقابة والحقيقة"
+            kicker="ما بعد التخصيص والقوالب والبونص"
             title="الخطوة التالية — الشريحة 11: التصلب والإطلاق"
-            subtitle="اختبارات E2E لكل معايير القبول على الجهاز المرجعي + أسبوع إصلاح + تجربة حية مع محلات حقيقية — نحو إصدار 1.0.0"
+            subtitle="اختبارات E2E لكل معايير القبول على الجهاز المرجعي + تجربة حية مع محلات حقيقية — نحو إصدار 1.0.0 وحزمة APK"
           />
 
           <Card className="gap-4 border-[#C9A96A]/25 bg-gradient-to-l from-[#C9A96A]/[0.07] via-[#0F1D19]/95 to-[#0F1D19]/95 py-6 text-[#E8F0EC] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.7)]">
             <CardContent className="flex flex-col gap-5 px-6 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <p className="text-sm leading-relaxed text-[#D7E4DE] sm:text-base">
-                  اكتملت رحلة الرقابة والحقيقة — <b>الجرد الفعلي</b> بتكلفة
-                  اللقطة و<b>الأرباح والخسائر</b> عبر
-                  (<span dir="ltr" className="font-mono text-xs">Posting Map</span>{" "}
-                  حصراً) و<b>مركز التقارير</b> الكامل — فالجولة القادمة هي
+                  اكتملت مرحلة ما قبل الإطلاق — <b>التخصيص الشامل</b> بمركز
+                  الأقسام و<b>قوالب الفواتير</b> بنموذج المالك و<b>الكميات
+                  المجانية/بونص</b> بتحاسبها السليم — فالجولة القادمة هي
                   الختام:{" "}
                   <span className="font-extrabold text-[#E3C88F]">
                     الشريحة 11 — التصلب والإطلاق
                   </span>{" "}
                   (الأسابيع 13–14): اختبارات <b>E2E</b> لكل معايير القبول
-                  على الجهاز المرجعي، ثم <b>أسبوع إصلاح</b> مخصّص، ثم{" "}
-                  <b>تجربة حية مع محلات حقيقية</b> — وصولاً إلى{" "}
-                  <span className="font-extrabold text-[#8FD9C6]">إصدار 1.0.0</span>.
+                  على الجهاز المرجعي، ثم <b>تجربة حية مع محلات حقيقية</b> —
+                  وصولاً إلى{" "}
+                  <span className="font-extrabold text-[#8FD9C6]">إصدار 1.0.0 مع حزمة APK</span>.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
@@ -1052,12 +1078,12 @@ export default function FinAccStage1DeliveryPanel() {
                     E2E لكل معايير القبول
                   </Badge>
                   <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
-                    <History className="h-3.5 w-3.5" aria-hidden="true" />
-                    أسبوع إصلاح مخصّص
-                  </Badge>
-                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
                     <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
                     تجربة حية مع محلات حقيقية
+                  </Badge>
+                  <Badge className="gap-1.5 border-[#2A4A42] bg-[#0B1512]/70 px-3 py-1 text-[11px] font-bold text-[#8FD9C6]">
+                    <PackageCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    إصدار 1.0.0 وAPK
                   </Badge>
                 </div>
               </div>
@@ -1065,12 +1091,15 @@ export default function FinAccStage1DeliveryPanel() {
               <div className="flex items-start gap-2.5 rounded-xl border border-[#C9A96A]/25 bg-[#C9A96A]/[0.06] p-3.5 sm:max-w-[280px]">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A96A]" aria-hidden="true" />
                 <p className="text-xs leading-relaxed text-[#D7E4DE]">
-                  جرّب رحلة الرقابة كاملة في المعاينة الحية بالأعلى:{" "}
-                  <span className="font-bold text-[#E3C88F]">الأرباح والخسائر</span>{" "}
-                  من المزيد ← مركز التقارير (بدّل الفترات وصدّر PDF)، ثم{" "}
-                  <span className="font-bold text-[#E3C88F]">الجرد الفعلي</span>{" "}
-                  من المخزون (عدّ كميات وشاهد تسوية الفروق بتكلفة اللقطة)، ثم
-                  حركة صنف وملخص المخزون والمبيعات حسب.
+                  جرّب التخصيص في المعاينة الحية بالأعلى:{" "}
+                  <span className="font-bold text-[#E3C88F]">الطباعة والفواتير</span>{" "}
+                  من المزيد (اختر القالب الكلاسيكي وبدّل الألوان وأظهر
+                  الباركود ثم شاهد المعاينة الحية)، ثم{" "}
+                  <span className="font-bold text-[#E3C88F]">تفضيلات البيع</span>{" "}
+                  (فعّل البونص وأضف <span dir="ltr">+N</span> مجاني بسطر
+                  بالسلة)، ثم{" "}
+                  <span className="font-bold text-[#E3C88F]">بيانات المنشأة</span>{" "}
+                  (ارفع شعارك).
                 </p>
               </div>
             </CardContent>
