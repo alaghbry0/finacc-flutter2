@@ -15,6 +15,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/info_note.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../view_models/party_form_view_model.dart';
 import '../view_models/party_kind.dart';
@@ -263,7 +265,7 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                   children: [
                     if (state.editMode && state.openingLocked) ...[
-                      PartiesInfoNote(
+                      InfoNote(
                         icon: Icons.lock_rounded,
                         message: l10n.partyFormOpeningLockedNote,
                         warning: true,
@@ -286,7 +288,7 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
                       _creditLimitField(l10n, state),
                     ],
                     const SizedBox(height: 18),
-                    PartiesSectionTitle(
+                    FinSectionTitle(
                       icon: Icons.account_balance_wallet_rounded,
                       title: l10n.partyFormOpeningSection,
                     ),

@@ -22,6 +22,7 @@ import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/confirm_word_dialog.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../view_models/settings_view_model.dart';
@@ -114,7 +115,7 @@ class _ReportsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(icon: Icons.insights_rounded, title: l10n.reportsTitle),
+        FinSectionTitle(icon: Icons.insights_rounded, title: l10n.reportsTitle),
         const SizedBox(height: 8),
         FinCard(
           accent: colors.gold,
@@ -162,7 +163,7 @@ class _CustomizationSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(
+        FinSectionTitle(
           icon: Icons.tune_rounded,
           title: l10n.settings2CustomizationTitle,
         ),
@@ -593,7 +594,7 @@ class _SecuritySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(icon: Icons.shield_rounded, title: l10n.settingsSecurity),
+        FinSectionTitle(icon: Icons.shield_rounded, title: l10n.settingsSecurity),
         const SizedBox(height: 8),
         FinCard(
           child: Column(
@@ -645,7 +646,7 @@ class _DataSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionTitle(icon: Icons.storage_rounded, title: l10n.settingsData),
+        FinSectionTitle(icon: Icons.storage_rounded, title: l10n.settingsData),
         const SizedBox(height: 8),
         FinCard(
           child: Column(
@@ -783,38 +784,6 @@ class _AboutCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        // حاوية أيقونة مصبوغة خفيفة — عمق بصري لأقسام الإعدادات.
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(FinRadius.chip),
-          ),
-          child: Icon(icon, size: 16, color: scheme.primary),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall
-              ?.copyWith(fontWeight: FontWeight.w800, color: scheme.onSurface),
-        ),
-      ],
     );
   }
 }

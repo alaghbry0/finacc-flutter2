@@ -15,9 +15,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_error_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../view_models/box_form_view_model.dart';
-import 'widgets/cash_widgets.dart';
 
 /// نموذج الصندوق — [editId] من المسار (null = إضافة).
 class BoxFormScreen extends StatefulWidget {
@@ -237,7 +237,7 @@ class _BoxFormBody extends StatelessWidget {
                   ),
                   if (vm.saveError != null) ...[
                     const SizedBox(height: 12),
-                    CashErrorCard(message: vm.saveError!),
+                    FinErrorCard(message: vm.saveError!),
                   ],
                 ],
               ],

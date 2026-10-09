@@ -20,6 +20,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/hub_hero_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../view_models/cash_home_view_model.dart';
@@ -61,16 +62,7 @@ class _CashHomeBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.cashHomeTitle),
-        actions: [
-          IconButton(
-            tooltip: l10n.cashQuickMovements,
-            icon: const Icon(Icons.receipt_long_rounded),
-            onPressed: () => context.go('/cash/movements'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(l10n.cashHomeTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
@@ -130,59 +122,22 @@ class _NetCashHeroCard extends StatelessWidget {
         .toList(growable: false);
     final now = DateTime.now();
 
-    return FinCard(
-      accent: colors.gold,
-      child: Column(
+    return HubHeroCard(
+      icon: Icons.account_balance_rounded,
+      title: l10n.cashHomeHeroTitle,
+      subtitle: Text(
+        '${cashFormatDate(now)} · ${l10n.cashHomeHeroHint}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontFeatures: FinText.tabularNums,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      // أسطر صافي النقدية أسفل صف البطولة بفتحة below (W3/R17-b).
+      below: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      scheme.primary,
-                      Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(
-                  Icons.account_balance_rounded,
-                  color: scheme.onPrimary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.cashHomeHeroTitle,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${cashFormatDate(now)} · ${l10n.cashHomeHeroHint}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontFeatures: FinText.tabularNums,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
           if (base != null) ...[
             const SizedBox(height: 14),
             Row(
@@ -466,19 +421,14 @@ class _RecentMovementsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
+          // صفوف عرض فقط (A3/R17-b): مدخل السجل عبر بلاطة الشبكة و«عرض
+          // الكل» — لا نقر مكرراً بكل صف (تدقيق R16 §A3).
           for (var i = 0; i < rows.length; i++)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Column(
                 children: [
-                  InkWell(
-                    onTap: () => context.go('/cash/movements'),
-                    borderRadius: BorderRadius.circular(10),
-                    child: CashMovementTile(
-                      movement: rows[i],
-                      dimmed: rows[i].isVoided,
-                    ),
-                  ),
+                  CashMovementTile(movement: rows[i], dimmed: rows[i].isVoided),
                   if (i != rows.length - 1)
                     const Divider(height: 1, thickness: 0.6),
                 ],

@@ -16,13 +16,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appBrand => 'FinAcc';
 
   @override
-  String get brandTagline =>
-      'Complete accounting & inventory system — works fully offline';
-
-  @override
-  String get commonNext => 'Next';
-
-  @override
   String get commonBack => 'Back';
 
   @override
@@ -79,12 +72,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardStepCompany => 'Company details';
-
-  @override
-  String get onboardStepSecurity => 'Security';
-
-  @override
-  String get onboardStepReview => 'Ready';
 
   @override
   String get companyNameLabel => 'Company name';
@@ -185,9 +172,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startUsing => 'Start using';
 
   @override
-  String get setupFailedTitle => 'Setup could not complete';
-
-  @override
   String get setupFailedBody =>
       'Review the details and try again — nothing was written to the database.';
 
@@ -196,9 +180,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockSubtitle => 'The app is locked to protect your financial data';
-
-  @override
-  String get lockWrong => 'Incorrect code';
 
   @override
   String lockAttemptsBeforeLock(Object count) {
@@ -259,13 +240,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wipeDoneBody => 'The app will now reopen on the setup screen.';
 
   @override
-  String get dashboardTitle => 'Home';
-
-  @override
   String get dashboardQuickAccess => 'Quick access';
-
-  @override
-  String get dashboardQuickRates => 'Rates';
 
   @override
   String get morningGreeting => 'Good morning';
@@ -287,10 +262,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get last30DaysTitle => 'Last 30 days of sales';
-
-  @override
-  String get chartEmptyMessage =>
-      'Your sales will appear here after the first invoice';
 
   @override
   String get stockAlertsTitle => 'Stock alerts';
@@ -325,59 +296,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabMore => 'More';
-
-  @override
-  String get comingSoonTitle => 'Coming in the next slices';
-
-  @override
-  String comingSoonBody(Object feature) {
-    return 'The “$feature” module is built in its dedicated slice after phase one approval — the architecture and database are already ready for it.';
-  }
-
-  @override
-  String get comingGatedBadge => 'Awaiting phase-one approval';
-
-  @override
-  String get featureSell => 'Selling & POS';
-
-  @override
-  String get featureInventory => 'Items, stock & batches';
-
-  @override
-  String get featureCash => 'Cashboxes & cash';
-
-  @override
-  String get featureMore => 'Parties, reports & settings';
-
-  @override
-  String get comingSellH1 => 'A fast POS — one or two taps per item';
-
-  @override
-  String get comingSellH2 =>
-      'Credit invoices and full installment plans with guard policies';
-
-  @override
-  String get comingInventoryH1 =>
-      'Items with weighted-average cost and barcode cards';
-
-  @override
-  String get comingInventoryH2 =>
-      'Supply batches, FEFO expiry dates, and negative-stock protection';
-
-  @override
-  String get comingCashH1 =>
-      'Receipt and payment movements across multiple cashboxes';
-
-  @override
-  String get comingCashH2 =>
-      'Reconciliations and end-of-day balances in all currencies';
-
-  @override
-  String get comingMoreH1 =>
-      'Parties (customers/suppliers) with governed credit limits';
-
-  @override
-  String get comingMoreH2 => 'Reports, analytics, and scheduled backups';
 
   @override
   String get settingsBaseCurrency => 'Base currency';
@@ -491,9 +409,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genericErrorTitle => 'An unexpected error occurred';
 
   @override
-  String get loadingData => 'Loading…';
-
-  @override
   String get settingsAutolockSheetTitle => 'Auto-lock delay';
 
   @override
@@ -595,18 +510,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick another category or clear the filter to see all recorded events.';
 
   @override
-  String auditCountsAll(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count events',
-      one: '1 event',
-      zero: 'No events',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get settingsLicenses => 'Open-source licenses';
 
   @override
@@ -623,9 +526,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dateSheetGregorianLabel => 'Gregorian calendar';
-
-  @override
-  String get dateSheetWeekdayLabel => 'Weekday';
 
   @override
   String get commonAdd => 'Add';
@@ -722,9 +622,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemBatchesBadge => 'Batches';
-
-  @override
-  String get itemsListAddTooltip => 'Add a new item';
 
   @override
   String itemsListLoadMore(Object shown) {
@@ -905,9 +802,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemDetailBatchesBadge => 'FEFO batches';
 
   @override
-  String get itemDetailCostLabel => 'Cost';
-
-  @override
   String get itemDetailPricesSection => 'Sale prices';
 
   @override
@@ -943,9 +837,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get itemDetailBarcodeNote =>
       'Printing and sharing arrive with the printing module later — the barcode is ready to scan from the screen.';
-
-  @override
-  String get itemDetailQrTitle => 'Item QR code';
 
   @override
   String get itemDetailEditAction => 'Edit item';
@@ -1263,15 +1154,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String importResultSnackbar(Object failed, Object inserted) {
-    return 'Inserted $inserted, failed $failed';
-  }
-
-  @override
-  String get importFileReadError =>
-      'Could not read the file — make sure it is a valid CSV or Excel file';
-
-  @override
   String get importRestart => 'Import another file';
 
   @override
@@ -1336,34 +1218,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partiesHubCustomers => 'Customers';
 
   @override
-  String get partiesHubCustomersDesc =>
-      'Customer files, balances and account statements';
-
-  @override
   String get partiesHubSuppliers => 'Suppliers';
-
-  @override
-  String get partiesHubSuppliersDesc => 'Supplier files and what you owe them';
 
   @override
   String get partiesHubReceivables => 'Outstanding at customers';
 
   @override
-  String get partiesHubReceivablesDesc =>
-      'Open receivables ordered by oldest invoice';
-
-  @override
   String get partiesHubPayables => 'Outstanding to suppliers';
 
   @override
-  String get partiesHubPayablesDesc => 'Payables on the business, per currency';
-
-  @override
   String get partiesHubRates => 'Daily exchange rates';
-
-  @override
-  String get partiesHubRatesDesc =>
-      'Update today\'s rates before issuing any non-base invoice';
 
   @override
   String get partiesFxChipComplete => 'Today\'s rates complete';
@@ -1616,9 +1480,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partyFormSavedSupplier => 'Supplier saved';
 
   @override
-  String get partiesCreditLimitLabel => 'Credit limit';
-
-  @override
   String get partiesCreditUnlimited => 'No limit';
 
   @override
@@ -1628,9 +1489,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String partiesCreditLimitValue(Object amount) {
     return 'Limit $amount';
   }
-
-  @override
-  String get partyDetailInfoSection => 'Party details';
 
   @override
   String get partyDetailBalancesSection => 'Balances by currency';
@@ -1720,9 +1578,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statementBalanceColumn => 'Balance';
 
   @override
-  String get statementAmountColumn => 'Amount';
-
-  @override
   String get receivablesTitle => 'Outstanding at customers';
 
   @override
@@ -1775,9 +1630,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fxRatesTitle => 'Daily exchange rates';
 
   @override
-  String get fxTodayCardTitle => 'Today\'s rates';
-
-  @override
   String fxTodayHijriDate(Object date) {
     return 'Rates for $date';
   }
@@ -1822,9 +1674,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String fxRateSaved(Object code) {
     return 'Today\'s rate saved for $code';
   }
-
-  @override
-  String get fxHistorySection => 'Recent rates';
 
   @override
   String get fxHistoryEmpty => 'No rates recorded for this currency yet.';
@@ -2608,12 +2457,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Returns are strictly linked to a completed original invoice.';
 
   @override
-  String get retPickInvoiceNoResultsTitle => 'No matches';
-
-  @override
-  String get retPickInvoiceNoResultsBody => 'Try another number or name.';
-
-  @override
   String get retChangeInvoice => 'Change invoice';
 
   @override
@@ -2704,10 +2547,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashHomeEmptyTitle => 'No cash movements yet';
-
-  @override
-  String get cashHomeEmptyBody =>
-      'Start from the quick actions below — every movement is recorded here instantly.';
 
   @override
   String get cashHomeBoxesSection => 'Cash boxes';
@@ -2898,9 +2737,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashVoucherUnallocated => 'Remainder on account';
-
-  @override
-  String get cashVoucherLoadingInvoices => 'Loading open invoices…';
 
   @override
   String cashVoucherCrossDeposit(Object amount, Object code) {
@@ -3508,9 +3344,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupShareFailed => 'Could not share the file';
 
   @override
-  String get backupSettingSaveFailed => 'Could not save the setting';
-
-  @override
   String get backupRestoreDialogTitle => 'Restore a backup';
 
   @override
@@ -3550,9 +3383,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupInspectChecksum => 'Fingerprint (SHA-256)';
-
-  @override
-  String get backupInspectKind => 'Type';
 
   @override
   String get backupErrNotFile =>
@@ -4400,9 +4230,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stockSummaryEndBalance => 'Balance';
 
   @override
-  String get stockSummaryValueAtCost => 'Value at cost';
-
-  @override
   String stockSummaryPeriodLabel(Object from, Object to) {
     return 'Period: $from to $to';
   }
@@ -4478,9 +4305,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String changeDown(Object pct) {
     return 'Down $pct%';
   }
-
-  @override
-  String get changeNew => 'New';
 
   @override
   String get movementTypePurchase => 'Purchase';
@@ -4783,9 +4607,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get visFixItemsAddFab => 'Register item';
 
   @override
-  String get visFixItemsAddFabShort => 'New item';
-
-  @override
   String get tmplSectionTitle => 'Printing & invoices';
 
   @override
@@ -4811,13 +4632,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tmplSimpleDesc =>
       'The app\'s current template — colored band, clean table and totals card';
-
-  @override
-  String get tmplThermalName => 'Thermal 80mm';
-
-  @override
-  String get tmplThermalDesc =>
-      'Roll receipt for thermal printers with an invoice-number barcode';
 
   @override
   String get tmplColorsTitle => 'Invoice colors';

@@ -19,6 +19,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/info_note.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../printing/services/statement_pdf_builder.dart';
@@ -180,7 +182,7 @@ class _PartyDetailBody extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
               children: [
                 if (record!.archived) ...[
-                  PartiesInfoNote(
+                  InfoNote(
                     icon: Icons.archive_rounded,
                     message: l10n.partyDetailArchivedBanner,
                     warning: true,
@@ -189,14 +191,14 @@ class _PartyDetailBody extends StatelessWidget {
                 ],
                 _InfoCard(state: state),
                 const SizedBox(height: 18),
-                PartiesSectionTitle(
+                FinSectionTitle(
                   icon: Icons.account_balance_wallet_rounded,
                   title: l10n.partyDetailBalancesSection,
                 ),
                 const SizedBox(height: 8),
                 _BalancesCard(state: state),
                 const SizedBox(height: 18),
-                PartiesSectionTitle(
+                FinSectionTitle(
                   icon: Icons.receipt_long_rounded,
                   title: l10n.partyDetailStatementSection,
                 ),

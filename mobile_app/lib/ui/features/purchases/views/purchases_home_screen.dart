@@ -15,8 +15,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/access_card.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/hub_hero_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
@@ -75,13 +77,6 @@ class _PurchasesHomeBody extends StatelessWidget {
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.go(_backDestination)),
         title: Text(l10n.purHomeTitle),
-        actions: [
-          IconButton(
-            tooltip: l10n.purInvoicesTitle,
-            icon: const Icon(Icons.receipt_long_rounded),
-            onPressed: () => context.go('/purchases/invoices'),
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -118,63 +113,24 @@ class _PurchasesHomeBody extends StatelessWidget {
   }
 }
 
-/// البطاقة البطلة — دعوة يومية لفواتير الشراء بلون الهوية.
+/// البطاقة البطلة — دعوة يومية لفواتير الشراء بلون الهوية
+/// (HubHeroCard الموحدة — W3/R17-b: كان construct يدوياً مكرراً).
 class _HeroCard extends StatelessWidget {
   const _HeroCard();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
     final now = DateTime.now();
-    return FinCard(
-      accent: colors.gold,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary,
-                  Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              Icons.local_shipping_rounded,
-              color: scheme.onPrimary,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.purHomeHeroTitle,
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${purFormatDate(now)} · ${purFormatTime(now)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontFeatures: FinText.tabularNums,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return HubHeroCard(
+      icon: Icons.local_shipping_rounded,
+      title: l10n.purHomeHeroTitle,
+      subtitle: Text(
+        '${purFormatDate(now)} · ${purFormatTime(now)}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontFeatures: FinText.tabularNums,
+        ),
       ),
     );
   }
@@ -182,6 +138,7 @@ class _HeroCard extends StatelessWidget {
 
 /// بلاطات اليوم — عدد فواتير الشراء + قيمتها بعملة الأساس (فواتير
 /// العملة الأساسية حصراً — فصل العملات 5.4-7).
+/// معلوماتية بلا تنقل (A2/R17-b): قائمة المشتريات لها بطاقة وصول واحدة.
 class _TodayStatsRow extends StatelessWidget {
   const _TodayStatsRow();
 
@@ -198,7 +155,6 @@ class _TodayStatsRow extends StatelessWidget {
             value: stats.todayCount.toDouble(),
             icon: Icons.receipt_long_rounded,
             isCount: true,
-            onTap: () => context.go('/purchases/invoices'),
           ),
         ),
         const SizedBox(width: 12),
@@ -209,7 +165,6 @@ class _TodayStatsRow extends StatelessWidget {
             icon: Icons.local_shipping_rounded,
             sign: FinSign.outgoing,
             decimals: 2,
-            onTap: () => context.go('/purchases/invoices'),
           ),
         ),
       ],
@@ -321,7 +276,7 @@ class _AccessRowOne extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _AccessCard(
+          child: AccessCard(
             icon: Icons.receipt_long_rounded,
             title: l10n.purInvoicesTitle,
             subtitle: l10n.purInvoicesSubtitle,
@@ -331,7 +286,7 @@ class _AccessRowOne extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _AccessCard(
+          child: AccessCard(
             icon: Icons.undo_rounded,
             title: l10n.retSaleTitle,
             subtitle: l10n.retSaleSubtitle,
@@ -355,7 +310,7 @@ class _AccessRowTwo extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _AccessCard(
+          child: AccessCard(
             icon: Icons.assignment_return_rounded,
             title: l10n.retPurchaseTitle,
             subtitle: l10n.retPurchaseSubtitle,
@@ -368,65 +323,8 @@ class _AccessRowTwo extends StatelessWidget {
   }
 }
 
-class _AccessCard extends StatelessWidget {
-  const _AccessCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 21, color: color),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w800),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// آخر المشتريات — وصول سريع لقائمة فواتير الشراء.
+/// آخر المشتريات — عرض موجز فقط (A2/R17-b): مدخل القائمة الوحيد هو
+/// بطاقة الوصول؛ الصفوف معلوماتية بلا تنقل.
 class _RecentPurchasesCard extends StatelessWidget {
   const _RecentPurchasesCard({required this.purchases});
 
@@ -440,19 +338,9 @@ class _RecentPurchasesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.purHomeRecent,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/purchases/invoices'),
-                child: Text(l10n.commonViewAll),
-              ),
-            ],
+          Text(
+            l10n.purHomeRecent,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
           for (final purchase in purchases.take(3))

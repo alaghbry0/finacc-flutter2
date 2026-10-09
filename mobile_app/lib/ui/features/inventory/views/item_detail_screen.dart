@@ -19,6 +19,8 @@ import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/info_note.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/status_chip.dart';
@@ -130,7 +132,7 @@ class _ItemDetailBody extends StatelessWidget {
               _PricesCard(state: state),
               const SizedBox(height: 14),
               if (detail.item.isService)
-                InfoNoteCard(
+                InfoNote(
                   icon: Icons.miscellaneous_services_rounded,
                   message: l10n.itemDetailServiceNote,
                 )
@@ -341,7 +343,7 @@ class _PricesCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InventorySectionTitle(
+        FinSectionTitle(
           icon: Icons.sell_rounded,
           title: l10n.itemDetailPricesSection,
         ),
@@ -421,7 +423,7 @@ class _StockCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InventorySectionTitle(
+        FinSectionTitle(
           icon: Icons.inventory_rounded,
           title: l10n.itemDetailStockSection,
         ),
@@ -546,7 +548,7 @@ class _BatchesCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InventorySectionTitle(
+        FinSectionTitle(
           icon: Icons.layers_rounded,
           title: l10n.itemDetailBatchesSection,
         ),
@@ -643,7 +645,7 @@ class _MovementsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InventorySectionTitle(
+        FinSectionTitle(
           icon: Icons.receipt_long_rounded,
           title: l10n.itemDetailMovementsSection,
         ),

@@ -23,6 +23,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/fin_card.dart';
+import '../../../../core/widgets/fin_error_card.dart';
 import '../../view_models/print_on_save.dart';
 import 'sell_widgets.dart';
 
@@ -449,7 +450,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 14),
-          _ErrorCard(message: _error!),
+          FinErrorCard(message: _error!),
         ],
         const SizedBox(height: 18),
         FilledButton(
@@ -845,32 +846,3 @@ class _PreviewRow extends StatelessWidget {
   }
 }
 
-/// بطاقة الخطأ الحمراء — رسالة الرفض العربية كاملة (لا تُختصر).
-class _ErrorCard extends StatelessWidget {
-  const _ErrorCard({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = FinColors.of(context);
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      accent: colors.negative,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline_rounded, color: colors.negative, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

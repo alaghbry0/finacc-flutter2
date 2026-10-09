@@ -28,10 +28,15 @@ import '../view_models/aging_view_model.dart';
 
 /// شاشة تقرير أعمار الديون — `/reports/aging`.
 class AgingReportScreen extends StatelessWidget {
-  const AgingReportScreen({super.key, this.viewModel});
+  const AgingReportScreen({super.key, this.viewModel, this.origin});
 
   /// Seam اختبار: نموذج محمّل مسبقاً — عند غيابه تُنشئ الشاشة نموذجها.
   final AgingViewModel? viewModel;
+
+  /// مسار الأصل الذي دخل منه المستخدم التقرير (A6/R17-b — نمط
+  /// PurchasesOriginTracker)؛ null = مجهول فيرجع الجسم إلى مركز
+  /// التقارير (جذر وحدة التقرير — قاعدة الدليل البصري للرجوع).
+  final String? origin;
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +55,16 @@ class AgingReportScreen extends StatelessWidget {
     return ChangeNotifierProvider<AgingViewModel>.value(
       value: vm,
       // إعادة التحميل عند العودة من مسار فرعي (سداد من تفاصيل الطرف…).
-      child: RefreshOnReturn(onReappear: vm.refresh, child: const _AgingBody()),
+      child: RefreshOnReturn(onReappear: vm.refresh, child: _AgingBody(origin: origin)),
     );
   }
 }
 
 class _AgingBody extends StatefulWidget {
-  const _AgingBody();
+  const _AgingBody({this.origin});
+
+  /// مسار الأصل الذي دخل منه المستخدم — يرجع إليه زر الرجوع.
+  final String? origin;
 
   @override
   State<_AgingBody> createState() => _AgingBodyState();
@@ -119,8 +127,12 @@ class _AgingBodyState extends State<_AgingBody> {
               ),
           ],
         ),
-        // مسار علوي خارج الهيكل — رجوع صريح إلى محور الأطراف (نمط parties).
-        leading: BackButton(onPressed: () => context.go('/parties')),
+        // مسار علوي خارج الهيكل — رجوع صريح إلى أصل الدخول (A6/R17-b:
+        // مركز التقارير أو محور الأطراف حسب المدخل؛ المجهول → المركز
+        // جذر وحدة التقرير) بدل التصلّب على محور واحد.
+        leading: BackButton(
+          onPressed: () => context.go(widget.origin ?? '/reports'),
+        ),
       ),
       body: SafeArea(
         top: false,

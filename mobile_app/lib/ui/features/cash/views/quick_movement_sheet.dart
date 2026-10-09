@@ -21,6 +21,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_error_card.dart';
 import '../view_models/quick_movement_view_model.dart';
 import 'widgets/cash_widgets.dart';
 
@@ -345,7 +346,7 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
         ),
         if (vm.saveError != null) ...[
           const SizedBox(height: 12),
-          CashErrorCard(message: vm.saveError!),
+          FinErrorCard(message: vm.saveError!),
         ],
         const SizedBox(height: 18),
         FilledButton(

@@ -201,9 +201,11 @@ class _DashboardBody extends StatelessWidget {
                     children: [
                       SectionHeader(title: l10n.dashboardQuickAccess),
                       const SizedBox(height: 10),
-                      // ست بلاطات مباشرة على صفين (طلب صاحب المشروع +
-                      // إصلاح البنية): الأطراف من الواجهة الأولى، و**بلاطة
-                      // المشتريات** التي كانت مدفونة داخل محور البيع فقط.
+                      // ثلاث بلاطات بصف واحد (A5/R17-b — تدقيق R16):
+                      // بلاطات العملاء/الموردين/الصرف الثلاث دُمجت في بلاطة
+                      // «الأطراف» واحدة → جذر وحدة /parties (بلا بلاطة
+                      // رابعة — قرار المنسق: الداشبورد أصغر وأنظف،
+                      // والتقارير تبقى من «المزيد»). مسارات الأبناء كما هي.
                       Row(
                         children: [
                           Expanded(
@@ -217,26 +219,13 @@ class _DashboardBody extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _QuickAccessTile(
-                              icon: Icons.person_rounded,
-                              label: l10n.partiesHubCustomers,
+                              icon: Icons.diversity_3_rounded,
+                              label: l10n.partiesTabTitle,
                               color: scheme.primary,
-                              onTap: () => context.go('/parties/customers'),
+                              onTap: () => context.go('/parties'),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickAccessTile(
-                              icon: Icons.local_shipping_rounded,
-                              label: l10n.partiesHubSuppliers,
-                              color: scheme.tertiary,
-                              onTap: () => context.go('/parties/suppliers'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
                           Expanded(
                             child: _QuickAccessTile(
                               key: const Key('home_purchases_tile'),
@@ -244,15 +233,6 @@ class _DashboardBody extends StatelessWidget {
                               label: l10n.purHomeTitle,
                               color: colors.gold,
                               onTap: () => context.go('/purchases'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _QuickAccessTile(
-                              icon: Icons.currency_exchange_rounded,
-                              label: l10n.dashboardQuickRates,
-                              color: colors.gold,
-                              onTap: () => context.go('/parties/rates'),
                             ),
                           ),
                         ],

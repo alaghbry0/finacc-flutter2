@@ -22,6 +22,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/hub_hero_card.dart';
+import '../../../core/widgets/fin_error_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../printing/services/shift_report_pdf_builder.dart';
@@ -185,59 +187,21 @@ class _NoShiftCardState extends State<_NoShiftCard> {
     final vm = context.watch<ShiftViewModel>();
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
     final state = vm.state;
     final box = state.boxFor(null);
 
-    return FinCard(
-      accent: colors.gold,
-      child: Column(
+    return HubHeroCard(
+      icon: Icons.lock_clock_rounded,
+      title: l10n.shiftOpenNoneTitle,
+      subtitle: Text(
+        l10n.shiftOpenNoneBody,
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: scheme.onSurfaceVariant),
+      ),
+      // نموذج الفتح أسفل صف البطولة بفتحة below (W3/R17-b).
+      below: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      scheme.primary,
-                      Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(
-                  Icons.lock_clock_rounded,
-                  color: scheme.onPrimary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.shiftOpenNoneTitle,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.shiftOpenNoneBody,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 16),
           if (state.boxes.length > 1 && box != null)
             Padding(
@@ -277,7 +241,7 @@ class _NoShiftCardState extends State<_NoShiftCard> {
           ),
           if (vm.actionError != null) ...[
             const SizedBox(height: 12),
-            CashErrorCard(message: vm.actionError!),
+            FinErrorCard(message: vm.actionError!),
           ],
           const SizedBox(height: 18),
           FilledButton(
@@ -319,61 +283,27 @@ class _LiveShiftCard extends StatelessWidget {
     final decimals = shiftDecimals(box?.box.currencyCode);
     final opened = _tryParseIso(current.openedAt);
 
-    return FinCard(
+    return HubHeroCard(
+      icon: Icons.timelapse_rounded,
+      title: l10n.shiftLiveTitle,
+      subtitle: Text(
+        '${box?.box.name ?? ''}'
+        '${opened == null ? '' : ' · ${l10n.shiftOpenedAtLabel}: '
+                  '${shiftFormatDateTime(opened.toLocal())}'}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontFeatures: FinText.tabularNums,
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       accent: colors.positive,
-      child: Column(
+      iconTint: colors.positive,
+      iconColor: colors.onPositiveContainer,
+      // معادلة الوردية أسفل صف البطولة بفتحة below (W3/R17-b).
+      below: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colors.positive,
-                      Color.lerp(colors.positive, Colors.black, 0.25)!,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(
-                  Icons.timelapse_rounded,
-                  color: colors.onPositiveContainer,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.shiftLiveTitle,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${box?.box.name ?? ''}'
-                      '${opened == null ? '' : ' · ${l10n.shiftOpenedAtLabel}: '
-                                '${shiftFormatDateTime(opened.toLocal())}'}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontFeatures: FinText.tabularNums,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 14),
           _SummaryRow(
             label: l10n.shiftOpeningCountLabel,
@@ -883,7 +813,7 @@ class _ShiftCloseSheetState extends State<_ShiftCloseSheet> {
             ),
             if (vm.actionError != null) ...[
               const SizedBox(height: 12),
-              CashErrorCard(message: vm.actionError!),
+              FinErrorCard(message: vm.actionError!),
             ],
             const SizedBox(height: 18),
             FilledButton(
