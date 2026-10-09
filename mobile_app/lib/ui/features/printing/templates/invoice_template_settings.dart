@@ -6,6 +6,10 @@
 /// الدفاعي: أي مفتاح غائب/تالف يرد إلى القيمة الافتراضية فلا يكسر
 /// التخصيصُ السيئٌ طباعةَ المتجر.
 ///
+/// **R16-b**: القالب الحراري `thermal_80` حُذف نهائياً بقرار المالك
+/// (القوالب الباقية: كلاسيكي A4 + بسيط A4 فقط) — وتُحوَّل أي قيمة
+/// محفوظة قديمة عند **القراءة** إلى الكلاسيكي (بلا هجرة schema).
+///
 /// قاعدة الملزمة المعمارية للقوالب: كل تسمية تصل القالب **مسبقة
 /// التعريباً** من المسقط (`InvoicePrintDoc`)، وكل تحويل أرقام (نظام
 /// `display.numerals`) يحدث في مرحلة المسقط حصراً — هذا النموذج لا
@@ -14,16 +18,20 @@ library;
 
 import 'dart:convert';
 
-/// أكواد القوالب المعتمدة (تطابق بذر هجرة v4).
+/// أكواد القوالب المعتمدة (بعد حذف الحراري — R16-b).
 const String kInvoiceTemplateClassicA4 = 'classic_a4';
 const String kInvoiceTemplateSimpleA4 = 'simple_a4';
-const String kInvoiceTemplateThermal80 = 'thermal_80';
+
+/// قيمة `thermal_80` المحفوظة قديماً (بذر v4/تخصيص مستخدم سابق) —
+/// القالب حُذف نهائياً بقرار المالك (R16-b) وأي قراءة لها تُحوَّل إلى
+/// الكلاسيكي A4 (تحويل قراءة بلا هجرة schema: صفوف الجدول القديمة
+/// تبقى في القاعدة بلا أن تظهر أو تُطبع أبداً).
+const String kLegacyInvoiceTemplateThermal80 = 'thermal_80';
 
 /// كل الأكواد المعتمدة بترتيب البذر.
 const List<String> kInvoiceTemplateCodes = <String>[
   kInvoiceTemplateClassicA4,
   kInvoiceTemplateSimpleA4,
-  kInvoiceTemplateThermal80,
 ];
 
 /// شارة النسخة على الفاتورة (أصل/صورة/بلا).
@@ -45,8 +53,7 @@ enum InvoiceBadgeMode {
 }
 
 /// ميزة من ميزات القوالب — يستعلم بها محدد القالب/الشاشة عمّا يوفّره
-/// كل قالب فعلياً (الحراري بلا توقيعات/ختم بطبيعته، والبسيط يحافظ على
-/// تخطيطه القائم بلا خانات إضافية).
+/// كل قالب فعلياً (البسيط يحافظ على تخطيطه القائم بلا خانات إضافية).
 enum TemplateFeature {
   discountColumn,
   unitColumn,
@@ -66,16 +73,16 @@ bool templateSupports(String templateId, TemplateFeature feature) {
     case TemplateFeature.barcode:
     case TemplateFeature.tax:
     case TemplateFeature.footer:
-      // الأعمدة/الباركود/الضريبة/التذييل مدعومة في القوالب الثلاثة.
+      // الأعمدة/الباركود/الضريبة/التذييل مدعومة في القالبين الباقيين.
       return true;
     case TemplateFeature.signatures:
     case TemplateFeature.stampArea:
       // خانات التوقيع ومكان الختم من لغة الكلاسيكي الحكومي حصراً
-      // (نموذج المالك) — البسيط كما كان والحراري إيصال مختصر.
+      // (نموذج المالك) — البسيط كما كان.
       return templateId == kInvoiceTemplateClassicA4;
     case TemplateFeature.notes:
-      // الكلاسيكي والحراري يرسمان خانة ملاحظات؛ البسيط بلا تغيير.
-      return templateId != kInvoiceTemplateSimpleA4;
+      // الكلاسيكي يرسم خانة ملاحظات؛ البسيط بلا تغيير (كما كان).
+      return templateId == kInvoiceTemplateClassicA4;
   }
 }
 
@@ -97,13 +104,12 @@ class InvoiceTemplateSettings {
     this.badge = InvoiceBadgeMode.none,
   });
 
-  /// هوية القالب (`classic_a4` / `simple_a4` / `thermal_80`).
+  /// هوية القالب (`classic_a4` / `simple_a4`).
   final String templateId;
 
-  /// الورق المشتق من القالب (`a4-landscape` / `a4-portrait` / `roll80`).
+  /// الورق المشتق من القالب (`a4-landscape` / `a4-portrait`).
   String get paper => switch (templateId) {
     kInvoiceTemplateClassicA4 => 'a4-landscape',
-    kInvoiceTemplateThermal80 => 'roll80',
     _ => 'a4-portrait',
   };
 
@@ -198,9 +204,12 @@ class InvoiceTemplateSettings {
     bool flag(Object? value, bool fallback) =>
         value is bool ? value : fallback;
     final templateId = switch (json['templateId']) {
-      kInvoiceTemplateClassicA4 ||
-      kInvoiceTemplateSimpleA4 ||
-      kInvoiceTemplateThermal80 => json['templateId']! as String,
+      // R16-b — تحويل قراءة: القالب الحراري حُذف بقرار المالك؛ أي
+      // قيمة محفوظة 'thermal_80' (بذر v4 قديم أو تخصيص سابق) تُقرأ
+      // كلاسيكياً فتمر الطباعة/المعاينة بالكلاسيكي A4 بلا انقطاع.
+      kLegacyInvoiceTemplateThermal80 => kInvoiceTemplateClassicA4,
+      kInvoiceTemplateClassicA4 => kInvoiceTemplateClassicA4,
+      kInvoiceTemplateSimpleA4 => kInvoiceTemplateSimpleA4,
       _ => kInvoiceTemplateSimpleA4,
     };
     return InvoiceTemplateSettings(

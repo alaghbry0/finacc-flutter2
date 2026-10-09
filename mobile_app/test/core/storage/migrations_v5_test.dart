@@ -1,8 +1,10 @@
-/// اختبارات هجرة v5 (موجة UX-4 — الكميات المجانية/بونص): عمود
-/// `invoice_item.free_qty` (NUMERIC(12,3) NOT NULL DEFAULT 0) + بذر مفتاح
-/// `sale.free_qty` = 'off': قاعدة فارغة (إقلاع نظيف)، ترقية قاعدة v3
-/// قائمة (v4+v5 فوقها — نفس مسار onUpgrade الحقيقي)، الصفوف القديمة
-/// بلا بونص تلقائياً، idempotency، وبذرة لا تدوس قيمة المستخدم.
+/// اختبارات هجرة v5 (موجة UX-4 — الكميات المجانية/بونص) بعد R16-a:
+/// عمود `invoice_item.free_qty` (NUMERIC(12,3) NOT NULL DEFAULT 0) يبقى
+/// محفوظاً إلى الأبد، بينما بذرة مفتاح `sale.free_qty` ('off') التي
+/// زرعتها v5 **تحذفها هجرة v6** (قرار المالك: لا إعداد للبونص) — قاعدة
+/// فارغة (إقلاع نظيف)، ترقية قاعدة v3 قائمة (v4+v5+v6 فوقها — نفس
+/// مسار onUpgrade الحقيقي)، الصفوف القديمة بلا بونص تلقائياً،
+/// وidempotency.
 library;
 
 import 'dart:io';
@@ -41,7 +43,7 @@ void main() {
     return db;
   }
 
-  test('قاعدة فارغة: عمود free_qty بجداول البنود والمفتاح مزروع off', () async {
+  test('قاعدة فارغة: عمود free_qty بجداول البنود والمفتاح المتقاعد محذوف (v6)', () async {
     final app = await openUniqueFileApp();
     addTearDown(app.close);
 
@@ -50,16 +52,16 @@ void main() {
     expect(freeCol['type'], 'NUMERIC(12,3)');
     expect(freeCol['notnull'], 1, reason: 'NOT NULL');
     expect(freeCol['dflt_value'], '0', reason: 'DEFAULT 0 — بلا بونص');
-    // المفتاح موصول فعلياً (مستودع الإعدادات يقرأه بالسجل المغلق).
+    // v5 زرعت المفتاح ثم v6 حذفه (قرار المالك R16-a: لا إعداد للبونص).
     final rows = await app.db.query(
       'settings',
       columns: ['value'],
       where: "key = 'sale.free_qty'",
     );
-    expect(rows.single['value'], '"off"');
+    expect(rows, isEmpty, reason: 'المفتاح المتقاعد غير موجود بقاعدة نظيفة');
   });
 
-  test('ترقية قاعدة v3 قائمة: v4+v5 فوقها والعمود والمفتاح يظهران', () async {
+  test('ترقية قاعدة v3 قائمة: v4+v5+v6 فوقها والعمود ظاهر والمفتاح محذوف', () async {
     final db = await buildDbAtVersion(3, '_upgrade');
     // v3: لا عمود بونص بعد.
     expect(
@@ -73,7 +75,7 @@ void main() {
 
     expect(
       (await db.query('_migrations')).map((r) => r['version']).toList(),
-      [1, 2, 3, 4, 5],
+      [1, 2, 3, 4, 5, 6],
     );
     final freeCol = (await db.rawQuery('PRAGMA table_info(invoice_item)'))
         .firstWhere((c) => c['name'] == 'free_qty');
@@ -83,9 +85,10 @@ void main() {
     };
     // القديمة بقت + الجديدة أُضيفت (لا فقد بالترقية).
     expect(byKey['sale.default_payment'], '"cash"');
-    expect(byKey['sale.free_qty'], '"off"');
+    expect(byKey.containsKey('sale.free_qty'), isFalse,
+        reason: 'v6 حذفت بوابة البونص المتقاعدة');
     // وجدول قوالب v4 صعد معها (ترقية v3 كاملة إلى الرأس).
-    expect(await db.query('print_template'), hasLength(3));
+    expect(await db.query('print_template'), hasLength(2));
   });
 
   test('صفوف بنود قديمة (أُدرجت بلا free_qty): بلا بونص تلقائياً', () async {
@@ -124,17 +127,17 @@ void main() {
     expect(SaleInvoiceItemLine.fromRow(row).freeQty, 0);
   });
 
-  test('idempotent: إعادة applyMigrations فوق v5 لا تكرر المفتاح', () async {
+  test('idempotent: إعادة applyMigrations فوق v6 لا تكرر الإعدادات', () async {
     final app = await openUniqueFileApp();
     addTearDown(app.close);
     await applyMigrations(app.db);
     final settingsCount = (await app.db.query('settings')).length;
     await applyMigrations(app.db);
     expect((await app.db.query('settings')).length, settingsCount);
-    expect(await app.db.query('_migrations'), hasLength(5));
+    expect(await app.db.query('_migrations'), hasLength(6));
   });
 
-  test('بذرة v5 لا تدوس قيمة المستخدم (on مكتوبة قبل الترقية تبقى)', () async {
+  test('قيمة المستخدم القديمة للمفتاح المتقاعد تُحذف أيضاً (v6 لا استثناء)', () async {
     final db = await buildDbAtVersion(3, '_user_value');
     // المستخدم فعّل البونص يدوياً قبل الترقية (ترقية مهوّاة أو قيمة سابقة).
     await db.insert('settings', {
@@ -150,6 +153,13 @@ void main() {
       columns: ['value'],
       where: "key = 'sale.free_qty'",
     );
-    expect(rows.single['value'], '"on"', reason: 'قيمة المستخدم لا تُداس');
+    expect(rows, isEmpty,
+        reason: 'الإعداد تقاعد نهائياً — البوابة ديناميكية عند freeQty>0');
+    // وعمود البونص نفسه لم يُمسّ (بونصات المتاجر محفوظة).
+    expect(
+      (await db.rawQuery('PRAGMA table_info(invoice_item)'))
+          .where((c) => c['name'] == 'free_qty'),
+      isNotEmpty,
+    );
   });
 }

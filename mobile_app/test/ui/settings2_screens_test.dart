@@ -235,16 +235,16 @@ void main() {
         expect(find.text('تفضيلات البيع'), findsWidgets);
         expect(find.text('طريقة الدفع الافتراضية'), findsOneWidget);
         expect(find.text('نقدي كامل'), findsOneWidget);
-        // UX-4: بطاقة البونص معروضة (مفتاحها الثالث مغلق افتراضياً).
-        expect(find.text('الكميات المجانية (بونص)'), findsOneWidget);
+        // R16-a: بطاقة البونص أُزيلت نهائياً — لا إعداد لإظهار/إخفاء
+        // حقل الكمية المجانية (الشارة ديناميكية عند freeQty>0 حصراً).
+        expect(find.text('الكميات المجانية (بونص)'), findsNothing);
         // المفاتيح الافتراضية on.
         final switches = tester
             .widgetList<Switch>(find.byType(Switch))
             .toList();
-        expect(switches, hasLength(3));
+        expect(switches, hasLength(2));
         expect(switches.first.value, isTrue, reason: 'إظهار الخصومات on');
         expect(switches[1].value, isFalse, reason: 'تحذير التكلفة off');
-        expect(switches.last.value, isFalse, reason: 'البونص off (بذر v5)');
       });
     });
 

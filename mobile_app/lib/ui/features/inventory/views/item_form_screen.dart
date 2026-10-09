@@ -63,6 +63,12 @@ class _ItemFormBody extends StatefulWidget {
 
 class _ItemFormBodyState extends State<_ItemFormBody> {
   final _formKey = GlobalKey<FormState>();
+
+  /// R16-b — مفتاح لافتة خطأ التحقير (أعلى زر الحفظ أسفل النموذج):
+  /// يُسقَط إليها تلقائياً عند ظهورها كي يرى المستخدم سبب رفض الحفظ
+  /// حتى لو كان أسفل الشاشة (نموذج أطول من الشاشة).
+  final GlobalKey _validationBannerKey = GlobalKey();
+
   late final TextEditingController _name;
   late final TextEditingController _barcode;
   late final TextEditingController _cost;
@@ -77,6 +83,9 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
 
   /// لقطة الحالة ما بعد التحميل — مقارنة التغييرات لحماية المغادرة (P1-4).
   ItemFormState? _dirtyBaseline;
+
+  /// آخر خطأ تحقق أُسقط إليه (R16-b) — يمنع تكرار الإسقاط لنفس الخطأ.
+  ItemFormError? _lastValidationError;
 
   /// هل في النموذج تغييرات غير محفوظة؟ (مقارنة الحالة باللقطة؛ بعد الحفظ
   /// أو قبل التحميل = نظيف).
@@ -185,12 +194,36 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
 
+    // R16-b — إسقاط تلقائي للافتة خطأ التحقق عند ظهورها (مرة لكل خطأ).
+    if (state.validationError != null && _lastValidationError == null) {
+      _lastValidationError = state.validationError;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final ctx = _validationBannerKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            alignment: 0.15,
+          );
+        }
+      });
+    } else if (state.validationError == null) {
+      _lastValidationError = null;
+    }
+
     // حماية التغييرات غير المحفوظة (P1-4): الرجوع المباشر يعرض حوار
     // «مغادرة/بقاء» — القرار الصريح وحده يفتح الباب.
     return DirtyFormGuard(
       isDirty: _dirty,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        // R16-b — النموذج أطول من الشاشة على الجوال: تفعيل صريح لتقليص
+        // الجسم مع لوحة المفاتيح (resizeToAvoidBottomInset) حتى تبقى
+        // الحقول السفلية — الكمية الافتتاحية/الأسعار/زر الحفظ — قابلة
+        // للتمرير إليها دائماً ولا تُحجب خلفها.
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: Text(
             state.editMode ? l10n.itemFormEditTitle : l10n.itemFormAddTitle,
@@ -219,6 +252,11 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                 key: _formKey,
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                  // R16-b: تمرير مؤكد للجسم الطويل — سحب بالإصبع يطوي
+                  // لوحة المفاتيح فوراً (onDrag) فلا يعوق الوصول للحقول
+                  // السفلية على الشاشات القصيرة.
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   children: [
                     if (state.editMode) ...[
                       InfoNoteCard(
@@ -263,6 +301,7 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                     if (state.validationError != null) ...[
                       const SizedBox(height: 14),
                       _ValidationErrorBanner(
+                        key: _validationBannerKey,
                         message: _validationMessage(
                           l10n,
                           state.validationError!,
@@ -642,6 +681,9 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           title: Text(l10n.categoryNameLabel),
+          // R16-b — جسم الحوار قابل للتمرير (scrollable): لا ينفيض ولا
+          // تحتجب حقوله خلف لوحة المفاتيح على الشاشات القصيرة.
+          scrollable: true,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -696,6 +738,8 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
           title: Text(l10n.unitNameLabel),
+          // R16-b — نفس علاج حوار الفئة: جسم قابل للتمرير.
+          scrollable: true,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -756,7 +800,7 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
 
 /// لافتة خطأ التحقق فوق زر الحفظ.
 class _ValidationErrorBanner extends StatelessWidget {
-  const _ValidationErrorBanner({required this.message});
+  const _ValidationErrorBanner({super.key, required this.message});
 
   final String message;
 

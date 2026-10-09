@@ -782,7 +782,8 @@ class ReturnRepository {
           final lineQty = input.qty;
 
           // Snapshot تكلفة الوحدة الأصلية (بالعملة الأساسية) — مقسوم
-          // المنصرف الكلي (free_qty = 0 ببنود الشراء دائماً — حيادي).
+          // المستلم الكلي (R16-a: بونص الشراء داخل line_cost — القسمة
+          // على qty + free_qty تعيد تكلفة الوحدة الفعلية وقت الشراء).
           final snapshotUnit = roundCost(
             (origItem['line_cost'] as num? ?? 0) / _dispatchedDivisor(origItem),
           );

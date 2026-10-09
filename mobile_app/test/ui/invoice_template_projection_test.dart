@@ -26,16 +26,6 @@ void main() {
     return pdf.save();
   }
 
-  double rollHeight(Uint8List bytes) {
-    final parts = pdfMediaBoxes(bytes)
-        .first
-        .trim()
-        .split(RegExp(r'\s+'))
-        .map(double.parse)
-        .toList();
-    return parts[3] - parts[1];
-  }
-
   testWidgets('بسيط A4: إخفاء عمود الخصم ينقص مواضع النص المرسومة', (
     tester,
   ) async {
@@ -163,35 +153,4 @@ void main() {
     });
   }, timeout: const Timeout(Duration(minutes: 2)));
 
-  testWidgets('حراري 80مم: تشغيل الباركود يمدّد رول الإيصال', (
-    tester,
-  ) async {
-    await tester.runAsync(() async {
-      final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
-      final doc = invoiceDocForTests(
-        l10n,
-        templateLabels: templateLabelsForTests(l10n),
-      );
-      final withBarcode = await build(
-        doc,
-        const InvoiceTemplateSettings(
-          templateId: kInvoiceTemplateThermal80,
-          showBarcode: true,
-        ),
-      );
-      final withoutBarcode = await build(
-        doc,
-        const InvoiceTemplateSettings(templateId: kInvoiceTemplateThermal80),
-      );
-      // الرول يتقلص مع المحتوى: الباركود يضيف ~11مم رسماً + سطر الرقم.
-      expect(
-        rollHeight(withBarcode),
-        greaterThan(rollHeight(withoutBarcode) + 20),
-        reason: 'باركود Code128 بارتفاع 11مم يُرسم فعلاً أسفل الإيصال',
-      );
-      // وكلاهما يبقى رولاً واحدة.
-      expect(pdfPageCount(withBarcode), 1);
-      expect(pdfPageCount(withoutBarcode), 1);
-    });
-  }, timeout: const Timeout(Duration(minutes: 2)));
 }

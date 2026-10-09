@@ -11,11 +11,19 @@
 /// خطوط حمراء مطبَّقة هنا:
 /// - **WAC بالعملة الأساسية** (قاعدة 5.4-3 + تعليق المخطط على
 ///   `product.cost_price`): خصم الرأس يوزَّع pro-rata على البنود **قبل**
-///   تحديث WAC، ثم `unitCostEffectiveBase = round4(netFinal × سعر يوم
-///   الشراء / qty)` ثم
+///   تحديث WAC، ثم `unitCostBase = round4(netFinal × سعر يوم الشراء ÷
+///   المستلم الكلي)` ثم
 ///   `new_cost = (qty_old×cost_old + qty_new×cost_new)/(qty_old+qty_new)`؛
 ///   وعند `qty_old ≤ 0` تُعتمد `cost_new` مباشرة (AC-03: شراء 10 @100
 ///   بخصم رأس 10% → التكلفة 90 لا 100).
+/// - **بونص الشراء** (R16-a — قرار المالك الموثّق، مرآة «المنصرف
+///   الكلي» للبيع): المستلم الكلي = `qty + free_qty` — الدفعة الواردة
+///   و`stock_level` وحركة المخزون وWAC كلها على الكلي، و**WAC = إجمالي
+///   التكلفة ÷ المستلم الكلي** فالبونص يخفّض التكلفة الوحدوية حرفياً
+///   (شراء 10+2 مجاني بتكلفة 1200 → دفعة 12 وحدة بوحدة تكلفة 100).
+///   المورد يُستحق من `qty` المدفوعة حصراً (subtotal/total/due_amount
+///   بلا أي أثر للبونص) — فلا تضخيم لدين المورد، و`line_cost` =
+///   المستلم الكلي × تكلفة الوحدة الفعلية (قيمة المخزون الوارد).
 /// - **فصل العملات** (5.4-7): الفاتورة وسندها النقدي وتخصيصها كلها بعملة
 ///   الفاتورة وسعر يومها (Snapshot FR-08-05)؛ الأساس يُخزَّن في `total_base`
 ///   و`line_cost`/`cost_total` (بالعملة الأساسية — نفس اصطلاح البيع).
@@ -306,27 +314,36 @@ class PurchaseRepository {
           'created_by': userId,
         });
 
-        // 6-ج) الأسطر: تكلفة الوحدة الفعلية بالعملة الأساسية → WAC →
-        //      الدفعة الواردة → السطر → المخزون وحركته — سطراً سطراً.
+        // 6-ج) الأسطر: تكلفة الوحدة الفعلية بالعملة الأساسية ÷ المستلم
+        //      الكلي (بونص R16-a) → WAC → الدفعة الواردة → السطر →
+        //      المخزون وحركته — سطراً سطراً.
         var costTotal = 0.0;
         for (final pricedLine in priced.lines) {
           final info = products[pricedLine.line.productId]!;
           final lineQty = pricedLine.line.qty;
+          // المستلم الكلي (بونص R16-a): المدفوع + المجاني يدخلان المخزون
+          // معاً — > 0 دائماً لأن qty > 0 مُتحقَّق في PurchasePricing.
+          final freeQty = pricedLine.line.freeQty;
+          final receivedQty = lineQty + freeQty;
 
-          // تكلفة الوحدة الفعلية بالعملة الأساسية — بسعر يوم الشراء
-          // (AC-03)؛ الخدمي بلا تكلفة مخزونية (القرار 7).
+          // تكلفة الوحدة الفعلية بالعملة الأساسية بسعر يوم الشراء (AC-03)
+          // — **بالقسمة على المستلم الكلي** (قرار تحاسبي موثّق R16-a:
+          // إجمالي التكلفة ÷ إجمالي الكمية المستلمة — البونص يخفّض
+          // التكلفة الوحدوية: 10+2 مجاني بتكلفة 1200 → 100)؛ الخدمي بلا
+          // تكلفة مخزونية (القرار 7).
           final unitCostBase = info.isService
               ? 0.0
-              : roundCost(pricedLine.netFinal * exchangeRate / lineQty);
-          final lineCost = roundCost(lineQty * unitCostBase);
+              : roundCost(pricedLine.netFinal * exchangeRate / receivedQty);
+          final lineCost = roundCost(receivedQty * unitCostBase);
           costTotal = roundCost(costTotal + lineCost);
 
-          // WAC (5.4-3): يُقرأ ويُحدَّث داخل المعاملة — قلب الشراء.
+          // WAC (5.4-3): يُقرأ ويُحدَّث داخل المعاملة على المستلم الكلي —
+          // قلب الشراء (بونص R16-a: الكمية الجديدة بالكلي).
           if (!info.isService) {
             await _applyWac(
               txn,
               productId: info.id,
-              qtyNew: lineQty,
+              qtyNew: receivedQty,
               costNew: unitCostBase,
               now: at,
             );
@@ -334,6 +351,7 @@ class PurchaseRepository {
 
           // الدفعة الواردة (القرار 4): متتبع + رقم + صلاحية → صف batch
           // داخل المعاملة مباشرة (createBatch يكتب خارجها فلا يصلح).
+          // بونص R16-a: الدفعة تستقبل الكلي بتكلفة الوحدة الوحدوية.
           int? batchId;
           final batchNo = pricedLine.line.batchNo?.trim() ?? '';
           if (!info.isService && info.trackBatches && batchNo.isNotEmpty) {
@@ -343,7 +361,7 @@ class PurchaseRepository {
               'batch_number': batchNo,
               'expiry_date': _dateOnly(pricedLine.line.expiryDate!),
               'cost_price': unitCostBase,
-              'qty': lineQty,
+              'qty': receivedQty,
               'created_at': at.toUtc().toIso8601String(),
               'updated_at': at.toUtc().toIso8601String(),
             });
@@ -352,7 +370,8 @@ class PurchaseRepository {
           final lineNotes = [
             if ((pricedLine.line.notes ?? '').trim().isNotEmpty)
               pricedLine.line.notes!.trim(),
-            if (batchId != null) 'دفعة: $batchNo×${_num(lineQty)}',
+            if (batchId != null) 'دفعة: $batchNo×${_num(receivedQty)}',
+            if (freeQty > _qtyEpsilon) 'بونص: ${_num(freeQty)}',
           ].join(' — ');
 
           await txn.insert('invoice_item', {
@@ -360,6 +379,7 @@ class PurchaseRepository {
             'product_id': info.id,
             'line_desc': info.name, // لقطة اسم الصنف للعرض/الطباعة.
             'qty': lineQty,
+            'free_qty': freeQty, // البونص مستقل (R16-a — مرآة البيع).
             'unit_id': info.unitId,
             'unit_factor': 1,
             'unit_price': pricedLine.line.unitCost,
@@ -379,8 +399,9 @@ class PurchaseRepository {
           // الخدمي: لا مخزون ولا دفعات (القرار 7).
           if (info.isService) continue;
 
-          // المخزون: زيادة مباشرة (الشراء وارد — لا حارس سالب needed)
-          // + حركة واردة بتكلفة الوحدة الفعلية بالأساس.
+          // المخزون: زيادة مباشرة بالمستلم الكلي (الشراء وارد — بونص
+          // R16-a يدخل المخزون كالمدفوع) + حركة واردة بتكلفة الوحدة
+          // الفعلية بالأساس.
           await txn.rawInsert(
             'INSERT OR IGNORE INTO stock_level(product_id, warehouse_id, qty) '
             'VALUES(?, ?, 0)',
@@ -389,21 +410,24 @@ class PurchaseRepository {
           await txn.rawUpdate(
             'UPDATE stock_level SET qty = qty + ? '
             'WHERE product_id = ? AND warehouse_id = ?',
-            [lineQty, info.id, draft.warehouseId],
+            [receivedQty, info.id, draft.warehouseId],
           );
           await txn.insert('stock_movement', {
             'product_id': info.id,
             'warehouse_id': draft.warehouseId,
             'movement_type': 'purchase',
-            'qty': lineQty, // الوارد موجب (اتجاه المخطط — عكس البيع).
+            'qty': receivedQty, // الوارد الكلي موجب (بونص داخل).
             'unit_cost': unitCostBase,
             'ref_type': 'invoice',
             'ref_id': invoiceId,
             'moved_at': issuedIso,
             'notes': batchId == null
-                ? docNo
+                ? (freeQty > _qtyEpsilon
+                      ? '$docNo — بونص: ${_num(freeQty)}'
+                      : docNo)
                 : '$docNo — دفعة $batchNo (تنتهي '
-                      '${_dateOnly(pricedLine.line.expiryDate!)})',
+                      '${_dateOnly(pricedLine.line.expiryDate!)})'
+                      '${freeQty > _qtyEpsilon ? ' — بونص: ${_num(freeQty)}' : ''}',
             'created_at': at.toUtc().toIso8601String(),
             'created_by': userId,
           });

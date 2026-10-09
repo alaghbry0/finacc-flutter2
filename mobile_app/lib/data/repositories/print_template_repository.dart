@@ -30,7 +30,8 @@ class PrintTemplateRow {
   /// نوع المستند (`sale` في V1).
   final String docType;
 
-  /// كود القالب (`classic_a4` / `simple_a4` / `thermal_80`).
+  /// كود القالب (`classic_a4` / `simple_a4`) — تحويل قراءة R16-b: أي
+  /// صف قديم `thermal_80` (بذر v4) يُقرأ `classic_a4`.
   final String code;
 
   /// هو القالب النشط لهذا النوع؟
@@ -46,7 +47,10 @@ class PrintTemplateRow {
       PrintTemplateRow(
         id: row['id'] as int,
         docType: row['doc_type'] as String? ?? 'sale',
-        code: row['code'] as String,
+        // R16-b — تحويل قراءة: القالب الحراري حُذف بقرار المالك؛ صف
+        // `thermal_80` المحفوظ قديماً يُقرأ `classic_a4` فيراه المحرك
+        // والشاشة كلاسيكياً (بلا هجرة schema).
+        code: _normalizeCode(row['code'] as String),
         isDefault: (row['is_default'] as int? ?? 0) == 1,
         config: InvoiceTemplateSettings.fromJsonString(
           row['config'] as String?,
@@ -55,8 +59,9 @@ class PrintTemplateRow {
       );
 }
 
-/// إعدادات البذر الافتراضية لكل قالب (تطابق بذر هجرة v4) — مرجع
-/// [resetToDefault] واختبارات الوحدة.
+/// إعدادات البذر الافتراضية لكل قالب — مرجع [resetToDefault]
+/// واختبارات الوحدة. (R16-b: الحراري محذوف؛ صفه القديم إن وُجد لا
+/// يُعاد ضبطه ويبقى محوَّلاً للكلاسيكي عند القراءة.)
 const Map<String, InvoiceTemplateSettings> kPrintTemplateSeedConfigs =
     <String, InvoiceTemplateSettings>{
       'classic_a4': InvoiceTemplateSettings(
@@ -70,18 +75,16 @@ const Map<String, InvoiceTemplateSettings> kPrintTemplateSeedConfigs =
         tableHeadArgb: 0xFFDFEBE7,
         borderArgb: 0xFFDCE7E1,
       ),
-      'thermal_80': InvoiceTemplateSettings(
-        templateId: kInvoiceTemplateThermal80,
-        tableHeadArgb: 0xFF000000,
-        borderArgb: 0xFF000000,
-        showBarcode: true,
-        showSignatures: false,
-        showStampArea: false,
-      ),
     };
 
 /// القالب الافتراضي عند غياب أي صف (سلوك ما قبل الترقية).
 const String kPrintTemplateDefaultCode = kInvoiceTemplateSimpleA4;
+
+/// R16-b — تحويل قراءة كود الصف: القالب الحراري حُذف نهائياً بقرار
+/// المالك، فأي صف قديم قيمته `thermal_80` (بذر هجرة v4 قديمة) يُقرأ
+/// `classic_a4` — الشاشة والمحرك لا يعرفان الحراري أبداً بعد الآن.
+String _normalizeCode(String code) =>
+    code == kLegacyInvoiceTemplateThermal80 ? kInvoiceTemplateClassicA4 : code;
 
 class PrintTemplateRepository {
   PrintTemplateRepository(this._db);
@@ -101,7 +104,8 @@ class PrintTemplateRepository {
     return PrintTemplateRow.fromRow(rows.first);
   }
 
-  /// كل قوالب نوع المستند بترتيب البذر (الكلاسيكي/البسيط/الحراري).
+  /// كل قوالب نوع المستند بترتيب البذر (الكلاسيكي/البسيط — وصف
+  /// `thermal_80` القديم إن وُجد يُقرأ كلاسيكياً).
   Future<List<PrintTemplateRow>> allFor(String docType) async {
     final rows = await _db.query(
       'print_template',

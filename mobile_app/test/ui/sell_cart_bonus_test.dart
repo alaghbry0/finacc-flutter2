@@ -1,10 +1,10 @@
-/// اختبارات بوابة البونص بالكاشير (موجة UX-4): مفتاح `sale.free_qty`
-/// (المزروع 'off' بهجرة v5) يكشف حقل الكمية المجانية بالسطر —
-/// `SellCartState.bonusQtyEnabled` تُقرأ عند `load()` عبر مستودع الإعدادات
-/// (نفس seam سياسات UX-2a في sell_cart_policies_test) — و`setFreeQty`
-/// تحرّر قيمة السطر بلا أي أثر بالتسعير، بينما off (والغياب = سلوك
-/// v0.x) يخفيه. ويغطّي اختبار الشاشة الرقاقة المرئية نفسها بسطر السلة
-/// عند on عبر الراوتر الكامل (نمط sell_fixes_test).
+/// اختبارات البونص بالكاشير بعد ثورة R16-a (لا بوابة إعدادات):
+/// `setFreeQty` دائم التوفر بلا أي مفتاح — تحرير قيمة السطر بلا أي أثر
+/// بالتسعير (الإيراد من المدفوع حصراً) والمنصرف الكلي (qty + freeQty)
+/// يقود تحذير التجاوز، والقيم الشاذة ترفض بإشعار. ويغطّي اختبار الشاشة
+/// الشارة الديناميكية: «(+2 مجاني)» تظهر **حصراً عند freeQty>0** بلا أي
+/// شرط إعدادات، ومحرر السطر الموحّد (نقرة صف السطر) يحمل حقل الكمية
+/// المجانية دائماً ويحرّر السطر كاملاً (كمية/بونص/سعر/خصم).
 library;
 
 import 'package:flutter/material.dart';
@@ -71,7 +71,7 @@ void main() {
   }
 
   /// نموذج سلة فوق قاعدة الاختبار الحالية — [noSettings] = بلا مستودع
-  /// إعدادات (سلوك v0.x). المفتاح يُقرأ عند `load()` فيُكتب قبله.
+  /// إعدادات. البونص دائم التوفر بلا أي قراءة إعدادات الآن (R16-a).
   Future<SellCartViewModel> newVm({bool noSettings = false}) async {
     final vm = SellCartViewModel(
       itemRepo: items,
@@ -106,15 +106,14 @@ void main() {
     vm.addItemFromInfo(info);
   }
 
-  group('sale.free_qty — بوابة حقل البونص بالكاشير', () {
+  group('البونص دائم التوفر — بلا أي بوابة إعدادات (R16-a)', () {
     test(
-      'on يكشف الحقل: bonusQtyEnabled وsetFreeQty تسري بلا أي أثر بالتسعير',
+      'setFreeQty تسري فوراً بلا أي إعداد وبلا أي أثر بالتسعير، '
+      'والمفتاح المتقاعد غير معتمد بالمستودع',
       () async {
         await openDb();
-        // المفتاح يُكتب قبل load() — يُقرأ مرة واحدة مع التحميل.
-        await settings.set('sale.free_qty', 'on');
+        // لم يُكتب أي إعداد — الحقل متاح دائماً الآن.
         final vm = await newVm();
-        expect(vm.state.bonusQtyEnabled, isTrue);
         await addStockedItem(vm);
 
         // تحرير البونص: قيمة السطر تتغير والإجمالي لا يمس إطلاقاً.
@@ -144,30 +143,30 @@ void main() {
         // والصفر يمسح البونص.
         vm.setFreeQty(0, 0);
         expect(vm.state.lines.single.freeQty, 0);
+
+        // المفتاح المتقاعد: هجرة v6 حذفته وكتابته تُرفض (FR-13-09 —
+        // أي مفتاح خارج السجل ممنوع).
+        expect(
+          () => settings.set('sale.free_qty', 'on'),
+          throwsArgumentError,
+        );
+        expect(await settings.raw('sale.free_qty'), isNull);
       },
     );
 
-    test('off (بذرة هجرة v5) يخفي الحقل — والتبديل ينعكس بتحميل جديد، والغياب كالإخفاء', () async {
+    test('غياب مستودع الإعدادات لا يخفي البونص — الحقل دائم التوفر', () async {
       await openDb();
-      // لم نكتب شيئاً — بذرة الهجرة v5 'off' (المحافظة على المتاجر).
-      final vm = await newVm();
-      expect(vm.state.bonusQtyEnabled, isFalse, reason: 'الافتراضي المزروع');
-
-      // تبديل المفتاح ثم تحميل نموذج جديد فوق نفس القاعدة يعكس on
-      // (قراءة load() حية لا قيمة مرة واحدة أبدية — نمط showDiscounts).
-      await settings.setBonusQtyEnabled(true);
-      final vmOn = await newVm();
-      expect(vmOn.state.bonusQtyEnabled, isTrue);
-
-      // غياب مستودع الإعدادات (سلوك v0.x): الحقل مخفي دائماً.
-      final vmNoSettings = await newVm(noSettings: true);
-      expect(vmNoSettings.state.bonusQtyEnabled, isFalse);
+      final vm = await newVm(noSettings: true);
+      await addStockedItem(vm);
+      vm.setFreeQty(0, 3);
+      expect(vm.state.lines.single.freeQty, 3);
+      expect(vm.grandTotal, 100, reason: 'بلا إعدادات: التسعير كالمدفوع');
     });
   });
 
-  group('شاشة الكاشير — رقاقة البونص بسطر السلة (sale.free_qty)', () {
+  group('شاشة الكاشير — الشارة الديناميكية ومحرر السطر الموحّد', () {
     testWidgets(
-      'on: الرقاقة ظاهرة بقيمتها «+2 مجاني» — وبعد الإغلاق وجلسة جديدة مختفية',
+      'الشارة تظهر حصراً عند freeQty>0 (بلا أي إعدادات) ومحرر السطر يحرّر البونص',
       (tester) async {
         tester.view.physicalSize = const Size(390, 1600);
         tester.view.devicePixelRatio = 1.0;
@@ -177,8 +176,6 @@ void main() {
           sellCartSession.reset();
           addTearDown(sellCartSession.reset);
           await openDb();
-          // on قبل أي تحميل — الرقاقة تظهر بالسطر.
-          await settings.setBonusQtyEnabled(true);
 
           final controller = AppController(forTesting: handle);
           await controller.decidePhaseForTest();
@@ -199,7 +196,7 @@ void main() {
           );
           await pumpQuietly(tester, 8);
 
-          // جلسة سلة تحمل سطراً ببونص (الشاشة تعيد استخدامها — attach).
+          // جلسة سلة تحمل سطراً بلا بونص — لا إعدادات إطلاقاً.
           final vm = sellCartSession.attach(
             itemRepo: items,
             companyRepo: companies,
@@ -211,49 +208,72 @@ void main() {
           );
           await vm.load();
           await addStockedItem(vm);
-          vm.setFreeQty(0, 2);
 
           router.go('/sell/new');
           await pumpQuietly(tester, 10);
 
-          // الرقاقة ظاهرة بالسطر بقيمتها، والكمية المجانية على السطر.
-          expect(
-            find.byKey(const Key('sell_line_bonus_chip')),
-            findsOneWidget,
-            reason: 'sale.free_qty=on → حقل البونص بالسطر',
-          );
-          expect(find.text('+2 مجاني'), findsOneWidget);
-          expect(vm.state.lines.single.freeQty, 2);
-
-          // off بعد إغلاق المفتاح وجلسة سلة جديدة: الرقاقة مختفية والسطر
-          // قائم (المفتاح يخفي الحقل لا السلة).
-          await settings.setBonusQtyEnabled(false);
-          router.go('/sell');
-          await pumpQuietly(tester, 6);
-          sellCartSession.reset();
-          final vm2 = sellCartSession.attach(
-            itemRepo: items,
-            companyRepo: companies,
-            fxRepo: fx,
-            saleRepo: sales,
-            quotationRepo: quotations,
-            database: handle.db,
-            settingsRepo: settings,
-          );
-          await vm2.load();
-          await addStockedItem(vm2);
-          router.go('/sell/new');
-          await pumpQuietly(tester, 10);
+          // بلا بونص: لا شارة إطلاقاً (الديناميكية — قرار المالك).
           expect(
             find.byKey(const Key('sell_line_bonus_chip')),
             findsNothing,
-            reason: 'off → حقل البونص مخفي والسطر باقٍ',
+            reason: 'freeQty=0 → لا وجود للشارة بلا أي شرط إعدادات',
           );
-          expect(vm2.state.lines.single.qty, 1);
+
+          // نقرة صف السطر تفتح محرر السطر الموحّد — حقل البونص دائم
+          // التوفر هناك.
+          await tester.tap(find.text('صنف بوابة البونص'));
+          await pumpQuietly(tester, 6);
+          expect(
+            find.byKey(const Key('sell_line_edit_sheet')),
+            findsOneWidget,
+            reason: 'محرر السطر الموحّد مفتوح من نقرة الصف',
+          );
+          expect(
+            find.byKey(const Key('sell_line_edit_bonus_field')),
+            findsOneWidget,
+          );
+
+          // إدخال بونص 2 وحفظ — الشارة تظهر بقيمتها والسعر لم يُمسّ.
+          await tester.enterText(
+            find.byKey(const Key('sell_line_edit_bonus_field')),
+            '2',
+          );
+          await tester.tap(find.byKey(const Key('sell_line_edit_save')));
+          await pumpQuietly(tester, 8);
+
+          expect(vm.state.lines.single.freeQty, 2);
+          expect(vm.grandTotal, 100, reason: 'البونص لا يدخل التسعير');
+          expect(
+            find.byKey(const Key('sell_line_bonus_chip')),
+            findsOneWidget,
+            reason: 'freeQty=2 → الشارة الديناميكية ظاهرة',
+          );
+          expect(find.text('+2 مجاني'), findsOneWidget);
+
+          // إعادة فتح المحرر ومسح البونص (صفر) → الشارة تختفي والسطر باقٍ.
+          await tester.tap(find.byKey(const Key('sell_line_bonus_chip')));
+          await pumpQuietly(tester, 6);
+          expect(
+            find.byKey(const Key('sell_line_edit_sheet')),
+            findsOneWidget,
+          );
+          await tester.enterText(
+            find.byKey(const Key('sell_line_edit_bonus_field')),
+            '0',
+          );
+          await tester.tap(find.byKey(const Key('sell_line_edit_save')));
+          await pumpQuietly(tester, 8);
+
+          expect(vm.state.lines.single.freeQty, 0);
+          expect(vm.state.lines.single.qty, 1, reason: 'السطر باقٍ');
+          expect(
+            find.byKey(const Key('sell_line_bonus_chip')),
+            findsNothing,
+            reason: 'عودة لصفر → لا شارة',
+          );
 
           router.dispose();
           vm.dispose();
-          vm2.dispose();
         });
       },
     );

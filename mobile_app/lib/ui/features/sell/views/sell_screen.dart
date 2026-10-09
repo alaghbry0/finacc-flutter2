@@ -727,6 +727,10 @@ class _CartLineCard extends StatelessWidget {
       ),
       child: FinCard(
         padding: const EdgeInsets.all(12),
+        // R16-a: نقرة صف السطر تفتح محرر السطر الموحّد (الكمية/الكمية
+        // المجانية/السعر/الخصم) — عناصر التحكم الداخلية (الدرّج/السعر/
+        // الخصم) تسبق هذه النقرة داخل ساحة الإيماءات.
+        onTap: () => _openLineEditor(context, vm, index),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -800,10 +804,13 @@ class _CartLineCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Builder(
-              // UX-4 — `sale.free_qty`: حقل البونص بجوار الكمية عند التفعيل،
-              // والسعر (ومعه الخصم) ينتقل لسطر مستقل — صف الكمية + البونص
-              // + السعر معاً يفيض 35px على 390dp (خلل كشفه اختبار الشاشة
-              // UX-4-finish)؛ بلا بونص يبقى الصف الواحد كما اليوم حرفياً.
+              // R16-a — ثورة الكميات المجانية: شارة «(+N مجاني)» تظهر
+              // **حصراً عندما freeQty>0** (ديناميكياً بلا أي شرط إعدادات)،
+              // وحين تظهر ينتقل السعر (ومعه الخصم عند إظهار الخصومات)
+              // لسطر مستقل — صف الكمية + الشارة + السعر معاً يفيض 35px
+              // على 390dp (خلل كشفه اختبار UX-4-finish)؛ بلا بونص يبقى
+              // الصف الواحد كما اليوم حرفياً. إدخال البونص دائم التوفر
+              // بمحرر السطر الموحّد (نقرة على صف السطر).
               builder: (context) {
                 Future<void> editDiscount() async {
                   final result = await showDiscountEditSheet(
@@ -839,6 +846,7 @@ class _CartLineCard extends StatelessWidget {
                   value: line.discountValue,
                   onTap: editDiscount,
                 );
+                final hasBonus = line.freeQty > 0.000001;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -849,27 +857,16 @@ class _CartLineCard extends StatelessWidget {
                           qty: line.qty,
                           onChanged: (qty) => vm.setQty(index, qty),
                         ),
-                        if (state.bonusQtyEnabled) ...[
+                        // الشارة الديناميكية: عند وجود بونص حصراً — نقرة
+                        // تفتح محرر السطر (الحقل دائم التوفر هناك).
+                        if (hasBonus) ...[
                           const SizedBox(width: 8),
                           _BonusQtyChip(
                             freeQty: line.freeQty,
-                            onTap: () async {
-                              final value = await showNumberEditSheet(
-                                context,
-                                title: l10n.bonusQtyEditTitle(line.name),
-                                initial: line.freeQty,
-                                confirmLabel: l10n.commonConfirm,
-                                allowZero: true,
-                                decimals: 3,
-                                icon: Icons.redeem_outlined,
-                              );
-                              if (value != null) {
-                                vm.setFreeQty(index, value);
-                              }
-                            },
+                            onTap: () => _openLineEditor(context, vm, index),
                           ),
                         ],
-                        if (!state.bonusQtyEnabled) ...[
+                        if (!hasBonus) ...[
                           const Spacer(),
                           priceButton,
                           // UX-2a — `sale.show_discounts` = off: خصم السطر
@@ -884,7 +881,7 @@ class _CartLineCard extends StatelessWidget {
                     ),
                     // مع البونص: السعر والخصم بسطر مستقل — السعر بنهاية
                     // الصف (نفس موضعه دائماً) والخصم بجواره.
-                    if (state.bonusQtyEnabled) ...[
+                    if (hasBonus) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -907,13 +904,51 @@ class _CartLineCard extends StatelessWidget {
     );
   }
 
+  /// يفتح محرر السطر الموحّد (R16-a): الكمية/الكمية المجانية/السعر/الخصم
+  /// — الدخول من نقرة صف السطر أو شارة البونص، وحقل البونص دائم التوفر
+  /// هناك بلا أي بوابة.
+  Future<void> _openLineEditor(
+    BuildContext context,
+    SellCartViewModel vm,
+    int index,
+  ) async {
+    final state = vm.state;
+    if (index < 0 || index >= state.lines.length) return;
+    final line = state.lines[index];
+    final l10n = AppLocalizations.of(context)!;
+    final result = await showSellLineEditSheet(
+      context,
+      title: l10n.sellLineEditTitle(line.name),
+      initialQty: line.qty,
+      initialFreeQty: line.freeQty,
+      initialPrice: line.unitPrice,
+      initialDiscountType: line.discountType,
+      initialDiscountValue: line.discountValue,
+    );
+    if (result == null) return;
+    final (qty, freeQty, price, discountType, discountValue) = result;
+    if (qty != line.qty) {
+      vm.setQty(index, qty);
+    }
+    if (freeQty != line.freeQty) {
+      vm.setFreeQty(index, freeQty);
+    }
+    if (price != line.unitPrice) {
+      vm.setUnitPrice(index, price);
+    }
+    if (discountType != line.discountType ||
+        discountValue != line.discountValue) {
+      vm.setLineDiscount(index, discountType, discountValue);
+    }
+  }
+
   static int _decimals(double value) =>
       value == value.truncateToDouble() ? 0 : 2;
 }
 
-/// رقاقة الكمية المجانية (بونص — UX-4): «بونص» عند الصفر و«+N مجاني»
-/// عند وجوده — نقرة تفتح محرر الرقم السفلي (الصفر يمسح البونص).
-/// تظهر حصراً حين يكون `sale.free_qty` مفعّلاً من تفضيلات البيع.
+/// شارة الكمية المجانية (بونص — R16-a): «+N مجاني» **تظهر حصراً عند
+/// freeQty>0** (ديناميكية بلا أي إعدادات — لا وجود لها حين لا بونص)؛
+/// نقرة تفتح محرر السطر الموحّد (الصفر يمسح البونص هناك).
 class _BonusQtyChip extends StatelessWidget {
   const _BonusQtyChip({required this.freeQty, required this.onTap});
 
@@ -924,10 +959,6 @@ class _BonusQtyChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = FinColors.of(context);
-    final hasBonus = freeQty > 0.000001;
-    final label = hasBonus
-        ? l10n.bonusQtyChipValue(sellQtyText(freeQty))
-        : l10n.bonusQtyChipEmpty;
     return InkWell(
       key: const Key('sell_line_bonus_chip'),
       onTap: onTap,
@@ -935,9 +966,7 @@ class _BonusQtyChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: hasBonus
-              ? colors.positiveContainer
-              : Theme.of(context).colorScheme.surfaceContainerHigh,
+          color: colors.positiveContainer,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -946,14 +975,14 @@ class _BonusQtyChip extends StatelessWidget {
             Icon(
               Icons.redeem_rounded,
               size: 15,
-              color: hasBonus ? colors.onPositiveContainer : null,
+              color: colors.onPositiveContainer,
             ),
             const SizedBox(width: 4),
             Text(
-              label,
+              l10n.bonusQtyChipValue(sellQtyText(freeQty)),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: hasBonus ? colors.onPositiveContainer : null,
+                color: colors.onPositiveContainer,
               ),
             ),
           ],

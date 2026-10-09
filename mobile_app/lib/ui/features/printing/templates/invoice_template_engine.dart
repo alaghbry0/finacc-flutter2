@@ -4,7 +4,10 @@
 ///
 /// - `classic_a4` — أفقي محاكٍ لنموذج المالك الحكومي.
 /// - `simple_a4` — البنّاء القائم كما هو (الافتراضي).
-/// - `thermal_80` — إيصال رول 80مم بباركود Code128.
+///
+/// **R16-b**: القالب الحراري `thermal_80` حُذف نهائياً بقرار المالك —
+/// القوالب الباقية: كلاسيكي A4 + بسيط A4 فقط (أي قيمة محفوظة قديمة
+/// تُحوَّل كلاسيكياً عند القراءة — انظر `invoice_template_settings.dart`).
 ///
 /// كل استدعاء يبدأ بـ`PrintFonts.load()` (idempotent) — المستدعي لا
 /// يحتاج تحميل الخطوط بنفسه. الشعار يمر اختيارياً من `company.logo_png`.
@@ -19,7 +22,6 @@ import '../print_docs.dart';
 import 'classic_a4_template.dart';
 import 'invoice_template_settings.dart';
 import 'simple_a4_template.dart';
-import 'thermal_80_template.dart';
 
 /// بطاقة قالب في فهرس المحرك — تسميات العرض تبنيها الشاشة من l10n
 /// (المحرك يحمل الكود والورق فقط، بلا نصوص).
@@ -33,7 +35,7 @@ class InvoiceTemplateDescriptor {
   /// كود القالب (يطابق جدول print_template).
   final String code;
 
-  /// الورق (`a4-landscape` / `a4-portrait` / `roll80`).
+  /// الورق (`a4-landscape` / `a4-portrait`).
   final String paper;
 
   /// أفقي؟ (للمعاينة المصغّرة بالشاشة).
@@ -44,7 +46,7 @@ class InvoiceTemplateDescriptor {
 class InvoiceTemplateEngine {
   const InvoiceTemplateEngine();
 
-  /// فهرس القوالب المعتمدة (بترتيب البذر).
+  /// فهرس القوالب المعتمدة (بترتيب البذر — الحراري محذوف R16-b).
   static const List<InvoiceTemplateDescriptor> templates =
       <InvoiceTemplateDescriptor>[
         InvoiceTemplateDescriptor(
@@ -55,11 +57,6 @@ class InvoiceTemplateEngine {
         InvoiceTemplateDescriptor(
           code: kInvoiceTemplateSimpleA4,
           paper: 'a4-portrait',
-          landscape: false,
-        ),
-        InvoiceTemplateDescriptor(
-          code: kInvoiceTemplateThermal80,
-          paper: 'roll80',
           landscape: false,
         ),
       ];
@@ -82,10 +79,6 @@ class InvoiceTemplateEngine {
           effective,
           logoPng,
         );
-        return pdf;
-      case kInvoiceTemplateThermal80:
-        final pdf = _document(doc);
-        const Thermal80InvoiceTemplate().addPages(pdf, doc, effective);
         return pdf;
       default:
         return const SimpleA4InvoiceTemplate().build(doc, effective);

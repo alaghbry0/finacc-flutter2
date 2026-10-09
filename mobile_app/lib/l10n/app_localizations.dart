@@ -8605,24 +8605,6 @@ abstract class AppLocalizations {
   /// **'Tax number'**
   String get tmplTaxNumber;
 
-  /// No description provided for @bonusPrefsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Free quantities (bonus)'**
-  String get bonusPrefsTitle;
-
-  /// No description provided for @bonusPrefsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'A bonus field next to the quantity on sale invoice lines — stock dispatch includes the free units while revenue counts only the paid quantity'**
-  String get bonusPrefsDesc;
-
-  /// No description provided for @bonusQtyEditTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Free quantity (bonus): {name}'**
-  String bonusQtyEditTitle(Object name);
-
   /// No description provided for @bonusQtyChipEmpty.
   ///
   /// In en, this message translates to:
@@ -8646,6 +8628,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'(+{n} free)'**
   String bonusPrintSuffix(Object n);
+
+  /// No description provided for @sellLineEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit line: {name}'**
+  String sellLineEditTitle(Object name);
+
+  /// No description provided for @sellLineEditQtyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid quantity'**
+  String get sellLineEditQtyLabel;
+
+  /// No description provided for @sellLineEditBonusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Free quantity (bonus)'**
+  String get sellLineEditBonusLabel;
+
+  /// No description provided for @sellLineEditPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit price'**
+  String get sellLineEditPriceLabel;
+
+  /// No description provided for @sellLineEditDiscountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Line discount'**
+  String get sellLineEditDiscountLabel;
+
+  /// No description provided for @sellLineEditSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get sellLineEditSave;
+
+  /// No description provided for @sellLineEditQtyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quantity greater than zero'**
+  String get sellLineEditQtyError;
+
+  /// No description provided for @sellLineEditBonusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid bonus quantity (zero or more, up to three decimals)'**
+  String get sellLineEditBonusError;
+
+  /// No description provided for @sellLineEditPriceError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid price (zero or more)'**
+  String get sellLineEditPriceError;
+
+  /// No description provided for @purBonusEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free quantity (bonus): {name}'**
+  String purBonusEditTitle(Object name);
 }
 
 class _AppLocalizationsDelegate

@@ -1,9 +1,12 @@
-/// نموذج عرض شاشة تفضيلات البيع (UX-2a) — ست سياسات في تحميل واحد:
+/// نموذج عرض شاشة تفضيلات البيع (UX-2a) — خمس سياسات في تحميل واحد:
 /// طريقة الدفع الافتراضية (`sale.default_payment`) + إظهار الخصومات
 /// (`sale.show_discounts`) + سياسة حد الائتمان (`parties.credit_limit_action`
 /// — كانت مستهلكة بلا واجهة) + البيع فوق المتاح (`sale.over_avail_policy`)
-/// + تحذير البيع تحت التكلفة (`invoicing.discount_below_margin`)
-/// + حقل الكمية المجانية/بونص (`sale.free_qty` — موجة UX-4).
+/// + تحذير البيع تحت التكلفة (`invoicing.discount_below_margin`).
+///
+/// R16-a: بطاقة الكمية المجانية (بونص) أُزيلت نهائياً — لا إعداد لإظهار/
+/// إخفاء الحقل (قرار المالك: الشارة ديناميكية عند وجود بونص حصراً)
+/// ومفتاح `sale.free_qty` حذفته هجرة v6.
 ///
 /// كل تبديل يُكتب فوراً في المستودع (إعداد لحظي بلا زر حفظ) مع تحديث
 /// متشائم آمن: فشل الكتابة يبقي القيمة الحية ويُعرض خطأً.
@@ -23,7 +26,6 @@ class SalePreferencesState {
     this.creditLimitAction = 'warn',
     this.overAvailPolicy = 'warn',
     this.warnBelowMargin = false,
-    this.bonusQtyEnabled = false,
     this.writeError,
   });
 
@@ -45,10 +47,6 @@ class SalePreferencesState {
   /// `invoicing.discount_below_margin` — لافتة تحذير عند هامش سالب.
   final bool warnBelowMargin;
 
-  /// `sale.free_qty` — حقل الكمية المجانية (بونص) ببنود الكاشير
-  /// (UX-4 — مزروعة 'off' بهجرة v5: مغلقة افتراضياً).
-  final bool bonusQtyEnabled;
-
   /// فشل كتابة آخر تبديل (يُعرض — القيمة الحية تبقى كما كانت).
   final String? writeError;
 
@@ -60,7 +58,6 @@ class SalePreferencesState {
     String? creditLimitAction,
     String? overAvailPolicy,
     bool? warnBelowMargin,
-    bool? bonusQtyEnabled,
     Object? writeError = _keep,
   }) => SalePreferencesState(
     loading: loading ?? this.loading,
@@ -70,7 +67,6 @@ class SalePreferencesState {
     creditLimitAction: creditLimitAction ?? this.creditLimitAction,
     overAvailPolicy: overAvailPolicy ?? this.overAvailPolicy,
     warnBelowMargin: warnBelowMargin ?? this.warnBelowMargin,
-    bonusQtyEnabled: bonusQtyEnabled ?? this.bonusQtyEnabled,
     writeError: identical(writeError, _keep)
         ? this.writeError
         : writeError as String?,
@@ -100,7 +96,6 @@ class SalePreferencesViewModel extends ChangeNotifier {
         _settings.creditLimitAction(),
         _settings.overAvailPolicy(),
         _settings.discountBelowMargin(),
-        _settings.bonusQtyEnabled(),
       ]);
       _state = SalePreferencesState(
         loading: false,
@@ -109,7 +104,6 @@ class SalePreferencesViewModel extends ChangeNotifier {
         creditLimitAction: results[2]! as String,
         overAvailPolicy: results[3]! as String,
         warnBelowMargin: results[4]! as bool,
-        bonusQtyEnabled: results[5]! as bool,
       );
     } catch (error) {
       _state = _state.copyWith(loading: false, error: error);
@@ -140,10 +134,6 @@ class SalePreferencesViewModel extends ChangeNotifier {
     warnBelowMargin: on,
   );
 
-  /// يثبّت إظهار/إخفاء حقل البونص بالكاشير (UX-4 — `sale.free_qty`).
-  Future<void> setBonusQtyEnabled(bool on) =>
-      _write(() => _settings.setBonusQtyEnabled(on), bonusQtyEnabled: on);
-
   /// يطبّق تبديلاً: تحديث حي فوري ثم كتابة — فشلها يُعرض دون كسر القيمة.
   Future<void> _write(
     Future<void> Function() write, {
@@ -152,7 +142,6 @@ class SalePreferencesViewModel extends ChangeNotifier {
     String? creditLimitAction,
     String? overAvailPolicy,
     bool? warnBelowMargin,
-    bool? bonusQtyEnabled,
   }) async {
     _state = _state.copyWith(
       defaultPayment: defaultPayment,
@@ -160,7 +149,6 @@ class SalePreferencesViewModel extends ChangeNotifier {
       creditLimitAction: creditLimitAction,
       overAvailPolicy: overAvailPolicy,
       warnBelowMargin: warnBelowMargin,
-      bonusQtyEnabled: bonusQtyEnabled,
       writeError: null,
     );
     notifyListeners();

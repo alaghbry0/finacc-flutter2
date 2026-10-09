@@ -39,16 +39,15 @@ void main() {
     return db;
   }
 
-  test('قاعدة فارغة: الجدول مبني والقوالب الثلاثة مبذورة والبسيط نشط', () async {
+  test('قاعدة فارغة: الجدول مبني والقالبان مبذوران والبسيط نشط (الحراري حُذف بv6)', () async {
     final app = await openUniqueFileApp();
     addTearDown(app.close);
 
     final rows = await app.db.query('print_template', orderBy: 'id ASC');
-    expect(rows, hasLength(3), reason: 'ثلاثة قوالب لفواتير البيع');
+    expect(rows, hasLength(2), reason: 'قالبان لفواتير البيع — الحراري حُذف بهجرة v6');
     expect(rows.map((r) => r['code']).toList(), [
       'classic_a4',
       'simple_a4',
-      'thermal_80',
     ]);
     expect(rows.every((r) => r['doc_type'] == 'sale'), isTrue);
     // البسيط A4 هو الافتراضي — سلوك المتاجر القائمة كما هو.
@@ -76,10 +75,10 @@ void main() {
 
     expect(
       (await db.query('_migrations')).map((r) => r['version']).toList(),
-      [1, 2, 3, 4, 5],
+      [1, 2, 3, 4, 5, 6],
     );
     final templates = await db.query('print_template');
-    expect(templates, hasLength(3));
+    expect(templates, hasLength(2));
     // مفاتيح v3 بقت كما هي (لا فقد بالترقية).
     final byKey = {
       for (final r in await db.query('settings')) r['key'] as String: r['value'],
@@ -92,10 +91,10 @@ void main() {
     final app = await openUniqueFileApp();
     addTearDown(app.close);
     await applyMigrations(app.db);
-    expect(await app.db.query('print_template'), hasLength(3));
+    expect(await app.db.query('print_template'), hasLength(2));
     await applyMigrations(app.db);
-    expect(await app.db.query('print_template'), hasLength(3));
-    expect(await app.db.query('_migrations'), hasLength(5));
+    expect(await app.db.query('print_template'), hasLength(2));
+    expect(await app.db.query('_migrations'), hasLength(6));
   });
 
   test('بذور v4 بـ INSERT OR IGNORE لا تدوس تخصيص المستخدم ولا تكرر', () async {
@@ -119,7 +118,11 @@ void main() {
     }
 
     final rows = await app.db.query('print_template');
-    expect(rows, hasLength(3), reason: 'لا ازدواج');
+    // إعادة تنفيذ بذور v4 يدوياً (سيناريو اصطناعي بالاختبار) يُحيي صف
+    // الحراري المحذوف بهجرة v6 — النظام الحي لا يعيد تنفيذ بذر مطبّق،
+    // والقيد الجوهري هنا: لا ازدواج لأي كود وتخصيص المستخدم لا يُداس.
+    final codes = rows.map((r) => r['code']).toList();
+    expect(codes.toSet().length, codes.length, reason: 'لا ازدواج لأي كود');
     final classic = rows.firstWhere((r) => r['code'] == 'classic_a4');
     expect(classic['is_default'], 1, reason: 'تفعيل المستخدم لا يُداس');
     expect(

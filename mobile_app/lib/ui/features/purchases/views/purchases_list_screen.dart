@@ -606,7 +606,10 @@ class _ItemRow extends StatelessWidget {
                 Text(
                   '${l10n.sellDetailQtyLabel} ${purQtyText(item.qty)} × '
                   '${AmountText.format(item.unitCost, _decimals(item.unitCost))}'
-                  '${item.discountAmount > 0 ? ' · ${l10n.sellDetailDiscountLabel} ${AmountText.format(item.discountAmount, 2)}' : ''}',
+                  '${item.discountAmount > 0 ? ' · ${l10n.sellDetailDiscountLabel} ${AmountText.format(item.discountAmount, 2)}' : ''}'
+                  // R16-a: البونص يظهر بجوار الكمية «+N مجاني» عند
+                  // وجوده فقط (ديناميكي بلا أي إعدادات).
+                  '${item.freeQty > 0.000001 ? ' · ${l10n.bonusDetailSuffix(purQtyText(item.freeQty))}' : ''}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontFeatures: FinText.tabularNums,

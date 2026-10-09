@@ -1569,11 +1569,18 @@
   "tmplSignSeller": "Seller",
   "tmplStampArea": "Stamp area",
   "tmplTaxNumber": "Tax number",
-  "bonusPrefsTitle": "Free quantities (bonus)",
-  "bonusPrefsDesc": "A bonus field next to the quantity on sale invoice lines — stock dispatch includes the free units while revenue counts only the paid quantity",
-  "bonusQtyEditTitle": "Free quantity (bonus): {name}",
   "bonusQtyChipEmpty": "Bonus",
   "bonusQtyChipValue": "+{n} free",
   "bonusDetailSuffix": "+{n} free",
-  "bonusPrintSuffix": "(+{n} free)"
+  "bonusPrintSuffix": "(+{n} free)",
+  "sellLineEditTitle": "Edit line: {name}",
+  "sellLineEditQtyLabel": "Paid quantity",
+  "sellLineEditBonusLabel": "Free quantity (bonus)",
+  "sellLineEditPriceLabel": "Unit price",
+  "sellLineEditDiscountLabel": "Line discount",
+  "sellLineEditSave": "Save changes",
+  "sellLineEditQtyError": "Enter a quantity greater than zero",
+  "sellLineEditBonusError": "Enter a valid bonus quantity (zero or more, up to three decimals)",
+  "sellLineEditPriceError": "Enter a valid price (zero or more)",
+  "purBonusEditTitle": "Free quantity (bonus): {name}"
 }

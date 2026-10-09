@@ -92,11 +92,29 @@
   -->
   <!-- pdf.js محلي (إصلاح UX-audit A7 — موجة 1-a): معاينة الطباعة على
        الويب كانت تكسر بلا شبكة لأن حزمة printing 5.14.3 تجلب pdf.js
-       من unpkg CDN وقت التشغيل. هذا المتغير (dartPdfJsBaseUrl — نفس
-       اسم متغير التجاوز في مصدر الحزمة) يوجهها إلى النسخة المحلية
-       web/pdfjs/ (نفس إصدار الحزمة بالضبط: 3.2.146، والمسار نسبي
-       فيتبع base-href النهائي ويجب أن ينتهي بـ "/"). -->
-  <script>window.dartPdfJsBaseUrl = 'pdfjs/';</script>
+       من unpkg CDN وقت التشغيل.
+
+       **R16-b (إصلاح جذري لعلة المعاينة)**: المسار القديم كان يضبط
+       `window.dartPdfJsBaseUrl = 'pdfjs/'` لتوجيه الحزمة إلى النسخة
+       المحلية — لكن حزمة printing 5.14.3 تقرأ هذا المتغير عبر
+       `window.getProperty('dartPdfJsBaseUrl')` بلا وسيط نوع، فيترجمه
+       المترجم إلى `getProperty<Never>` ويرمي وقت التشغيل:
+       `TypeError: "pdfjs/": type 'String' is not a subtype of
+       type 'Never'` — فتتعطل المعاينة (رسالة «خطأ تحديث المستند»)،
+       وتظل مزامنة الحزمة الداخلية مقفلة للأبد فتعلق «إعادة المحاولة»
+       في loading نهائياً (شكوى المالك الحية).
+
+       العلاج: نحمّل pdf.js المحلي (نفس إصدار الحزمة 3.2.146) بأنفسنا
+       قبل إقلاع التطبيق ونضبط مسار الـ worker — فتجد الحزمة
+       `pdfjsLib` جاهزة (`GlobalWorkerOptions.workerSrc` غير فارغ)
+       وتتخطى مسار التحميل المعطوب كلياً (المسار النسبي يتبع base-href
+       النهائي مثل أي أصلي آخر بالصفحة). -->
+  <script src="pdfjs/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.min.js';
+    }
+  </script>
   <script src="flutter_bootstrap.js" defer></script>
   <script>
     // إخفاء شاشة الافتتاح فور أول إطار فلاتر.

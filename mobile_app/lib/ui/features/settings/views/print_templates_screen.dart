@@ -2,11 +2,12 @@
 /// بنمط شاشات تفضيلات المركز الفرعية (sale_preferences_screen):
 ///
 /// - **اختيار القالب**: بطاقات مصغرة بأسماء وأوصاف (كلاسيكي A4 أفقي /
-///   بسيط A4 عمودي / حراري 80مم) — النقر يعملّ القالب فوراً.
+///   بسيط A4 عمودي — R16-b: الحراري 80مم حُذف نهائياً بقرار المالك) —
+///   النقر يعملّ القالب فوراً.
 /// - **منتقي الألوان**: لوحات مرجعية لرأس الجدول/الحدود/التمييز الأحمر.
 /// - **مفاتيح الإظهار/الإخفاء**: عمود خصم/عمود وحدة/باركود Code128/
 ///   ضريبة/توقيعات ثلاث/مكان ختم/تذييل/ملاحظات — التي يوفرها القالب
-///   المحدد فقط (الحراري بلا توقيعات/ختم بطبيعته).
+///   المحدد فقط.
 /// - **شارة أصل/صورة**.
 /// - **معاينة حية**: زر يعيد بناء المستند بالإعدادات الجارية فوق آخر
 ///   فاتورة (أو بيانات نموذجية) عبر `showPdfPreviewDialog` القائم.
@@ -42,7 +43,7 @@ const List<int> kTemplateColorSwatches = <int>[
   0xFFDCE7E1, // حد فاتح
   0xFF9E9E9E, // رمادي
   0xFF1A2420, // حبر داكن
-  0xFF000000, // أسود (حراري)
+  0xFF000000, // أسود
 ];
 
 /// شاشة تخصيص قوالب الطباعة — مسار `/more/print-templates`.
@@ -134,26 +135,24 @@ class _PrintTemplatesList extends StatelessWidget {
                 title: l10n.tmplTemplateSectionTitle,
               ),
               const SizedBox(height: 12),
-              for (final (code, name, desc, icon) in [
+              // R16-b: بطاقتان فقط — الحراري 80مم حُذف بقرار المالك.
+              for (final (i, code, name, desc, icon) in [
                 (
+                  0,
                   kInvoiceTemplateClassicA4,
                   l10n.tmplClassicName,
                   l10n.tmplClassicDesc,
                   Icons.article_rounded,
                 ),
                 (
+                  1,
                   kInvoiceTemplateSimpleA4,
                   l10n.tmplSimpleName,
                   l10n.tmplSimpleDesc,
                   Icons.description_rounded,
                 ),
-                (
-                  kInvoiceTemplateThermal80,
-                  l10n.tmplThermalName,
-                  l10n.tmplThermalDesc,
-                  Icons.receipt_rounded,
-                ),
               ]) ...[
+                if (i > 0) const SizedBox(height: 8),
                 _TemplateCard(
                   code: code,
                   name: name,
@@ -162,8 +161,6 @@ class _PrintTemplatesList extends StatelessWidget {
                   selected: state.activeCode == code,
                   onTap: () => vm.selectTemplate(code),
                 ),
-                if (code != kInvoiceTemplateThermal80)
-                  const SizedBox(height: 8),
               ],
             ],
           ),

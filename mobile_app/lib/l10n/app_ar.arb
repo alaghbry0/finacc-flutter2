@@ -1452,11 +1452,18 @@
   "tmplSignSeller": "البائع",
   "tmplStampArea": "مكان الختم",
   "tmplTaxNumber": "الرقم الضريبي",
-  "bonusPrefsTitle": "الكميات المجانية (بونص)",
-  "bonusPrefsDesc": "حقل بونص بجوار الكمية ببنود فاتورة البيع — المنصرف من المخزون يشمل المجاني والإيراد من الكمية المدفوعة فقط",
-  "bonusQtyEditTitle": "الكمية المجانية (بونص): {name}",
   "bonusQtyChipEmpty": "بونص",
   "bonusQtyChipValue": "+{n} مجاني",
   "bonusDetailSuffix": "+{n} مجاني",
-  "bonusPrintSuffix": "(+{n} مجاني)"
+  "bonusPrintSuffix": "(+{n} مجاني)",
+  "sellLineEditTitle": "تعديل السطر: {name}",
+  "sellLineEditQtyLabel": "الكمية المدفوعة",
+  "sellLineEditBonusLabel": "الكمية المجانية (بونص)",
+  "sellLineEditPriceLabel": "سعر الوحدة",
+  "sellLineEditDiscountLabel": "خصم السطر",
+  "sellLineEditSave": "حفظ التعديلات",
+  "sellLineEditQtyError": "أدخل كمية أكبر من صفر",
+  "sellLineEditBonusError": "أدخل كمية بونص سليمة (صفر فأكثر وبلا دقة أعلى من ثلاث منازل)",
+  "sellLineEditPriceError": "أدخل سعراً سليماً لا يقل عن صفر",
+  "purBonusEditTitle": "الكمية المجانية (بونص): {name}"
 }
