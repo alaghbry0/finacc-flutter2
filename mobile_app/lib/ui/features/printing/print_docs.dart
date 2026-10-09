@@ -44,6 +44,7 @@ class InvoicePrintLine {
     required this.priceLabel,
     required this.discountLabel,
     required this.totalLabel,
+    this.unitLabel,
   });
 
   /// وصف البند (اسم الصنف لحظة البيع).
@@ -60,6 +61,10 @@ class InvoicePrintLine {
 
   /// صافي السطر منسَّق (سلسلة جاهزة).
   final String totalLabel;
+
+  /// اسم وحدة البيع (اختياري — عمود الوحدة بالقوالب القابلة للتخصيص
+  /// UX-3: يظهر فقط حين يوفره المسقط ويطلب المالك العمود).
+  final String? unitLabel;
 }
 
 /// كل تسميات مستند الفاتورة داخل الـPDF — مبنية من l10n عند المستدعي.
@@ -128,6 +133,50 @@ class InvoiceLabels {
   final String footerThanks;
 }
 
+/// تسميات عناصر القوالب القابلة للتخصيص (UX-3) — مبنية من l10n عند
+/// المستدعي مثل [InvoiceLabels]. حقول اختيارية التمرير: القوالب ترسم
+/// العنصر المقابل فقط إذا وصلتها تسميته **وطلب المالك إظهاره**.
+class InvoiceTemplateLabels {
+  const InvoiceTemplateLabels({
+    this.unitCol,
+    this.notesTitle,
+    this.signatureReceiver,
+    this.signatureCollector,
+    this.signatureSeller,
+    this.stampArea,
+    this.taxNumber,
+    this.badgeOriginal,
+    this.badgeCopy,
+  });
+
+  /// تسمية عمود الوحدة.
+  final String? unitCol;
+
+  /// تسمية خانة الملاحظات.
+  final String? notesTitle;
+
+  /// تسمية خانة توقيع المستلم.
+  final String? signatureReceiver;
+
+  /// تسمية خانة توقيع المحصّل.
+  final String? signatureCollector;
+
+  /// تسمية خانة توقيع البائع.
+  final String? signatureSeller;
+
+  /// تسمية مساحة الختم المحجوزة.
+  final String? stampArea;
+
+  /// تسمية سطر الرقم الضريبي.
+  final String? taxNumber;
+
+  /// نص شارة «أصل».
+  final String? badgeOriginal;
+
+  /// نص شارة «صورة».
+  final String? badgeCopy;
+}
+
 /// مستند فاتورة قابل للطباعة (FR-10-01) — يغذي قالب A4.
 class InvoicePrintDoc {
   const InvoicePrintDoc({
@@ -145,6 +194,10 @@ class InvoicePrintDoc {
     required this.paidAmount,
     required this.dueAmount,
     required this.labels,
+    this.payStatusLabel,
+    this.taxNumber,
+    this.notesPrinted,
+    this.templateLabels,
   });
 
   /// رأس المنشأة.
@@ -188,6 +241,20 @@ class InvoicePrintDoc {
 
   /// كل تسميات المستند (مسبقة التعريب).
   final InvoiceLabels labels;
+
+  /// وضع الدفع معرّباً مسبقاً («فاتورة مبيعات نقد/آجل…») — يملأ صندوق
+  /// العنوان الملون بالكلاسيكي وعنوان الإيصال الحراري (UX-3).
+  final String? payStatusLabel;
+
+  /// الرقم الضريبي للمنشأة (اختياري — يُعرض بطلب المالك فقط).
+  final String? taxNumber;
+
+  /// الملاحظات المطبوعة للفاتورة (اختياري — خانة ملاحظات القوالب).
+  final String? notesPrinted;
+
+  /// تسميات عناصر القوالب القابلة للتخصيص (اختياري — غيابه يسقط
+  /// العناصر الجديدة بلا كسر البناة القديمة).
+  final InvoiceTemplateLabels? templateLabels;
 }
 
 /// كل تسميات مستند السند داخل الـPDF — مبنية من l10n عند المستدعي.

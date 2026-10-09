@@ -4784,4 +4784,165 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get visFixItemsAddFabShort => 'New item';
+
+  @override
+  String get tmplSectionTitle => 'Printing & invoices';
+
+  @override
+  String get tmplSectionSubtitle =>
+      'Invoice template, colors and elements — with live preview';
+
+  @override
+  String get tmplScreenTitle => 'Printing & invoices';
+
+  @override
+  String get tmplTemplateSectionTitle => 'Invoice template';
+
+  @override
+  String get tmplClassicName => 'Classic A4 landscape';
+
+  @override
+  String get tmplClassicDesc =>
+      'Government-form mimicry: outer frame, centered logo, three signature boxes and stamp area';
+
+  @override
+  String get tmplSimpleName => 'Simple A4 portrait';
+
+  @override
+  String get tmplSimpleDesc =>
+      'The app\'s current template — colored band, clean table and totals card';
+
+  @override
+  String get tmplThermalName => 'Thermal 80mm';
+
+  @override
+  String get tmplThermalDesc =>
+      'Roll receipt for thermal printers with an invoice-number barcode';
+
+  @override
+  String get tmplColorsTitle => 'Invoice colors';
+
+  @override
+  String get tmplColorTableHead => 'Table header';
+
+  @override
+  String get tmplColorBorders => 'Borders';
+
+  @override
+  String get tmplColorAccentRed => 'Red accent';
+
+  @override
+  String get tmplTogglesTitle => 'Invoice elements';
+
+  @override
+  String get tmplShowDiscountCol => 'Discount column';
+
+  @override
+  String get tmplShowDiscountColDesc =>
+      'Hiding it simplifies the items table for discount-free shops';
+
+  @override
+  String get tmplShowUnitCol => 'Unit column';
+
+  @override
+  String get tmplShowUnitColDesc =>
+      'Shows each item\'s selling unit (carton/box…) where available';
+
+  @override
+  String get tmplShowBarcode => 'Invoice-number barcode';
+
+  @override
+  String get tmplShowBarcodeDesc =>
+      'A scannable Code128 mark under the invoice or receipt';
+
+  @override
+  String get tmplShowTax => 'Tax details';
+
+  @override
+  String get tmplShowTaxDesc =>
+      'Prints the company tax number if present in its profile';
+
+  @override
+  String get tmplShowSignatures => 'Three signature boxes';
+
+  @override
+  String get tmplShowSignaturesDesc =>
+      'Receiver, collector and seller in horizontal boxes (classic template)';
+
+  @override
+  String get tmplShowStamp => 'Stamp area';
+
+  @override
+  String get tmplShowStampDesc =>
+      'Reserved blank space for the company stamp (classic template)';
+
+  @override
+  String get tmplShowFooter => 'Invoice footer';
+
+  @override
+  String get tmplShowFooterDesc =>
+      'Company text and thanks line at the bottom of the document';
+
+  @override
+  String get tmplShowNotes => 'Notes box';
+
+  @override
+  String get tmplShowNotesDesc =>
+      'The invoice\'s printed notes inside a dedicated frame';
+
+  @override
+  String get tmplBadgeTitle => 'Copy badge';
+
+  @override
+  String get tmplBadgeNone => 'No badge';
+
+  @override
+  String get tmplBadgeOriginal => 'Original';
+
+  @override
+  String get tmplBadgeCopy => 'Copy';
+
+  @override
+  String get tmplPreviewButton => 'Live preview';
+
+  @override
+  String get tmplResetButton => 'Reset to default';
+
+  @override
+  String get tmplWriteFailed =>
+      'Could not save the template setting — current value unchanged.';
+
+  @override
+  String get tmplNote =>
+      'Changes apply to the next print instantly — no save button.';
+
+  @override
+  String get tmplTitleCash => 'Cash sales invoice';
+
+  @override
+  String get tmplTitleCredit => 'Credit sales invoice';
+
+  @override
+  String get tmplTitleMixed => 'Cash & credit sales invoice';
+
+  @override
+  String get tmplUnitCol => 'Unit';
+
+  @override
+  String get tmplNotesTitle => 'Notes';
+
+  @override
+  String get tmplSignReceiver => 'Receiver';
+
+  @override
+  String get tmplSignCollector => 'Collector';
+
+  @override
+  String get tmplSignSeller => 'Seller';
+
+  @override
+  String get tmplStampArea => 'Stamp area';
+
+  @override
+  String get tmplTaxNumber => 'Tax number';
 }

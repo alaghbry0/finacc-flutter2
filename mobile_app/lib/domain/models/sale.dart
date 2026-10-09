@@ -258,6 +258,7 @@ class SaleInvoiceItemLine {
     required this.discountAmount,
     required this.lineTotal,
     required this.lineCost,
+    this.unitName,
     this.batchId,
     this.notes,
   });
@@ -269,6 +270,10 @@ class SaleInvoiceItemLine {
 
   final double qty;
   final double unitPrice;
+
+  /// اسم وحدة البيع (عرض فقط — عمود الوحدة بقوالب الطباعة UX-3؛
+  /// `invoice_item.unit_id` موجود بالمخطط منذ v1 ولم يكن يُقرأ).
+  final String? unitName;
 
   /// خصم السطر النسبي (0 إن كان الخصم مبلغاً).
   final double discountPercent;
@@ -293,6 +298,7 @@ class SaleInvoiceItemLine {
         lineDesc: row['line_desc'] as String?,
         qty: (row['qty'] as num?)?.toDouble() ?? 0,
         unitPrice: (row['unit_price'] as num?)?.toDouble() ?? 0,
+        unitName: row['unit_name'] as String?,
         discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
         discountAmount: (row['discount_amount'] as num?)?.toDouble() ?? 0,
         lineTotal: (row['line_total'] as num?)?.toDouble() ?? 0,

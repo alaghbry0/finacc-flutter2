@@ -17,13 +17,13 @@ import '../../helpers/app_for_tests.dart';
 void main() {
   setUpAll(initFfiForTests);
 
-  test('إصدار المخطط الحالي 3، والهجرات الثلاث مسجّلة بقاعدة فارغة', () async {
-    expect(currentSchemaVersion, 3);
+  test('إصدار المخطط الحالي 4، والهجرات الأربع مسجّلة بقاعدة فارغة', () async {
+    expect(currentSchemaVersion, 4);
     final app = await openUniqueFileApp();
     addTearDown(app.close);
     final rows = await app.db.query('_migrations');
-    expect(rows, hasLength(3));
-    expect(rows.map((r) => r['version']).toList(), [1, 2, 3]);
+    expect(rows, hasLength(4));
+    expect(rows.map((r) => r['version']).toList(), [1, 2, 3, 4]);
   });
 
   test('قاعدة فارغة: عمود logo_png موجود ويستقبل BLOB ويُقرأ كاملاً', () async {
@@ -84,11 +84,11 @@ void main() {
       reason: 'قبل v3 لا يوجد عمود الشعار',
     );
 
-    // ترقية v3 فوقها (نفس مسار onUpgrade الحقيقي).
+    // ترقية v3+v4 فوقها (نفس مسار onUpgrade الحقيقي).
     await applyMigrations(db);
 
     final applied = await db.query('_migrations');
-    expect(applied.map((r) => r['version']).toList(), [1, 2, 3]);
+    expect(applied.map((r) => r['version']).toList(), [1, 2, 3, 4]);
     final columnsV3 = await db.rawQuery('PRAGMA table_info(company)');
     final logoCol = columnsV3.firstWhere((c) => c['name'] == 'logo_png');
     expect(logoCol['type'], 'BLOB');
@@ -113,7 +113,7 @@ void main() {
       final settingsCount = (await app.db.query('settings')).length;
       await applyMigrations(app.db);
       expect((await app.db.query('settings')).length, settingsCount);
-      expect(await app.db.query('_migrations'), hasLength(3));
+      expect(await app.db.query('_migrations'), hasLength(4));
     },
   );
 

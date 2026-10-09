@@ -57,6 +57,7 @@ import '../../features/settings/views/audit_log_screen.dart';
 import '../../features/settings/views/backup_screen.dart';
 import '../../features/settings/views/change_pin_screen.dart';
 import '../../features/settings/views/company_profile_screen.dart';
+import '../../features/settings/views/print_templates_screen.dart';
 import '../../features/settings/views/sale_preferences_screen.dart';
 import '../../features/settings/views/settings_screen.dart';
 import '../../features/splash/views/splash_screen.dart';
@@ -484,6 +485,12 @@ GoRouter buildAppRouter(AppController controller) {
                   GoRoute(
                     path: 'appearance',
                     builder: (context, state) => const AppearanceScreen(),
+                  ),
+                  // قوالب طباعة الفواتير (UX-3) — القالب النشط والألوان
+                  // والعناصر بمعاينة حية (كلاسيكي/بسيط/حراري 80مم).
+                  GoRoute(
+                    path: 'print-templates',
+                    builder: (context, state) => const PrintTemplatesScreen(),
                   ),
                 ],
               ),

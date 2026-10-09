@@ -2,7 +2,8 @@
 /// التطبيق (FinCard) تفتح شاشات فرعية متخصصة:
 /// بطاقة المنشأة (شعار + مدة القفل التلقائي القابلة للضبط — FR-12-05)
 /// → بيانات المنشأة `/more/company` · تفضيلات البيع `/more/sale-prefs` ·
-/// العرض والمظهر `/more/appearance` · الأمان (تغيير PIN/سجل التدقيق/
+/// العرض والمظهر `/more/appearance` · قوالب طباعة الفواتير
+/// `/more/print-templates` (UX-3) · الأمان (تغيير PIN/سجل التدقيق/
 /// القفل الفوري) · البيانات (النسخ/المسح المحروس) · مركز التقارير · حول.
 library;
 
@@ -144,8 +145,9 @@ class _ReportsSection extends StatelessWidget {
   }
 }
 
-/// قسم التخصيص (UX-2a) — بوابتا «بيانات المنشأة» و«تفضيلات البيع»
-/// و«العرض والمظهر» (شاشات فرعية متخصصة بلا ازدحام بالمركز).
+/// قسم التخصيص (UX-2a + UX-3) — بوابات «بيانات المنشأة» و«تفضيلات
+/// البيع» و«العرض والمظهر» و«الطباعة والفواتير» (شاشات فرعية متخصصة
+/// بلا ازدحام بالمركز).
 class _CustomizationSection extends StatelessWidget {
   const _CustomizationSection({required this.state});
 
@@ -193,6 +195,16 @@ class _CustomizationSection extends StatelessWidget {
                 subtitle: _appearanceSummary(context, app),
                 trailing: const Icon(Icons.chevron_left_rounded),
                 onTap: () => context.go('/more/appearance'),
+              ),
+              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+              // قوالب طباعة الفواتير (UX-3) — بطاقة رابعة بقسم التخصيص.
+              _ActionRow(
+                icon: Icons.receipt_long_rounded,
+                iconColor: colors.positive,
+                title: l10n.tmplSectionTitle,
+                subtitle: l10n.tmplSectionSubtitle,
+                trailing: const Icon(Icons.chevron_left_rounded),
+                onTap: () => context.go('/more/print-templates'),
               ),
             ],
           ),

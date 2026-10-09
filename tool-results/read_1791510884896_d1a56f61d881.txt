@@ -1,0 +1,885 @@
+     1→/// شاشة «المزيد» — **مركز أقسام الإعدادات** (UX-2a): بطاقات أقسام بنمط
+     2→/// التطبيق (FinCard) تفتح شاشات فرعية متخصصة:
+     3→/// بطاقة المنشأة (شعار + مدة القفل التلقائي القابلة للضبط — FR-12-05)
+     4→/// → بيانات المنشأة `/more/company` · تفضيلات البيع `/more/sale-prefs` ·
+     5→/// العرض والمظهر `/more/appearance` · الأمان (تغيير PIN/سجل التدقيق/
+     6→/// القفل الفوري) · البيانات (النسخ/المسح المحروس) · مركز التقارير · حول.
+     7→library;
+     8→
+     9→import 'dart:async';
+    10→
+    11→import 'package:flutter/material.dart';
+    12→import 'package:go_router/go_router.dart';
+    13→import 'package:provider/provider.dart';
+    14→
+    15→import '../../../../l10n/app_localizations.dart';
+    16→import '../../../../core/app_version.dart';
+    17→import '../../../../domain/services/numerals.dart';
+    18→import '../../../core/session/app_controller.dart';
+    19→import '../../../core/theme/app_colors.dart';
+    20→import '../../../core/theme/fin_tokens.dart';
+    21→import '../../../core/widgets/confirm_word_dialog.dart';
+    22→import '../../../core/widgets/error_state.dart';
+    23→import '../../../core/widgets/fin_card.dart';
+    24→import '../../../core/widgets/loading_state.dart';
+    25→import '../../../core/widgets/numerals_scope.dart';
+    26→import '../view_models/settings_view_model.dart';
+    27→
+    28→class SettingsScreen extends StatelessWidget {
+    29→  const SettingsScreen({super.key, this.viewModel});
+    30→
+    31→  /// Seam اختبار: نموذج محمّل مسبقاً (في `runAsync`) — عند غيابه
+    32→  /// تُنشئ الشاشة نموذجها وتحمّله بنفسها.
+    33→  final SettingsViewModel? viewModel;
+    34→
+    35→  @override
+    36→  Widget build(BuildContext context) {
+    37→    final app = context.read<AppController>();
+    38→    late final SettingsViewModel vm;
+    39→    if (viewModel != null) {
+    40→      vm = viewModel!;
+    41→    } else {
+    42→      vm = SettingsViewModel(
+    43→        companyRepo: app.companies!,
+    44→        userRepo: app.users!,
+    45→        settingsRepo: app.settings!,
+    46→        backupEngine: app.backupEngine,
+    47→      );
+    48→      unawaited(vm.load());
+    49→    }
+    50→    return ChangeNotifierProvider<SettingsViewModel>.value(
+    51→      value: vm,
+    52→      child: const _SettingsBody(),
+    53→    );
+    54→  }
+    55→}
+    56→
+    57→class _SettingsBody extends StatelessWidget {
+    58→  const _SettingsBody();
+    59→
+    60→  @override
+    61→  Widget build(BuildContext context) {
+    62→    final vm = context.watch<SettingsViewModel>();
+    63→    final l10n = AppLocalizations.of(context)!;
+    64→    final state = vm.state;
+    65→
+    66→    return Scaffold(
+    67→      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    68→      appBar: AppBar(title: Text(l10n.tabMore)),
+    69→      body: ListView(
+    70→        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+    71→        children: [
+    72→          if (state.loading)
+    73→            const ListSkeleton(rows: 6)
+    74→          else if (state.error != null)
+    75→            ErrorState(
+    76→              title: l10n.genericErrorTitle,
+    77→              message: l10n.dbOpenErrorMessage,
+    78→              technicalDetails: state.error.toString(),
+    79→              retryLabel: l10n.commonRetry,
+    80→              onRetry: vm.load,
+    81→              compact: true,
+    82→            )
+    83→          else ...[
+    84→            _CompanyCard(state: state),
+    85→            const SizedBox(height: 16),
+    86→            // مركز التقارير (الشريحة 10) — بوابة الأرباح والرقابة اليومية.
+    87→            const _ReportsSection(),
+    88→            const SizedBox(height: 16),
+    89→            _CustomizationSection(state: state),
+    90→            const SizedBox(height: 16),
+    91→            _SecuritySection(),
+    92→            const SizedBox(height: 16),
+    93→            _DataSection(),
+    94→            const SizedBox(height: 16),
+    95→            _AboutCard(state: state),
+    96→          ],
+    97→        ],
+    98→      ),
+    99→    );
+   100→  }
+   101→}
+   102→
+   103→/// قسم مركز التقارير — بطاقة ذهبية Accent بنمط أقسام الإعدادات، أول
+   104→/// ما يقع عليه البصر بعد بطاقة المنشأة (أهم أداة رقابية يومية).
+   105→class _ReportsSection extends StatelessWidget {
+   106→  const _ReportsSection();
+   107→
+   108→  @override
+   109→  Widget build(BuildContext context) {
+   110→    final l10n = AppLocalizations.of(context)!;
+   111→    final scheme = Theme.of(context).colorScheme;
+   112→    final colors = FinColors.of(context);
+   113→    return Column(
+   114→      crossAxisAlignment: CrossAxisAlignment.start,
+   115→      children: [
+   116→        _SectionTitle(icon: Icons.insights_rounded, title: l10n.reportsTitle),
+   117→        const SizedBox(height: 8),
+   118→        FinCard(
+   119→          accent: colors.gold,
+   120→          child: _ActionRow(
+   121→            icon: Icons.trending_up_rounded,
+   122→            iconColor: colors.positive,
+   123→            title: l10n.reportsHeroTitle,
+   124→            subtitle: l10n.reportsPnlDesc,
+   125→            trailing: Icon(
+   126→              Icons.auto_awesome_rounded,
+   127→              size: 16,
+   128→              color: colors.gold,
+   129→            ),
+   130→            onTap: () => context.go('/reports'),
+   131→          ),
+   132→        ),
+   133→        const SizedBox(height: 4),
+   134→        Padding(
+   135→          padding: const EdgeInsets.symmetric(horizontal: 4),
+   136→          child: Text(
+   137→            l10n.reportsHeroSubtitle,
+   138→            style: Theme.of(context).textTheme.bodySmall
+   139→                ?.copyWith(color: scheme.onSurfaceVariant),
+   140→          ),
+   141→        ),
+   142→      ],
+   143→    );
+   144→  }
+   145→}
+   146→
+   147→/// قسم التخصيص (UX-2a) — بوابتا «بيانات المنشأة» و«تفضيلات البيع»
+   148→/// و«العرض والمظهر» (شاشات فرعية متخصصة بلا ازدحام بالمركز).
+   149→class _CustomizationSection extends StatelessWidget {
+   150→  const _CustomizationSection({required this.state});
+   151→
+   152→  final SettingsData state;
+   153→
+   154→  @override
+   155→  Widget build(BuildContext context) {
+   156→    final l10n = AppLocalizations.of(context)!;
+   157→    final scheme = Theme.of(context).colorScheme;
+   158→    final app = context.watch<AppController>();
+   159→    final colors = FinColors.of(context);
+   160→    return Column(
+   161→      crossAxisAlignment: CrossAxisAlignment.start,
+   162→      children: [
+   163→        _SectionTitle(
+   164→          icon: Icons.tune_rounded,
+   165→          title: l10n.settings2CustomizationTitle,
+   166→        ),
+   167→        const SizedBox(height: 8),
+   168→        FinCard(
+   169→          child: Column(
+   170→            children: [
+   171→              _ActionRow(
+   172→                icon: Icons.storefront_rounded,
+   173→                iconColor: scheme.primary,
+   174→                title: l10n.settings2CompanyTitle,
+   175→                subtitle: l10n.settings2CompanySubtitle,
+   176→                trailing: const Icon(Icons.chevron_left_rounded),
+   177→                onTap: () => context.go('/more/company'),
+   178→              ),
+   179→              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+   180→              _ActionRow(
+   181→                icon: Icons.shopping_cart_checkout_rounded,
+   182→                iconColor: colors.warning,
+   183→                title: l10n.settings2SalePrefsTitle,
+   184→                subtitle: l10n.settings2SalePrefsSubtitle,
+   185→                trailing: const Icon(Icons.chevron_left_rounded),
+   186→                onTap: () => context.go('/more/sale-prefs'),
+   187→              ),
+   188→              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+   189→              _ActionRow(
+   190→                icon: Icons.palette_rounded,
+   191→                iconColor: colors.gold,
+   192→                title: l10n.settings2AppearanceTitle,
+   193→                subtitle: _appearanceSummary(context, app),
+   194→                trailing: const Icon(Icons.chevron_left_rounded),
+   195→                onTap: () => context.go('/more/appearance'),
+   196→              ),
+   197→            ],
+   198→          ),
+   199→        ),
+   200→      ],
+   201→    );
+   202→  }
+   203→
+   204→  /// ملخص حي لخيارات المظهر بصف البوابة (ثيم · أرقام · خط · تباين).
+   205→  String _appearanceSummary(BuildContext context, AppController app) {
+   206→    final l10n = AppLocalizations.of(context)!;
+   207→    final theme = switch (app.themeMode) {
+   208→      'light' => l10n.themeLight,
+   209→      'dark' => l10n.themeDark,
+   210→      _ => l10n.themeSystem,
+   211→    };
+   212→    final scale = switch (app.fontScale) {
+   213→      'large' => l10n.settings2FontScaleLarge,
+   214→      'xlarge' => l10n.settings2FontScaleXlarge,
+   215→      _ => l10n.settings2FontScaleNormal,
+   216→    };
+   217→    return '$theme · $scale'
+   218→        '${app.highContrast ? ' · ${l10n.settings2HighContrast}' : ''}';
+   219→  }
+   220→}
+   221→
+   222→/// بطاقة المنشأة: الشعار (BLOB إن وُجد — UX-2a) + الاسم + العملة
+   223→/// الأساسية + المدير + مدة القفل التلقائي + بوابة التحرير الكامل.
+   224→class _CompanyCard extends StatelessWidget {
+   225→  const _CompanyCard({required this.state});
+   226→
+   227→  final SettingsData state;
+   228→
+   229→  @override
+   230→  Widget build(BuildContext context) {
+   231→    final l10n = AppLocalizations.of(context)!;
+   232→    final scheme = Theme.of(context).colorScheme;
+   233→    final company = state.company;
+   234→    final logo = company?.logoPng;
+   235→    return FinCard(
+   236→      child: Column(
+   237→        crossAxisAlignment: CrossAxisAlignment.start,
+   238→        children: [
+   239→          Row(
+   240→            children: [
+   241→              if (logo != null)
+   242→                ClipRRect(
+   243→                  borderRadius: BorderRadius.circular(FinRadius.control),
+   244→                  child: Image.memory(
+   245→                    logo,
+   246→                    width: 44,
+   247→                    height: 44,
+   248→                    fit: BoxFit.contain,
+   249→                  ),
+   250→                )
+   251→              else
+   252→                Container(
+   253→                  width: 44,
+   254→                  height: 44,
+   255→                  decoration: BoxDecoration(
+   256→                    gradient: LinearGradient(
+   257→                      begin: Alignment.topLeft,
+   258→                      end: Alignment.bottomRight,
+   259→                      colors: [
+   260→                        scheme.primary,
+   261→                        Color.lerp(scheme.primary, Colors.black, 0.25)!,
+   262→                      ],
+   263→                    ),
+   264→                    borderRadius: BorderRadius.circular(FinRadius.control),
+   265→                  ),
+   266→                  child: Icon(
+   267→                    Icons.storefront_rounded,
+   268→                    color: scheme.onPrimary,
+   269→                    size: 22,
+   270→                  ),
+   271→                ),
+   272→              const SizedBox(width: 12),
+   273→              Expanded(
+   274→                child: Text(
+   275→                  company?.name ?? l10n.appTitle,
+   276→                  style: Theme.of(context).textTheme.titleMedium
+   277→                      ?.copyWith(fontWeight: FontWeight.w800),
+   278→                  maxLines: 1,
+   279→                  overflow: TextOverflow.ellipsis,
+   280→                ),
+   281→              ),
+   282→            ],
+   283→          ),
+   284→          const SizedBox(height: 14),
+   285→          _InfoRow(
+   286→            icon: Icons.attach_money_rounded,
+   287→            label: l10n.settingsBaseCurrency,
+   288→            value: state.baseCurrency == null
+   289→                ? '—'
+   290→                : '${state.baseCurrency!.code} • ${state.baseCurrency!.name}',
+   291→          ),
+   292→          _InfoRow(
+   293→            icon: Icons.badge_rounded,
+   294→            label: l10n.settingsAdmin,
+   295→            value: state.adminName ?? '—',
+   296→          ),
+   297→          // مدة القفل التلقائي — قابلة للضبط (FR-12-05: 1–60 دقيقة).
+   298→          const _AutolockRow(),
+   299→        ],
+   300→      ),
+   301→    );
+   302→  }
+   303→}
+   304→
+   305→/// صف مدة القفل التلقائي — قابل للنقر يفتح لوحة الخيارات.
+   306→///
+   307→/// يقرأ القيمة من AppController مباشرة (مراقبة حية) — التغيير من
+   308→/// اللوحة ينعكس فوراً دون إعادة تحميل الشاشة كاملة.
+   309→class _AutolockRow extends StatelessWidget {
+   310→  const _AutolockRow();
+   311→
+   312→  @override
+   313→  Widget build(BuildContext context) {
+   314→    final minutes = context.watch<AppController>().autolockMinutes;
+   315→    final l10n = AppLocalizations.of(context)!;
+   316→    final scheme = Theme.of(context).colorScheme;
+   317→    return Padding(
+   318→      padding: const EdgeInsets.only(top: 10),
+   319→      child: Material(
+   320→        color: scheme.primaryContainer.withValues(alpha: 0.45),
+   321→        borderRadius: BorderRadius.circular(10),
+   322→        child: InkWell(
+   323→          onTap: () => _openAutolockSheet(context),
+   324→          borderRadius: BorderRadius.circular(10),
+   325→          child: Padding(
+   326→            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+   327→            child: Row(
+   328→              children: [
+   329→                Icon(
+   330→                  Icons.timer_outlined,
+   331→                  size: 18,
+   332→                  color: scheme.onPrimaryContainer,
+   333→                ),
+   334→                const SizedBox(width: 10),
+   335→                Expanded(
+   336→                  child: Text(
+   337→                    l10n.settingsAutolock,
+   338→                    style: Theme.of(context).textTheme.bodySmall
+   339→                        ?.copyWith(color: scheme.onPrimaryContainer),
+   340→                  ),
+   341→                ),
+   342→                Text(
+   343→                  l10n.settingsAutolackValue(minutes),
+   344→                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   345→                    color: scheme.onPrimaryContainer,
+   346→                    fontWeight: FontWeight.w800,
+   347→                    fontFeatures: const [FontFeature.tabularFigures()],
+   348→                  ),
+   349→                ),
+   350→                const SizedBox(width: 4),
+   351→                Icon(
+   352→                  Icons.expand_more_rounded,
+   353→                  size: 18,
+   354→                  color: scheme.onPrimaryContainer,
+   355→                ),
+   356→              ],
+   357→            ),
+   358→          ),
+   359→        ),
+   360→      ),
+   361→    );
+   362→  }
+   363→
+   364→  Future<void> _openAutolockSheet(BuildContext context) async {
+   365→    await showModalBottomSheet<void>(
+   366→      context: context,
+   367→      // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
+   368→      useRootNavigator: false,
+   369→      // لوحة كاملة العرض بحواف علوية مستديرة ومقبض.
+   370→      shape: const RoundedRectangleBorder(
+   371→        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+   372→      ),
+   373→      builder: (sheetContext) => _AutolockSheet(
+   374→        current: context.read<AppController>().autolockMinutes,
+   375→      ),
+   376→    );
+   377→  }
+   378→}
+   379→
+   380→/// لوحة اختيار مدة القفل التلقائي (FR-12-05 — 1–60 دقيقة).
+   381→class _AutolockSheet extends StatelessWidget {
+   382→  const _AutolockSheet({required this.current});
+   383→
+   384→  final int current;
+   385→
+   386→  /// الخيارات المعروضة (خيارات مشتركة ضمن النطاق الملزم 1–60).
+   387→  static const options = [1, 5, 10, 15, 30, 60];
+   388→
+   389→  @override
+   390→  Widget build(BuildContext context) {
+   391→    final l10n = AppLocalizations.of(context)!;
+   392→    final scheme = Theme.of(context).colorScheme;
+   393→    return SafeArea(
+   394→      child: Padding(
+   395→        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+   396→        // تمرير آمن للشاشات القصيرة (لا تجاوز أبداً).
+   397→        child: SingleChildScrollView(
+   398→          child: Column(
+   399→            mainAxisSize: MainAxisSize.min,
+   400→            crossAxisAlignment: CrossAxisAlignment.start,
+   401→            children: [
+   402→              // مقبض اللوحة.
+   403→              Center(
+   404→                child: Container(
+   405→                  width: 44,
+   406→                  height: 4,
+   407→                  margin: const EdgeInsets.only(bottom: 14),
+   408→                  decoration: BoxDecoration(
+   409→                    color: scheme.outlineVariant,
+   410→                    borderRadius: BorderRadius.circular(3),
+   411→                  ),
+   412→                ),
+   413→              ),
+   414→              Row(
+   415→                children: [
+   416→                  Container(
+   417→                    width: 40,
+   418→                    height: 40,
+   419→                    decoration: BoxDecoration(
+   420→                      gradient: LinearGradient(
+   421→                        begin: Alignment.topLeft,
+   422→                        end: Alignment.bottomRight,
+   423→                        colors: [
+   424→                          scheme.primary,
+   425→                          Color.lerp(scheme.primary, Colors.black, 0.25)!,
+   426→                        ],
+   427→                      ),
+   428→                      borderRadius: BorderRadius.circular(12),
+   429→                    ),
+   430→                    child: Icon(
+   431→                      Icons.timer_outlined,
+   432→                      color: scheme.onPrimary,
+   433→                      size: 20,
+   434→                    ),
+   435→                  ),
+   436→                  const SizedBox(width: 12),
+   437→                  Expanded(
+   438→                    child: Column(
+   439→                      crossAxisAlignment: CrossAxisAlignment.start,
+   440→                      children: [
+   441→                        Text(
+   442→                          l10n.settingsAutolockSheetTitle,
+   443→                          style: Theme.of(context).textTheme.titleMedium
+   444→                              ?.copyWith(fontWeight: FontWeight.w800),
+   445→                        ),
+   446→                        Text(
+   447→                          l10n.settingsAutolockSheetSubtitle,
+   448→                          style: Theme.of(context).textTheme.bodySmall
+   449→                              ?.copyWith(color: scheme.onSurfaceVariant),
+   450→                        ),
+   451→                      ],
+   452→                    ),
+   453→                  ),
+   454→                ],
+   455→              ),
+   456→              const SizedBox(height: 14),
+   457→              for (final option in options)
+   458→                _AutolockOption(
+   459→                  minutes: option,
+   460→                  selected: option == current,
+   461→                  onTap: () {
+   462→                    unawaited(
+   463→                      context.read<AppController>().setAutolockMinutes(option),
+   464→                    );
+   465→                    Navigator.of(context).pop();
+   466→                  },
+   467→                ),
+   468→            ],
+   469→          ),
+   470→        ),
+   471→      ),
+   472→    );
+   473→  }
+   474→}
+   475→
+   476→/// خيار مدة واحد داخل اللوحة — علامة تحديد متحركة عند الاختيار.
+   477→class _AutolockOption extends StatelessWidget {
+   478→  const _AutolockOption({
+   479→    required this.minutes,
+   480→    required this.selected,
+   481→    required this.onTap,
+   482→  });
+   483→
+   484→  final int minutes;
+   485→  final bool selected;
+   486→  final VoidCallback onTap;
+   487→
+   488→  @override
+   489→  Widget build(BuildContext context) {
+   490→    final l10n = AppLocalizations.of(context)!;
+   491→    final scheme = Theme.of(context).colorScheme;
+   492→    return InkWell(
+   493→      onTap: onTap,
+   494→      borderRadius: BorderRadius.circular(12),
+   495→      child: AnimatedContainer(
+   496→        duration: const Duration(milliseconds: 220),
+   497→        margin: const EdgeInsets.symmetric(vertical: 2),
+   498→        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+   499→        decoration: BoxDecoration(
+   500→          color: selected ? scheme.primaryContainer : Colors.transparent,
+   501→          borderRadius: BorderRadius.circular(12),
+   502→        ),
+   503→        child: Row(
+   504→          children: [
+   505→            Expanded(
+   506→              child: Text(
+   507→                l10n.settingsAutolackValue(minutes),
+   508→                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+   509→                  color: selected ? scheme.onPrimaryContainer : null,
+   510→                  fontWeight: selected ? FontWeight.w800 : FontWeight.w400,
+   511→                  fontFeatures: const [FontFeature.tabularFigures()],
+   512→                ),
+   513→              ),
+   514→            ),
+   515→            AnimatedScale(
+   516→              duration: const Duration(milliseconds: 220),
+   517→              scale: selected ? 1 : 0,
+   518→              child: Icon(
+   519→                Icons.check_circle_rounded,
+   520→                color: scheme.primary,
+   521→                size: 22,
+   522→              ),
+   523→            ),
+   524→          ],
+   525→        ),
+   526→      ),
+   527→    );
+   528→  }
+   529→}
+   530→
+   531→class _InfoRow extends StatelessWidget {
+   532→  const _InfoRow({
+   533→    required this.icon,
+   534→    required this.label,
+   535→    required this.value,
+   536→  });
+   537→
+   538→  final IconData icon;
+   539→  final String label;
+   540→  final String value;
+   541→
+   542→  @override
+   543→  Widget build(BuildContext context) {
+   544→    final scheme = Theme.of(context).colorScheme;
+   545→    return Padding(
+   546→      padding: const EdgeInsets.only(bottom: 10),
+   547→      child: Row(
+   548→        children: [
+   549→          Icon(icon, size: 18, color: scheme.onSurfaceVariant),
+   550→          const SizedBox(width: 10),
+   551→          Text(
+   552→            label,
+   553→            style: Theme.of(context).textTheme.bodySmall
+   554→                ?.copyWith(color: scheme.onSurfaceVariant),
+   555→          ),
+   556→          const Spacer(),
+   557→          Flexible(
+   558→            child: Text(
+   559→              value,
+   560→              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   561→                fontWeight: FontWeight.w700,
+   562→                fontFeatures: const [FontFeature.tabularFigures()],
+   563→              ),
+   564→              maxLines: 1,
+   565→              overflow: TextOverflow.ellipsis,
+   566→              textAlign: TextAlign.start,
+   567→            ),
+   568→          ),
+   569→        ],
+   570→      ),
+   571→    );
+   572→  }
+   573→}
+   574→
+   575→/// قسم الأمان: تغيير PIN + سجل التدقيق + القفل الفوري.
+   576→class _SecuritySection extends StatelessWidget {
+   577→  @override
+   578→  Widget build(BuildContext context) {
+   579→    final l10n = AppLocalizations.of(context)!;
+   580→    final scheme = Theme.of(context).colorScheme;
+   581→    return Column(
+   582→      crossAxisAlignment: CrossAxisAlignment.start,
+   583→      children: [
+   584→        _SectionTitle(icon: Icons.shield_rounded, title: l10n.settingsSecurity),
+   585→        const SizedBox(height: 8),
+   586→        FinCard(
+   587→          child: Column(
+   588→            children: [
+   589→              _ActionRow(
+   590→                icon: Icons.password_rounded,
+   591→                iconColor: scheme.primary,
+   592→                title: l10n.settingsChangePin,
+   593→                subtitle: l10n.settingsChangePinDesc,
+   594→                trailing: const Icon(Icons.chevron_left_rounded),
+   595→                // go (لا push): يحدّث عنوان URL للمسارات الفرعية للفرع ويحفظ
+   596→                // عمق الرجوع داخل شريط التطبيق (push كان يترك #/more ثابتاً).
+   597→                onTap: () => context.go('/more/change-pin'),
+   598→              ),
+   599→              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+   600→              _ActionRow(
+   601→                icon: Icons.receipt_long_rounded,
+   602→                iconColor: scheme.tertiary,
+   603→                title: l10n.settingsAuditLog,
+   604→                subtitle: l10n.settingsAuditLogDesc,
+   605→                trailing: const Icon(Icons.chevron_left_rounded),
+   606→                onTap: () => context.go('/more/audit-log'),
+   607→              ),
+   608→              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+   609→              _ActionRow(
+   610→                icon: Icons.lock_rounded,
+   611→                iconColor: scheme.onSurfaceVariant,
+   612→                title: l10n.settingsLockNow,
+   613→                subtitle: l10n.settingsLockNowDesc,
+   614→                trailing: const Icon(Icons.chevron_left_rounded),
+   615→                onTap: () => context.read<AppController>().lock(),
+   616→              ),
+   617→            ],
+   618→          ),
+   619→        ),
+   620→      ],
+   621→    );
+   622→  }
+   623→}
+   624→
+   625→/// قسم البيانات: النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11) +
+   626→/// المسح الكامل (AC-15) — بوابة الحذر الأحمر.
+   627→class _DataSection extends StatelessWidget {
+   628→  @override
+   629→  Widget build(BuildContext context) {
+   630→    final l10n = AppLocalizations.of(context)!;
+   631→    final scheme = Theme.of(context).colorScheme;
+   632→    final colors = FinColors.of(context);
+   633→    return Column(
+   634→      crossAxisAlignment: CrossAxisAlignment.start,
+   635→      children: [
+   636→        _SectionTitle(icon: Icons.storage_rounded, title: l10n.settingsData),
+   637→        const SizedBox(height: 8),
+   638→        FinCard(
+   639→          child: Column(
+   640→            children: [
+   641→              _ActionRow(
+   642→                icon: Icons.backup_rounded,
+   643→                iconColor: scheme.primary,
+   644→                title: l10n.settingsBackupTitle,
+   645→                subtitle: l10n.settingsBackupDesc,
+   646→                trailing: const Icon(Icons.chevron_left_rounded),
+   647→                onTap: () => context.go('/more/backup'),
+   648→              ),
+   649→              Divider(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+   650→              _ActionRow(
+   651→                icon: Icons.delete_forever_rounded,
+   652→                iconColor: colors.negative,
+   653→                title: l10n.settingsWipe,
+   654→                subtitle: l10n.settingsWipeDesc,
+   655→                trailing: Icon(
+   656→                  Icons.chevron_left_rounded,
+   657→                  color: scheme.onSurfaceVariant,
+   658→                ),
+   659→                // المسار المحروس الموحد (AC-15): تأكيد ← كتابة الكلمة ←
+   660→                // نسخة أمان إجبارية قبل المسح ← حوار نجاح يذكر ملفها.
+   661→                onTap: () => unawaited(
+   662→                  runGuardedWipeFlow(context, context.read<AppController>()),
+   663→                ),
+   664→              ),
+   665→            ],
+   666→          ),
+   667→        ),
+   668→      ],
+   669→    );
+   670→  }
+   671→}
+   672→
+   673→/// بطاقة «حول»: الاسم والإصدار (من المصدر الوحيد `appVersion` — UX-2a
+   674→/// توحيد الإصدار: بلا تضارب بين نص القالب والإصدار الفعلي) ووثيقة
+   675→/// المتطلبات وحجم القاعدة.
+   676→class _AboutCard extends StatelessWidget {
+   677→  const _AboutCard({required this.state});
+   678→
+   679→  /// بيانات الإعدادات (لحجم القاعدة — FR-13-07).
+   680→  final SettingsData state;
+   681→
+   682→  @override
+   683→  Widget build(BuildContext context) {
+   684→    final l10n = AppLocalizations.of(context)!;
+   685→    final colors = FinColors.of(context);
+   686→    return FinCard(
+   687→      child: Column(
+   688→        children: [
+   689→          // شارة الطور: وسط البطاقة — النص مرن (RTL عربي + لاتيني «v1.0.0»
+   690→          // يفيض 1.5px على 390dp بالسطر الصلب — ellipsis عند الضيق).
+   691→          Row(
+   692→            mainAxisAlignment: MainAxisAlignment.center,
+   693→            children: [
+   694→              Icon(Icons.verified_rounded, color: colors.gold, size: 20),
+   695→              const SizedBox(width: 6),
+   696→              Flexible(
+   697→                child: Text(
+   698→                  l10n.settings2AboutPhase,
+   699→                  maxLines: 1,
+   700→                  overflow: TextOverflow.ellipsis,
+   701→                  style: Theme.of(context).textTheme.labelMedium
+   702→                      ?.copyWith(fontWeight: FontWeight.w800),
+   703→                ),
+   704→              ),
+   705→            ],
+   706→          ),
+   707→          const SizedBox(height: 10),
+   708→          Text(
+   709→            '${l10n.appBrand} — ${l10n.appTitle}',
+   710→            style: Theme.of(context).textTheme.titleSmall
+   711→                ?.copyWith(fontWeight: FontWeight.w800),
+   712→            textAlign: TextAlign.center,
+   713→          ),
+   714→          const SizedBox(height: 4),
+   715→          Text(
+   716→            l10n.settings2AboutVersion(appVersion),
+   717→            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   718→              color: Theme.of(context).colorScheme.onSurfaceVariant,
+   719→              fontFeatures: const [FontFeature.tabularFigures()],
+   720→            ),
+   721→            textAlign: TextAlign.center,
+   722→          ),
+   723→          const SizedBox(height: 4),
+   724→          Text(
+   725→            l10n.settingsAboutSrs,
+   726→            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   727→              color: Theme.of(context).colorScheme.onSurfaceVariant,
+   728→            ),
+   729→            textAlign: TextAlign.center,
+   730→          ),
+   731→          // حجم القاعدة (FR-13-07) — من ملف finacc.db على المنصات الأصلية.
+   732→          if (state.dbSizeBytes != null) ...[
+   733→            const SizedBox(height: 4),
+   734→            Text(
+   735→              l10n.settingsAboutDbSize(
+   736→                _formatDbSize(context, state.dbSizeBytes!),
+   737→              ),
+   738→              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   739→                color: Theme.of(context).colorScheme.onSurfaceVariant,
+   740→                fontFeatures: const [FontFeature.tabularFigures()],
+   741→              ),
+   742→              textAlign: TextAlign.center,
+   743→            ),
+   744→          ],
+   745→          const SizedBox(height: 14),
+   746→          Divider(
+   747→            color: Theme.of(context).colorScheme.outlineVariant
+   748→                .withValues(alpha: 0.4),
+   749→          ),
+   750→          const SizedBox(height: 10),
+   751→          // صف التراخيص المفتوحة — صفحة تراخيص Flutter الرسمية.
+   752→          _ActionRow(
+   753→            icon: Icons.description_rounded,
+   754→            iconColor: colors.gold,
+   755→            title: l10n.settingsLicenses,
+   756→            subtitle: l10n.settingsLicensesDesc,
+   757→            trailing: const Icon(Icons.chevron_left_rounded),
+   758→            onTap: () => showLicensePage(
+   759→              context: context,
+   760→              applicationName: '${l10n.appBrand} — ${l10n.appTitle}',
+   761→              applicationVersion: appVersion,
+   762→              applicationIcon: Padding(
+   763→                padding: const EdgeInsets.all(10),
+   764→                child: Icon(
+   765→                  Icons.menu_book_rounded,
+   766→                  color: colors.gold,
+   767→                  size: 40,
+   768→                ),
+   769→              ),
+   770→            ),
+   771→          ),
+   772→        ],
+   773→      ),
+   774→    );
+   775→  }
+   776→}
+   777→
+   778→class _SectionTitle extends StatelessWidget {
+   779→  const _SectionTitle({required this.icon, required this.title});
+   780→
+   781→  final IconData icon;
+   782→  final String title;
+   783→
+   784→  @override
+   785→  Widget build(BuildContext context) {
+   786→    final scheme = Theme.of(context).colorScheme;
+   787→    return Row(
+   788→      children: [
+   789→        // حاوية أيقونة مصبوغة خفيفة — عمق بصري لأقسام الإعدادات.
+   790→        Container(
+   791→          width: 28,
+   792→          height: 28,
+   793→          decoration: BoxDecoration(
+   794→            color: scheme.primaryContainer.withValues(alpha: 0.55),
+   795→            borderRadius: BorderRadius.circular(FinRadius.chip),
+   796→          ),
+   797→          child: Icon(icon, size: 16, color: scheme.primary),
+   798→        ),
+   799→        const SizedBox(width: 10),
+   800→        Text(
+   801→          title,
+   802→          style: Theme.of(context).textTheme.titleSmall
+   803→              ?.copyWith(fontWeight: FontWeight.w800, color: scheme.onSurface),
+   804→        ),
+   805→      ],
+   806→    );
+   807→  }
+   808→}
+   809→
+   810→class _ActionRow extends StatelessWidget {
+   811→  const _ActionRow({
+   812→    required this.icon,
+   813→    required this.iconColor,
+   814→    required this.title,
+   815→    required this.subtitle,
+   816→    required this.trailing,
+   817→    this.onTap,
+   818→  });
+   819→
+   820→  final IconData icon;
+   821→  final Color iconColor;
+   822→  final String title;
+   823→  final String subtitle;
+   824→  final Widget trailing;
+   825→  final VoidCallback? onTap;
+   826→
+   827→  @override
+   828→  Widget build(BuildContext context) {
+   829→    return InkWell(
+   830→      onTap: onTap,
+   831→      borderRadius: BorderRadius.circular(12),
+   832→      child: Padding(
+   833→        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+   834→        child: Row(
+   835→          children: [
+   836→            Container(
+   837→              width: 38,
+   838→              height: 38,
+   839→              decoration: BoxDecoration(
+   840→                color: iconColor.withValues(alpha: 0.12),
+   841→                borderRadius: BorderRadius.circular(FinRadius.control),
+   842→              ),
+   843→              child: Icon(icon, size: 20, color: iconColor),
+   844→            ),
+   845→            const SizedBox(width: 12),
+   846→            Expanded(
+   847→              child: Column(
+   848→                crossAxisAlignment: CrossAxisAlignment.start,
+   849→                children: [
+   850→                  Text(
+   851→                    title,
+   852→                    style: Theme.of(context).textTheme.bodyLarge
+   853→                        ?.copyWith(fontWeight: FontWeight.w700),
+   854→                  ),
+   855→                  const SizedBox(height: 2),
+   856→                  Text(
+   857→                    subtitle,
+   858→                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+   859→                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+   860→                    ),
+   861→                  ),
+   862→                ],
+   863→              ),
+   864→            ),
+   865→            trailing,
+   866→          ],
+   867→        ),
+   868→      ),
+   869→    );
+   870→  }
+   871→}
+   872→
+   873→/// حجم القاعدة مقروءاً (ك.ب/م.ب) بأرقام النظام الحي — لبند «حول».
+   874→String _formatDbSize(BuildContext context, int bytes) {
+   875→  final l10n = AppLocalizations.of(context)!;
+   876→  final arabicIndic = NumeralsScope.of(context);
+   877→  String digits(String text) =>
+   878→      arabicIndic ? Numerals.toArabicIndic(text) : text;
+   879→  final kb = bytes / 1024;
+   880→  if (kb < 1024) {
+   881→    return l10n.backupSizeKb(digits(kb.round().toString()));
+   882→  }
+   883→  return l10n.backupSizeMb(digits((kb / 1024).toStringAsFixed(1)));
+   884→}
+   885→

@@ -20,6 +20,7 @@ import '../../../data/repositories/dashboard_repository.dart';
 import '../../../data/repositories/exchange_rate_repository.dart';
 import '../../../data/repositories/item_repository.dart';
 import '../../../data/repositories/purchase_repository.dart';
+import '../../../data/repositories/print_template_repository.dart';
 import '../../../data/repositories/quotation_repository.dart';
 import '../../../data/repositories/return_repository.dart';
 import '../../../data/repositories/sale_repository.dart';
@@ -99,6 +100,7 @@ class AppController extends ChangeNotifier {
   PurchaseRepository? _purchaseRepo;
   ReturnRepository? _returnRepo;
   CashRepository? _cashRepo;
+  PrintTemplateRepository? _printTemplateRepo;
   BackupService? _backupSvc;
   Company? _company;
 
@@ -169,6 +171,9 @@ class AppController extends ChangeNotifier {
 
   /// مستودع النقدية والصناديق (المرحلة 6 — FR-04).
   CashRepository? get cash => _cashRepo;
+
+  /// مستودع قوالب الطباعة (موجة UX-3) — القالب النشط لفواتير البيع.
+  PrintTemplateRepository? get printTemplates => _printTemplateRepo;
 
   /// محرك النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11) — يُنشأ مع
   /// كل قاعدة مفتوحة (جاهز بعد bootstrap) ويتجدد تلقائياً بعد أي استعادة.
@@ -266,6 +271,7 @@ class AppController extends ChangeNotifier {
     _purchaseRepo = PurchaseRepository(db.db);
     _returnRepo = ReturnRepository(db.db);
     _cashRepo = CashRepository(db.db);
+    _printTemplateRepo = PrintTemplateRepository(db.db);
     // محرك النسخ يُبنى لاحقاً (يحتاج حل مسار المنصة غير المتزامن).
     _backupSvc = null;
   }
@@ -559,6 +565,7 @@ class AppController extends ChangeNotifier {
     _purchaseRepo = null;
     _returnRepo = null;
     _cashRepo = null;
+    _printTemplateRepo = null;
     _backupSvc = null;
     _db = null;
     if (db != null) {

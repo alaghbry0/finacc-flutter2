@@ -576,4 +576,6 @@ const List<String> schemaTableNames = <String>[
   'audit_log',
   'backup_log',
   'settings',
+  // قوالب الطباعة (هجرة v4 — موجة UX-3).
+  'print_template',
 ];
