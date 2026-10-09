@@ -1,0 +1,823 @@
+     1→/// اختبارات انحدار إصلاحات تدفقات البيع والكاشير (موجة 1-b):
+     2→///
+     3→/// - **P0-2**: أزرار طباعة/مشاركة فورية من إيصال نجاح البيع + استهلاك
+     4→///   `invoicing.print_on_save` (ask/always/off).
+     5→/// - **P1-1**: زر «مرتجع» من تفاصيل فاتورة البيع (ربط ?invoice=).
+     6→/// - **P1-3**: «عميل جديد سريع» داخل منتقي العميل يعيد الطرف مختاراً.
+     7→/// - **P2-1/2/3**: تمييز زري الإيصال + المختلط يبدأ 0 + تعطيل آجل/مختلط
+     8→///   لعميل نقدي.
+     9→/// - **P2-5**: validUntil افتراضي +30 يوماً + رقم INV الحقيقي في شريحة
+    10→///   التحويل (قابلة للنقر لتفاصيل الفاتورة).
+    11→/// - **P2-6**: زر البيع البارز بسلة فارغة يفتح /sell/new مباشرة.
+    12→library;
+    13→
+    14→import 'package:flutter/material.dart';
+    15→import 'package:flutter_test/flutter_test.dart';
+    16→import 'package:go_router/go_router.dart';
+    17→import 'package:mobile_app/core/storage/app_database.dart';
+    18→import 'package:mobile_app/data/repositories/company_repository.dart';
+    19→import 'package:mobile_app/data/repositories/customer_repository.dart';
+    20→import 'package:mobile_app/data/repositories/exchange_rate_repository.dart';
+    21→import 'package:mobile_app/data/repositories/item_repository.dart';
+    22→import 'package:mobile_app/data/repositories/quotation_repository.dart';
+    23→import 'package:mobile_app/data/repositories/sale_repository.dart';
+    24→import 'package:mobile_app/domain/core/result.dart';
+    25→import 'package:mobile_app/domain/models/item.dart';
+    26→import 'package:mobile_app/domain/models/party.dart';
+    27→import 'package:mobile_app/domain/models/sale.dart';
+    28→import 'package:mobile_app/l10n/app_localizations.dart';
+    29→import 'package:mobile_app/ui/core/router/app_router.dart';
+    30→import 'package:mobile_app/ui/core/session/app_controller.dart';
+    31→import 'package:mobile_app/ui/features/sell/view_models/customer_picker_view_model.dart';
+    32→import 'package:mobile_app/ui/features/sell/view_models/print_on_save.dart';
+    33→import 'package:mobile_app/ui/features/sell/view_models/quotations_view_model.dart';
+    34→import 'package:mobile_app/ui/features/sell/view_models/sell_cart_session.dart';
+    35→import 'package:mobile_app/ui/features/sell/view_models/sell_cart_view_model.dart';
+    36→import 'package:mobile_app/ui/features/sell/views/widgets/customer_picker_sheet.dart';
+    37→import 'package:mobile_app/ui/features/sell/views/widgets/payment_sheet.dart';
+    38→import 'package:provider/provider.dart';
+    39→
+    40→import '../helpers/app_for_tests.dart';
+    41→
+    42→void main() {
+    43→  setUpAll(initFfiForTests);
+    44→
+    45→  final at = DateTime.utc(2026, 10, 6, 12);
+    46→
+    47→  late AppDatabase handle;
+    48→  late CompanyRepository companies;
+    49→  late ItemRepository items;
+    50→  late CustomerRepository customers;
+    51→  late ExchangeRateRepository fx;
+    52→  late SaleRepository sales;
+    53→  late QuotationRepository quotations;
+    54→  late int userId;
+    55→  late int warehouseId;
+    56→  late int baseId;
+    57→
+    58→  Future<void> open() async {
+    59→    final seeded = await openSeededApp();
+    60→    handle = seeded.$1;
+    61→    companies = seeded.$2;
+    62→    items = ItemRepository(handle.db);
+    63→    customers = CustomerRepository(handle.db);
+    64→    fx = ExchangeRateRepository(handle.db);
+    65→    sales = SaleRepository(handle.db);
+    66→    quotations = QuotationRepository(handle.db);
+    67→    userId = (await companies.findAdminUserId())!;
+    68→    warehouseId = (await companies.findDefaultWarehouseId())!;
+    69→    baseId = (await companies.listActiveCurrencies())
+    70→        .firstWhere((c) => c.isBase)
+    71→        .id;
+    72→    addTearDown(handle.close);
+    73→  }
+    74→
+    75→  Future<int> makeItem(String name, {double price = 100}) async {
+    76→    final result = await items.createItem(
+    77→      ItemDraft(
+    78→        name: name,
+    79→        costPrice: 50,
+    80→        openingQty: 10,
+    81→        prices: [ItemPrice(currencyId: baseId, price: price)],
+    82→      ),
+    83→      warehouseId: warehouseId,
+    84→      userId: userId,
+    85→      now: at,
+    86→    );
+    87→    return result.valueOrNull!;
+    88→  }
+    89→
+    90→  SellCartViewModel cartVm() => SellCartViewModel(
+    91→    itemRepo: items,
+    92→    companyRepo: companies,
+    93→    fxRepo: fx,
+    94→    saleRepo: sales,
+    95→    quotationRepo: quotations,
+    96→    database: handle.db,
+    97→    clock: () => at,
+    98→  );
+    99→
+   100→  Future<ItemStockInfo> findInfo(int itemId) async {
+   101→    final all = await items.searchItems('', currencyIdForPrice: baseId);
+   102→    return all.firstWhere((i) => i.item.id == itemId);
+   103→  }
+   104→
+   105→  // ─────────────────────────────────────────────────────────────────────
+   106→  // P0-2 — استهلاك invoicing.print_on_save
+   107→  // ─────────────────────────────────────────────────────────────────────
+   108→
+   109→  group('PrintOnSave — استهلاك invoicing.print_on_save', () {
+   110→    test('parsePrintOnSave: القيم الثلاث المعتمدة والمجهول والغياب = ask', () {
+   111→      expect(parsePrintOnSave('ask'), PrintOnSaveMode.ask);
+   112→      expect(parsePrintOnSave('always'), PrintOnSaveMode.always);
+   113→      expect(parsePrintOnSave('off'), PrintOnSaveMode.off);
+   114→      expect(parsePrintOnSave(null), PrintOnSaveMode.ask);
+   115→      expect(parsePrintOnSave('garbage'), PrintOnSaveMode.ask);
+   116→      expect(parsePrintOnSave(''), PrintOnSaveMode.ask);
+   117→    });
+   118→
+   119→    test(
+   120→      'resolvePrintOnSave من مستودع حقيقي: الافتراضي ask ثم off/always',
+   121→      () async {
+   122→        final seeded = await openSeededApp();
+   123→        addTearDown(seeded.$1.close);
+   124→        final settings = seeded.$4;
+   125→        // المزروع في الهجرة v2 = 'ask'.
+   126→        expect(await resolvePrintOnSave(settings), PrintOnSaveMode.ask);
+   127→        await settings.set('invoicing.print_on_save', 'off');
+   128→        expect(await resolvePrintOnSave(settings), PrintOnSaveMode.off);
+   129→        await settings.set('invoicing.print_on_save', 'always');
+   130→        expect(await resolvePrintOnSave(settings), PrintOnSaveMode.always);
+   131→        // بلا مستودع (خارج الجلسة) = ask المحافظ.
+   132→        expect(await resolvePrintOnSave(null), PrintOnSaveMode.ask);
+   133→      },
+   134→    );
+   135→  });
+   136→
+   137→  // ─────────────────────────────────────────────────────────────────────
+   138→  // P0-2 / P2-1 / P2-2 / P2-3 — نافذة الدفع وإيصال النجاح
+   139→  // ─────────────────────────────────────────────────────────────────────
+   140→
+   141→  SalePostedReceipt testReceipt() => SalePostedReceipt(
+   142→    invoiceId: 7,
+   143→    invoiceNo: 'INV-2026-00007',
+   144→    totals: const CartTotals(
+   145→      subtotal: 100,
+   146→      lineDiscountsTotal: 0,
+   147→      invoiceDiscount: 0,
+   148→      grandTotal: 100,
+   149→      itemsCount: 1,
+   150→    ),
+   151→    payStatus: SalePaymentMethod.cash,
+   152→    exchangeRate: 1,
+   153→    rateIsFallback: false,
+   154→  );
+   155→
+   156→  Future<void> pumpPaymentSheet(
+   157→    WidgetTester tester, {
+   158→    String? customerName,
+   159→    PrintOnSaveMode mode = PrintOnSaveMode.ask,
+   160→    Future<void> Function(SalePostedReceipt receipt)? opener,
+   161→    required Future<Result<SalePostedReceipt, String>> Function(
+   162→      double paidCash,
+   163→      SalePaymentMethod method,
+   164→    )
+   165→    onConfirm,
+   166→    required ValueNotifier<bool> posted,
+   167→  }) async {
+   168→    await tester.pumpWidget(
+   169→      wrapWithL10n(
+   170→        Scaffold(
+   171→          body: Builder(
+   172→            builder: (context) => Center(
+   173→              child: FilledButton(
+   174→                key: const Key('fix_open_payment'),
+   175→                onPressed: () async {
+   176→                  posted.value = await showPaymentSheet(
+   177→                    context,
+   178→                    grandTotal: 100,
+   179→                    decimals: 0,
+   180→                    currencyCode: 'YER',
+   181→                    customerName: customerName,
+   182→                    onConfirm: onConfirm,
+   183→                    printOnSave: mode,
+   184→                    openInvoicePreview: opener,
+   185→                  );
+   186→                },
+   187→                child: const Text('افتح الدفع'),
+   188→              ),
+   189→            ),
+   190→          ),
+   191→        ),
+   192→      ),
+   193→    );
+   194→    await tester.tap(find.byKey(const Key('fix_open_payment')));
+   195→    await tester.pump();
+   196→    await tester.pump(const Duration(milliseconds: 350));
+   197→  }
+   198→
+   199→  /// يفتح النافذة ويرحّل نقداً كاملاً → إيصال النجاح ظاهر.
+   200→  Future<void> confirmCash(WidgetTester tester) async {
+   201→    await tester.tap(find.text('تأكيد الترحيل'));
+   202→    await tester.pump();
+   203→    await tester.pump(const Duration(milliseconds: 100));
+   204→  }
+   205→
+   206→  group('PaymentSheet — إيصال النجاح (P0-2/P2-1/P2-2/P2-3)', () {
+   207→    testWidgets('ask: زرا الطباعة والمشاركة يظهران ويفتحان المعاينة', (
+   208→      tester,
+   209→    ) async {
+   210→      final openedIds = <int>[];
+   211→      final posted = ValueNotifier<bool>(false);
+   212→      await pumpPaymentSheet(
+   213→        tester,
+   214→        mode: PrintOnSaveMode.ask,
+   215→        opener: (receipt) async => openedIds.add(receipt.invoiceId),
+   216→        onConfirm: (paidCash, method) async =>
+   217→            Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
+   218→        posted: posted,
+   219→      );
+   220→      await confirmCash(tester);
+   221→
+   222→      // بطاقة الإيصال ظاهرة برقم الفاتورة.
+   223→      expect(find.text('INV-2026-00007'), findsOneWidget);
+   224→      expect(
+   225→        find.byKey(const Key('sell_receipt_print_button')),
+   226→        findsOneWidget,
+   227→      );
+   228→      expect(
+   229→        find.byKey(const Key('sell_receipt_share_button')),
+   230→        findsOneWidget,
+   231→      );
+   232→
+   233→      // زر الطباعة يفتح المعاينة (المُسجِّل بدل PDF الحقيقي).
+   234→      await tester.tap(find.byKey(const Key('sell_receipt_print_button')));
+   235→      await tester.pump();
+   236→      expect(openedIds, [7]);
+   237→      // زر المشاركة يفتح نفس المعاينة.
+   238→      await tester.tap(find.byKey(const Key('sell_receipt_share_button')));
+   239→      await tester.pump();
+   240→      expect(openedIds, [7, 7]);
+   241→    });
+   242→
+   243→    testWidgets('off: الأزرار مخفية والأساسي «فاتورة جديدة» والثانوي «إغلاق»', (
+   244→      tester,
+   245→    ) async {
+   246→      final openedIds = <int>[];
+   247→      final posted = ValueNotifier<bool>(false);
+   248→      await pumpPaymentSheet(
+   249→        tester,
+   250→        mode: PrintOnSaveMode.off,
+   251→        opener: (receipt) async => openedIds.add(receipt.invoiceId),
+   252→        onConfirm: (paidCash, method) async =>
+   253→            Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
+   254→        posted: posted,
+   255→      );
+   256→      await confirmCash(tester);
+   257→
+   258→      expect(find.byKey(const Key('sell_receipt_print_button')), findsNothing);
+   259→      expect(find.byKey(const Key('sell_receipt_share_button')), findsNothing);
+   260→      // الزران متمايزان (P2-1): الأساسي بلا طباعة، والثانوي «إغلاق».
+   261→      expect(find.text('فاتورة جديدة'), findsOneWidget);
+   262→      expect(find.text('إغلاق'), findsOneWidget);
+   263→      expect(find.text('طباعة + فاتورة جديدة'), findsNothing);
+   264→
+   265→      // «إغلاق» ينهي النافذة بنجاح الترحيل (السلوك القائم).
+   266→      await tester.tap(find.byKey(const Key('sell_receipt_close_action')));
+   267→      await tester.pump();
+   268→      await tester.pump(const Duration(milliseconds: 350));
+   269→      expect(posted.value, isTrue);
+   270→      expect(openedIds, isEmpty);
+   271→    });
+   272→
+   273→    testWidgets('always: المعاينة تفتح تلقائياً مرة واحدة بعد الترحيل', (
+   274→      tester,
+   275→    ) async {
+   276→      final openedIds = <int>[];
+   277→      final posted = ValueNotifier<bool>(false);
+   278→      await pumpPaymentSheet(
+   279→        tester,
+   280→        mode: PrintOnSaveMode.always,
+   281→        opener: (receipt) async => openedIds.add(receipt.invoiceId),
+   282→        onConfirm: (paidCash, method) async =>
+   283→            Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
+   284→        posted: posted,
+   285→      );
+   286→      await confirmCash(tester);
+   287→      await tester.pump();
+   288→      await tester.pump(const Duration(milliseconds: 100));
+   289→
+   290→      // فتح تلقائي واحد فقط (لا تكرار عند البناء مجدداً).
+   291→      expect(openedIds, [7]);
+   292→      await tester.pump(const Duration(milliseconds: 200));
+   293→      expect(openedIds, [7]);
+   294→      // الأزرار اليدوية متاحة أيضاً في always (الوضعان ask/always يعرضانها).
+   295→      expect(
+   296→        find.byKey(const Key('sell_receipt_print_button')),
+   297→        findsOneWidget,
+   298→      );
+   299→    });
+   300→
+   301→    testWidgets('P2-1: الأساسي «طباعة + فاتورة جديدة» يفتح المعاينة ثم يغلق', (
+   302→      tester,
+   303→    ) async {
+   304→      final openedIds = <int>[];
+   305→      final posted = ValueNotifier<bool>(false);
+   306→      await pumpPaymentSheet(
+   307→        tester,
+   308→        mode: PrintOnSaveMode.ask,
+   309→        opener: (receipt) async => openedIds.add(receipt.invoiceId),
+   310→        onConfirm: (paidCash, method) async =>
+   311→            Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
+   312→        posted: posted,
+   313→      );
+   314→      await confirmCash(tester);
+   315→
+   316→      expect(find.text('طباعة + فاتورة جديدة'), findsOneWidget);
+   317→      await tester.tap(find.byKey(const Key('sell_receipt_primary_action')));
+   318→      await tester.pump();
+   319→      await tester.pump(const Duration(milliseconds: 400));
+   320→      // فتح المعاينة ثم إغلاق النافذة بنجاح الترحيل (فاتورة جديدة).
+   321→      expect(openedIds, [7]);
+   322→      expect(posted.value, isTrue);
+   323→      expect(
+   324→        find.byKey(const Key('sell_receipt_primary_action')),
+   325→        findsNothing,
+   326→      );
+   327→    });
+   328→
+   329→    testWidgets('P2-2: الدفع المختلط يبدأ من صفر لا من نصف الصافي', (
+   330→      tester,
+   331→    ) async {
+   332→      final posted = ValueNotifier<bool>(false);
+   333→      await pumpPaymentSheet(
+   334→        tester,
+   335→        customerName: 'عميل فهد',
+   336→        onConfirm: (paidCash, method) async =>
+   337→            Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
+   338→        posted: posted,
+   339→      );
+   340→
+   341→      await tester.tap(find.text('مختلط'));
+   342→      await tester.pump(const Duration(milliseconds: 100));
+   343→      final field = tester.widget<TextField>(find.byType(TextField));
+   344→      expect(field.controller!.text, '0', reason: 'المختلط يبدأ 0 (P2-2)');
+   345→
+   346→      // النقدي الكامل يعود فيملأ الصافي كاملاً.
+   347→      await tester.tap(find.text('نقدي كامل'));
+   348→      await tester.pump(const Duration(milliseconds: 100));
+   349→      final cashField = tester.widget<TextField>(find.byType(TextField));
+   350→      expect(cashField.controller!.text, '100');
+   351→    });
+   352→
+   353→    testWidgets('P2-3: آجل/مختلط معطّلان للعميل النقدي والتحذير يبقى معروضاً', (
+   354→      tester,
+   355→    ) async {
+   356→      final posted = ValueNotifier<bool>(false);
+   357→      await pumpPaymentSheet(
+   358→        tester,
+   359→        onConfirm: (paidCash, method) async =>
+   360→            Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
+   361→        posted: posted,
+   362→      );
+   363→
+   364→      // التحذير القائم ظاهر.
+   365→      expect(
+   366→        find.text('العميل النقدي المجهول يسدد نقداً كاملاً فقط.'),
+   367→        findsOneWidget,
+   368→      );
+   369→      // الضغط على «آجل كامل» لا يغيّر النمط (السطر النقدي يبقى) —
+   370→      // القبعة معطلة لا رفض بعد الضغط.
+   371→      await tester.tap(find.text('آجل كامل'));
+   372→      await tester.pump(const Duration(milliseconds: 100));
+   373→      expect(
+   374→        find.byType(TextField),
+   375→        findsOneWidget,
+   376→        reason: 'بقي نمط النقدي الكامل',
+   377→      );
+   378→      await tester.tap(find.text('مختلط'));
+   379→      await tester.pump(const Duration(milliseconds: 100));
+   380→      expect(
+   381→        find.byType(TextField),
+   382→        findsOneWidget,
+   383→        reason: 'بقي نمط النقدي الكامل بعد محاولة المختلط',
+   384→      );
+   385→      // ولا رسالة خطأ (لم يُؤكَّد شيء).
+   386→      expect(
+   387→        find.text(
+   388→          'البيع الآجل يتطلب اختيار عميل أولاً — العميل النقدي المجهول يسدد كاملاً.',
+   389→        ),
+   390→        findsNothing,
+   391→      );
+   392→    });
+   393→  });
+   394→
+   395→  // ─────────────────────────────────────────────────────────────────────
+   396→  // P1-3 — عميل جديد سريع داخل منتقي العميل
+   397→  // ─────────────────────────────────────────────────────────────────────
+   398→
+   399→  group('منتقي العميل — عميل جديد سريع (P1-3)', () {
+   400→    Future<void> pumpPicker(
+   401→      WidgetTester tester, {
+   402→      Future<Result<CustomerPick, String>> Function(String name, String? phone)?
+   403→      onCreate,
+   404→      required ValueNotifier<CustomerPick?> picked,
+   405→    }) async {
+   406→      await tester.pumpWidget(
+   407→        wrapWithL10n(
+   408→          Scaffold(
+   409→            body: Builder(
+   410→              builder: (context) => Center(
+   411→                child: FilledButton(
+   412→                  key: const Key('fix_open_picker'),
+   413→                  onPressed: () => showCustomerPickerSheet(
+   414→                    context,
+   415→                    customerRepo: customers,
+   416→                    onPick: (pick) => picked.value = pick,
+   417→                    onCashCustomer: () {},
+   418→                    onCreateCustomer: onCreate,
+   419→                  ),
+   420→                  child: const Text('افتح المنتقي'),
+   421→                ),
+   422→              ),
+   423→            ),
+   424→          ),
+   425→        ),
+   426→      );
+   427→      await tester.tap(find.byKey(const Key('fix_open_picker')));
+   428→      await tester.pump();
+   429→      await tester.pump(const Duration(milliseconds: 350));
+   430→      // البحث الأولي FFI غير متزامن — أعطه زمناً حقيقياً ليكتمل قبل
+   431→      // انتهاء الاختبار (notifyListeners بعد dispose يكسر الإطار).
+   432→      await Future<void>.delayed(const Duration(milliseconds: 120));
+   433→      await pumpQuietly(tester, 4);
+   434→    }
+   435→
+   436→    testWidgets('الحفظ يعيد الطرف الجديد مختاراً ويُنشئه فعلاً في القاعدة', (
+   437→      tester,
+   438→    ) async {
+   439→      // سطح منطقي 390×1600 (dpr=1) — setSurfaceSize وحده يعطي منطقياً
+   440→      // 130×533 على dpr الاختباري 3.0 فيفيض كل شيء.
+   441→      tester.view.physicalSize = const Size(390, 1600);
+   442→      tester.view.devicePixelRatio = 1.0;
+   443→      addTearDown(tester.view.resetPhysicalSize);
+   444→      addTearDown(tester.view.resetDevicePixelRatio);
+   445→      await tester.runAsync(() async {
+   446→        await open();
+   447→        final picked = ValueNotifier<CustomerPick?>(null);
+   448→        await pumpPicker(
+   449→          tester,
+   450→          onCreate: (name, phone) async {
+   451→            final result = await customers.createCustomer(
+   452→              CustomerDraft(name: name, phone: phone),
+   453→              userId: userId,
+   454→            );
+   455→            return result.map(
+   456→              (id) => CustomerPick(
+   457→                partyId: id,
+   458→                name: name,
+   459→                phone: phone,
+   460→                currencyCode: 'YER',
+   461→                balance: 0,
+   462→                hasMoreCurrencies: false,
+   463→              ),
+   464→            );
+   465→          },
+   466→          picked: picked,
+   467→        );
+   468→
+   469→        expect(
+   470→          find.byKey(const Key('sell_customer_new_button')),
+   471→          findsOneWidget,
+   472→        );
+   473→        await tester.tap(find.byKey(const Key('sell_customer_new_button')));
+   474→        await tester.pump();
+   475→        await tester.pump(const Duration(milliseconds: 350));
+   476→
+   477→        // النموذج المصغّر: الاسم إلزامي.
+   478→        await tester.tap(find.byKey(const Key('sell_quick_customer_save')));
+   479→        await tester.pump(const Duration(milliseconds: 100));
+   480→        expect(find.text('اسم العميل مطلوب.'), findsOneWidget);
+   481→
+   482→        await tester.enterText(
+   483→          find.byKey(const Key('sell_quick_customer_name')),
+   484→          'سالم أحمد',
+   485→        );
+   486→        await tester.enterText(
+   487→          find.byKey(const Key('sell_quick_customer_phone')),
+   488→          '777123999',
+   489→        );
+   490→        await tester.tap(find.byKey(const Key('sell_quick_customer_save')));
+   491→        // الحفظ عبر FFI حقيقي — مهلة حقيقية ليكتمل الإنشاء والإرجاع قبل
+   492→        // الفحص (بدونها يُغلق الاختبار القاعدة قبله → database_closed).
+   493→        await Future<void>.delayed(const Duration(milliseconds: 300));
+   494→        await tester.pump();
+   495→        await tester.pump(const Duration(milliseconds: 350));
+   496→        await pumpQuietly(tester, 4);
+   497→
+   498→        // الطرف الجديد عاد مختاراً في المنتقي (pop بالنتيجة).
+   499→        expect(picked.value, isNotNull);
+   500→        expect(picked.value!.name, 'سالم أحمد');
+   501→        expect(picked.value!.phone, '777123999');
+   502→        expect(picked.value!.partyId, greaterThan(0));
+   503→        // واختُلق فعلاً في القاعدة.
+   504→        final rows = await handle.db.query(
+   505→          'customer',
+   506→          where: 'name = ?',
+   507→          whereArgs: ['سالم أحمد'],
+   508→        );
+   509→        expect(rows, hasLength(1));
+   510→        expect(rows.first['phone'], '777123999');
+   511→        // المنتقي كله أُغلق.
+   512→        expect(find.byKey(const Key('sell_customer_new_button')), findsNothing);
+   513→        expect(
+   514→          find.byKey(const Key('sell_customer_search_field')),
+   515→          findsNothing,
+   516→        );
+   517→      });
+   518→    });
+   519→
+   520→    testWidgets('غياب onCreateCustomer يخفي الزر (السلوك القائم)', (
+   521→      tester,
+   522→    ) async {
+   523→      await tester.runAsync(() async {
+   524→        await open();
+   525→        final picked = ValueNotifier<CustomerPick?>(null);
+   526→        await pumpPicker(tester, onCreate: null, picked: picked);
+   527→        expect(find.byKey(const Key('sell_customer_new_button')), findsNothing);
+   528→        // والمنتقي نفسه يعمل (بحث + عميل نقدي).
+   529→        expect(
+   530→          find.byKey(const Key('sell_customer_search_field')),
+   531→          findsOneWidget,
+   532→        );
+   533→      });
+   534→    });
+   535→  });
+   536→
+   537→  // ─────────────────────────────────────────────────────────────────────
+   538→  // P2-5 — عروض الأسعار: الصلاحية الافتراضية ورقم الفاتورة الحقيقي
+   539→  // ─────────────────────────────────────────────────────────────────────
+   540→
+   541→  group('عروض الأسعار (P2-5)', () {
+   542→    test('validUntil افتراضي +30 يوماً عند الحفظ من السلة', () async {
+   543→      await open();
+   544→      final item = await makeItem('قلم حبر');
+   545→      final vm = cartVm();
+   546→      await vm.load();
+   547→      vm.addItemFromInfo(await findInfo(item));
+   548→
+   549→      final saved = await vm.saveAsQuotation();
+   550→      expect(saved.isOk, isTrue, reason: '${saved.errorOrNull}');
+   551→      final quotation = saved.valueOrNull!;
+   552→      expect(quotation.validUntil, isNotNull);
+   553→      final want = at.add(const Duration(days: 30));
+   554→      // التخزين date-only — التساوي على مستوى اليوم.
+   555→      expect(
+   556→        DateTime(
+   557→          quotation.validUntil!.year,
+   558→          quotation.validUntil!.month,
+   559→          quotation.validUntil!.day,
+   560→        ),
+   561→        DateTime(want.year, want.month, want.day),
+   562→        reason: 'الصلاحية = يوم الحفظ + 30 يوماً',
+   563→      );
+   564→
+   565→      // صلاحية صريحة تُحترم كما هي (التخزين date-only بلا منطقة زمنية).
+   566→      final explicit = await vm.saveAsQuotation(
+   567→        validUntil: DateTime.utc(2026, 12, 25),
+   568→      );
+   569→      final got = explicit.valueOrNull!.validUntil!;
+   570→      expect(DateTime.utc(got.year, got.month, got.day), DateTime.utc(2026, 12, 25));
+   571→      vm.dispose();
+   572→    });
+   573→
+   574→    test('convertedInvoiceNo يجلب رقم INV الحقيقي بعد التحويل', () async {
+   575→      await open();
+   576→      final item = await makeItem('دفتر مدرسي', price: 500);
+   577→      final vm = cartVm();
+   578→      await vm.load();
+   579→      vm.addItemFromInfo(await findInfo(item));
+   580→      final saved = await vm.saveAsQuotation();
+   581→      final quotationId = saved.valueOrNull!.id;
+   582→
+   583→      final detailVm = QuotationDetailViewModel(
+   584→        quotationRepo: quotations,
+   585→        companyRepo: companies,
+   586→        quotationId: quotationId,
+   587→        saleRepo: sales,
+   588→        initialUserId: userId,
+   589→      );
+   590→      final converted = await detailVm.convertToInvoice(
+   591→        paidCash: 500,
+   592→        paymentMethod: SalePaymentMethod.cash,
+   593→      );
+   594→      expect(converted.isOk, isTrue, reason: '${converted.errorOrNull}');
+   595→      final invoiceNo = converted.valueOrNull!.invoiceNo;
+   596→      expect(invoiceNo, startsWith('INV-'));
+   597→
+   598→      await detailVm.load();
+   599→      expect(detailVm.state.convertedInvoiceNo, invoiceNo);
+   600→      expect(detailVm.quotation!.convertedInvoiceId, isNotNull);
+   601→
+   602→      // بلا مستودع مبيعات: null (الشريحة تعود للمعرّف الداخلي).
+   603→      final noRepoVm = QuotationDetailViewModel(
+   604→        quotationRepo: quotations,
+   605→        companyRepo: companies,
+   606→        quotationId: quotationId,
+   607→      );
+   608→      await noRepoVm.load();
+   609→      expect(noRepoVm.state.convertedInvoiceNo, isNull);
+   610→      vm.dispose();
+   611→      detailVm.dispose();
+   612→      noRepoVm.dispose();
+   613→    });
+   614→  });
+   615→
+   616→  // ─────────────────────────────────────────────────────────────────────
+   617→  // الشاشات عبر الراوتر الكامل — P1-1 و P2-5 و P2-6
+   618→  // ─────────────────────────────────────────────────────────────────────
+   619→
+   620→  group('الشاشات عبر الراوتر الكامل', () {
+   621→    Future<GoRouter> pumpApp(WidgetTester tester) async {
+   622→      final seeded = await openSeededApp();
+   623→      handle = seeded.$1;
+   624→      companies = seeded.$2;
+   625→      items = ItemRepository(handle.db);
+   626→      customers = CustomerRepository(handle.db);
+   627→      fx = ExchangeRateRepository(handle.db);
+   628→      sales = SaleRepository(handle.db);
+   629→      quotations = QuotationRepository(handle.db);
+   630→      userId = (await companies.findAdminUserId())!;
+   631→      warehouseId = (await companies.findDefaultWarehouseId())!;
+   632→      baseId = (await companies.listActiveCurrencies())
+   633→          .firstWhere((c) => c.isBase)
+   634→          .id;
+   635→      final controller = AppController(forTesting: handle);
+   636→      await controller.decidePhaseForTest();
+   637→      controller.unlockSession();
+   638→      addTearDown(controller.dispose);
+   639→
+   640→      final router = buildAppRouter(controller);
+   641→      await tester.pumpWidget(
+   642→        ChangeNotifierProvider<AppController>.value(
+   643→          value: controller,
+   644→          child: MaterialApp.router(
+   645→            routerConfig: router,
+   646→            locale: const Locale('ar'),
+   647→            localizationsDelegates: AppLocalizations.localizationsDelegates,
+   648→            supportedLocales: AppLocalizations.supportedLocales,
+   649→          ),
+   650→        ),
+   651→      );
+   652→      await pumpQuietly(tester, 8);
+   653→      return router;
+   654→    }
+   655→
+   656→    testWidgets(
+   657→      'P1-1: زر المرتجع بتفاصيل فاتورة البيع → ربط ?invoice= العميق',
+   658→      (tester) async {
+   659→        tester.view.physicalSize = const Size(390, 1600);
+   660→        tester.view.devicePixelRatio = 1.0;
+   661→        addTearDown(tester.view.resetPhysicalSize);
+   662→        addTearDown(tester.view.resetDevicePixelRatio);
+   663→        await tester.runAsync(() async {
+   664→          sellCartSession.reset();
+   665→          addTearDown(sellCartSession.reset);
+   666→          final router = await pumpApp(tester);
+   667→
+   668→          // فاتورة بيع مرحّلة فعلياً.
+   669→          final item = await makeItem('حليب المراعي', price: 40);
+   670→          final vm = cartVm();
+   671→          await vm.load();
+   672→          vm.addItemFromInfo(await findInfo(item));
+   673→          final posted = await vm.postSale(
+   674→            paidCash: 40,
+   675→            method: SalePaymentMethod.cash,
+   676→          );
+   677→          expect(posted.isOk, isTrue, reason: '${posted.errorOrNull}');
+   678→          final invoiceId = posted.valueOrNull!.invoiceId;
+   679→          vm.dispose();
+   680→
+   681→          router.go('/sell/invoices/$invoiceId');
+   682→          await pumpQuietly(tester, 10);
+   683→          // تحميل تفاصيل الفاتورة عبر FFI غير متزامن — مهلة حقيقية ليكتمل
+   684→          // قبل الفحص (نمط منتقي العميل أعلاه).
+   685→          await Future<void>.delayed(const Duration(milliseconds: 200));
+   686→          await pumpQuietly(tester, 4);
+   687→
+   688→          final returnButton = find.byKey(
+   689→            const Key('sell_detail_return_button'),
+   690→          );
+   691→          expect(
+   692→            returnButton,
+   693→            findsOneWidget,
+   694→            reason: 'زر المرتجع ظاهر (P1-1)',
+   695→          );
+   696→          await tester.ensureVisible(returnButton);
+   697→          await tester.tap(returnButton);
+   698→          await pumpQuietly(tester, 8);
+   699→
+   700→          final uri = router.routerDelegate.currentConfiguration.uri;
+   701→          expect(uri.path, '/purchases/returns/sale');
+   702→          expect(uri.queryParameters['invoice'], '$invoiceId');
+   703→          router.dispose();
+   704→        });
+   705→      },
+   706→    );
+   707→
+   708→    testWidgets('P2-5: شريحة التحويل برقم INV الحقيقي تفتح تفاصيل الفاتورة', (
+   709→      tester,
+   710→    ) async {
+   711→      // سطح منطقي 390×1600 (dpr=1) — setSurfaceSize وحده يعطي منطقياً
+   712→      // 130×533 على dpr الاختباري 3.0 فيفيض كل شيء.
+   713→      tester.view.physicalSize = const Size(390, 1600);
+   714→      tester.view.devicePixelRatio = 1.0;
+   715→      addTearDown(tester.view.resetPhysicalSize);
+   716→      addTearDown(tester.view.resetDevicePixelRatio);
+   717→      await tester.runAsync(() async {
+   718→        sellCartSession.reset();
+   719→        addTearDown(sellCartSession.reset);
+   720→        final router = await pumpApp(tester);
+   721→
+   722→        // عرض سعر محوَّل إلى فاتورة.
+   723→        final item = await makeItem('كيس سكر', price: 500);
+   724→        final vm = cartVm();
+   725→        await vm.load();
+   726→        vm.addItemFromInfo(await findInfo(item));
+   727→        final saved = await vm.saveAsQuotation();
+   728→        final quotationId = saved.valueOrNull!.id;
+   729→        final detailVm = QuotationDetailViewModel(
+   730→          quotationRepo: quotations,
+   731→          companyRepo: companies,
+   732→          quotationId: quotationId,
+   733→          saleRepo: sales,
+   734→          initialUserId: userId,
+   735→        );
+   736→        final converted = await detailVm.convertToInvoice(
+   737→          paidCash: 500,
+   738→          paymentMethod: SalePaymentMethod.cash,
+   739→        );
+   740→        expect(converted.isOk, isTrue, reason: '${converted.errorOrNull}');
+   741→        final invoiceId = converted.valueOrNull!.invoiceId;
+   742→        final invoiceNo = converted.valueOrNull!.invoiceNo;
+   743→        vm.dispose();
+   744→        detailVm.dispose();
+   745→
+   746→        router.go('/sell/quotations/$quotationId');
+   747→        await pumpQuietly(tester, 10);
+   748→        // تحميل التفاصيل عبر FFI غير متزامن — مهلة حقيقية ليكتمل قبل
+   749→        // فحص شريحة INV (نفس نمط تفاصيل الفاتورة أعلاه).
+   750→        await Future<void>.delayed(const Duration(milliseconds: 200));
+   751→        await pumpQuietly(tester, 4);
+   752→
+   753→        // الشريحة تحمل رقم INV الحقيقي لا المعرّف الداخلي.
+   754→        final chip = find.byKey(const Key('quotation_converted_invoice_chip'));
+   755→        expect(chip, findsOneWidget);
+   756→        expect(find.textContaining(invoiceNo), findsOneWidget);
+   757→        expect(find.textContaining('#$invoiceId'), findsNothing);
+   758→
+   759→        await tester.ensureVisible(chip);
+   760→        await tester.tap(chip);
+   761→        await pumpQuietly(tester, 8);
+   762→        expect(
+   763→          router.routerDelegate.currentConfiguration.uri.path,
+   764→          '/sell/invoices/$invoiceId',
+   765→        );
+   766→        router.dispose();
+   767→      });
+   768→    });
+   769→
+   770→    testWidgets('P2-6: زر البيع البارز بسلة فارغة يفتح /sell/new مباشرة', (
+   771→      tester,
+   772→    ) async {
+   773→      tester.view.physicalSize = const Size(390, 844);
+   774→      tester.view.devicePixelRatio = 1.0;
+   775→      addTearDown(tester.view.resetPhysicalSize);
+   776→      addTearDown(tester.view.resetDevicePixelRatio);
+   777→      await tester.runAsync(() async {
+   778→        sellCartSession.reset();
+   779→        addTearDown(sellCartSession.reset);
+   780→        final router = await pumpApp(tester);
+   781→        expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
+   782→
+   783→        // سلة فارغة (لا جلسة) → الزر البارز يفتح الكاشير مباشرة.
+   784→        // مفتاح مستقر: الأيقونة تتبدل حسب نشاط فرع البيع.
+   785→        final sellButton = find.byKey(const Key('shell_sell_button'));
+   786→        await tester.tap(sellButton);
+   787→        await pumpQuietly(tester, 8);
+   788→        expect(
+   789→          router.routerDelegate.currentConfiguration.uri.path,
+   790→          '/sell/new',
+   791→          reason: 'سلة فارغة → الكاشير مباشرة (P2-6)',
+   792→        );
+   793→
+   794→        // جلسة سلة قائمة (سطر واحد) → الزر يتصرف كمحور البيع كما كان:
+   795→        // لا قفز إلى /sell/new — يبقى على موقع فرع البيع الحالي.
+   796→        final item = await makeItem('علبة شاي');
+   797→        final vm = sellCartSession.attach(
+   798→          itemRepo: items,
+   799→          companyRepo: companies,
+   800→          fxRepo: fx,
+   801→          saleRepo: sales,
+   802→          quotationRepo: quotations,
+   803→          database: handle.db,
+   804→        );
+   805→        await vm.load();
+   806→        vm.addItemFromInfo(await findInfo(item));
+   807→        expect(vm.state.lines, isNotEmpty);
+   808→        router.go('/sell');
+   809→        await pumpQuietly(tester, 8);
+   810→        await tester.tap(sellButton);
+   811→        await pumpQuietly(tester, 8);
+   812→        expect(
+   813→          router.routerDelegate.currentConfiguration.uri.path,
+   814→          '/sell',
+   815→          reason: 'جلسة سلة قائمة → محور البيع كما كان (لا قفز للكاشير)',
+   816→        );
+   817→        router.dispose();
+   818→        vm.dispose();
+   819→      });
+   820→    });
+   821→  });
+   822→}
+   823→

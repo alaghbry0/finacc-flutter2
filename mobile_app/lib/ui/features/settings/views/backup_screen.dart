@@ -20,6 +20,7 @@ import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
@@ -190,7 +191,7 @@ class _StatusCard extends StatelessWidget {
                       Color.lerp(scheme.primary, Colors.black, 0.25)!,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(FinRadius.control),
                 ),
                 child: Icon(
                   Icons.cloud_done_outlined,
@@ -551,7 +552,7 @@ class _LogRow extends StatelessWidget {
               color: entry.statusOk
                   ? scheme.primaryContainer.withValues(alpha: 0.55)
                   : colors.negativeContainer.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(FinRadius.control),
             ),
             child: Icon(
               icon,
@@ -746,7 +747,7 @@ class _SectionTitle extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             color: scheme.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(FinRadius.chip),
           ),
           child: Icon(icon, size: 16, color: scheme.primary),
         ),
@@ -909,7 +910,7 @@ class _RestoreFlowDialogState extends State<_RestoreFlowDialog> {
           _RestoreStage.running => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(strokeWidth: 2.6),
+              const CircularProgressIndicator(strokeWidth: 3),
               const SizedBox(height: 16),
               Text(l10n.backupRestoreRunning),
             ],
@@ -1013,7 +1014,7 @@ class _ConfirmContent extends StatelessWidget {
                     l10n.backupRestoreWarnBody,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: scheme.onSurface,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

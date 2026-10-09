@@ -116,13 +116,13 @@ class _SalesInvoicesBodyState extends State<_SalesInvoicesBody> {
     final state = vm.state;
     if (state.loading) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: const [ListSkeleton(rows: 7)],
       );
     }
     if (state.error != null) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           ErrorState(
             title: l10n.genericErrorTitle,
@@ -137,7 +137,7 @@ class _SalesInvoicesBodyState extends State<_SalesInvoicesBody> {
     }
     if (state.invoices.isEmpty) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           EmptyState(
             icon: Icons.receipt_long_rounded,
@@ -153,7 +153,7 @@ class _SalesInvoicesBodyState extends State<_SalesInvoicesBody> {
     final visible = state.visible;
     if (visible.isEmpty) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           EmptyState(
             icon: Icons.search_off_rounded,
@@ -165,7 +165,7 @@ class _SalesInvoicesBodyState extends State<_SalesInvoicesBody> {
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       children: [
         for (final invoice in visible)
           Padding(

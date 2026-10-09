@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/dashboard_repository.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_typography.dart';
 
 /// بطاقة رسم المبيعات اليومية (30 يوماً).
 class MiniSalesChart extends StatefulWidget {
@@ -231,10 +232,14 @@ class _SelectionBubble extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             _formatAmount(point.total),
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: scheme.onSurface,
-              fontWeight: FontWeight.w800,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            // مبلغ الفقاعة بأرقام جدولية حقيقية (الخط المرافق — UX-2b):
+            // القيمة تتغير مع كل لمس عمود فلا ترتجّ عرض الفقاعة.
+            style: FinText.withTabularDigits(
+              Theme.of(context).textTheme.labelMedium!.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
           if (currency != null) ...[

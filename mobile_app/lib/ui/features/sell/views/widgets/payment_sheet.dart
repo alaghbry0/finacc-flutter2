@@ -20,6 +20,7 @@ import '../../../../../domain/services/credit_limit.dart';
 import '../../../../../domain/services/sale_pricing.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/fin_card.dart';
 import '../../view_models/print_on_save.dart';
@@ -422,6 +423,11 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             onChanged: (_) {
               if (_error != null) setState(() => _error = null);
             },
+            // أرقام جدولية أثناء الكتابة (الخط المرافق — UX-2b): الحقل
+            // يتقلص/يتمدد مع كل خانة بأرقام متساوية العرض فلا يقفز النص.
+            style: FinText.withTabularDigits(
+              Theme.of(context).textTheme.bodyLarge!,
+            ),
             decoration: InputDecoration(
               labelText: l10n.sellPayCashFieldLabel,
               suffixText: widget.currencyCode ?? '',
@@ -656,13 +662,19 @@ class _LimitRow extends StatelessWidget {
               ),
             ),
           ),
-          // مبلغ ملوّن بأرقام جدولية (LTR داخل السياق العربي).
+          // مبلغ ملوّن بأرقام جدولية (LTR داخل السياق العربي) — الخط
+          // المرافق NotoSansArabic بأرقام متساوية العرض فلا يرتجّ صف
+          // الحوار عند تحديث القيم (UX-2b / DS-18n).
           Text(
             AmountText.formatFor(context, value, decimals),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: color,
-              fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            style: FinText.withTabularDigits(
+              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: color,
+                // w600 غير متوفر في Almarai (300/400/700/800 حصراً) —
+                // التصحيح إلى w700 المتاح (UX-2b).
+                fontWeight: emphasized ? FontWeight.w800 : FontWeight.w700,
+                fontFeatures: FinText.tabularNums,
+              ),
             ),
           ),
         ],

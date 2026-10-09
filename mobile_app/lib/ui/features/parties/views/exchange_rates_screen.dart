@@ -16,6 +16,7 @@ import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
@@ -258,7 +259,7 @@ class _TodayCard extends StatelessWidget {
                       Color.lerp(scheme.primary, Colors.black, 0.25)!,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(FinRadius.control),
                 ),
                 child: Icon(
                   Icons.currency_exchange_rounded,

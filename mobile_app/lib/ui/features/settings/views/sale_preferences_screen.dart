@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
@@ -292,7 +293,7 @@ class _PrefHeader extends StatelessWidget {
           height: 38,
           decoration: BoxDecoration(
             color: scheme.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(FinRadius.control),
           ),
           child: Icon(icon, size: 20, color: scheme.primary),
         ),
@@ -349,7 +350,7 @@ class _SwitchRow extends StatelessWidget {
           height: 38,
           decoration: BoxDecoration(
             color: iconColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(FinRadius.control),
           ),
           child: Icon(icon, size: 20, color: iconColor),
         ),
@@ -414,7 +415,7 @@ class _ModeOption extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: selected ? scheme.onPrimaryContainer : null,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w400,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -474,7 +475,7 @@ class _PolicyOption extends StatelessWidget {
                 label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: selected ? scheme.onPrimaryContainer : null,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w400,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

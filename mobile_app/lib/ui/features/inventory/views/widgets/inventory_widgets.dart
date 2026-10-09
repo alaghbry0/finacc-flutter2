@@ -11,6 +11,7 @@ import '../../../../../domain/services/barcode_ean13.dart';
 import '../../../../../domain/services/numerals.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/fin_tokens.dart';
 import '../../../../core/widgets/fin_card.dart';
 import '../../../../core/widgets/numerals_scope.dart';
 import '../../../../core/widgets/status_chip.dart';
@@ -226,7 +227,7 @@ class InventorySectionTitle extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             color: scheme.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(FinRadius.chip),
           ),
           child: Icon(icon, size: 16, color: scheme.primary),
         ),

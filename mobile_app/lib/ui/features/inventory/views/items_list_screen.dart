@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -109,6 +110,14 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
           ),
         ],
       ),
+      // نمط الإنشاء الموحد للقوائم التشغيلية (UX-2b): FAB.extended
+      // كنمط قائمة الأطراف — زر إنشاء بارز دائم أسفل الشاشة.
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('items_list_fab'),
+        onPressed: () => context.go('/inventory/item-form'),
+        icon: const Icon(Icons.add_rounded),
+        label: Text(l10n.visFixItemsAddFab),
+      ),
       body: Column(
         children: [
           Padding(
@@ -143,13 +152,25 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
     final state = vm.state;
     if (state.loading) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        // حشو القوائم الموحد (UX-2b): رأس 8 وقاع 32 (وقاع 96 للقائمة
+        // الرئيسية تحت FAB.extended) — كان رأس 4 شاذاً بين 4/8/16.
+        padding: const EdgeInsets.fromLTRB(
+          FinSpacing.xl,
+          FinSpacing.sm,
+          FinSpacing.xl,
+          FinSpacing.fabClearance,
+        ),
         children: const [ListSkeleton(rows: 6)],
       );
     }
     if (state.error != null) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(
+          FinSpacing.xl,
+          FinSpacing.sm,
+          FinSpacing.xl,
+          FinSpacing.bottom,
+        ),
         children: [
           ErrorState(
             title: l10n.genericErrorTitle,
@@ -166,7 +187,12 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
     if (state.items.isEmpty) {
       if (filtered) {
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+          padding: const EdgeInsets.fromLTRB(
+            FinSpacing.xl,
+            FinSpacing.sm,
+            FinSpacing.xl,
+            FinSpacing.bottom,
+          ),
           children: [
             EmptyState(
               icon: Icons.search_off_rounded,
@@ -178,7 +204,12 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
         );
       }
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(
+          FinSpacing.xl,
+          FinSpacing.sm,
+          FinSpacing.xl,
+          FinSpacing.bottom,
+        ),
         children: [
           EmptyState(
             icon: Icons.inventory_2_rounded,
@@ -192,7 +223,14 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+      // القائمة الرئيسية تحت FAB.extended — قاع 96 يمنع تراكب الزر
+      // على آخر صنف (نمط قائمة الأطراف).
+      padding: const EdgeInsets.fromLTRB(
+        FinSpacing.xl,
+        FinSpacing.sm,
+        FinSpacing.xl,
+        FinSpacing.fabClearance,
+      ),
       children: [
         for (final info in state.items)
           Padding(

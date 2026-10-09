@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../core/widgets/pin_pad.dart';
@@ -506,12 +507,11 @@ class _SecurityStep extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final errorText = _errorText(context, vm.error);
     final valid = vm.passphraseFormValid;
-    final warningColor = scheme.brightness == Brightness.dark
-        ? const Color(0xFF39300F)
-        : const Color(0xFFFCEFD8);
-    final warningFg = scheme.brightness == Brightness.dark
-        ? const Color(0xFFF6E2AE)
-        : const Color(0xFF332405);
+    // توكنز التحذير الموحدة من FinColors (UX-2b) بدل تكرار قيم
+    // warningContainer/onWarningContainer بفحص سطوح يدوي.
+    final colors = FinColors.of(context);
+    final warningColor = colors.warningContainer;
+    final warningFg = colors.onWarningContainer;
     return ListView(
       key: const ValueKey('passphrase-section'),
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),

@@ -94,13 +94,13 @@ class _BatchesBody extends StatelessWidget {
     final state = vm.state;
     if (state.loading) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: const [ListSkeleton(rows: 5)],
       );
     }
     if (state.error != null) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           ErrorState(
             title: l10n.genericErrorTitle,
@@ -115,7 +115,7 @@ class _BatchesBody extends StatelessWidget {
     }
     if (state.visible.isEmpty) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           EmptyState(
             icon: Icons.event_busy_rounded,
@@ -127,7 +127,7 @@ class _BatchesBody extends StatelessWidget {
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       children: [
         for (final alert in state.visible)
           Padding(

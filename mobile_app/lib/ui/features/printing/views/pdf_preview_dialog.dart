@@ -16,6 +16,7 @@ import 'package:printing/printing.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../l10n/app_localizations.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/error_state.dart';
 
 /// تفتح نافذة معاينة PDF لمستند يُبنى عند الطلب.
@@ -357,15 +358,22 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
         if (hasWhatsApp) ...[
           const SizedBox(width: 8),
           Expanded(
-            child: FilledButton.tonalIcon(
-              // لمسة خضراء بروح واتساب فوق الطابع التونالي.
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD7F2E4),
-                foregroundColor: const Color(0xFF075E54),
-              ),
-              onPressed: _actionBusy ? null : () => unawaited(_whatsapp()),
-              icon: const Icon(Icons.chat_rounded, size: 18),
-              label: Text(l10n.printingWhatsApp),
+            child: Builder(
+              builder: (context) {
+                // توكن whatsappContainer بوضعين (UX-2b): كانت ألواناً
+                // فاتحة ثابتة تُبهت في الداكن — الآن تتكيف مع الثيم.
+                final colors = FinColors.of(context);
+                return FilledButton.tonalIcon(
+                  // لمسة خضراء بروح واتساب فوق الطابع التونالي.
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.whatsappContainer,
+                    foregroundColor: colors.onWhatsappContainer,
+                  ),
+                  onPressed: _actionBusy ? null : () => unawaited(_whatsapp()),
+                  icon: const Icon(Icons.chat_rounded, size: 18),
+                  label: Text(l10n.printingWhatsApp),
+                );
+              },
             ),
           ),
         ],

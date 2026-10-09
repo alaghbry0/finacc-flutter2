@@ -119,7 +119,7 @@ class AppShell extends StatelessWidget {
                 spec.label(l10n),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w400,
                   fontSize: 12,
                 ),
                 maxLines: 1,

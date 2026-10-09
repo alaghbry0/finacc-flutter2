@@ -22,6 +22,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -738,7 +739,7 @@ class _CartLineCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: (line.isService ? scheme.tertiary : scheme.primary)
                         .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(11),
+                    borderRadius: BorderRadius.circular(FinRadius.control),
                   ),
                   child: Icon(
                     line.isService

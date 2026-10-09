@@ -226,6 +226,10 @@ class ShiftReportPdfBuilder {
       headerAlignments: _columnAlignments(),
       cellAlignments: _columnAlignments(),
       cellStyle: PrintText.body(size: 9.5),
+      // عمود القيمة (0) بالخط المرافق الجدولي (UX-2b) — أرقام متساوية
+      // العرض تستقيم بها القيم؛ الاتجاه/البند يبقيان Almarai للعربية.
+      textStyleBuilder: (column, cell, rowNum) =>
+          column == 0 ? PrintText.tabular(size: 9.5) : null,
       oddRowDecoration: const pw.BoxDecoration(color: PrintPalette.zebra),
       headerDirection: pw.TextDirection.rtl,
       tableDirection: pw.TextDirection.rtl,
@@ -408,6 +412,11 @@ class ShiftReportPdfBuilder {
   /// ترسم حزمة pdf العربيةَ (الصندوق/المستخدم) بلا تشكيل معكوسةً
   /// مفككةً، وقد ينهار subsetter الخط حين يجتمع عربي غير مشكل بعربي مشكل.
   pw.Widget _kvLine(String label, String value, {double size = 9.5}) {
+    // القيمة المبلغية/التاريخية الرقمية تُرسم بالخط الجدولي المرافق
+    // (UX-2b)؛ أسماء الصندوق/المستخدم العربية تبقى Almarai عبر body.
+    final isAmount = RegExp(
+      r'^[\d\s.,\u0660-\u0669\u066B\u066C+:\-]*[A-Z]{0,3}[\d\s.,\u0660-\u0669\u066B\u066C:]*$',
+    ).hasMatch(value);
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 1.5),
       child: pw.Row(
@@ -417,10 +426,12 @@ class ShiftReportPdfBuilder {
               alignment: pw.Alignment.centerLeft,
               child: pw.Text(
                 value,
-                style: PrintText.body(
-                  color: PrintPalette.brandDeep,
-                  size: size,
-                ),
+                style: isAmount
+                    ? PrintText.tabular(
+                        color: PrintPalette.brandDeep,
+                        size: size,
+                      )
+                    : PrintText.body(color: PrintPalette.brandDeep, size: size),
                 textDirection: pw.TextDirection.rtl,
               ),
             ),

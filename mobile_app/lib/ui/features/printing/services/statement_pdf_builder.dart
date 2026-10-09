@@ -265,6 +265,11 @@ class StatementPdfBuilder {
       headerAlignments: _columnAlignments(),
       cellAlignments: _columnAlignments(),
       cellStyle: PrintText.body(size: 9.5),
+      // أعمدة المبالغ (الرصيد/دائن/مدين = 0..2) والتاريخ (4) بالخط المرافق
+      // الجدولي (UX-2b) — أرقام متساوية العرض تستقيم بها الأعمدة على
+      // الورق؛ عمود البيان (3) يبقى Almarai لهوية النص العربي.
+      textStyleBuilder: (column, cell, rowNum) =>
+          column == 3 ? null : PrintText.tabular(size: 9.5),
       oddRowDecoration: const pw.BoxDecoration(color: PrintPalette.zebra),
       headerDirection: pw.TextDirection.rtl,
       tableDirection: pw.TextDirection.rtl,
@@ -321,9 +326,10 @@ class StatementPdfBuilder {
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
+                    // الرصيد الختامي — أرقام جدولية عريضة (UX-2b).
                     pw.Text(
                       value,
-                      style: PrintText.head(
+                      style: PrintText.tabularHead(
                         color: PrintPalette.brandDeep,
                         size: 12,
                       ),
@@ -385,6 +391,11 @@ class StatementPdfBuilder {
   /// معكوسةً مفككةً، وقد ينهار subsetter الخط حين يجتمع عربي غير مشكل
   /// بعربي مشكل في نفس المستند.
   pw.Widget _kvLine(String label, String value, {double size = 9.5}) {
+    // القيمة المبلغية الرقمية الخالصة (رقم/فاصلة/رمز عملة) تُرسم بالخط
+    // الجدولي المرافق (UX-2b)؛ العربية تبقى Almarai عبر body.
+    final isAmount = RegExp(
+      r'^[\d\s.,\u0660-\u0669\u066B\u066C+\-]*[A-Z]{0,3}[\d\s.,\u0660-\u0669\u066B\u066C]*$',
+    ).hasMatch(value);
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 1.5),
       child: pw.Row(
@@ -394,10 +405,12 @@ class StatementPdfBuilder {
               alignment: pw.Alignment.centerLeft,
               child: pw.Text(
                 value,
-                style: PrintText.body(
-                  color: PrintPalette.brandDeep,
-                  size: size,
-                ),
+                style: isAmount
+                    ? PrintText.tabular(
+                        color: PrintPalette.brandDeep,
+                        size: size,
+                      )
+                    : PrintText.body(color: PrintPalette.brandDeep, size: size),
                 textDirection: pw.TextDirection.rtl,
               ),
             ),

@@ -135,13 +135,13 @@ class _PartyBalancesBodyState extends State<_PartyBalancesBody> {
     final isCustomer = state.kind == PartyKind.customer;
     if (state.loading) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: const [ListSkeleton(rows: 6)],
       );
     }
     if (state.error != null) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           ErrorState(
             title: l10n.genericErrorTitle,
@@ -156,7 +156,7 @@ class _PartyBalancesBodyState extends State<_PartyBalancesBody> {
     }
     if (!state.hasAnyDues) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           EmptyState(
             icon: isCustomer ? Icons.task_alt_rounded : Icons.handshake_rounded,
@@ -171,7 +171,7 @@ class _PartyBalancesBodyState extends State<_PartyBalancesBody> {
     }
     if (state.groups.isEmpty) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           EmptyState(
             icon: Icons.search_off_rounded,
@@ -183,7 +183,7 @@ class _PartyBalancesBodyState extends State<_PartyBalancesBody> {
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       children: [
         PartiesInfoNote(
           icon: Icons.currency_exchange_rounded,

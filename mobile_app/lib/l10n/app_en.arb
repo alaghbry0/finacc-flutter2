@@ -1517,5 +1517,7 @@
   "@settings2BelowCostWarning": {"placeholders": {"names": {"type": "String"}}},
   "settings2AboutVersion": "Version {version}",
   "@settings2AboutVersion": {"placeholders": {"version": {"type": "String"}}},
-  "settings2AboutPhase": "Pre-v1.0.0 — Wave 2"
+  "settings2AboutPhase": "Pre-v1.0.0 — Wave 2",
+  "visFixItemsAddFab": "Register item",
+  "visFixItemsAddFabShort": "New item"
 }

@@ -277,7 +277,7 @@ class _StepHeader extends StatelessWidget {
                     color: i <= step
                         ? scheme.onSurface
                         : scheme.onSurfaceVariant,
-                    fontWeight: i == step ? FontWeight.w800 : FontWeight.w500,
+                    fontWeight: i == step ? FontWeight.w800 : FontWeight.w400,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

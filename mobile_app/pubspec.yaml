@@ -89,6 +89,7 @@ flutter:
 
   assets:
     - assets/fonts/almarai/
+    - assets/fonts/noto/
 
   fonts:
     # Almarai (المراعي) — SRS §0.3: الخط الرسمي مضمن محلياً (أوفلاين).
@@ -102,4 +103,18 @@ flutter:
         - asset: assets/fonts/almarai/Almarai-Bold.ttf
           weight: 700
         - asset: assets/fonts/almarai/Almarai-ExtraBold.ttf
+          weight: 800
+
+    # Noto Sans Arabic (OFL 1.1) — الخط المرافق للأرقام الجدولية (UX-2b):
+    # أرقام Almarai تناسبية (بلا tnum) فترتجّ المبالغ الحية عند التحديث
+    # (999→1000)؛ أرقام Noto جدولية افتراضياً (نفس العرض) بنظامَي الأرقام
+    # (0-9 و٠-٩) فيُستعمل لعائلة المبالغ حصراً عبر سلسلة fallback مرتبة —
+    # لا يُستبدل Almarai لهوية النصوص (assets/fonts/noto/OFL.txt).
+    - family: NotoSansArabic
+      fonts:
+        - asset: assets/fonts/noto/NotoSansArabic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/noto/NotoSansArabic-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/noto/NotoSansArabic-ExtraBold.ttf
           weight: 800
