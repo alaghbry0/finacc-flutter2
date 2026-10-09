@@ -21,6 +21,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_search_field.dart';
+import '../../../core/widgets/hub_hero_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/status_chip.dart';
@@ -172,9 +174,11 @@ class _StocktakeBodyState extends State<_StocktakeBody> {
               onPickDate: () => unawaited(_pickDate(vm)),
             ),
             const SizedBox(height: 14),
-            _SearchField(
+            FinSearchField(
               controller: _searchController,
               onChanged: vm.setQuery,
+              fieldKey: const Key('stocktake_search_field'),
+              hint: l10n.stocktakeSearchHint,
               onCleared: () {
                 _searchController.clear();
                 vm.setQuery('');
@@ -210,7 +214,9 @@ class _StocktakeBodyState extends State<_StocktakeBody> {
   }
 }
 
-/// البطاقة البطلة — شرح مفهوم تكلفة اللقطة وقفل الأرصدة.
+/// البطاقة البطلة — شرح مفهوم تكلفة اللقطة وقفل الأرصدة
+/// (HubHeroCard الموحدة — W3/R17-b: سطر المستودع بفتحة underSubtitle
+/// داخل عمود النص كما كان).
 class _HeroCard extends StatelessWidget {
   const _HeroCard();
 
@@ -218,68 +224,34 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<StocktakeViewModel>();
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final colors = FinColors.of(context);
 
-    return FinCard(
-      accent: colors.gold,
-      child: Row(
+    return HubHeroCard(
+      icon: Icons.fact_check_rounded,
+      title: l10n.stocktakeHeroTitle,
+      subtitle: Text(
+        l10n.stocktakeHeroSubtitle,
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+      underSubtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary,
-                  Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              Icons.fact_check_rounded,
-              color: scheme.onPrimary,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.stocktakeHeroTitle,
-                  style: Theme.of(context).textTheme.titleLarge
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.warehouse_rounded, size: 14, color: colors.gold),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  vm.state.warehouseName ?? '',
+                  style: Theme.of(context).textTheme.labelMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.stocktakeHeroSubtitle,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.warehouse_rounded, size: 14, color: colors.gold),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        vm.state.warehouseName ?? '',
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -377,45 +349,6 @@ class _MetaCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// حقل البحث — بادئة بحث ولاحقة مسح (نمط قائمة الأصناف).
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.onChanged,
-    required this.onCleared,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onCleared;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        return TextField(
-          key: const Key('stocktake_search_field'),
-          controller: controller,
-          onChanged: onChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: l10n.stocktakeSearchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: onCleared,
-                  ),
-          ),
-        );
-      },
     );
   }
 }

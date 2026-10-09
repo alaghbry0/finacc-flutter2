@@ -110,18 +110,6 @@ abstract class AppLocalizations {
   /// **'FinAcc'**
   String get appBrand;
 
-  /// No description provided for @brandTagline.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete accounting & inventory system — works fully offline'**
-  String get brandTagline;
-
-  /// No description provided for @commonNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get commonNext;
-
   /// No description provided for @commonBack.
   ///
   /// In en, this message translates to:
@@ -229,18 +217,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Company details'**
   String get onboardStepCompany;
-
-  /// No description provided for @onboardStepSecurity.
-  ///
-  /// In en, this message translates to:
-  /// **'Security'**
-  String get onboardStepSecurity;
-
-  /// No description provided for @onboardStepReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready'**
-  String get onboardStepReview;
 
   /// No description provided for @companyNameLabel.
   ///
@@ -404,12 +380,6 @@ abstract class AppLocalizations {
   /// **'Start using'**
   String get startUsing;
 
-  /// No description provided for @setupFailedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Setup could not complete'**
-  String get setupFailedTitle;
-
   /// No description provided for @setupFailedBody.
   ///
   /// In en, this message translates to:
@@ -427,12 +397,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The app is locked to protect your financial data'**
   String get lockSubtitle;
-
-  /// No description provided for @lockWrong.
-  ///
-  /// In en, this message translates to:
-  /// **'Incorrect code'**
-  String get lockWrong;
 
   /// No description provided for @lockAttemptsBeforeLock.
   ///
@@ -536,23 +500,11 @@ abstract class AppLocalizations {
   /// **'The app will now reopen on the setup screen.'**
   String get wipeDoneBody;
 
-  /// No description provided for @dashboardTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Home'**
-  String get dashboardTitle;
-
   /// No description provided for @dashboardQuickAccess.
   ///
   /// In en, this message translates to:
   /// **'Quick access'**
   String get dashboardQuickAccess;
-
-  /// No description provided for @dashboardQuickRates.
-  ///
-  /// In en, this message translates to:
-  /// **'Rates'**
-  String get dashboardQuickRates;
 
   /// No description provided for @morningGreeting.
   ///
@@ -595,12 +547,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last 30 days of sales'**
   String get last30DaysTitle;
-
-  /// No description provided for @chartEmptyMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Your sales will appear here after the first invoice'**
-  String get chartEmptyMessage;
 
   /// No description provided for @stockAlertsTitle.
   ///
@@ -649,96 +595,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get tabMore;
-
-  /// No description provided for @comingSoonTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming in the next slices'**
-  String get comingSoonTitle;
-
-  /// No description provided for @comingSoonBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The “{feature}” module is built in its dedicated slice after phase one approval — the architecture and database are already ready for it.'**
-  String comingSoonBody(Object feature);
-
-  /// No description provided for @comingGatedBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'Awaiting phase-one approval'**
-  String get comingGatedBadge;
-
-  /// No description provided for @featureSell.
-  ///
-  /// In en, this message translates to:
-  /// **'Selling & POS'**
-  String get featureSell;
-
-  /// No description provided for @featureInventory.
-  ///
-  /// In en, this message translates to:
-  /// **'Items, stock & batches'**
-  String get featureInventory;
-
-  /// No description provided for @featureCash.
-  ///
-  /// In en, this message translates to:
-  /// **'Cashboxes & cash'**
-  String get featureCash;
-
-  /// No description provided for @featureMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Parties, reports & settings'**
-  String get featureMore;
-
-  /// No description provided for @comingSellH1.
-  ///
-  /// In en, this message translates to:
-  /// **'A fast POS — one or two taps per item'**
-  String get comingSellH1;
-
-  /// No description provided for @comingSellH2.
-  ///
-  /// In en, this message translates to:
-  /// **'Credit invoices and full installment plans with guard policies'**
-  String get comingSellH2;
-
-  /// No description provided for @comingInventoryH1.
-  ///
-  /// In en, this message translates to:
-  /// **'Items with weighted-average cost and barcode cards'**
-  String get comingInventoryH1;
-
-  /// No description provided for @comingInventoryH2.
-  ///
-  /// In en, this message translates to:
-  /// **'Supply batches, FEFO expiry dates, and negative-stock protection'**
-  String get comingInventoryH2;
-
-  /// No description provided for @comingCashH1.
-  ///
-  /// In en, this message translates to:
-  /// **'Receipt and payment movements across multiple cashboxes'**
-  String get comingCashH1;
-
-  /// No description provided for @comingCashH2.
-  ///
-  /// In en, this message translates to:
-  /// **'Reconciliations and end-of-day balances in all currencies'**
-  String get comingCashH2;
-
-  /// No description provided for @comingMoreH1.
-  ///
-  /// In en, this message translates to:
-  /// **'Parties (customers/suppliers) with governed credit limits'**
-  String get comingMoreH1;
-
-  /// No description provided for @comingMoreH2.
-  ///
-  /// In en, this message translates to:
-  /// **'Reports, analytics, and scheduled backups'**
-  String get comingMoreH2;
 
   /// No description provided for @settingsBaseCurrency.
   ///
@@ -932,12 +788,6 @@ abstract class AppLocalizations {
   /// **'An unexpected error occurred'**
   String get genericErrorTitle;
 
-  /// No description provided for @loadingData.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading…'**
-  String get loadingData;
-
   /// No description provided for @settingsAutolockSheetTitle.
   ///
   /// In en, this message translates to:
@@ -1118,12 +968,6 @@ abstract class AppLocalizations {
   /// **'Pick another category or clear the filter to see all recorded events.'**
   String get auditFilterEmptyBody;
 
-  /// No description provided for @auditCountsAll.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No events} one{1 event} other{{count} events}}'**
-  String auditCountsAll(num count);
-
   /// No description provided for @settingsLicenses.
   ///
   /// In en, this message translates to:
@@ -1159,12 +1003,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gregorian calendar'**
   String get dateSheetGregorianLabel;
-
-  /// No description provided for @dateSheetWeekdayLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekday'**
-  String get dateSheetWeekdayLabel;
 
   /// No description provided for @commonAdd.
   ///
@@ -1321,12 +1159,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Batches'**
   String get itemBatchesBadge;
-
-  /// No description provided for @itemsListAddTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a new item'**
-  String get itemsListAddTooltip;
 
   /// No description provided for @itemsListLoadMore.
   ///
@@ -1658,12 +1490,6 @@ abstract class AppLocalizations {
   /// **'FEFO batches'**
   String get itemDetailBatchesBadge;
 
-  /// No description provided for @itemDetailCostLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cost'**
-  String get itemDetailCostLabel;
-
   /// No description provided for @itemDetailPricesSection.
   ///
   /// In en, this message translates to:
@@ -1729,12 +1555,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Printing and sharing arrive with the printing module later — the barcode is ready to scan from the screen.'**
   String get itemDetailBarcodeNote;
-
-  /// No description provided for @itemDetailQrTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Item QR code'**
-  String get itemDetailQrTitle;
 
   /// No description provided for @itemDetailEditAction.
   ///
@@ -2198,18 +2018,6 @@ abstract class AppLocalizations {
   /// **'Units created: {count}'**
   String importResultUnits(Object count);
 
-  /// No description provided for @importResultSnackbar.
-  ///
-  /// In en, this message translates to:
-  /// **'Inserted {inserted}, failed {failed}'**
-  String importResultSnackbar(Object failed, Object inserted);
-
-  /// No description provided for @importFileReadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not read the file — make sure it is a valid CSV or Excel file'**
-  String get importFileReadError;
-
   /// No description provided for @importRestart.
   ///
   /// In en, this message translates to:
@@ -2312,23 +2120,11 @@ abstract class AppLocalizations {
   /// **'Customers'**
   String get partiesHubCustomers;
 
-  /// No description provided for @partiesHubCustomersDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Customer files, balances and account statements'**
-  String get partiesHubCustomersDesc;
-
   /// No description provided for @partiesHubSuppliers.
   ///
   /// In en, this message translates to:
   /// **'Suppliers'**
   String get partiesHubSuppliers;
-
-  /// No description provided for @partiesHubSuppliersDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Supplier files and what you owe them'**
-  String get partiesHubSuppliersDesc;
 
   /// No description provided for @partiesHubReceivables.
   ///
@@ -2336,35 +2132,17 @@ abstract class AppLocalizations {
   /// **'Outstanding at customers'**
   String get partiesHubReceivables;
 
-  /// No description provided for @partiesHubReceivablesDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Open receivables ordered by oldest invoice'**
-  String get partiesHubReceivablesDesc;
-
   /// No description provided for @partiesHubPayables.
   ///
   /// In en, this message translates to:
   /// **'Outstanding to suppliers'**
   String get partiesHubPayables;
 
-  /// No description provided for @partiesHubPayablesDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Payables on the business, per currency'**
-  String get partiesHubPayablesDesc;
-
   /// No description provided for @partiesHubRates.
   ///
   /// In en, this message translates to:
   /// **'Daily exchange rates'**
   String get partiesHubRates;
-
-  /// No description provided for @partiesHubRatesDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Update today\'s rates before issuing any non-base invoice'**
-  String get partiesHubRatesDesc;
 
   /// No description provided for @partiesFxChipComplete.
   ///
@@ -2762,12 +2540,6 @@ abstract class AppLocalizations {
   /// **'Supplier saved'**
   String get partyFormSavedSupplier;
 
-  /// No description provided for @partiesCreditLimitLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Credit limit'**
-  String get partiesCreditLimitLabel;
-
   /// No description provided for @partiesCreditUnlimited.
   ///
   /// In en, this message translates to:
@@ -2785,12 +2557,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Limit {amount}'**
   String partiesCreditLimitValue(Object amount);
-
-  /// No description provided for @partyDetailInfoSection.
-  ///
-  /// In en, this message translates to:
-  /// **'Party details'**
-  String get partyDetailInfoSection;
 
   /// No description provided for @partyDetailBalancesSection.
   ///
@@ -2954,12 +2720,6 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get statementBalanceColumn;
 
-  /// No description provided for @statementAmountColumn.
-  ///
-  /// In en, this message translates to:
-  /// **'Amount'**
-  String get statementAmountColumn;
-
   /// No description provided for @receivablesTitle.
   ///
   /// In en, this message translates to:
@@ -3038,12 +2798,6 @@ abstract class AppLocalizations {
   /// **'Daily exchange rates'**
   String get fxRatesTitle;
 
-  /// No description provided for @fxTodayCardTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Today\'s rates'**
-  String get fxTodayCardTitle;
-
   /// No description provided for @fxTodayHijriDate.
   ///
   /// In en, this message translates to:
@@ -3115,12 +2869,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today\'s rate saved for {code}'**
   String fxRateSaved(Object code);
-
-  /// No description provided for @fxHistorySection.
-  ///
-  /// In en, this message translates to:
-  /// **'Recent rates'**
-  String get fxHistorySection;
 
   /// No description provided for @fxHistoryEmpty.
   ///
@@ -4520,18 +4268,6 @@ abstract class AppLocalizations {
   /// **'Returns are strictly linked to a completed original invoice.'**
   String get retPickInvoiceEmptyBody;
 
-  /// No description provided for @retPickInvoiceNoResultsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No matches'**
-  String get retPickInvoiceNoResultsTitle;
-
-  /// No description provided for @retPickInvoiceNoResultsBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Try another number or name.'**
-  String get retPickInvoiceNoResultsBody;
-
   /// No description provided for @retChangeInvoice.
   ///
   /// In en, this message translates to:
@@ -4687,12 +4423,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No cash movements yet'**
   String get cashHomeEmptyTitle;
-
-  /// No description provided for @cashHomeEmptyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Start from the quick actions below — every movement is recorded here instantly.'**
-  String get cashHomeEmptyBody;
 
   /// No description provided for @cashHomeBoxesSection.
   ///
@@ -5059,12 +4789,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remainder on account'**
   String get cashVoucherUnallocated;
-
-  /// No description provided for @cashVoucherLoadingInvoices.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading open invoices…'**
-  String get cashVoucherLoadingInvoices;
 
   /// No description provided for @cashVoucherCrossDeposit.
   ///
@@ -6176,12 +5900,6 @@ abstract class AppLocalizations {
   /// **'Could not share the file'**
   String get backupShareFailed;
 
-  /// No description provided for @backupSettingSaveFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not save the setting'**
-  String get backupSettingSaveFailed;
-
   /// No description provided for @backupRestoreDialogTitle.
   ///
   /// In en, this message translates to:
@@ -6259,12 +5977,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fingerprint (SHA-256)'**
   String get backupInspectChecksum;
-
-  /// No description provided for @backupInspectKind.
-  ///
-  /// In en, this message translates to:
-  /// **'Type'**
-  String get backupInspectKind;
 
   /// No description provided for @backupErrNotFile.
   ///
@@ -7651,12 +7363,6 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get stockSummaryEndBalance;
 
-  /// No description provided for @stockSummaryValueAtCost.
-  ///
-  /// In en, this message translates to:
-  /// **'Value at cost'**
-  String get stockSummaryValueAtCost;
-
   /// No description provided for @stockSummaryPeriodLabel.
   ///
   /// In en, this message translates to:
@@ -7764,12 +7470,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Down {pct}%'**
   String changeDown(Object pct);
-
-  /// No description provided for @changeNew.
-  ///
-  /// In en, this message translates to:
-  /// **'New'**
-  String get changeNew;
 
   /// No description provided for @movementTypePurchase.
   ///
@@ -8305,12 +8005,6 @@ abstract class AppLocalizations {
   /// **'Register item'**
   String get visFixItemsAddFab;
 
-  /// No description provided for @visFixItemsAddFabShort.
-  ///
-  /// In en, this message translates to:
-  /// **'New item'**
-  String get visFixItemsAddFabShort;
-
   /// No description provided for @tmplSectionTitle.
   ///
   /// In en, this message translates to:
@@ -8358,18 +8052,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The app\'s current template — colored band, clean table and totals card'**
   String get tmplSimpleDesc;
-
-  /// No description provided for @tmplThermalName.
-  ///
-  /// In en, this message translates to:
-  /// **'Thermal 80mm'**
-  String get tmplThermalName;
-
-  /// No description provided for @tmplThermalDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Roll receipt for thermal printers with an invoice-number barcode'**
-  String get tmplThermalDesc;
 
   /// No description provided for @tmplColorsTitle.
   ///

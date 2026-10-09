@@ -87,10 +87,36 @@ class PurchasesOriginTracker {
   String? get origin => _origin;
 }
 
+/// يتتبع آخر مسار **خارج تقرير أعمار الديون** — يغذّي زر رجوع شاشة
+/// الأعمار بوجهة «الأصل» التي دخل منها المستخدم (نمط
+/// PurchasesOriginTracker — A6/R17-b بتدقيق R16: الدخول من مركز
+/// التقارير أو من محور الأطراف كلاهما يعود لأصله بدل التصلّب على
+/// محور واحد مهما كان المدخل).
+class AgingOriginTracker {
+  String? _origin;
+
+  /// يُستدعى عند كل تغيّر للموقع — مسار التقرير نفسه ومسارات الحراسة
+  /// (قفل/إقلاع/تأسيس) لا تُسجّل وجهاً؛ جذر /reports أصل مشروع (المركز).
+  void track(String location) {
+    if (location.startsWith('/reports/aging')) return;
+    if (location == '/lock' ||
+        location == '/splash' ||
+        location == '/onboarding') {
+      return;
+    }
+    _origin = location;
+  }
+
+  /// وجهة الرجوع (null = مجهول — المتصل يقرر البديل).
+  String? get origin => _origin;
+}
+
 /// يبني الموجّه فوق متحكم الجلسة (refreshListenable = تغيّر الطور).
 GoRouter buildAppRouter(AppController controller) {
   // متتبع أصل دخول محور المشتريات (رجوع ذكي — P2-7).
   final purchasesOrigin = PurchasesOriginTracker();
+  // متتبع أصل دخول تقرير أعمار الديون (رجوع حسب الأصل — A6/R17-b).
+  final agingOrigin = AgingOriginTracker();
   final router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: controller,
@@ -260,7 +286,8 @@ GoRouter buildAppRouter(AppController controller) {
         routes: [
           GoRoute(
             path: 'aging',
-            builder: (context, state) => const AgingReportScreen(),
+            builder: (context, state) =>
+                AgingReportScreen(origin: agingOrigin.origin),
           ),
           // الأرباح والخسائر (FR-09-02) — الصيغة الملزمة عبر Posting Map.
           GoRoute(
@@ -500,9 +527,12 @@ GoRouter buildAppRouter(AppController controller) {
       ),
     ],
   );
-  // تغذية متتبع أصل المشتريات بكل تغيّر موقع (رجوع حسب الأصل — P2-7).
+  // تغذية متتبع أصل المشتريات بكل تغيّر موقع (رجوع حسب الأصل — P2-7)،
+  // ومتتبع أصل أعمار الديون كذلك (A6/R17-b).
   router.routerDelegate.addListener(() {
-    purchasesOrigin.track(router.routerDelegate.currentConfiguration.uri.path);
+    final location = router.routerDelegate.currentConfiguration.uri.path;
+    purchasesOrigin.track(location);
+    agingOrigin.track(location);
   });
   return router;
 }

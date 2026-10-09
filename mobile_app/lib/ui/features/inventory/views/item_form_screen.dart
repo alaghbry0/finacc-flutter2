@@ -18,6 +18,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/info_note.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../view_models/item_form_view_model.dart';
 import 'widgets/inventory_widgets.dart';
@@ -259,7 +261,7 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   children: [
                     if (state.editMode) ...[
-                      InfoNoteCard(
+                      InfoNote(
                         icon: Icons.info_rounded,
                         message: l10n.itemFormEditNote,
                       ),
@@ -287,7 +289,7 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                       _trackBatchesSwitch(l10n, state),
                     ],
                     const SizedBox(height: 18),
-                    InventorySectionTitle(
+                    FinSectionTitle(
                       icon: Icons.sell_rounded,
                       title: l10n.itemFormPricesSection,
                     ),

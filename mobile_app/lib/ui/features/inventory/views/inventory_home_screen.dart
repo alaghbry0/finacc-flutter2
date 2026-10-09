@@ -12,12 +12,13 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/count_badge.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/hub_hero_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../view_models/inventory_home_view_model.dart';
-import 'widgets/inventory_widgets.dart';
 
 class InventoryHomeScreen extends StatelessWidget {
   const InventoryHomeScreen({super.key, this.viewModel});
@@ -87,60 +88,22 @@ class _InventoryHomeBody extends StatelessWidget {
   }
 }
 
-/// البطاقة البطلة — هوية الوحدة مع أيقونة داخل تدرج.
+/// البطاقة البطلة — هوية الوحدة مع أيقونة داخل تدرج
+/// (HubHeroCard الموحدة — W3/R17-b: كان construct يدوياً مكرراً).
 class _HeroCard extends StatelessWidget {
   const _HeroCard();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    return FinCard(
-      accent: colors.gold,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary,
-                  Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              Icons.warehouse_rounded,
-              color: scheme.onPrimary,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.inventoryHomeHeroTitle,
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.inventoryHomeHeroSubtitle,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return HubHeroCard(
+      icon: Icons.warehouse_rounded,
+      title: l10n.inventoryHomeHeroTitle,
+      subtitle: Text(
+        l10n.inventoryHomeHeroSubtitle,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

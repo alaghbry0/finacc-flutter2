@@ -16,6 +16,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_section_title.dart';
+import '../../../core/widgets/hub_hero_card.dart';
 
 /// شاشة مركز التقارير — قائمة ثابتة من بطاقات الأقسام (لا حالة تحميل؛
 /// كل تقرير يحمّل بياناته عند فتحه).
@@ -64,90 +66,21 @@ class ReportsHubScreen extends StatelessWidget {
   }
 }
 
-/// البطاقة البطلة — هوية المركز بلمسة ذهبية.
+/// البطاقة البطلة — هوية المركز بلمسة ذهبية
+/// (HubHeroCard الموحدة — W3/R17-b: كان construct يدوياً مكرراً).
 class _HeroCard extends StatelessWidget {
   const _HeroCard();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    return FinCard(
-      accent: colors.gold,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary,
-                  Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              Icons.insights_rounded,
-              color: scheme.onPrimary,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.reportsHeroTitle,
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.reportsHeroSubtitle,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// عنوان قسم صغير بأيقونة.
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(right: 4, bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: scheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
+    return HubHeroCard(
+      icon: Icons.insights_rounded,
+      title: l10n.reportsHeroTitle,
+      subtitle: Text(
+        l10n.reportsHeroSubtitle,
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -278,9 +211,12 @@ class _FinanceSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(
-          icon: Icons.account_balance_wallet_rounded,
-          title: l10n.reportsSectionFinance,
+        Padding(
+          padding: const EdgeInsets.only(right: 4, bottom: 8),
+          child: FinSectionTitle(
+            icon: Icons.account_balance_wallet_rounded,
+            title: l10n.reportsSectionFinance,
+          ),
         ),
         FinCard(
           accent: colors.gold,
@@ -313,9 +249,12 @@ class _FlowsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(
-          icon: Icons.swap_vert_rounded,
-          title: l10n.reportsSectionFlows,
+        Padding(
+          padding: const EdgeInsets.only(right: 4, bottom: 8),
+          child: FinSectionTitle(
+            icon: Icons.swap_vert_rounded,
+            title: l10n.reportsSectionFlows,
+          ),
         ),
         FinCard(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -366,9 +305,12 @@ class _DebtsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(
-          icon: Icons.schedule_send_rounded,
-          title: l10n.reportsSectionDebts,
+        Padding(
+          padding: const EdgeInsets.only(right: 4, bottom: 8),
+          child: FinSectionTitle(
+            icon: Icons.schedule_send_rounded,
+            title: l10n.reportsSectionDebts,
+          ),
         ),
         FinCard(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -398,9 +340,12 @@ class _InventoryControlSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(
-          icon: Icons.fact_check_rounded,
-          title: l10n.reportsSectionInventory,
+        Padding(
+          padding: const EdgeInsets.only(right: 4, bottom: 8),
+          child: FinSectionTitle(
+            icon: Icons.fact_check_rounded,
+            title: l10n.reportsSectionInventory,
+          ),
         ),
         FinCard(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

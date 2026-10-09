@@ -15,8 +15,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/access_card.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/hub_hero_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
 import '../../../core/widgets/stat_tile.dart';
@@ -68,16 +70,7 @@ class _SellHomeBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.sellHomeTitle),
-        actions: [
-          IconButton(
-            tooltip: l10n.sellInvoicesTitle,
-            icon: const Icon(Icons.receipt_long_rounded),
-            onPressed: () => context.go('/sell/invoices'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(l10n.sellHomeTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
@@ -115,69 +108,31 @@ class _SellHomeBody extends StatelessWidget {
   }
 }
 
-/// البطاقة البطلة — دعوة يومية سريعة للكاشير بلمسة ذهبية.
+/// البطاقة البطلة — دعوة يومية سريعة للكاشير بلمسة ذهبية
+/// (HubHeroCard الموحدة — W3/R17-b: كان construct يدوياً مكرراً).
 class _HeroCard extends StatelessWidget {
   const _HeroCard();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
     final now = DateTime.now();
-    return FinCard(
-      accent: colors.gold,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primary,
-                  Color.lerp(scheme.primary, Colors.black, 0.25)!,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              Icons.point_of_sale_rounded,
-              color: scheme.onPrimary,
-              size: 26,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.sellHomeHeroTitle,
-                  style: Theme.of(context).textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${sellFormatDate(now)} · ${sellFormatTime(now)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontFeatures: FinText.tabularNums,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return HubHeroCard(
+      icon: Icons.point_of_sale_rounded,
+      title: l10n.sellHomeHeroTitle,
+      subtitle: Text(
+        '${sellFormatDate(now)} · ${sellFormatTime(now)}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontFeatures: FinText.tabularNums,
+        ),
       ),
     );
   }
 }
 
 /// بلاطات اليوم — المبيعات والصافي (بعملة الأساس — total_base).
+/// معلوماتية بلا تنقل (A1/R17-b): قائمة الفواتير لها بطاقة وصول واحدة.
 class _TodayStatsRow extends StatelessWidget {
   const _TodayStatsRow();
 
@@ -195,7 +150,6 @@ class _TodayStatsRow extends StatelessWidget {
             icon: Icons.trending_up_rounded,
             sign: FinSign.incoming,
             decimals: 2,
-            onTap: () => context.go('/sell/invoices'),
           ),
         ),
         const SizedBox(width: 12),
@@ -208,7 +162,6 @@ class _TodayStatsRow extends StatelessWidget {
                 ? FinSign.outgoing
                 : FinSign.neutral,
             decimals: 2,
-            onTap: () => context.go('/sell/invoices'),
           ),
         ),
       ],
@@ -317,7 +270,7 @@ class _SecondaryAccessRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _AccessCard(
+          child: AccessCard(
             icon: Icons.request_quote_rounded,
             title: l10n.sellQuotationsTitle,
             subtitle: l10n.sellQuotationsSubtitle,
@@ -327,7 +280,7 @@ class _SecondaryAccessRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _AccessCard(
+          child: AccessCard(
             icon: Icons.receipt_long_rounded,
             title: l10n.sellInvoicesTitle,
             subtitle: l10n.sellInvoicesSubtitle,
@@ -340,7 +293,9 @@ class _SecondaryAccessRow extends StatelessWidget {
   }
 }
 
-/// صف الوصول للمشتريات والمرتجعات — بوابة الوحدة الخامسة (/purchases).
+/// صف الوصول للمشتريات — بوابة الوحدة الخامسة (/purchases) وحدها
+/// (A4/R17-b): بطاقة مرتجع البيع حُذفت من محور البيع — الزر السياقي
+/// بتفاصيل الفاتورة وبطاقة محور المشتريات يكفيان (تدقيق R16 §A4).
 class _PurchasesAccessRow extends StatelessWidget {
   const _PurchasesAccessRow();
 
@@ -348,11 +303,10 @@ class _PurchasesAccessRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
     return Row(
       children: [
         Expanded(
-          child: _AccessCard(
+          child: AccessCard(
             icon: Icons.local_shipping_rounded,
             title: l10n.purHomeTitle,
             subtitle: l10n.purHubSubtitle,
@@ -360,80 +314,13 @@ class _PurchasesAccessRow extends StatelessWidget {
             onTap: () => context.go('/purchases'),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _AccessCard(
-            icon: Icons.undo_rounded,
-            title: l10n.retSaleTitle,
-            subtitle: l10n.retSaleSubtitle,
-            color: colors.gold,
-            onTap: () => context.go('/purchases/returns/sale'),
-          ),
-        ),
       ],
     );
   }
 }
 
-class _AccessCard extends StatelessWidget {
-  const _AccessCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 21, color: color),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall
-                  ?.copyWith(fontWeight: FontWeight.w800),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// آخر الفواتير — وصول سريع لقائمة فواتير المبيعات.
+/// آخر الفواتير — عرض موجز فقط (A1/R17-b): مدخل القائمة الوحيد هو
+/// بطاقة الوصول الثانوية؛ الصفوف معلوماتية بلا تنقل.
 class _RecentInvoicesCard extends StatelessWidget {
   const _RecentInvoicesCard({required this.invoices});
 
@@ -447,19 +334,9 @@ class _RecentInvoicesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.sellHomeRecentInvoices,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/sell/invoices'),
-                child: Text(l10n.commonViewAll),
-              ),
-            ],
+          Text(
+            l10n.sellHomeRecentInvoices,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
           for (final invoice in invoices.take(3))

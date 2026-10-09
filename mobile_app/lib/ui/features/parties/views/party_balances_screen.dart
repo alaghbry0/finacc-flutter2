@@ -18,6 +18,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_search_field.dart';
+import '../../../core/widgets/info_note.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../view_models/party_balances_view_model.dart';
@@ -113,9 +115,11 @@ class _PartyBalancesBodyState extends State<_PartyBalancesBody> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: _SearchField(
+            child: FinSearchField(
               controller: _searchController,
               onChanged: vm.onQueryChanged,
+              fieldKey: const Key('parties_balances_search_field'),
+              hint: l10n.partiesBalancesSearchHint,
               onCleared: () {
                 _searchController.clear();
                 vm.setQuery('');
@@ -185,7 +189,7 @@ class _PartyBalancesBodyState extends State<_PartyBalancesBody> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       children: [
-        PartiesInfoNote(
+        InfoNote(
           icon: Icons.currency_exchange_rounded,
           message: l10n.partiesNoMixNote,
         ),
@@ -364,44 +368,5 @@ class _DueRow extends StatelessWidget {
     final oldest = row.oldestOpenInvoiceDate;
     if (oldest == null) return '';
     return '${l10n.statementKindInvoice}: ${partyFormatDate(context, oldest)}';
-  }
-}
-
-/// حقل البحث — بادئة بحث ولاحقة مسح.
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.onChanged,
-    required this.onCleared,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onCleared;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        return TextField(
-          key: const Key('parties_balances_search_field'),
-          controller: controller,
-          onChanged: onChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: l10n.partiesBalancesSearchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: onCleared,
-                  ),
-          ),
-        );
-      },
-    );
   }
 }

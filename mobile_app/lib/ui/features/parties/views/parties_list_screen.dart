@@ -17,6 +17,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_return.dart';
 import '../../../core/widgets/status_chip.dart';
@@ -162,9 +163,11 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: _SearchField(
+            child: FinSearchField(
               controller: _searchController,
               onChanged: vm.onQueryChanged,
+              fieldKey: const Key('parties_search_field'),
+              hint: l10n.partiesListSearchHint,
               onCleared: () {
                 _searchController.clear();
                 unawaited(vm.setQuery(''));
@@ -305,45 +308,6 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
       SnackBar(content: Text(l10n.partiesArchiveHasMovements(row.name))),
     );
     return false;
-  }
-}
-
-/// حقل البحث — بادئة بحث ولاحقة مسح.
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.onChanged,
-    required this.onCleared,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onCleared;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        return TextField(
-          key: const Key('parties_search_field'),
-          controller: controller,
-          onChanged: onChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: l10n.partiesListSearchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: onCleared,
-                  ),
-          ),
-        );
-      },
-    );
   }
 }
 

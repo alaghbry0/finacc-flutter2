@@ -10,55 +10,10 @@ import '../../../../../domain/services/numerals.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/fin_tokens.dart';
 import '../../../../core/widgets/amount_text.dart';
-import '../../../../core/widgets/fin_card.dart';
 import '../../../../core/widgets/numerals_scope.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../view_models/party_kind.dart';
-
-/// عنوان قسم داخل شاشات الأطراف — أيقونة داخل حاوية مصبوغة + نص عريض.
-class PartiesSectionTitle extends StatelessWidget {
-  const PartiesSectionTitle({
-    super.key,
-    required this.icon,
-    required this.title,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final String title;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: scheme.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(FinRadius.chip),
-          ),
-          child: Icon(icon, size: 16, color: scheme.primary),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
-            ),
-          ),
-        ),
-        ?trailing,
-      ],
-    );
-  }
-}
 
 /// صورة الطرف — أيقونة النوع داخل دائرة مصبوغة (أو الحرف الأول للاسم).
 class PartyAvatar extends StatelessWidget {
@@ -256,79 +211,6 @@ class CurrencyCodePill extends StatelessWidget {
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// شارة عدّاد — رقم بأرقام جدولية داخل كبسولة مصبوغة.
-class PartiesCountBadge extends StatelessWidget {
-  const PartiesCountBadge({
-    super.key,
-    required this.count,
-    required this.color,
-  });
-
-  final int count;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final arabicIndic = NumeralsScope.of(context);
-    final text = arabicIndic ? Numerals.toArabicIndic('$count') : '$count';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w800,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
-    );
-  }
-}
-
-/// بطاقة ملاحظة معلوماتية خفيفة داخل شاشات الأطراف.
-class PartiesInfoNote extends StatelessWidget {
-  const PartiesInfoNote({
-    super.key,
-    required this.icon,
-    required this.message,
-    this.warning = false,
-  });
-
-  final IconData icon;
-  final String message;
-
-  /// نبرة تحذيرية بدل الذهبية.
-  final bool warning;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    return FinCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: warning ? colors.warning : colors.gold),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-        ],
       ),
     );
   }

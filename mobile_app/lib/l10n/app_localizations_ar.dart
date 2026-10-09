@@ -16,12 +16,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appBrand => 'FinAcc';
 
   @override
-  String get brandTagline => 'نظام محاسبي ومخزون متكامل — يعمل بلا إنترنت';
-
-  @override
-  String get commonNext => 'التالي';
-
-  @override
   String get commonBack => 'السابق';
 
   @override
@@ -78,12 +72,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardStepCompany => 'بيانات المنشأة';
-
-  @override
-  String get onboardStepSecurity => 'الأمان';
-
-  @override
-  String get onboardStepReview => 'جاهز';
 
   @override
   String get companyNameLabel => 'اسم المنشأة';
@@ -182,9 +170,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get startUsing => 'ابدأ الاستخدام';
 
   @override
-  String get setupFailedTitle => 'تعذّر إتمام التأسيس';
-
-  @override
   String get setupFailedBody =>
       'راجع البيانات وأعد المحاولة — لم يُكتب شيء في القاعدة.';
 
@@ -193,9 +178,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lockSubtitle => 'التطبيق مقفل لحماية بياناتك المالية';
-
-  @override
-  String get lockWrong => 'رمز غير صحيح';
 
   @override
   String lockAttemptsBeforeLock(Object count) {
@@ -256,13 +238,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get wipeDoneBody => 'الآن سيعاد فتح التطبيق على شاشة التأسيس.';
 
   @override
-  String get dashboardTitle => 'الرئيسية';
-
-  @override
   String get dashboardQuickAccess => 'الوصول السريع';
-
-  @override
-  String get dashboardQuickRates => 'الصرف';
 
   @override
   String get morningGreeting => 'صباح الخير';
@@ -284,9 +260,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get last30DaysTitle => 'مبيعات آخر 30 يوماً';
-
-  @override
-  String get chartEmptyMessage => 'ستظهر مبيعاتك هنا بعد أول فاتورة';
 
   @override
   String get stockAlertsTitle => 'تنبيهات المخزون';
@@ -323,54 +296,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tabMore => 'المزيد';
-
-  @override
-  String get comingSoonTitle => 'قادم في الشرائح التالية';
-
-  @override
-  String comingSoonBody(Object feature) {
-    return 'وحدة «$feature» تُبنى في شريحتها المخصصة بعد اعتماد المرحلة الأولى — البنية وقاعدة البيانات جاهزة لها الآن.';
-  }
-
-  @override
-  String get comingGatedBadge => 'بانتظار اعتماد المرحلة الأولى';
-
-  @override
-  String get featureSell => 'البيع والكاشير';
-
-  @override
-  String get featureInventory => 'الأصناف والمخزون والدفعات';
-
-  @override
-  String get featureCash => 'الصناديق والنقدية';
-
-  @override
-  String get featureMore => 'الأطراف والتقارير والإعدادات';
-
-  @override
-  String get comingSellH1 => 'كاشير سريع بلمسة أو اثنتين لكل صنف';
-
-  @override
-  String get comingSellH2 => 'فواتير آجلة وتقسيط دفعات كامل مع سياسات الحماية';
-
-  @override
-  String get comingInventoryH1 => 'أصناف بتكلفة المتوسط المرجّح وبطاقات باركود';
-
-  @override
-  String get comingInventoryH2 =>
-      'دفعات توريد وتاريخ صلاحية FEFO ومنع السالب المخزوني';
-
-  @override
-  String get comingCashH1 => 'حركات قبض وصرف بين صناديق متعددة';
-
-  @override
-  String get comingCashH2 => 'تسويات وحساب أرصدة نهاية اليوم بالعملات';
-
-  @override
-  String get comingMoreH1 => 'أطراف (عملاء/موردون) بحدود ائتمان محكومة';
-
-  @override
-  String get comingMoreH2 => 'تقارير وتحليلات ونسخ احتياطي مجدول';
 
   @override
   String get settingsBaseCurrency => 'العملة الأساسية';
@@ -482,9 +407,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get genericErrorTitle => 'حدث خطأ غير متوقع';
 
   @override
-  String get loadingData => 'جارٍ التحميل…';
-
-  @override
   String get settingsAutolockSheetTitle => 'مدة القفل التلقائي';
 
   @override
@@ -585,19 +507,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر تصنيفاً آخر أو أزل التصفية لعرض كل الأحداث المسجلة.';
 
   @override
-  String auditCountsAll(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count أحداث',
-      two: 'حدثان',
-      one: 'حدث واحد',
-      zero: 'لا أحداث',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get settingsLicenses => 'التراخيص المفتوحة';
 
   @override
@@ -614,9 +523,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dateSheetGregorianLabel => 'التقويم الميلادي';
-
-  @override
-  String get dateSheetWeekdayLabel => 'اليوم';
 
   @override
   String get commonAdd => 'إضافة';
@@ -715,9 +621,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get itemBatchesBadge => 'دفعات';
-
-  @override
-  String get itemsListAddTooltip => 'إضافة صنف جديد';
 
   @override
   String itemsListLoadMore(Object shown) {
@@ -895,9 +798,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get itemDetailBatchesBadge => 'دفعات FEFO';
 
   @override
-  String get itemDetailCostLabel => 'التكلفة';
-
-  @override
   String get itemDetailPricesSection => 'أسعار البيع';
 
   @override
@@ -933,9 +833,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get itemDetailBarcodeNote =>
       'الطباعة والمشاركة تُتاحان في وحدة الطباعة لاحقاً — الباركود جاهز للمسح من الشاشة.';
-
-  @override
-  String get itemDetailQrTitle => 'رمز QR للصنف';
 
   @override
   String get itemDetailEditAction => 'تعديل الصنف';
@@ -1270,15 +1167,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String importResultSnackbar(Object failed, Object inserted) {
-    return 'أُدخل $inserted وفشل $failed';
-  }
-
-  @override
-  String get importFileReadError =>
-      'تعذّر قراءة الملف — تأكد أنه ملف CSV أو Excel سليم';
-
-  @override
   String get importRestart => 'استيراد ملف آخر';
 
   @override
@@ -1346,33 +1234,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get partiesHubCustomers => 'العملاء';
 
   @override
-  String get partiesHubCustomersDesc => 'ملفات العملاء وأرصدتهم وكشوف حساباتهم';
-
-  @override
   String get partiesHubSuppliers => 'الموردون';
-
-  @override
-  String get partiesHubSuppliersDesc => 'ملفات الموردين وما عليك دفعه لهم';
 
   @override
   String get partiesHubReceivables => 'المبالغ المتبقية عند العملاء';
 
   @override
-  String get partiesHubReceivablesDesc =>
-      'المديونيات القائمة مرتّبة بأقدم فاتورة';
-
-  @override
   String get partiesHubPayables => 'المبالغ المتبقية للموردين';
 
   @override
-  String get partiesHubPayablesDesc => 'الذمم الدائنة على المنشأة بكل عملة';
-
-  @override
   String get partiesHubRates => 'أسعار الصرف اليومية';
-
-  @override
-  String get partiesHubRatesDesc =>
-      'حدّث أسعار اليوم قبل إصدار أي فاتورة بعملة غير الأساس';
 
   @override
   String get partiesFxChipComplete => 'أسعار اليوم مكتملة';
@@ -1636,9 +1507,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get partyFormSavedSupplier => 'حُفظت بيانات المورد';
 
   @override
-  String get partiesCreditLimitLabel => 'حد الائتمان';
-
-  @override
   String get partiesCreditUnlimited => 'بلا حد';
 
   @override
@@ -1648,9 +1516,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String partiesCreditLimitValue(Object amount) {
     return 'الحد $amount';
   }
-
-  @override
-  String get partyDetailInfoSection => 'بيانات الطرف';
 
   @override
   String get partyDetailBalancesSection => 'الأرصدة حسب العملة';
@@ -1739,9 +1604,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statementBalanceColumn => 'الرصيد';
 
   @override
-  String get statementAmountColumn => 'المبلغ';
-
-  @override
   String get receivablesTitle => 'المبالغ المتبقية عند العملاء';
 
   @override
@@ -1796,9 +1658,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fxRatesTitle => 'أسعار الصرف اليومية';
 
   @override
-  String get fxTodayCardTitle => 'أسعار اليوم';
-
-  @override
   String fxTodayHijriDate(Object date) {
     return 'أسعار يوم $date';
   }
@@ -1843,9 +1702,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String fxRateSaved(Object code) {
     return 'حُفظ سعر اليوم لـ $code';
   }
-
-  @override
-  String get fxHistorySection => 'آخر الأسعار';
 
   @override
   String get fxHistoryEmpty => 'لا أسعار مسجّلة لهذه العملة بعد.';
@@ -2621,12 +2477,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'المرتجع يرتبط بفاتورة أصلية مكتملة حصراً — لا مرتجع حر.';
 
   @override
-  String get retPickInvoiceNoResultsTitle => 'لا نتائج مطابقة';
-
-  @override
-  String get retPickInvoiceNoResultsBody => 'جرّب رقماً أو اسماً آخر.';
-
-  @override
   String get retChangeInvoice => 'تغيير الفاتورة';
 
   @override
@@ -2716,10 +2566,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashHomeEmptyTitle => 'لا حركات نقدية بعد';
-
-  @override
-  String get cashHomeEmptyBody =>
-      'ابدأ من أزرار الوصول السريع بالأسفل — كل حركة تُسجَّل فوراً هنا.';
 
   @override
   String get cashHomeBoxesSection => 'الصناديق';
@@ -2909,9 +2755,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashVoucherUnallocated => 'الباقي على الحساب';
-
-  @override
-  String get cashVoucherLoadingInvoices => 'تحميل الفواتير المفتوحة…';
 
   @override
   String cashVoucherCrossDeposit(Object amount, Object code) {
@@ -3517,9 +3360,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get backupShareFailed => 'تعذّرت مشاركة الملف';
 
   @override
-  String get backupSettingSaveFailed => 'تعذّر حفظ الإعداد';
-
-  @override
   String get backupRestoreDialogTitle => 'استعادة نسخة احتياطية';
 
   @override
@@ -3559,9 +3399,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backupInspectChecksum => 'البصمة (SHA-256)';
-
-  @override
-  String get backupInspectKind => 'النوع';
 
   @override
   String get backupErrNotFile =>
@@ -4419,9 +4256,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stockSummaryEndBalance => 'الرصيد';
 
   @override
-  String get stockSummaryValueAtCost => 'القيمة بالتكلفة';
-
-  @override
   String stockSummaryPeriodLabel(Object from, Object to) {
     return 'الفترة: من $from إلى $to';
   }
@@ -4497,9 +4331,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String changeDown(Object pct) {
     return 'انخفاض $pct٪';
   }
-
-  @override
-  String get changeNew => 'جديد';
 
   @override
   String get movementTypePurchase => 'شراء';
@@ -4802,9 +4633,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get visFixItemsAddFab => 'تسجيل صنف';
 
   @override
-  String get visFixItemsAddFabShort => 'صنف جديد';
-
-  @override
   String get tmplSectionTitle => 'الطباعة والفواتير';
 
   @override
@@ -4830,13 +4658,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get tmplSimpleDesc =>
       'قالب التطبيق الحالي — ترويسة ملونة وجدول أنيق وبطاقة إجماليات';
-
-  @override
-  String get tmplThermalName => 'حراري 80مم';
-
-  @override
-  String get tmplThermalDesc =>
-      'إيصال رول للطابعات الحرارية بباركود رقم الفاتورة';
 
   @override
   String get tmplColorsTitle => 'ألوان الفاتورة';

@@ -15,7 +15,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/fin_card.dart';
-import 'widgets/inventory_widgets.dart';
+import '../../../core/widgets/info_note.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../view_models/import_view_model.dart';
 
 class ImportScreen extends StatelessWidget {
@@ -200,12 +201,12 @@ class _ImportBodyState extends State<_ImportBody> {
         ),
       ),
       const SizedBox(height: 14),
-      InventorySectionTitle(
+      FinSectionTitle(
         icon: Icons.link_rounded,
         title: l10n.importMappingSection,
       ),
       const SizedBox(height: 6),
-      InfoNoteCard(
+      InfoNote(
         icon: Icons.auto_awesome_rounded,
         message: l10n.importMappingDesc,
       ),

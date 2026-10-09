@@ -20,6 +20,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/refresh_on_active.dart';
@@ -102,13 +103,9 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: l10n.itemsListAddTooltip,
-            icon: const Icon(Icons.add_rounded),
-            onPressed: () => context.go('/inventory/item-form'),
-          ),
-        ],
+        // A7/R17-b (تدقيق R16): حُذفت أيقونة إضافة AppBar — FAB.extended
+        // الموحد + Empty هما نمط الإنشاء (ثلاثة أزرار بنفس الوظيفة كانت
+        // تكراراً محلياً بشاشة واحدة).
       ),
       // نمط الإنشاء الموحد للقوائم التشغيلية (UX-2b): FAB.extended
       // كنمط قائمة الأطراف — زر إنشاء بارز دائم أسفل الشاشة.
@@ -122,9 +119,11 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: _SearchField(
+            child: FinSearchField(
               controller: _searchController,
               onChanged: vm.onQueryChanged,
+              fieldKey: const Key('items_search_field'),
+              hint: l10n.itemsListSearchHint,
               onCleared: () {
                 _searchController.clear();
                 unawaited(vm.setQuery(''));
@@ -250,45 +249,6 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// حقل البحث — بادئة بحث ولاحقة مسح.
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.onChanged,
-    required this.onCleared,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onCleared;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, _) {
-        return TextField(
-          key: const Key('items_search_field'),
-          controller: controller,
-          onChanged: onChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: l10n.itemsListSearchHint,
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: value.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                    onPressed: onCleared,
-                  ),
-          ),
-        );
-      },
     );
   }
 }

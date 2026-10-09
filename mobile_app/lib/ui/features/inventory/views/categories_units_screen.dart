@@ -13,10 +13,10 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../view_models/categories_units_view_model.dart';
-import 'widgets/inventory_widgets.dart';
 
 class CategoriesUnitsScreen extends StatelessWidget {
   const CategoriesUnitsScreen({super.key, this.viewModel});
@@ -72,7 +72,7 @@ class _CategoriesUnitsBody extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: InventorySectionTitle(
+                  child: FinSectionTitle(
                     icon: Icons.category_rounded,
                     title: l10n.categoriesSectionTitle,
                   ),
@@ -92,7 +92,7 @@ class _CategoriesUnitsBody extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: InventorySectionTitle(
+                  child: FinSectionTitle(
                     icon: Icons.straighten_rounded,
                     title: l10n.unitsSectionTitle,
                   ),
