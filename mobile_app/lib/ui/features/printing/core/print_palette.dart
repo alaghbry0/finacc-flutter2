@@ -58,4 +58,19 @@ abstract final class PrintText {
     pw.PdfColor color = PrintPalette.ink,
     double size = 20,
   }) => pw.TextStyle(font: PrintFonts.extraBold, color: color, fontSize: size);
+
+  /// مبلغ بأرقام جدولية (UX-2b — DS-18n): الخط المرافق NotoSansArabic
+  /// بأرقام متساوية العرض افتراضياً، فتستقيم أعمدة المبالغ في الجداول
+  /// والمجاميع على الورق (Almarai تناسبية فكانت الأعمدة ترتجّ).
+  static pw.TextStyle tabular({
+    pw.PdfColor color = PrintPalette.ink,
+    double size = 9.5,
+  }) => pw.TextStyle(font: PrintFonts.tabular, color: color, fontSize: size);
+
+  /// مبلغ جدولي عريض (صف الإجمالي النهائي/المجاميع البارزة).
+  static pw.TextStyle tabularHead({
+    pw.PdfColor color = PrintPalette.ink,
+    double size = 11,
+  }) =>
+      pw.TextStyle(font: PrintFonts.tabularBold, color: color, fontSize: size);
 }

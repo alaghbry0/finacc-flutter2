@@ -8298,6 +8298,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pre-v1.0.0 — Wave 2'**
   String get settings2AboutPhase;
+
+  /// No description provided for @visFixItemsAddFab.
+  ///
+  /// In en, this message translates to:
+  /// **'Register item'**
+  String get visFixItemsAddFab;
+
+  /// No description provided for @visFixItemsAddFabShort.
+  ///
+  /// In en, this message translates to:
+  /// **'New item'**
+  String get visFixItemsAddFabShort;
 }
 
 class _AppLocalizationsDelegate

@@ -27,6 +27,8 @@ import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -85,7 +87,13 @@ class _DashboardBody extends StatelessWidget {
           onRefresh: () => vm.load(),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            // قاع القوائم الموحد 32 (UX-2b — كان 28 شاذاً بين 28/32/96).
+            padding: const EdgeInsets.fromLTRB(
+              FinSpacing.xl,
+              16,
+              FinSpacing.xl,
+              FinSpacing.bottom,
+            ),
             children: [
               _StaggeredEntrance(
                 index: 0,
@@ -676,7 +684,9 @@ class _TopItemRow extends StatelessWidget {
                     rankText,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: medalColor,
-                      fontWeight: FontWeight.w900,
+                      // w900 غير متوفر في Almarai (300/400/700/800) —
+                      // أقرب وزن متاح هو 800 (UX-2b).
+                      fontWeight: FontWeight.w800,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
@@ -759,8 +769,9 @@ class _StaggeredEntrance extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: 420 + index * 90),
-      curve: Curves.easeOutCubic,
+      // الدخول المتدرج: المدة الموحدة 420ms + تأخير index*90 (UX-2b).
+      duration: FinMotion.standard + Duration(milliseconds: index * 90),
+      curve: FinMotion.curve,
       builder: (context, t, child) {
         return Opacity(
           opacity: t.clamp(0.0, 1.0),
@@ -836,7 +847,8 @@ class _BackupReminderBanner extends StatelessWidget {
               message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: scheme.onSurface,
-                fontWeight: FontWeight.w600,
+                // w600 غير متوفر في Almarai — التصحيح إلى w700 (UX-2b).
+                fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -955,9 +967,13 @@ class _LastUpdatedChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             DateFormat('HH:mm').format(at),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            // وقت حي يتحدث مع كل تحديث — أرقام جدولية حقيقية عبر الخط
+            // المرافق (UX-2b): شارة «آخر تحديث» لا ترتجّ عند تغير الدقائق.
+            style: FinText.withTabularDigits(
+              Theme.of(context).textTheme.labelSmall!.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ],

@@ -13,6 +13,7 @@ import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/confirm_word_dialog.dart';
 import '../../../core/widgets/numerals_scope.dart';
@@ -303,8 +304,10 @@ class _CountdownBadge extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               '$minutes:$seconds',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontFeatures: const [FontFeature.tabularFigures()],
+              style: FinText.withTabularDigits(
+                Theme.of(context).textTheme.titleSmall!.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ],
@@ -356,11 +359,13 @@ class _LockClockState extends State<_LockClock> {
         children: [
           Text(
             num(time),
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              color: scheme.onSurface,
-              letterSpacing: 1.2,
+            style: FinText.withTabularDigits(
+              Theme.of(context).textTheme.displaySmall!.copyWith(
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: scheme.onSurface,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -374,10 +379,12 @@ class _LockClockState extends State<_LockClock> {
             ),
             child: Text(
               num(hijri),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.gold,
-                fontWeight: FontWeight.w700,
-                fontFeatures: const [FontFeature.tabularFigures()],
+              style: FinText.withTabularDigits(
+                Theme.of(context).textTheme.labelSmall!.copyWith(
+                  color: colors.gold,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ),

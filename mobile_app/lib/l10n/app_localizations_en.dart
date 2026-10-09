@@ -4778,4 +4778,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings2AboutPhase => 'Pre-v1.0.0 — Wave 2';
+
+  @override
+  String get visFixItemsAddFab => 'Register item';
+
+  @override
+  String get visFixItemsAddFabShort => 'New item';
 }

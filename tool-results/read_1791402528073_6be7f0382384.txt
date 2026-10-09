@@ -1,0 +1,988 @@
+     1→/// شاشتا تفاصيل الطرف — العميل والمورد (دليل 06/… و05/05): بطاقة
+     2→/// البيانات وشارات حد الائتمان والأرشفة، توزيع الرصيد **لكل عملة على
+     3→/// حدة**، وكشف الحساب (FR-03-04) بعملة وفترة ورصيد رأسي متحرك في
+     4→/// خط زمني بأيقونات دلالية لكل قيد.
+     5→library;
+     6→
+     7→import 'dart:async';
+     8→
+     9→import 'package:flutter/material.dart';
+    10→import 'package:go_router/go_router.dart';
+    11→import 'package:provider/provider.dart';
+    12→
+    13→import '../../../../domain/models/party.dart';
+    14→import '../../../../l10n/app_localizations.dart';
+    15→import '../../../core/session/app_controller.dart';
+    16→import '../../../core/theme/app_colors.dart';
+    17→import '../../../core/theme/app_typography.dart';
+    18→import '../../../core/widgets/amount_text.dart';
+    19→import '../../../core/widgets/empty_state.dart';
+    20→import '../../../core/widgets/error_state.dart';
+    21→import '../../../core/widgets/fin_card.dart';
+    22→import '../../../core/widgets/loading_state.dart';
+    23→import '../../../core/widgets/status_chip.dart';
+    24→import '../view_models/party_detail_view_model.dart';
+    25→import '../view_models/party_kind.dart';
+    26→import '../view_models/party_lookup.dart';
+    27→import '../view_models/party_repo_gate.dart';
+    28→import 'widgets/parties_widgets.dart';
+    29→import '../../../core/widgets/refresh_on_return.dart';
+    30→
+    31→/// شاشة تفاصيل العميل.
+    32→class CustomerDetailScreen extends StatelessWidget {
+    33→  const CustomerDetailScreen({super.key, this.viewModel, this.customerId});
+    34→
+    35→  /// Seam اختبار: نموذج محمّل مسبقاً.
+    36→  final PartyDetailViewModel? viewModel;
+    37→
+    38→  /// معرّف العميل.
+    39→  final int? customerId;
+    40→
+    41→  @override
+    42→  Widget build(BuildContext context) {
+    43→    final app = context.read<AppController>();
+    44→    late final PartyDetailViewModel vm;
+    45→    if (viewModel != null) {
+    46→      vm = viewModel!;
+    47→    } else {
+    48→      vm = PartyDetailViewModel(
+    49→        gate: CustomerRepoGate(app.customers!),
+    50→        companyRepo: app.companies!,
+    51→        partyLookup: PartyLookup(app.database!.db),
+    52→        partyKind: PartyKind.customer,
+    53→        id: customerId ?? -1,
+    54→      );
+    55→      unawaited(vm.load());
+    56→    }
+    57→    return ChangeNotifierProvider<PartyDetailViewModel>.value(
+    58→      value: vm,
+    59→      // تحديث التفاصيل عند العودة من مسار التعديل الفرعي (:id/edit).
+    60→      child: RefreshOnReturn(
+    61→        onReappear: vm.load,
+    62→        child: const _PartyDetailBody(),
+    63→      ),
+    64→    );
+    65→  }
+    66→}
+    67→
+    68→/// شاشة تفاصيل المورد (دليل 05/05 — كشف الحساب والتقرير).
+    69→class SupplierDetailScreen extends StatelessWidget {
+    70→  const SupplierDetailScreen({super.key, this.viewModel, this.supplierId});
+    71→
+    72→  /// Seam اختبار: نموذج محمّل مسبقاً.
+    73→  final PartyDetailViewModel? viewModel;
+    74→
+    75→  /// معرّف المورد.
+    76→  final int? supplierId;
+    77→
+    78→  @override
+    79→  Widget build(BuildContext context) {
+    80→    final app = context.read<AppController>();
+    81→    late final PartyDetailViewModel vm;
+    82→    if (viewModel != null) {
+    83→      vm = viewModel!;
+    84→    } else {
+    85→      vm = PartyDetailViewModel(
+    86→        gate: SupplierRepoGate(app.suppliers!),
+    87→        companyRepo: app.companies!,
+    88→        partyLookup: PartyLookup(app.database!.db),
+    89→        partyKind: PartyKind.supplier,
+    90→        id: supplierId ?? -1,
+    91→      );
+    92→      unawaited(vm.load());
+    93→    }
+    94→    return ChangeNotifierProvider<PartyDetailViewModel>.value(
+    95→      value: vm,
+    96→      child: RefreshOnReturn(
+    97→        onReappear: vm.load,
+    98→        child: const _PartyDetailBody(),
+    99→      ),
+   100→    );
+   101→  }
+   102→}
+   103→
+   104→class _PartyDetailBody extends StatelessWidget {
+   105→  const _PartyDetailBody();
+   106→
+   107→  @override
+   108→  Widget build(BuildContext context) {
+   109→    final vm = context.watch<PartyDetailViewModel>();
+   110→    final l10n = AppLocalizations.of(context)!;
+   111→    final state = vm.state;
+   112→    final record = state.record;
+   113→
+   114→    return Scaffold(
+   115→      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+   116→      appBar: AppBar(
+   117→        title: Text(record?.name ?? ''),
+   118→        actions: [
+   119→          // تعديل الطرف — يفتح النموذج بنفس المعرّف (مسار :id/edit).
+   120→          IconButton(
+   121→            tooltip: l10n.partyDetailEditAction,
+   122→            icon: const Icon(Icons.edit_outlined),
+   123→            onPressed: record == null
+   124→                ? null
+   125→                : () => context.go(
+   126→                    state.kind.isCustomer
+   127→                        ? '/parties/customers/${state.partyId}/edit'
+   128→                        : '/parties/suppliers/${state.partyId}/edit',
+   129→                  ),
+   130→          ),
+   131→        ],
+   132→      ),
+   133→      body: state.loading
+   134→          ? ListView(
+   135→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   136→              children: const [ListSkeleton(rows: 6)],
+   137→            )
+   138→          : state.error != null
+   139→          ? ListView(
+   140→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   141→              children: [
+   142→                ErrorState(
+   143→                  title: l10n.genericErrorTitle,
+   144→                  message: l10n.dbOpenErrorMessage,
+   145→                  technicalDetails: state.error.toString(),
+   146→                  retryLabel: l10n.commonRetry,
+   147→                  onRetry: vm.load,
+   148→                  compact: true,
+   149→                ),
+   150→              ],
+   151→            )
+   152→          : state.notFound
+   153→          ? ListView(
+   154→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   155→              children: [
+   156→                EmptyState(
+   157→                  icon: Icons.person_off_rounded,
+   158→                  title: l10n.partyDetailNotFoundTitle,
+   159→                  message: l10n.partyDetailNotFoundBody,
+   160→                  compact: true,
+   161→                ),
+   162→              ],
+   163→            )
+   164→          : ListView(
+   165→              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+   166→              children: [
+   167→                if (record!.archived) ...[
+   168→                  PartiesInfoNote(
+   169→                    icon: Icons.archive_rounded,
+   170→                    message: l10n.partyDetailArchivedBanner,
+   171→                    warning: true,
+   172→                  ),
+   173→                  const SizedBox(height: 14),
+   174→                ],
+   175→                _InfoCard(state: state),
+   176→                const SizedBox(height: 18),
+   177→                PartiesSectionTitle(
+   178→                  icon: Icons.account_balance_wallet_rounded,
+   179→                  title: l10n.partyDetailBalancesSection,
+   180→                ),
+   181→                const SizedBox(height: 8),
+   182→                _BalancesCard(state: state),
+   183→                const SizedBox(height: 18),
+   184→                PartiesSectionTitle(
+   185→                  icon: Icons.receipt_long_rounded,
+   186→                  title: l10n.partyDetailStatementSection,
+   187→                ),
+   188→                const SizedBox(height: 8),
+   189→                _StatementCard(state: state),
+   190→              ],
+   191→            ),
+   192→    );
+   193→  }
+   194→}
+   195→
+   196→/// بطاقة البيانات — الاسم والهواتف والعنوان وحد الائتمان والافتتاحي.
+   197→class _InfoCard extends StatelessWidget {
+   198→  const _InfoCard({required this.state});
+   199→
+   200→  final PartyDetailState state;
+   201→
+   202→  @override
+   203→  Widget build(BuildContext context) {
+   204→    final l10n = AppLocalizations.of(context)!;
+   205→    final scheme = Theme.of(context).colorScheme;
+   206→    final record = state.record!;
+   207→    final isCustomer = state.kind == PartyKind.customer;
+   208→
+   209→    return FinCard(
+   210→      child: Column(
+   211→        crossAxisAlignment: CrossAxisAlignment.start,
+   212→        children: [
+   213→          Row(
+   214→            crossAxisAlignment: CrossAxisAlignment.start,
+   215→            children: [
+   216→              PartyAvatar(kind: state.kind, name: record.name, size: 48),
+   217→              const SizedBox(width: 12),
+   218→              Expanded(
+   219→                child: Column(
+   220→                  crossAxisAlignment: CrossAxisAlignment.start,
+   221→                  children: [
+   222→                    Text(
+   223→                      record.name,
+   224→                      style: Theme.of(context).textTheme.titleLarge
+   225→                          ?.copyWith(fontWeight: FontWeight.w800),
+   226→                    ),
+   227→                    const SizedBox(height: 6),
+   228→                    Wrap(
+   229→                      spacing: 6,
+   230→                      runSpacing: 4,
+   231→                      children: [
+   232→                        if (isCustomer)
+   233→                          CreditLimitChip(creditLimit: record.creditLimit),
+   234→                        if (record.archived)
+   235→                          StatusChip(
+   236→                            label: l10n.partiesArchivedBadge,
+   237→                            tone: ChipTone.neutral,
+   238→                            icon: Icons.archive_rounded,
+   239→                            dense: true,
+   240→                          ),
+   241→                      ],
+   242→                    ),
+   243→                  ],
+   244→                ),
+   245→              ),
+   246→            ],
+   247→          ),
+   248→          const SizedBox(height: 12),
+   249→          _InfoRow(
+   250→            icon: Icons.call_rounded,
+   251→            label: l10n.partyFormPhoneLabel,
+   252→            child: (record.phone ?? '').isNotEmpty
+   253→                ? PartyPhoneText(record.phone!)
+   254→                : Text(
+   255→                    l10n.partiesNoPhone,
+   256→                    style: Theme.of(context).textTheme.bodySmall
+   257→                        ?.copyWith(color: scheme.onSurfaceVariant),
+   258→                  ),
+   259→          ),
+   260→          if (isCustomer && (record.whatsapp ?? '').isNotEmpty) ...[
+   261→            const SizedBox(height: 8),
+   262→            _InfoRow(
+   263→              icon: Icons.chat_rounded,
+   264→              label: l10n.partyFormWhatsappLabel,
+   265→              child: PartyPhoneText(record.whatsapp!),
+   266→            ),
+   267→          ],
+   268→          if ((record.address ?? '').isNotEmpty) ...[
+   269→            const SizedBox(height: 8),
+   270→            _InfoRow(
+   271→              icon: Icons.location_on_rounded,
+   272→              label: l10n.partyFormAddressLabel,
+   273→              child: Expanded(
+   274→                child: Text(
+   275→                  record.address!,
+   276→                  style: Theme.of(context).textTheme.bodySmall,
+   277→                ),
+   278→              ),
+   279→            ),
+   280→          ],
+   281→          if (isCustomer && (record.area ?? '').isNotEmpty) ...[
+   282→            const SizedBox(height: 8),
+   283→            _InfoRow(
+   284→              icon: Icons.map_rounded,
+   285→              label: l10n.partyFormAreaLabel,
+   286→              child: Text(
+   287→                record.area!,
+   288→                style: Theme.of(context).textTheme.bodySmall,
+   289→              ),
+   290→            ),
+   291→          ],
+   292→          if (record.openingBalance != 0) ...[
+   293→            const SizedBox(height: 8),
+   294→            _InfoRow(
+   295→              icon: Icons.savings_rounded,
+   296→              label: l10n.statementKindOpening,
+   297→              child: Expanded(
+   298→                child: Text(
+   299→                  l10n.partyDetailOpeningRow(
+   300→                    partyFormatDate(context, record.openingDate),
+   301→                  ),
+   302→                  style: Theme.of(context).textTheme.bodySmall,
+   303→                ),
+   304→              ),
+   305→            ),
+   306→          ],
+   307→          if ((record.notes ?? '').isNotEmpty) ...[
+   308→            const SizedBox(height: 8),
+   309→            _InfoRow(
+   310→              icon: Icons.sticky_note_2_rounded,
+   311→              label: l10n.partyDetailNotesLabel,
+   312→              child: Expanded(
+   313→                child: Text(
+   314→                  record.notes!,
+   315→                  style: Theme.of(context).textTheme.bodySmall,
+   316→                ),
+   317→              ),
+   318→            ),
+   319→          ],
+   320→        ],
+   321→      ),
+   322→    );
+   323→  }
+   324→}
+   325→
+   326→/// سطر معلومة — أيقونة + تسمية + قيمة.
+   327→class _InfoRow extends StatelessWidget {
+   328→  const _InfoRow({
+   329→    required this.icon,
+   330→    required this.label,
+   331→    required this.child,
+   332→  });
+   333→
+   334→  final IconData icon;
+   335→  final String label;
+   336→  final Widget child;
+   337→
+   338→  @override
+   339→  Widget build(BuildContext context) {
+   340→    final scheme = Theme.of(context).colorScheme;
+   341→    return Row(
+   342→      crossAxisAlignment: CrossAxisAlignment.start,
+   343→      children: [
+   344→        Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+   345→        const SizedBox(width: 8),
+   346→        SizedBox(
+   347→          width: 86,
+   348→          child: Text(
+   349→            label,
+   350→            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   351→              color: scheme.onSurfaceVariant,
+   352→              fontWeight: FontWeight.w700,
+   353→            ),
+   354→          ),
+   355→        ),
+   356→        const SizedBox(width: 8),
+   357→        if (child is Expanded) child else Expanded(child: child),
+   358→      ],
+   359→    );
+   360→  }
+   361→}
+   362→
+   363→/// بطاقة الأرصدة — سطر لكل عملة (قد تكون واحدة صفرياً)؛ النقر على سطر
+   364→/// يختار عملة الكشف.
+   365→class _BalancesCard extends StatelessWidget {
+   366→  const _BalancesCard({required this.state});
+   367→
+   368→  final PartyDetailState state;
+   369→
+   370→  @override
+   371→  Widget build(BuildContext context) {
+   372→    final l10n = AppLocalizations.of(context)!;
+   373→    final scheme = Theme.of(context).colorScheme;
+   374→    if (state.balances.isEmpty) {
+   375→      return FinCard(
+   376→        child: Text(
+   377→          l10n.partyDetailBalancesEmpty,
+   378→          style: Theme.of(context).textTheme.bodySmall
+   379→              ?.copyWith(color: scheme.onSurfaceVariant),
+   380→        ),
+   381→      );
+   382→    }
+   383→    return FinCard(
+   384→      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+   385→      child: Column(
+   386→        children: [
+   387→          for (var i = 0; i < state.balances.length; i++) ...[
+   388→            if (i > 0)
+   389→              Divider(
+   390→                height: 1,
+   391→                color: scheme.outlineVariant.withValues(alpha: 0.4),
+   392→              ),
+   393→            _BalanceRow(
+   394→              row: state.balances[i],
+   395→              selected:
+   396→                  _currencyIdOfCode(state, state.balances[i].currencyCode) ==
+   397→                  state.statementCurrencyId,
+   398→              decimals: state.decimalsFor(state.balances[i].currencyCode),
+   399→              onTap: () => _selectCurrency(
+   400→                context,
+   401→                _currencyIdOfCode(state, state.balances[i].currencyCode),
+   402→              ),
+   403→            ),
+   404→          ],
+   405→        ],
+   406→      ),
+   407→    );
+   408→  }
+   409→
+   410→  static int? _currencyIdOfCode(PartyDetailState state, String code) {
+   411→    for (final currency in state.currencies) {
+   412→      if (currency.code == code) return currency.id;
+   413→    }
+   414→    return null;
+   415→  }
+   416→
+   417→  static void _selectCurrency(BuildContext context, int? currencyId) {
+   418→    final vm = context.read<PartyDetailViewModel>();
+   419→    if (currencyId != null) {
+   420→      unawaited(vm.setStatementCurrency(currencyId));
+   421→    }
+   422→  }
+   423→}
+   424→
+   425→/// سطر رصيد بعملة واحدة — النقر يجعلها عملة الكشف.
+   426→class _BalanceRow extends StatelessWidget {
+   427→  const _BalanceRow({
+   428→    required this.row,
+   429→    required this.selected,
+   430→    required this.decimals,
+   431→    required this.onTap,
+   432→  });
+   433→
+   434→  final PartyBalance row;
+   435→  final bool selected;
+   436→  final int decimals;
+   437→  final VoidCallback onTap;
+   438→
+   439→  @override
+   440→  Widget build(BuildContext context) {
+   441→    final scheme = Theme.of(context).colorScheme;
+   442→    final colors = FinColors.of(context);
+   443→    return InkWell(
+   444→      onTap: onTap,
+   445→      borderRadius: BorderRadius.circular(10),
+   446→      child: Container(
+   447→        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+   448→        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+   449→        decoration: BoxDecoration(
+   450→          color: selected
+   451→              ? scheme.primaryContainer.withValues(alpha: 0.30)
+   452→              : Colors.transparent,
+   453→          borderRadius: BorderRadius.circular(10),
+   454→          border: selected
+   455→              ? Border.all(color: scheme.primary.withValues(alpha: 0.5))
+   456→              : null,
+   457→        ),
+   458→        child: Row(
+   459→          children: [
+   460→            CurrencyCodePill(code: row.currencyCode),
+   461→            const SizedBox(width: 10),
+   462→            Expanded(
+   463→              child: Text(
+   464→                partyFormatDate(context, row.lastPaymentDate),
+   465→                style: Theme.of(context).textTheme.labelSmall
+   466→                    ?.copyWith(color: scheme.onSurfaceVariant),
+   467→                maxLines: 1,
+   468→                overflow: TextOverflow.ellipsis,
+   469→              ),
+   470→            ),
+   471→            PartyBalanceText(balance: row.balance, decimals: decimals),
+   472→            if (selected) ...[
+   473→              const SizedBox(width: 6),
+   474→              Icon(Icons.check_circle_rounded, size: 16, color: colors.gold),
+   475→            ],
+   476→          ],
+   477→        ),
+   478→      ),
+   479→    );
+   480→  }
+   481→}
+   482→
+   483→/// بطاقة كشف الحساب — عناصر التحكم بالعملة والفترة + الرصيد النهائي +
+   484→/// الخط الزمني للقيود برصيد رأسي متحرك.
+   485→class _StatementCard extends StatelessWidget {
+   486→  const _StatementCard({required this.state});
+   487→
+   488→  final PartyDetailState state;
+   489→
+   490→  @override
+   491→  Widget build(BuildContext context) {
+   492→    final l10n = AppLocalizations.of(context)!;
+   493→    final vm = context.read<PartyDetailViewModel>();
+   494→    return FinCard(
+   495→      child: Column(
+   496→        crossAxisAlignment: CrossAxisAlignment.start,
+   497→        children: [
+   498→          DropdownButtonFormField<int>(
+   499→            key: const Key('party_detail_currency'),
+   500→            initialValue: state.statementCurrencyId,
+   501→            onChanged: (value) {
+   502→              if (value != null) unawaited(vm.setStatementCurrency(value));
+   503→            },
+   504→            decoration: InputDecoration(
+   505→              labelText: l10n.partyDetailStatementCurrency,
+   506→              prefixIcon: const Icon(Icons.currency_exchange_rounded),
+   507→            ),
+   508→            items: [
+   509→              for (final currency in state.currencies)
+   510→                DropdownMenuItem<int>(
+   511→                  value: currency.id,
+   512→                  child: Text('${currency.name} (${currency.code})'),
+   513→                ),
+   514→            ],
+   515→          ),
+   516→          const SizedBox(height: 12),
+   517→          _PeriodControls(state: state),
+   518→          const SizedBox(height: 14),
+   519→          if (state.loadingStatement)
+   520→            const Center(
+   521→              child: Padding(
+   522→                padding: EdgeInsets.all(12),
+   523→                child: CircularProgressIndicator(strokeWidth: 2),
+   524→              ),
+   525→            )
+   526→          else
+   527→            _StatementBody(state: state),
+   528→        ],
+   529→      ),
+   530→    );
+   531→  }
+   532→}
+   533→
+   534→/// أدوات الفترة — من/إلى + رقائق سريعة (الكل/هذا الشهر/هذه السنة).
+   535→class _PeriodControls extends StatelessWidget {
+   536→  const _PeriodControls({required this.state});
+   537→
+   538→  final PartyDetailState state;
+   539→
+   540→  @override
+   541→  Widget build(BuildContext context) {
+   542→    final l10n = AppLocalizations.of(context)!;
+   543→    final vm = context.read<PartyDetailViewModel>();
+   544→    final now = DateTime.now();
+   545→    final thisMonth = DateTime(now.year, now.month, 1);
+   546→    final thisYear = DateTime(now.year, 1, 1);
+   547→
+   548→    return Column(
+   549→      crossAxisAlignment: CrossAxisAlignment.start,
+   550→      children: [
+   551→        Row(
+   552→          children: [
+   553→            Expanded(
+   554→              child: _DateChip(
+   555→                key: const Key('party_detail_from_date'),
+   556→                icon: Icons.event_rounded,
+   557→                label: l10n.partyDetailStatementFrom,
+   558→                text: state.from == null
+   559→                    ? l10n.partyDetailPeriodAll
+   560→                    : partyFormatDate(context, state.from),
+   561→                onTap: () => unawaited(_pickFrom(context, vm)),
+   562→              ),
+   563→            ),
+   564→            const SizedBox(width: 8),
+   565→            Expanded(
+   566→              child: _DateChip(
+   567→                key: const Key('party_detail_to_date'),
+   568→                icon: Icons.event_available_rounded,
+   569→                label: l10n.partyDetailStatementTo,
+   570→                text: partyFormatDate(context, state.to),
+   571→                onTap: () => unawaited(_pickTo(context, vm)),
+   572→              ),
+   573→            ),
+   574→          ],
+   575→        ),
+   576→        const SizedBox(height: 8),
+   577→        SizedBox(
+   578→          height: 34,
+   579→          child: ListView(
+   580→            scrollDirection: Axis.horizontal,
+   581→            clipBehavior: Clip.none,
+   582→            children: [
+   583→              _QuickChip(
+   584→                label: l10n.partyDetailPeriodAll,
+   585→                selected: state.from == null,
+   586→                onTap: () => unawaited(vm.clearPeriod()),
+   587→              ),
+   588→              const SizedBox(width: 8),
+   589→              _QuickChip(
+   590→                label: l10n.partyDetailPeriodThisMonth,
+   591→                selected: _sameDay(state.from, thisMonth),
+   592→                onTap: () => unawaited(vm.setFrom(thisMonth)),
+   593→              ),
+   594→              const SizedBox(width: 8),
+   595→              _QuickChip(
+   596→                label: l10n.partyDetailPeriodThisYear,
+   597→                selected: _sameDay(state.from, thisYear),
+   598→                onTap: () => unawaited(vm.setFrom(thisYear)),
+   599→              ),
+   600→            ],
+   601→          ),
+   602→        ),
+   603→      ],
+   604→    );
+   605→  }
+   606→
+   607→  static bool _sameDay(DateTime? a, DateTime b) =>
+   608→      a != null && a.year == b.year && a.month == b.month && a.day == b.day;
+   609→
+   610→  static Future<void> _pickFrom(
+   611→    BuildContext context,
+   612→    PartyDetailViewModel vm,
+   613→  ) async {
+   614→    final picked = await showDatePicker(
+   615→      context: context,
+   616→      initialDate: vm.state.from ?? DateTime.now(),
+   617→      firstDate: DateTime(2000),
+   618→      lastDate: DateTime.now().add(const Duration(days: 1)),
+   619→    );
+   620→    if (picked != null) {
+   621→      await vm.setFrom(DateTime(picked.year, picked.month, picked.day));
+   622→    }
+   623→  }
+   624→
+   625→  static Future<void> _pickTo(
+   626→    BuildContext context,
+   627→    PartyDetailViewModel vm,
+   628→  ) async {
+   629→    final picked = await showDatePicker(
+   630→      context: context,
+   631→      initialDate: vm.state.to ?? DateTime.now(),
+   632→      firstDate: DateTime(2000),
+   633→      lastDate: DateTime.now().add(const Duration(days: 1)),
+   634→    );
+   635→    if (picked != null) {
+   636→      await vm.setTo(DateTime(picked.year, picked.month, picked.day));
+   637→    }
+   638→  }
+   639→}
+   640→
+   641→/// رقاقة تاريخ (من/إلى) — تفتح المنتقي.
+   642→class _DateChip extends StatelessWidget {
+   643→  const _DateChip({
+   644→    super.key,
+   645→    required this.icon,
+   646→    required this.label,
+   647→    required this.text,
+   648→    required this.onTap,
+   649→  });
+   650→
+   651→  final IconData icon;
+   652→  final String label;
+   653→  final String text;
+   654→  final VoidCallback onTap;
+   655→
+   656→  @override
+   657→  Widget build(BuildContext context) {
+   658→    final scheme = Theme.of(context).colorScheme;
+   659→    return InkWell(
+   660→      onTap: onTap,
+   661→      borderRadius: BorderRadius.circular(10),
+   662→      child: Container(
+   663→        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+   664→        decoration: BoxDecoration(
+   665→          color: scheme.surfaceContainerLow,
+   666→          borderRadius: BorderRadius.circular(10),
+   667→          border: Border.all(
+   668→            color: scheme.outlineVariant.withValues(alpha: 0.5),
+   669→          ),
+   670→        ),
+   671→        child: Row(
+   672→          children: [
+   673→            Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+   674→            const SizedBox(width: 6),
+   675→            Expanded(
+   676→              child: Column(
+   677→                crossAxisAlignment: CrossAxisAlignment.start,
+   678→                mainAxisSize: MainAxisSize.min,
+   679→                children: [
+   680→                  Text(
+   681→                    label,
+   682→                    style: Theme.of(context).textTheme.labelSmall
+   683→                        ?.copyWith(color: scheme.onSurfaceVariant),
+   684→                  ),
+   685→                  Text(
+   686→                    text,
+   687→                    style: Theme.of(context).textTheme.labelMedium
+   688→                        ?.copyWith(fontWeight: FontWeight.w700),
+   689→                    maxLines: 1,
+   690→                    overflow: TextOverflow.ellipsis,
+   691→                  ),
+   692→                ],
+   693→              ),
+   694→            ),
+   695→          ],
+   696→        ),
+   697→      ),
+   698→    );
+   699→  }
+   700→}
+   701→
+   702→/// رقاقة فترة سريعة.
+   703→class _QuickChip extends StatelessWidget {
+   704→  const _QuickChip({
+   705→    required this.label,
+   706→    required this.selected,
+   707→    required this.onTap,
+   708→  });
+   709→
+   710→  final String label;
+   711→  final bool selected;
+   712→  final VoidCallback onTap;
+   713→
+   714→  @override
+   715→  Widget build(BuildContext context) {
+   716→    final scheme = Theme.of(context).colorScheme;
+   717→    return InkWell(
+   718→      onTap: onTap,
+   719→      borderRadius: BorderRadius.circular(10),
+   720→      child: AnimatedContainer(
+   721→        duration: const Duration(milliseconds: 200),
+   722→        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+   723→        decoration: BoxDecoration(
+   724→          color: selected
+   725→              ? scheme.primary.withValues(alpha: 0.14)
+   726→              : scheme.surfaceContainerLow,
+   727→          borderRadius: BorderRadius.circular(10),
+   728→          border: Border.all(
+   729→            color: selected
+   730→                ? scheme.primary.withValues(alpha: 0.55)
+   731→                : scheme.outlineVariant.withValues(alpha: 0.5),
+   732→          ),
+   733→        ),
+   734→        child: Text(
+   735→          label,
+   736→          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+   737→            color: selected ? scheme.primary : scheme.onSurface,
+   738→            fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+   739→          ),
+   740→        ),
+   741→      ),
+   742→    );
+   743→  }
+   744→}
+   745→
+   746→/// جسم الكشف — الرصيد النهائي + «رصيد ماضٍ» + الخط الزمني للقيود.
+   747→class _StatementBody extends StatelessWidget {
+   748→  const _StatementBody({required this.state});
+   749→
+   750→  final PartyDetailState state;
+   751→
+   752→  @override
+   753→  Widget build(BuildContext context) {
+   754→    final l10n = AppLocalizations.of(context)!;
+   755→    final statement = state.statement;
+   756→    if (statement == null) {
+   757→      return Text(
+   758→        l10n.partyDetailNoEntries,
+   759→        style: Theme.of(context).textTheme.bodySmall,
+   760→      );
+   761→    }
+   762→    final decimals = state.statementDecimals;
+   763→    return Column(
+   764→      crossAxisAlignment: CrossAxisAlignment.start,
+   765→      children: [
+   766→        if (state.from != null) ...[
+   767→          _CarryInRow(
+   768→            label: l10n.partyDetailCarryInBalance,
+   769→            amount: statement.openingBalance,
+   770→            decimals: decimals,
+   771→          ),
+   772→          const SizedBox(height: 12),
+   773→        ],
+   774→        _FinalBalanceHeader(
+   775→          label: l10n.partyDetailFinalBalance,
+   776→          code: statement.currencyCode,
+   777→          amount: statement.finalBalance,
+   778→          decimals: decimals,
+   779→        ),
+   780→        const SizedBox(height: 14),
+   781→        if (statement.entries.isEmpty)
+   782→          Text(
+   783→            l10n.partyDetailNoEntries,
+   784→            style: Theme.of(context).textTheme.bodySmall,
+   785→          )
+   786→        else
+   787→          for (var i = 0; i < statement.entries.length; i++)
+   788→            Padding(
+   789→              padding: const EdgeInsets.only(bottom: 10),
+   790→              child: _StatementEntryRow(
+   791→                key: Key('statement_entry_$i'),
+   792→                entry: statement.entries[i],
+   793→                decimals: decimals,
+   794→              ),
+   795→            ),
+   796→      ],
+   797→    );
+   798→  }
+   799→}
+   800→
+   801→/// رأس الرصيد النهائي — بطاقة داخل البطاقة بلون دلالي ومبلغ ضخم.
+   802→class _FinalBalanceHeader extends StatelessWidget {
+   803→  const _FinalBalanceHeader({
+   804→    required this.label,
+   805→    required this.code,
+   806→    required this.amount,
+   807→    required this.decimals,
+   808→  });
+   809→
+   810→  final String label;
+   811→  final String code;
+   812→  final double amount;
+   813→  final int decimals;
+   814→
+   815→  @override
+   816→  Widget build(BuildContext context) {
+   817→    final scheme = Theme.of(context).colorScheme;
+   818→    return Container(
+   819→      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+   820→      decoration: BoxDecoration(
+   821→        color: scheme.surfaceContainerLow,
+   822→        borderRadius: BorderRadius.circular(12),
+   823→      ),
+   824→      child: Row(
+   825→        children: [
+   826→          Expanded(
+   827→            child: Text(
+   828→              label,
+   829→              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+   830→                color: scheme.onSurfaceVariant,
+   831→                fontWeight: FontWeight.w700,
+   832→              ),
+   833→            ),
+   834→          ),
+   835→          CurrencyCodePill(code: code),
+   836→          const SizedBox(width: 8),
+   837→          PartyBalanceText(
+   838→            balance: amount,
+   839→            decimals: decimals,
+   840→            size: AmountSize.large,
+   841→            showChip: false,
+   842→          ),
+   843→        ],
+   844→      ),
+   845→    );
+   846→  }
+   847→}
+   848→
+   849→/// سطر «رصيد ماضٍ» عند تحديد بداية فترة.
+   850→class _CarryInRow extends StatelessWidget {
+   851→  const _CarryInRow({
+   852→    required this.label,
+   853→    required this.amount,
+   854→    required this.decimals,
+   855→  });
+   856→
+   857→  final String label;
+   858→  final double amount;
+   859→  final int decimals;
+   860→
+   861→  @override
+   862→  Widget build(BuildContext context) {
+   863→    final scheme = Theme.of(context).colorScheme;
+   864→    return Row(
+   865→      children: [
+   866→        Icon(Icons.history_rounded, size: 15, color: scheme.onSurfaceVariant),
+   867→        const SizedBox(width: 6),
+   868→        Expanded(
+   869→          child: Text(
+   870→            label,
+   871→            style: Theme.of(context).textTheme.labelSmall
+   872→                ?.copyWith(color: scheme.onSurfaceVariant),
+   873→          ),
+   874→        ),
+   875→        PartyBalanceText(balance: amount, decimals: decimals, showChip: false),
+   876→      ],
+   877→    );
+   878→  }
+   879→}
+   880→
+   881→/// قيد واحد في الخط الزمني — أيقونة دلالية + تاريخ ونوع ورقم المستند +
+   882→/// المبلغ الموقَّع + الرصيد الرأسي بعد القيد.
+   883→class _StatementEntryRow extends StatelessWidget {
+   884→  const _StatementEntryRow({
+   885→    super.key,
+   886→    required this.entry,
+   887→    required this.decimals,
+   888→  });
+   889→
+   890→  final StatementEntry entry;
+   891→  final int decimals;
+   892→
+   893→  @override
+   894→  Widget build(BuildContext context) {
+   895→    final l10n = AppLocalizations.of(context)!;
+   896→    final scheme = Theme.of(context).colorScheme;
+   897→    final colors = FinColors.of(context);
+   898→    final isDebit = entry.amount > 0;
+   899→    final amountColor = entry.amount == 0
+   900→        ? scheme.onSurfaceVariant
+   901→        : (isDebit ? colors.negative : colors.positive);
+   902→    final iconColor =
+   903→        entry.code == StatementEntryCode.receipt ||
+   904→            entry.code == StatementEntryCode.payment
+   905→        ? colors.positive
+   906→        : entry.code == StatementEntryCode.opening ||
+   907→              entry.code == StatementEntryCode.carryIn
+   908→        ? colors.gold
+   909→        : scheme.primary;
+   910→
+   911→    return Row(
+   912→      crossAxisAlignment: CrossAxisAlignment.start,
+   913→      children: [
+   914→        Container(
+   915→          width: 34,
+   916→          height: 34,
+   917→          decoration: BoxDecoration(
+   918→            color: iconColor.withValues(alpha: 0.12),
+   919→            borderRadius: BorderRadius.circular(10),
+   920→          ),
+   921→          child: Icon(
+   922→            statementEntryIcon(entry.code),
+   923→            size: 17,
+   924→            color: iconColor,
+   925→          ),
+   926→        ),
+   927→        const SizedBox(width: 10),
+   928→        Expanded(
+   929→          child: Column(
+   930→            crossAxisAlignment: CrossAxisAlignment.start,
+   931→            children: [
+   932→              Row(
+   933→                children: [
+   934→                  Expanded(
+   935→                    child: Text(
+   936→                      statementEntryLabel(l10n, entry.code),
+   937→                      style: Theme.of(context).textTheme.bodyMedium
+   938→                          ?.copyWith(fontWeight: FontWeight.w700),
+   939→                    ),
+   940→                  ),
+   941→                  Directionality(
+   942→                    textDirection: TextDirection.ltr,
+   943→                    child: Text(
+   944→                      '${isDebit ? '+' : '−'}'
+   945→                      '${AmountText.formatFor(context, entry.amount.abs(), decimals)}',
+   946→                      style: FinText.amountRow(amountColor),
+   947→                    ),
+   948→                  ),
+   949→                ],
+   950→              ),
+   951→              const SizedBox(height: 2),
+   952→              Text(
+   953→                '${partyFormatDate(context, entry.date)}'
+   954→                '${entry.docNo != null ? ' · ${entry.docNo}' : ''}',
+   955→                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+   956→                  color: scheme.onSurfaceVariant,
+   957→                  fontFeatures: const [FontFeature.tabularFigures()],
+   958→                ),
+   959→                maxLines: 1,
+   960→                overflow: TextOverflow.ellipsis,
+   961→              ),
+   962→            ],
+   963→          ),
+   964→        ),
+   965→        const SizedBox(width: 8),
+   966→        Column(
+   967→          crossAxisAlignment: CrossAxisAlignment.end,
+   968→          children: [
+   969→            Text(
+   970→              l10n.statementBalanceColumn,
+   971→              style: Theme.of(context).textTheme.labelSmall
+   972→                  ?.copyWith(color: scheme.onSurfaceVariant),
+   973→            ),
+   974→            Directionality(
+   975→              textDirection: TextDirection.ltr,
+   976→              child: Text(
+   977→                AmountText.formatFor(context, entry.runningBalance, decimals),
+   978→                style: FinText.amountRow(scheme.onSurface)
+   979→                    .copyWith(fontSize: 13),
+   980→              ),
+   981→            ),
+   982→          ],
+   983→        ),
+   984→      ],
+   985→    );
+   986→  }
+   987→}
+   988→

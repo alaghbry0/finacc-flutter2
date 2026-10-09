@@ -177,9 +177,14 @@ class VoucherPdfBuilder {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
+          // المبلغ الكبير — أرقام جدولية عريضة (UX-2b): الخط المرافق
+          // بأرقام متساوية العرض، والعملة اللاتينية مغطاة فيه.
           pw.Text(
             amount,
-            style: PrintText.head(color: PrintPalette.brandDeep, size: 17),
+            style: PrintText.tabularHead(
+              color: PrintPalette.brandDeep,
+              size: 17,
+            ),
           ),
           pw.Text(
             doc.labels.amount,
@@ -312,9 +317,10 @@ class VoucherPdfBuilder {
   pw.Widget _pair(String label, String value) {
     return pw.Row(
       children: [
+        // القيمة (تاريخ/رقم) بالخط الجدولي المرافق (UX-2b).
         pw.Text(
           value,
-          style: PrintText.body(
+          style: PrintText.tabular(
             color: const pw.PdfColor.fromInt(0xFF332405),
             size: 10,
           ),

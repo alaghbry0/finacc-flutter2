@@ -4797,4 +4797,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settings2AboutPhase => 'ما قبل v1.0.0 — الموجة 2';
+
+  @override
+  String get visFixItemsAddFab => 'تسجيل صنف';
+
+  @override
+  String get visFixItemsAddFabShort => 'صنف جديد';
 }

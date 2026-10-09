@@ -17,6 +17,7 @@ import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
@@ -129,7 +130,7 @@ class _AppendOnlyCard extends StatelessWidget {
                   Color.lerp(colors.gold, Colors.black, 0.3)!,
                 ],
               ),
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(FinRadius.control),
             ),
             child: Icon(
               Icons.verified_user_rounded,

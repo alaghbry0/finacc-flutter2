@@ -37,6 +37,8 @@ class FinColors {
     required this.skeletonBase,
     required this.skeletonHighlight,
     required this.successGlow,
+    required this.whatsappContainer,
+    required this.onWhatsappContainer,
   });
 
   final Brightness brightness;
@@ -83,6 +85,11 @@ class FinColors {
   /// توهج النجاح الناعم (تأكيد فتح القفل).
   final Color successGlow;
 
+  /// لمسة واتساب (زر المشاركة بالمعاينة) — زوج حاوية/نص بوضعين
+  /// (UX-2b): كانت ألواناً فاتحة ثابتة لا تتكيف مع الداكن.
+  final Color whatsappContainer;
+  final Color onWhatsappContainer;
+
   /// التوكنز الفاتحة.
   static const FinColors light = FinColors(
     brightness: Brightness.light,
@@ -108,6 +115,8 @@ class FinColors {
     skeletonBase: Color(0xFFE7EEEA),
     skeletonHighlight: Color(0xFFF5F9F7),
     successGlow: Color(0x330E7A4E),
+    whatsappContainer: Color(0xFFD7F2E4),
+    onWhatsappContainer: Color(0xFF075E54),
   );
 
   /// التوكنز الداكنة (Premium Deep — خلفية خضراء عميقة لا سوداء صرفة).
@@ -135,6 +144,8 @@ class FinColors {
     skeletonBase: Color(0xFF16241F),
     skeletonHighlight: Color(0xFF1E302A),
     successGlow: Color(0x336FDCAE),
+    whatsappContainer: Color(0xFF113528),
+    onWhatsappContainer: Color(0xFFA6EFD0),
   );
 
   /// يختار التوكنز حسب سطوع الثيم الحالي.

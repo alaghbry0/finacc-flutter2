@@ -189,13 +189,13 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
     final isCustomer = state.kind == PartyKind.customer;
     if (state.loading) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
         children: const [ListSkeleton(rows: 6)],
       );
     }
     if (state.error != null) {
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           ErrorState(
             title: l10n.genericErrorTitle,
@@ -213,7 +213,7 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
     if (state.rows.isEmpty) {
       if (filtered) {
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
             EmptyState(
               icon: Icons.search_off_rounded,
@@ -225,7 +225,7 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
         );
       }
       return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           EmptyState(
             icon: isCustomer
@@ -251,7 +251,7 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 96),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
       children: [
         for (final row in state.rows)
           Padding(

@@ -6,9 +6,11 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../../../domain/services/numerals.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'amount_text.dart';
+import 'numerals_scope.dart';
 
 /// بلاطة إحصائية للداشبورد.
 class StatTile extends StatelessWidget {
@@ -101,8 +103,13 @@ class StatTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     if (isCount)
+                      // عدّد صرف (عدد الفواتير) بأرقام النظام الحي
+                      // (UX-2b: كان toInt().toString() غربياً ثابتاً بينما
+                      // الجوار يحترم display.numerals عبر NumeralsScope).
                       Text(
-                        value.toInt().toString(),
+                        NumeralsScope.of(context)
+                            ? Numerals.toArabicIndic(value.toInt().toString())
+                            : value.toInt().toString(),
                         style: FinText.amountLarge(
                           Theme.of(context).colorScheme.onSurface,
                         ),

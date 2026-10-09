@@ -15,6 +15,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
@@ -180,7 +181,7 @@ class _HeaderCard extends StatelessWidget {
                       Color.lerp(scheme.primary, Colors.black, 0.25)!,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(FinRadius.control),
                 ),
                 child: Icon(
                   item.isService

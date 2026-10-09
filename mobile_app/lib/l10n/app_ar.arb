@@ -1400,5 +1400,7 @@
   "@settings2BelowCostWarning": {"placeholders": {"names": {"type": "String"}}},
   "settings2AboutVersion": "الإصدار {version}",
   "@settings2AboutVersion": {"placeholders": {"version": {"type": "String"}}},
-  "settings2AboutPhase": "ما قبل v1.0.0 — الموجة 2"
+  "settings2AboutPhase": "ما قبل v1.0.0 — الموجة 2",
+  "visFixItemsAddFab": "تسجيل صنف",
+  "visFixItemsAddFabShort": "صنف جديد"
 }
