@@ -1,6 +1,6 @@
 /// اختبارات شاشة «الطباعة والفواتير» (موجة UX-3) بالـseam الموثق (نمط
 /// settings2): نموذج محمّل مسبقاً داخل runAsync ثم تفاعل حقيقي —
-/// البطاقات الثلاث والمختار الافتراضي، نقر قالب يفعّله بالمستودع فوراً،
+/// بطاقتا القالبين والمختار الافتراضي، نقر قالب يفعّله بالمستودع فوراً،
 /// تبديل مفتاح إظهار يحدّث الإعدادات المخزنة، استعادة الافتراضي تعيد
 /// البسيط وبذور الجميع، ومسار الراوتر `/more/print-templates` يفتح
 /// الشاشة الحقيقية فوق AppController بقاعدة حقيقية.
@@ -23,7 +23,7 @@ void main() {
   setUpAll(initFfiForTests);
 
   group('PrintTemplatesScreen — seam', () {
-    testWidgets('البطاقات الثلاث معروضة والبسيط مختاراً افتراضياً', (
+    testWidgets('بطاقتا القالبين معروضتان والبسيط مختاراً افتراضياً', (
       tester,
     ) async {
       await tester.binding.setSurfaceSize(const Size(390, 2400));
@@ -46,7 +46,8 @@ void main() {
         expect(find.text('الطباعة والفواتير'), findsOneWidget);
         expect(find.text('كلاسيكي A4 أفقي'), findsOneWidget);
         expect(find.text('بسيط A4 عمودي'), findsOneWidget);
-        expect(find.text('حراري 80مم'), findsOneWidget);
+        // الحراري حُذف بقرار المالك — لا وجود له بالشاشة.
+        expect(find.text('حراري 80مم'), findsNothing);
         // مفاتيح الإظهار للقالب البسيط: بلا توقيعات/ختم/ملاحظات
         // (templateSupports) — خمسة مفاتيح.
         expect(find.text('عمود الخصم'), findsOneWidget);
@@ -148,10 +149,10 @@ void main() {
         await vm.load();
         addTearDown(vm.dispose);
 
-        // المستخدم فعّل الحراري وخصّصه (إخفاء عمود الخصم).
+        // المستخدم فعّل الكلاسيكي وخصّصه (إخفاء عمود الخصم).
         await repo.save(
-          kInvoiceTemplateThermal80,
-          kPrintTemplateSeedConfigs[kInvoiceTemplateThermal80]!
+          kInvoiceTemplateClassicA4,
+          kPrintTemplateSeedConfigs[kInvoiceTemplateClassicA4]!
               .copyWith(showDiscountColumn: false),
         );
 
@@ -159,13 +160,13 @@ void main() {
           wrapWithL10n(PrintTemplatesScreen(viewModel: vm)),
         );
         await pumpQuietly(tester, 10);
-        // إعادة التحميل لجلب الحراري النشط.
+        // إعادة التحميل لجلب الكلاسيكي النشط.
         await tester.pumpWidget(
           wrapWithL10n(PrintTemplatesScreen(viewModel: vm)),
         );
         await vm.load();
         await pumpQuietly(tester, 6);
-        expect(vm.state.activeCode, kInvoiceTemplateThermal80);
+        expect(vm.state.activeCode, kInvoiceTemplateClassicA4);
 
         await tester.tap(find.text('استعادة الافتراضي'));
         await pumpQuietly(tester, 10);
@@ -175,10 +176,10 @@ void main() {
         expect(active!.code, kPrintTemplateDefaultCode);
         expect(active.config.showDiscountColumn, isTrue,
             reason: 'بذر البسيط مستعاد');
-        final thermal = (await repo.allFor('sale'))
-            .firstWhere((r) => r.code == kInvoiceTemplateThermal80);
-        expect(thermal.config.showDiscountColumn, isTrue,
-            reason: 'بذر الحراري مستعاد');
+        final classic = (await repo.allFor('sale'))
+            .firstWhere((r) => r.code == kInvoiceTemplateClassicA4);
+        expect(classic.config.showDiscountColumn, isTrue,
+            reason: 'بذر الكلاسيكي مستعاد');
       });
     });
   });
@@ -223,9 +224,9 @@ void main() {
         expect(router.routerDelegate.currentConfiguration.uri.path,
             '/more/print-templates');
         expect(find.byType(PrintTemplatesScreen), findsOneWidget);
-        // الشاشة حمّلت القوالب الثلاثة من القاعدة الحقيقية (بلا seam —
+        // الشاشة حمّلت القالبين من القاعدة الحقيقية (بلا seam —
         // عبر AppController.printTemplates).
-        expect(find.text('حراري 80مم'), findsOneWidget);
+        expect(find.text('حراري 80مم'), findsNothing);
         expect(find.text('كلاسيكي A4 أفقي'), findsOneWidget);
 
         router.dispose();

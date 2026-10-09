@@ -1,6 +1,7 @@
 /// اختبارات نموذج إعدادات القالب (موجة UX-3) — نقاء JSON: roundtrip
 /// كامل، copyWith انتقائي، التحمّل الدفاعي (كل قيمة تالفة/غائبة ترد
-/// للافتراض فلا يكسر تخصيصٌ سيئ طباعةَ المتجر)، واشتقاق الورق.
+/// للافتراض فلا يكسر تخصيصٌ سيئ طباعةَ المتجر)، واشتقاق الورق، وتحويل
+/// قراءة القالب الحراري المحذوف thermal_80 → كلاسيكي (R16-b).
 library;
 
 import 'dart:convert';
@@ -12,11 +13,11 @@ void main() {
   test('copyWith يعدّل المفتاح المطلوب حصراً ويبقي البقية', () {
     const base = InvoiceTemplateSettings();
     final toggled = base.copyWith(
-      templateId: kInvoiceTemplateThermal80,
+      templateId: kInvoiceTemplateClassicA4,
       showBarcode: true,
       badge: InvoiceBadgeMode.copy,
     );
-    expect(toggled.templateId, kInvoiceTemplateThermal80);
+    expect(toggled.templateId, kInvoiceTemplateClassicA4);
     expect(toggled.showBarcode, isTrue);
     expect(toggled.badge, InvoiceBadgeMode.copy);
     // البقية كما كانت.
@@ -99,23 +100,48 @@ void main() {
     // وسليم يُفك.
     expect(
       InvoiceTemplateSettings.fromJsonString(
-        '{"templateId":"thermal_80","showBarcode":true}',
+        '{"templateId":"classic_a4","showBarcode":true}',
       ).templateId,
-      kInvoiceTemplateThermal80,
+      kInvoiceTemplateClassicA4,
     );
   });
 
-  test('paper مشتق من القالب: أفقي/عمودي/رول + equality بالقيمة', () {
+  test('R16-b: تحويل قراءة thermal_80 المحفوظ → كلاسيكي A4', () {
+    // القالب الحراري حُذف نهائياً — أي قيمة قديمة تُقرأ كلاسيكياً
+    // (بذر v4 قديم أو تخصيص مستخدم سابق قبل الحذف).
+    expect(
+      InvoiceTemplateSettings.fromJsonString(
+        '{"templateId":"thermal_80","showBarcode":true,"showSignatures":false}',
+      ).templateId,
+      kInvoiceTemplateClassicA4,
+    );
+    // عبر fromJson مباشرة كذلك — بكل بقية المفاتيح كما خُزّنت.
+    final fromMap = InvoiceTemplateSettings.fromJson(
+      Map<String, Object?>.from(
+        jsonDecode(
+          '{"templateId":"thermal_80","showBarcode":true,'
+          '"showSignatures":false,"showStampArea":false}',
+        ) as Map,
+      ),
+    );
+    expect(fromMap.templateId, kInvoiceTemplateClassicA4);
+    // بقية الإعدادات تُحفظ كما هي (لا فقد للتخصيص غير المتعلق بالقالب).
+    expect(fromMap.showBarcode, isTrue);
+    expect(fromMap.showSignatures, isFalse);
+    expect(fromMap.showStampArea, isFalse);
+    // والورق المشتق كلاسيكي أفقي (لا roll80 بعد الحذف).
+    expect(fromMap.paper, 'a4-landscape');
+  });
+
+  test('paper مشتق من القالب: أفقي/عمودي + equality بالقيمة', () {
     const classic = InvoiceTemplateSettings(
       templateId: kInvoiceTemplateClassicA4,
     );
     const simple = InvoiceTemplateSettings();
-    const thermal = InvoiceTemplateSettings(
-      templateId: kInvoiceTemplateThermal80,
-    );
     expect(classic.paper, 'a4-landscape');
     expect(simple.paper, 'a4-portrait');
-    expect(thermal.paper, 'roll80');
+    // لا يوجد رول بعد حذف الحراري — القيمة القديمة تتحول عند القراءة
+    // فلا يمكن بناء إعدادات حرارية جديدة من JSON البائد أصلاً.
     // equality بالقيمة (نفس JSON = نفس الكائن منطقياً).
     expect(const InvoiceTemplateSettings(), simple);
     expect(

@@ -55,6 +55,7 @@ class PurchaseLine {
     required this.unitCost,
     this.lineDiscountType = PurchaseDiscountType.amount,
     this.lineDiscountValue = 0,
+    this.freeQty = 0,
     this.notes,
     this.batchNo,
     this.expiryDate,
@@ -63,8 +64,19 @@ class PurchaseLine {
   /// الصنف (product.id) — الخدمي مسموح (بلا مخزون ولا WAC).
   final int productId;
 
-  /// الكمية (> 0 — NUMERIC(12,3)).
+  /// الكمية المدفوعة للمورد (> 0 — NUMERIC(12,3)).
   final double qty;
+
+  /// الكمية المجانية/بونص من المورد (≥ 0 — NUMERIC(12,3)، موجة R16-a).
+  ///
+  /// **القرار التحاسبي الموثّق** (قرار المالك R16-a — مرآة البيع):
+  /// المستلم الكلي = `qty + freeQty` (الدفعة الواردة وstock_level
+  /// وحركة المخزون بالكلي) وWAC = إجمالي التكلفة ÷ المستلم الكلي —
+  /// **البونص يخفّض التكلفة الوحدوية** (شراء 10+2 مجاني بتكلفة 1200
+  /// → دفعة 12 وحدة بوحدة تكلفة 100). المبلغ المستحق للمورد من `qty`
+  /// حصراً — هذا الحقل لا يدخل أي حساب تسعير هنا إطلاقاً
+  /// (`PurchasePricing` يقرأ `qty` وحدها؛ يستهلكه المستودع بالمخزون).
+  final double freeQty;
 
   /// تكلفة الوحدة **بعملة الفاتورة** كما في فاتورة المورد (≥ 0).
   final double unitCost;
@@ -277,6 +289,7 @@ class PurchaseInvoiceItemLine {
     required this.discountAmount,
     required this.lineTotal,
     required this.lineCost,
+    this.freeQty = 0,
     this.batchId,
     this.notes,
   });
@@ -286,7 +299,13 @@ class PurchaseInvoiceItemLine {
   /// وصف السطر (اسم الصنف لحظة الشراء).
   final String? lineDesc;
 
+  /// الكمية المدفوعة للمورد.
   final double qty;
+
+  /// الكمية المجانية/بونص من المورد (≥ 0 — R16-a): المستلم الكلي
+  /// = qty + freeQty دخل المخزون/الدفعة بWAC الكلي. غياب العمود بصفوف
+  /// قديمة القاعدة = 0 (بلا بونص — سلوك ما قبل الترقية).
+  final double freeQty;
 
   /// تكلفة الوحدة المدخلة بعملة الفاتورة (`invoice_item.unit_price`).
   final double unitCost;
@@ -315,6 +334,7 @@ class PurchaseInvoiceItemLine {
         lineDesc: row['line_desc'] as String?,
         qty: (row['qty'] as num?)?.toDouble() ?? 0,
         unitCost: (row['unit_price'] as num?)?.toDouble() ?? 0,
+        freeQty: (row['free_qty'] as num?)?.toDouble() ?? 0,
         discountPercent: (row['discount_percent'] as num?)?.toDouble() ?? 0,
         discountAmount: (row['discount_amount'] as num?)?.toDouble() ?? 0,
         lineTotal: (row['line_total'] as num?)?.toDouble() ?? 0,

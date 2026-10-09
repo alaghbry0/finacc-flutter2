@@ -34,22 +34,22 @@ void main() {
     expect(active.config.showUnitColumn, isFalse);
   });
 
-  test('allFor: القوالب الثلاثة بترتيب البذر (كلاسيكي/بسيط/حراري)', () async {
+  test('allFor: القالبان المبذوران بترتيب البذر (كلاسيكي/بسيط) — الحراري محذوف', () async {
     final rows = await repo.allFor('sale');
     expect(rows.map((r) => r.code).toList(), [
       kInvoiceTemplateClassicA4,
       kInvoiceTemplateSimpleA4,
-      kInvoiceTemplateThermal80,
     ]);
     // بذور الكلاسيكي: أزرق سماوي + عمود وحدة.
     final classic = rows[0];
     expect(classic.config.tableHeadArgb, 0xFF9DC3E6);
     expect(classic.config.showUnitColumn, isTrue);
-    // بذور الحراري: باركود ON وتوقيعات/ختم OFF.
-    final thermal = rows[2];
-    expect(thermal.config.showBarcode, isTrue);
-    expect(thermal.config.showSignatures, isFalse);
-    expect(thermal.config.showStampArea, isFalse);
+    // صف الحراري القديم حُذف بهجرة v6 — لا وجود له بقاعدة جديدة.
+    expect(
+      rows.where((r) => r.code == kLegacyInvoiceTemplateThermal80),
+      isEmpty,
+      reason: 'الحراري محذوف نهائياً بقرار المالك',
+    );
   });
 
   test('activeFor لنوع بلا صفوف = null (المستدعي يرد للافتراضي)', () async {
@@ -57,13 +57,35 @@ void main() {
   });
 
   test('save يفعّل القالب حصراً وينقل is_default عن البقية', () async {
-    await repo.save(kInvoiceTemplateThermal80, kPrintTemplateSeedConfigs[kInvoiceTemplateThermal80]!);
+    await repo.save(
+      kInvoiceTemplateClassicA4,
+      kPrintTemplateSeedConfigs[kInvoiceTemplateClassicA4]!,
+    );
 
     final active = await repo.activeFor('sale');
-    expect(active!.code, kInvoiceTemplateThermal80);
+    expect(active!.code, kInvoiceTemplateClassicA4);
     final defaults = (await repo.allFor('sale')).where((r) => r.isDefault);
     expect(defaults, hasLength(1), reason: 'قالب نشط واحد حصراً');
-    expect(defaults.single.code, kInvoiceTemplateThermal80);
+    expect(defaults.single.code, kInvoiceTemplateClassicA4);
+  });
+
+  test('تحويل قراءة الصف القديم: thermal_80 المحفوظ قبل الحذف يُقرأ كلاسيكياً', () async {
+    // قاعدة قديمة لم تمر بهجرة v6 بعد (أو صف متبقٍ) — طبقة normalize
+    // بالمستودع تحوله لكلاسيكي فلا يعرفه المحرك/الشاشة أبداً.
+    await app.db.rawInsert(
+      "INSERT OR IGNORE INTO print_template(doc_type, code, is_default, config, "
+      "created_at, updated_at) VALUES('sale', 'thermal_80', 0, "
+      "'{\"templateId\":\"classic_a4\"}', "
+      "strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+    );
+    final rows = await repo.allFor('sale');
+    final legacy = rows.where((r) => r.code == kInvoiceTemplateClassicA4);
+    expect(legacy, isNotEmpty, reason: 'الصف القديم يُقرأ كلاسيكياً');
+    expect(
+      rows.map((r) => r.code),
+      everyElement(isNot(kLegacyInvoiceTemplateThermal80)),
+      reason: 'لا يُكشف الحراري أبداً للمحرك/الشاشة',
+    );
   });
 
   test('save يخزّن config كاملة وتستعاد الحقول بعد إعادة القراءة', () async {
@@ -117,11 +139,7 @@ void main() {
   });
 
   test('resetToDefault يستعيد بذور الجميع ويعيد البسيط نشطاً', () async {
-    // المستخدم فعّل الحراري وخصّص الكلاسيكي.
-    await repo.save(
-      kInvoiceTemplateThermal80,
-      kPrintTemplateSeedConfigs[kInvoiceTemplateThermal80]!,
-    );
+    // المستخدم فعّل الكلاسيكي وخصّصه.
     await repo.save(
       kInvoiceTemplateClassicA4,
       const InvoiceTemplateSettings(templateId: kInvoiceTemplateClassicA4),
@@ -134,8 +152,6 @@ void main() {
     final rows = await repo.allFor('sale');
     final classic = rows.firstWhere((r) => r.code == kInvoiceTemplateClassicA4);
     expect(classic.config.tableHeadArgb, 0xFF9DC3E6, reason: 'بذر الكلاسيكي');
-    final thermal = rows.firstWhere((r) => r.code == kInvoiceTemplateThermal80);
-    expect(thermal.config.showBarcode, isTrue, reason: 'بذر الحراري');
   });
 
   test('تحمّل دفاعي: JSON تالف في config يرد للافتراض لا للاستثناء', () async {

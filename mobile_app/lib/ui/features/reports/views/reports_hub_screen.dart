@@ -3,6 +3,11 @@
 /// الديون، الجرد الفعلي، الحد الأدنى، الصلاحية) مع روابط عميقة لوحدات
 /// المخزون. تُلحق بها تقارير الشريحة 10 الباقية (حركة صنف/ملخص حركة/
 /// المبيعات حسب) فور تسليم وكلاءها.
+///
+/// R16-b: زر عودة برأس الشاشة — المسار جذري خارج هيكل التبويبات
+/// (يُفتح من «المزيد») فلا يفترض المحرك زر رجوع تلقائياً وكان المالك
+/// يحاصر بلا مخرج (شكوى مؤكدة حياً). الرجوع الفعلي: pop إن كان
+/// متاحاً، وإلا عودة صريحة إلى «المزيد» (نمط الشاشات العلوية).
 library;
 
 import 'package:flutter/material.dart';
@@ -22,7 +27,25 @@ class ReportsHubScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: Text(l10n.reportsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.reportsTitle),
+        // R16-b — زر العودة: يعمل دوماً (pop عند توفره، وإلا عودة
+        // صريحة إلى تبويب «المزيد» الذي فُتح منه المركز). الأيقونة
+        // BackButtonIcon (تنعكس تلقائياً بالـRTL) وtooltip من مفتاح
+        // l10n القائم commonBack — BackButton هنا بلا وسيط tooltip.
+        leading: IconButton(
+          tooltip: l10n.commonBack,
+          icon: const BackButtonIcon(),
+          onPressed: () {
+            final navigator = Navigator.of(context);
+            if (navigator.canPop()) {
+              navigator.maybePop();
+            } else {
+              context.go('/more');
+            }
+          },
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: const [

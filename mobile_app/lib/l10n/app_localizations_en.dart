@@ -4947,18 +4947,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tmplTaxNumber => 'Tax number';
 
   @override
-  String get bonusPrefsTitle => 'Free quantities (bonus)';
-
-  @override
-  String get bonusPrefsDesc =>
-      'A bonus field next to the quantity on sale invoice lines — stock dispatch includes the free units while revenue counts only the paid quantity';
-
-  @override
-  String bonusQtyEditTitle(Object name) {
-    return 'Free quantity (bonus): $name';
-  }
-
-  @override
   String get bonusQtyChipEmpty => 'Bonus';
 
   @override
@@ -4974,5 +4962,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String bonusPrintSuffix(Object n) {
     return '(+$n free)';
+  }
+
+  @override
+  String sellLineEditTitle(Object name) {
+    return 'Edit line: $name';
+  }
+
+  @override
+  String get sellLineEditQtyLabel => 'Paid quantity';
+
+  @override
+  String get sellLineEditBonusLabel => 'Free quantity (bonus)';
+
+  @override
+  String get sellLineEditPriceLabel => 'Unit price';
+
+  @override
+  String get sellLineEditDiscountLabel => 'Line discount';
+
+  @override
+  String get sellLineEditSave => 'Save changes';
+
+  @override
+  String get sellLineEditQtyError => 'Enter a quantity greater than zero';
+
+  @override
+  String get sellLineEditBonusError =>
+      'Enter a valid bonus quantity (zero or more, up to three decimals)';
+
+  @override
+  String get sellLineEditPriceError => 'Enter a valid price (zero or more)';
+
+  @override
+  String purBonusEditTitle(Object name) {
+    return 'Free quantity (bonus): $name';
   }
 }

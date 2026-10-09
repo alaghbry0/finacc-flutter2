@@ -44,7 +44,8 @@ class CartSupplier {
 }
 
 /// سطر شراء حي — صورة الصنف لحظة إضافته + حقوله القابلة للتحرير،
-/// وحقول الدفعة الواردة (رقم الدفعة + الصلاحية) للأصناف المتتبعة.
+/// وحقول الدفعة الواردة (رقم الدفعة + الصلاحية) للأصناف المتتبعة،
+/// والكمية المجانية/بونص من المورد (R16-a).
 class PurchaseCartUiLine {
   const PurchaseCartUiLine({
     required this.productId,
@@ -56,6 +57,7 @@ class PurchaseCartUiLine {
     required this.currentStock,
     required this.isService,
     required this.trackBatches,
+    this.freeQty = 0,
     this.batchNo = '',
     this.expiryDate,
   });
@@ -63,8 +65,13 @@ class PurchaseCartUiLine {
   final int productId;
   final String name;
 
-  /// الكمية (> 0 دائماً — القيم غير الصالحة ترفض قبل الدخول).
+  /// الكمية المدفوعة للمورد (> 0 دائماً — القيم غير الصالحة ترفض).
   final double qty;
+
+  /// الكمية المجانية/بونص من المورد (≥ 0 — R16-a): الحقل دائم التوفر
+  /// بمحرر السطر؛ لا تدخل أي تسعير — المستلم الكلي (qty + freeQty)
+  /// يُحسب مخزونياً وقت الترحيل (البونص يخفّض WAC).
+  final double freeQty;
 
   /// تكلفة الوحدة بعملة الفاتورة كما في فاتورة المورد (≥ 0).
   final double unitCost;
@@ -88,6 +95,7 @@ class PurchaseCartUiLine {
 
   PurchaseCartUiLine copyWith({
     double? qty,
+    double? freeQty,
     double? unitCost,
     PurchaseDiscountType? discountType,
     double? discountValue,
@@ -97,6 +105,7 @@ class PurchaseCartUiLine {
     productId: productId,
     name: name,
     qty: qty ?? this.qty,
+    freeQty: freeQty ?? this.freeQty,
     unitCost: unitCost ?? this.unitCost,
     discountType: discountType ?? this.discountType,
     discountValue: discountValue ?? this.discountValue,
@@ -113,6 +122,7 @@ class PurchaseCartUiLine {
     unitCost: unitCost,
     lineDiscountType: discountType,
     lineDiscountValue: discountValue,
+    freeQty: freeQty,
     batchNo: batchNo.trim().isEmpty ? null : batchNo.trim(),
     expiryDate: batchNo.trim().isEmpty ? null : expiryDate,
   );
@@ -471,6 +481,21 @@ class PurchaseCartViewModel extends ChangeNotifier {
     _updateLine(index, qty: qty);
   }
 
+  /// تعديل الكمية المجانية/بونص من المورد (R16-a — دائم التوفر): ≥ 0
+  /// وبرقم سليم وبلا دقة أعلى من ثلاث منازل (NUMERIC(12,3)). الصفر يمسح
+  /// البونص. لا أثر إطلاقاً على الصافي المستحق للمورد.
+  void setFreeQty(int index, double freeQty) {
+    if (freeQty.isNaN || freeQty.isInfinite || freeQty < 0) {
+      _notice('كمية البونص لا يمكن أن تكون سالبة — أدخل رقماً سليماً.');
+      return;
+    }
+    if (((freeQty * 1000).roundToDouble() - freeQty * 1000).abs() > 0.001) {
+      _notice('كمية البونص لا تقبل دقة أعلى من ثلاث منازل عشرية.');
+      return;
+    }
+    _updateLine(index, freeQty: freeQty);
+  }
+
   /// تعديل تكلفة الوحدة بعملة الفاتورة (≥ 0).
   void setUnitCost(int index, double cost) {
     if (cost.isNaN || cost.isInfinite || cost < 0) {
@@ -680,6 +705,7 @@ class PurchaseCartViewModel extends ChangeNotifier {
   void _updateLine(
     int index, {
     double? qty,
+    double? freeQty,
     double? unitCost,
     PurchaseDiscountType? discountType,
     double? discountValue,
@@ -689,6 +715,7 @@ class PurchaseCartViewModel extends ChangeNotifier {
     final lines = [..._state.lines];
     lines[index] = lines[index].copyWith(
       qty: qty,
+      freeQty: freeQty,
       unitCost: unitCost,
       discountType: discountType,
       discountValue: discountValue,

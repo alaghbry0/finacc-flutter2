@@ -583,12 +583,40 @@ class _PurchaseLineCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
+            // R16-a — بونص الشراء: حقل «كمية مجانية» صغير بجانب الكمية
+            // **دائم التوفر للإدخال** (لا بوابة إعدادات)؛ وحين وجوده تعرض
+            // الشارة «+N مجاني». السعر والخصم بسطر مستقل أسفلها — صف
+            // الكمية + الشارة + التكلفة + الخصم معاً يفيض على 390dp
+            // (نفس خلل الكاشير الموثّق بـ UX-4-finish).
             Row(
               children: [
                 PurchaseQtyStepper(
                   qty: line.qty,
                   onChanged: (qty) => vm.setQty(index, qty),
                 ),
+                const SizedBox(width: 8),
+                _PurchaseBonusChip(
+                  freeQty: line.freeQty,
+                  onTap: () async {
+                    final value = await showPurchaseNumberEditSheet(
+                      context,
+                      title: l10n.purBonusEditTitle(line.name),
+                      initial: line.freeQty,
+                      confirmLabel: l10n.commonConfirm,
+                      allowZero: true,
+                      decimals: 3,
+                      icon: Icons.redeem_outlined,
+                    );
+                    if (value != null) {
+                      vm.setFreeQty(index, value);
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
                 const Spacer(),
                 _CostButton(
                   cost: line.unitCost,
@@ -627,6 +655,59 @@ class _PurchaseLineCard extends StatelessWidget {
               const SizedBox(height: 10),
               _IncomingBatchSection(index: index),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// حقل الكمية المجانية (بونص) الصغير بجوار الكمية (R16-a) — **دائم
+/// التوفر للإدخال**: «بونص» عند الصفر و«+N مجاني» عند وجوده؛ نقرة تفتح
+/// محرر الرقم السفلي (الصفر يمسح). البونص لا يدخل المستحق للمورد —
+/// المستلم الكلي (qty + freeQty) يدخل المخزون ويخفّض WAC.
+class _PurchaseBonusChip extends StatelessWidget {
+  const _PurchaseBonusChip({required this.freeQty, required this.onTap});
+
+  final double freeQty;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = FinColors.of(context);
+    final hasBonus = freeQty > 0.000001;
+    final label = hasBonus
+        ? l10n.bonusQtyChipValue(purQtyText(freeQty))
+        : l10n.bonusQtyChipEmpty;
+    return InkWell(
+      key: const Key('pur_line_bonus_chip'),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: hasBonus
+              ? colors.positiveContainer
+              : Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.redeem_rounded,
+              size: 15,
+              color: hasBonus ? colors.onPositiveContainer : null,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: hasBonus ? colors.onPositiveContainer : null,
+              ),
+            ),
           ],
         ),
       ),

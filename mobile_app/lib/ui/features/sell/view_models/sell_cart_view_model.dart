@@ -81,9 +81,10 @@ class CartUiLine {
   /// الكمية (> 0 دائماً — القيم غير الصالحة ترفض قبل الدخول).
   final double qty;
 
-  /// الكمية المجانية/بونص (≥ 0 — موجة UX-4): تُدخل من حقل البونص بجوار
-  /// الكمية حين يكون `sale.free_qty` مفعّلاً. لا تدخل أي تسعير —
-  /// المنصرف الكلي (qty + freeQty) يُحسب مخزونياً وقت الترحيل.
+  /// الكمية المجانية/بونص (≥ 0 — موجة UX-4؛ دائم التوفر منذ R16-a):
+  /// تُدخل من محرر السطر الموحّد (BottomSheet بنقرة على صف السطر).
+  /// لا تدخل أي تسعير — المنصرف الكلي (qty + freeQty) يُحسب مخزونياً
+  /// وقت الترحيل.
   final double freeQty;
 
   /// سعر الوحدة بعملة الفاتورة (≥ 0).
@@ -162,7 +163,6 @@ class SellCartState {
     this.overAvailPolicy = 'warn',
     this.showDiscounts = true,
     this.warnBelowMargin = false,
-    this.bonusQtyEnabled = false,
   });
 
   final bool loading;
@@ -217,12 +217,6 @@ class SellCartState {
   /// تحذير البيع تحت التكلفة مفعّل؟ (UX-2a —
   /// `invoicing.discount_below_margin`).
   final bool warnBelowMargin;
-
-  /// حقل البونص (الكمية المجانية) ظاهر بالكاشير؟ (UX-4 — `sale.free_qty`,
-  /// مزروعة 'off' بهجرة v5): ON = حقل بونص بجوار الكمية بسطر السلة؛
-  /// OFF = مخفي تماماً وسلوك اليوم. غياب مستودع الإعدادات = off
-  /// (القيمة المحافظة — سلوك v0.x).
-  final bool bonusQtyEnabled;
 
   Currency? get selectedCurrency {
     for (final currency in currencies) {
@@ -301,23 +295,20 @@ class SellCartViewModel extends ChangeNotifier {
     try {
       // سياسات التخصيص (UX-2a) — قراءة واحدة متزامنة مع باقي التحميل؛
       // غياب المستودع يبقي سلوك v0.x (warn/خصومات ظاهرة/بلا تحذير هامش).
+      // (R16-a: بوابة البونص أُزيلت — الحقل دائم التوفر بمحرر السطر
+      // والشارة ديناميكية عند freeQty>0 حصراً، بلا أي إعداد.)
       var overAvailPolicy = 'warn';
       var showDiscounts = true;
       var warnBelowMargin = false;
-      // UX-4 — بوابة البونص (`sale.free_qty`، بنمط print_on_save عبر
-      // مستودع إعدادات AppController): off المحافظة هي الافتراضية.
-      var bonusQtyEnabled = false;
       if (_settings != null) {
         final policyResults = await Future.wait<Object?>([
           _settings.overAvailPolicy(),
           _settings.showDiscounts(),
           _settings.discountBelowMargin(),
-          _settings.bonusQtyEnabled(),
         ]);
         overAvailPolicy = policyResults[0]! as String;
         showDiscounts = policyResults[1]! as bool;
         warnBelowMargin = policyResults[2]! as bool;
-        bonusQtyEnabled = policyResults[3]! as bool;
       }
       final results = await Future.wait<Object?>([
         _companies.listActiveCurrencies(),
@@ -348,7 +339,6 @@ class SellCartViewModel extends ChangeNotifier {
         overAvailPolicy: overAvailPolicy,
         showDiscounts: showDiscounts,
         warnBelowMargin: warnBelowMargin,
-        bonusQtyEnabled: bonusQtyEnabled,
       );
     } catch (error) {
       _state = SellCartState(
@@ -599,8 +589,10 @@ class SellCartViewModel extends ChangeNotifier {
     _updateLine(index, qty: qty);
   }
 
-  /// تعديل الكمية المجانية (بونص — UX-4): ≥ 0 وبرقم سليم وبلا دقة
-  /// أعلى من ثلاث منازل (NUMERIC(12,3)). الصفر يمسح البونص.
+  /// تعديل الكمية المجانية (بونص — UX-4، دائم التوفر منذ R16-a): ≥ 0
+  /// وبرقم سليم وبلا دقة أعلى من ثلاث منازل (NUMERIC(12,3)). الصفر يمسح
+  /// البونص. الإدخال من محرر السطر الموحّد (نقرة على صف السطر) — لا
+  /// بوابة إعدادات بعد الآن.
   void setFreeQty(int index, double freeQty) {
     if (freeQty.isNaN || freeQty.isInfinite || freeQty < 0) {
       _notice('كمية البونص لا يمكن أن تكون سالبة — أدخل رقماً سليماً.');
@@ -941,7 +933,6 @@ class SellCartViewModel extends ChangeNotifier {
     String? overAvailPolicy,
     bool? showDiscounts,
     bool? warnBelowMargin,
-    bool? bonusQtyEnabled,
   }) => SellCartState(
     loading: loading ?? _state.loading,
     error: _state.error,
@@ -974,6 +965,5 @@ class SellCartViewModel extends ChangeNotifier {
     overAvailPolicy: overAvailPolicy ?? _state.overAvailPolicy,
     showDiscounts: showDiscounts ?? _state.showDiscounts,
     warnBelowMargin: warnBelowMargin ?? _state.warnBelowMargin,
-    bonusQtyEnabled: bonusQtyEnabled ?? _state.bonusQtyEnabled,
   );
 }

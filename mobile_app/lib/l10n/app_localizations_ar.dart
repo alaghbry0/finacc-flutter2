@@ -4963,18 +4963,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tmplTaxNumber => 'الرقم الضريبي';
 
   @override
-  String get bonusPrefsTitle => 'الكميات المجانية (بونص)';
-
-  @override
-  String get bonusPrefsDesc =>
-      'حقل بونص بجوار الكمية ببنود فاتورة البيع — المنصرف من المخزون يشمل المجاني والإيراد من الكمية المدفوعة فقط';
-
-  @override
-  String bonusQtyEditTitle(Object name) {
-    return 'الكمية المجانية (بونص): $name';
-  }
-
-  @override
   String get bonusQtyChipEmpty => 'بونص';
 
   @override
@@ -4990,5 +4978,40 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String bonusPrintSuffix(Object n) {
     return '(+$n مجاني)';
+  }
+
+  @override
+  String sellLineEditTitle(Object name) {
+    return 'تعديل السطر: $name';
+  }
+
+  @override
+  String get sellLineEditQtyLabel => 'الكمية المدفوعة';
+
+  @override
+  String get sellLineEditBonusLabel => 'الكمية المجانية (بونص)';
+
+  @override
+  String get sellLineEditPriceLabel => 'سعر الوحدة';
+
+  @override
+  String get sellLineEditDiscountLabel => 'خصم السطر';
+
+  @override
+  String get sellLineEditSave => 'حفظ التعديلات';
+
+  @override
+  String get sellLineEditQtyError => 'أدخل كمية أكبر من صفر';
+
+  @override
+  String get sellLineEditBonusError =>
+      'أدخل كمية بونص سليمة (صفر فأكثر وبلا دقة أعلى من ثلاث منازل)';
+
+  @override
+  String get sellLineEditPriceError => 'أدخل سعراً سليماً لا يقل عن صفر';
+
+  @override
+  String purBonusEditTitle(Object name) {
+    return 'الكمية المجانية (بونص): $name';
   }
 }

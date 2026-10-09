@@ -63,6 +63,18 @@ int get currentSchemaVersion => migrations.last.version;
 /// يرفع COGS ويخفض الربح بالمقدار الحرفي، والبدائل (سطر بسعر صفر /
 /// خصم 100%) تُشوّه التقارير وتفشل مع فاتورة مجانية بالكامل
 /// (CHECK(total > 0)).
+///
+/// **الإصدار 6** (موجة R16-a — ثورة الكميات المجانية): **حذف مفتاح
+/// `sale.free_qty` نهائياً** بقرار المالك الملزم: لا يوجد أي إعداد
+/// لإظهار/إخفاء حقل الكمية المجانية — الشارة/الحقل يُضاف ديناميكياً
+/// عند وجود كمية مجانية ولا يظهر إطلاقاً حين لا يوجد بونص. العبارة
+/// **idempotent** بطبيعتها (DELETE لا يفعل شيئاً حين لا صف).
+/// **تنبيهات جوهرية**: (1) عمود `invoice_item.free_qty` **لا يُمسّ
+/// أبداً** — بونصات المتاجر القائمة محفوظة. (2) بنود الشراء تسكن
+/// `invoice_item` نفسها (doc_type='purchase') والعمود موجود فيها منذ
+/// v5 بذات التعريف المطلوب NUMERIC(12,3) NOT NULL DEFAULT 0 — فلا
+/// DDL جديد لازماً للشراء (لا يوجد جدول purchase_item بالمخطط).
+/// (3) الجدول اسمه `settings` (لا app_settings).
 const List<DbMigration> migrations = <DbMigration>[
   DbMigration(version: 1, statements: schemaV1Ddl, seeds: _seedStatements),
   DbMigration(version: 2, statements: <String>[repairOpeningBatchesV2]),
@@ -80,6 +92,10 @@ const List<DbMigration> migrations = <DbMigration>[
     version: 5,
     statements: <String>[alterInvoiceItemFreeQtyV5],
     seeds: _seedStatementsV5,
+  ),
+  DbMigration(
+    version: 6,
+    statements: <String>[deleteSaleFreeQtyKeyV6, deleteThermalTemplateV6],
   ),
 ];
 
@@ -235,6 +251,28 @@ const List<String> _seedStatementsV5 = <String>[
     ('sale.free_qty', '"off"', strftime('%Y-%m-%dT%H:%M:%SZ','now'))
   ''',
 ];
+
+/// عبارة الإصدار 6 — إزالة مفتاح بوابة البونص المتقاعد (موجة R16-a).
+///
+/// (علنية لتُختبر مباشرة.) التكليف الأصلي ذكر `app_settings` وعموداً
+/// لجدول `purchase_item` — بالمخطط المجمد الفعلي الجدول `settings`،
+/// وبنود الشراء تسكن `invoice_item` (وحصلت `free_qty` بها منذ هجرة v5
+/// بذات تعريف NUMERIC(12,3) NOT NULL DEFAULT 0)، فالهجرة تنظيف بيانات
+/// حصراً. `DELETE` idempotent بطبيعته؛ وحين يمرّ أي قاعدة قديمة (زرع
+/// v5 المفتاح 'off' أو كتب المستخدم 'on') يُحذف بلا استثناء — الإعداد
+/// **لم يعد موجوداً** والبوابة الديناميكية (freeQty>0) هي القاعدة
+/// الوحيدة الآن في البيع والشراء معاً.
+const String deleteSaleFreeQtyKeyV6 =
+    "DELETE FROM settings WHERE key = 'sale.free_qty'";
+
+/// عبارة الإصدار 6 (تتمة — R16-b/المنسق): حذف صف قالب الطباعة الحراري
+/// المتقاعد بقرار المالك. بذر v4 التاريخي يزرعه للقواعد الجديدة (هجرات
+/// v1→v6 تعمل تسلسلياً وقت الإنشاء) فيُحذف هنا؛ والقواعد القديمة التي
+/// بُذرت قبل الحذف يُنظّف صفها أيضاً — والقراءة فوق أي قاعدة متبقية
+/// تحوّل `thermal_80` لكلاسيكي (طبقة normalize بالمستودع). DELETE
+/// idempotent بطبيعته.
+const String deleteThermalTemplateV6 =
+    "DELETE FROM print_template WHERE code = 'thermal_80'";
 
 /// يطبّق كل الهجرات المعلّقة فوق قاعدة مفتوحة (idempotent).
 ///
