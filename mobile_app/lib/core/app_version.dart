@@ -6,7 +6,7 @@
 ///
 /// ملحوظة معمارية: قراءته من packageInfoPlus تعني تبعية + قناة منصة
 /// زائدة لقيمة ثابتة يعرفها المترجم أصلاً — const واحد أرخص وأدق هنا.
-const String appVersion = '0.11.0';
+const String appVersion = '0.11.2';
 
 /// الطور التسليمي المعروض ببطاقة «حول» (بجوار رقم الإصدار).
-const String appReleasePhase = 'ما قبل v1.0.0 — الموجة 2';
+const String appReleasePhase = 'ما قبل v1.0.0 — الشريحة 11';

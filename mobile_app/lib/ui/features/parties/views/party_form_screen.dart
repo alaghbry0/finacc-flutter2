@@ -201,7 +201,13 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
           ),
         ),
       );
-      unawaited(Navigator.of(context).maybePop());
+      // R17 — تأجيل الرجوع لإطار لاحق (نفس علة نموذج الصنف): الاستدعاء
+      // أثناء البناء يسبق التزام PopScope بcanPop الجديدة فيرتد حوار
+      // «مغادرة/بقاء» بعد نجاح الحفظ.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).maybePop();
+      });
     }
   }
 

@@ -104,7 +104,12 @@ InvoicePrintDoc buildInvoicePrintDoc(
     total: invoice.total,
     paidAmount: invoice.paidAmount,
     dueAmount: invoice.dueAmount,
-    payStatusLabel: _payStatusLabel(l10n, invoice.payStatus),
+    // R17 — الفاتورة الملغاة تطبع حالتها لا وضع دفعها: «ملغاة» مكان
+    // «نقدي/آجل/مختلط» حتى لا يستلم العميل مستنداً ملغىً يوحي بذمم
+    // قائمة (وضع الدفع الأصلي يبقى ظاهراً بشاشة التفاصيل والقوائم).
+    payStatusLabel: invoice.status == 'void'
+        ? l10n.invoiceVoidBadge
+        : _payStatusLabel(l10n, invoice.payStatus),
     taxNumber: company?.taxNumber,
     notesPrinted: invoice.notesPrinted,
     templateLabels: invoiceTemplateLabelsFor(l10n),

@@ -173,7 +173,15 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.itemFormSavedMessage)));
-      unawaited(Navigator.of(context).maybePop());
+      // R17 — تأجيل الرجوع لإطار لاحق: الاستدعاء المباشر أثناء البناء
+      // يسبق التزام PopScope بقيمة canPop الجديدة (isDirty=false بعد
+      // الحفظ) فيرصد الحارسُ رجوعَ ما بعد الحفظ كتغييرات غير محفوظة
+      // (علة اكتُشفت تحقياً حياً: حوار «مغادرة/بقاء» بعد نجاح الحفظ).
+      // نفس النمط الذي يستخدمه DirtyFormGuard نفسه.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).maybePop();
+      });
     }
   }
 
