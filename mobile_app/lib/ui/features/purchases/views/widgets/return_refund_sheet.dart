@@ -461,7 +461,6 @@ class _PreviewRow extends StatelessWidget {
   }
 }
 
-
 /// إيصال نجاح ترحيل المرتجع — SRN/PRN/الفاتورة الأصلية/قيمة الرد نقدياً
 /// ومن الحساب + شارة السعر التقديري عند fallback (FR-02-20).
 class PostedReturnReceiptCard extends StatelessWidget {

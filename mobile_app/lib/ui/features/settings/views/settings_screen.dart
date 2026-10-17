@@ -594,7 +594,10 @@ class _SecuritySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        FinSectionTitle(icon: Icons.shield_rounded, title: l10n.settingsSecurity),
+        FinSectionTitle(
+          icon: Icons.shield_rounded,
+          title: l10n.settingsSecurity,
+        ),
         const SizedBox(height: 8),
         FinCard(
           child: Column(

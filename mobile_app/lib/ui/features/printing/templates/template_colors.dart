@@ -21,8 +21,7 @@ pw.PdfColor templateDarken(pw.PdfColor color, [double factor = 0.55]) =>
 /// قابلية القراءة أيّ لونٍ يختاره المالك لرأس الجدول.
 pw.PdfColor templateOnColor(pw.PdfColor fill) {
   // الإضاءة المدركَة (نسب WCAG التقريبية).
-  final luminance =
-      0.299 * fill.red + 0.587 * fill.green + 0.114 * fill.blue;
+  final luminance = 0.299 * fill.red + 0.587 * fill.green + 0.114 * fill.blue;
   return luminance >= 0.55
       ? const pw.PdfColor.fromInt(0xFF1A2420)
       : pw.PdfColors.white;

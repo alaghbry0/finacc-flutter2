@@ -845,4 +845,3 @@ class _PreviewRow extends StatelessWidget {
     );
   }
 }
-

@@ -55,7 +55,10 @@ class AgingReportScreen extends StatelessWidget {
     return ChangeNotifierProvider<AgingViewModel>.value(
       value: vm,
       // إعادة التحميل عند العودة من مسار فرعي (سداد من تفاصيل الطرف…).
-      child: RefreshOnReturn(onReappear: vm.refresh, child: _AgingBody(origin: origin)),
+      child: RefreshOnReturn(
+        onReappear: vm.refresh,
+        child: _AgingBody(origin: origin),
+      ),
     );
   }
 }

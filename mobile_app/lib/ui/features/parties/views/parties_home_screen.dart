@@ -125,9 +125,8 @@ class _HeroCard extends StatelessWidget {
       title: l10n.partiesHomeHeroTitle,
       subtitle: Text(
         l10n.partiesHomeHeroSubtitle,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     );
   }
