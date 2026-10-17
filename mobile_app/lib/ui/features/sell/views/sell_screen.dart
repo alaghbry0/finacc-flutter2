@@ -14,22 +14,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../domain/core/result.dart';
-import '../../../../domain/models/party.dart';
-import '../../../../domain/models/sale.dart';
-import '../../../../domain/services/credit_limit.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/fin_tokens.dart';
-import '../../../core/widgets/amount_text.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/status_chip.dart';
-import '../view_models/customer_picker_view_model.dart';
 import '../view_models/print_on_save.dart';
 import '../view_models/sell_cart_session.dart';
 import '../view_models/sell_cart_view_model.dart';
@@ -38,6 +27,11 @@ import 'widgets/fx_rate_gate_sheet.dart';
 import 'widgets/invoice_pdf_preview.dart';
 import 'widgets/item_picker_sheet.dart';
 import 'widgets/payment_sheet.dart';
+import 'widgets/sell_bottom_bar.dart';
+import 'widgets/sell_cart_banners.dart';
+import 'widgets/sell_cart_line_card.dart';
+import 'widgets/sell_checkout_helpers.dart';
+import 'widgets/sell_targets_strip.dart';
 import 'widgets/sell_widgets.dart';
 
 /// شاشة إنشاء فاتورة بيع جديدة (مسار مقترح `/sell/new` — شاشة كاملة فوق
@@ -150,42 +144,7 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       // P1-3: عميل جديد سريع داخل المنتقي — ينشئ طرفاً بحد أدنى من
       // الحقول (اسم + هاتف، بلا رصيد افتتاحي) ويعيده مختاراً للسلة.
       onCreateCustomer: (name, phone) =>
-          _createQuickCustomer(app, vm, name, phone),
-    );
-  }
-
-  /// ينشئ عميلاً جديداً من المنتقي (P1-3) — بعملة السلة للعرض ورصيد
-  /// صفري (لا افتتاحي)؛ الفشل يُعاد للعرض داخل النموذج المصغّر.
-  Future<Result<CustomerPick, String>> _createQuickCustomer(
-    AppController app,
-    SellCartViewModel vm,
-    String name,
-    String? phone,
-  ) async {
-    final customers = app.customers;
-    final companies = app.companies;
-    if (customers == null || companies == null) {
-      return const Err<CustomerPick, String>(
-        'المستودعات غير جاهزة — أعد فتح الشاشة ثم حاول.',
-      );
-    }
-    final userId = (await companies.findAdminUserId()) ?? 1;
-    final result = await customers.createCustomer(
-      CustomerDraft(name: name, phone: phone),
-      userId: userId,
-    );
-    if (result.isErr) {
-      return Err<CustomerPick, String>(result.errorOrNull!);
-    }
-    return Ok<CustomerPick, String>(
-      CustomerPick(
-        partyId: result.valueOrNull!,
-        name: name,
-        phone: (phone ?? '').isEmpty ? null : phone,
-        currencyCode: vm.state.baseCurrency?.code ?? '',
-        balance: 0,
-        hasMoreCurrencies: false,
-      ),
+          createQuickSellCustomer(app, vm, name, phone),
     );
   }
 
@@ -236,7 +195,7 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
           vm.postSale(paidCash: paidCash, method: method),
       // FR-03-05 (17-c): بوابة حد الائتمان — تُجلب لحظة التأكيد من
       // المستودع (الحد + الرصيد الحي بعملة الفاتورة) والإعداد.
-      creditGate: () => _resolveCreditGate(app, vm),
+      creditGate: () => resolveSellCreditGate(app, vm),
       // P0-2: فتح معاينة PDF للفاتورة المرحّلة (نمط زر PDF القائم).
       printOnSave: printMode,
       // UX-2a: وضع الدفع الافتراضي من تفضيلات البيع.
@@ -252,32 +211,6 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
     if (posted) {
       vm.dismissReceipt();
     }
-  }
-
-  /// يجلب معطيات بوابة حد الائتمان — null عند غياب العميل/المستودعات
-  /// (عميل نقدي مجهول: لا آجل أصلاً فلا فحص — FR-03-05).
-  Future<CreditLimitGate?> _resolveCreditGate(
-    AppController app,
-    SellCartViewModel vm,
-  ) async {
-    final customerId = vm.state.customer?.id;
-    final currencyId = vm.state.currencyId;
-    if (customerId == null || currencyId == null) return null;
-    final customers = app.customers;
-    final settings = app.settings;
-    if (customers == null || settings == null) return null;
-    // checkCredit يقرأ الحد من جدول العميل والرصيد بصيغة FR-03-02
-    // بعملة الفاتورة (لا الحقل المخزَّن في السلة — دائماً حي).
-    final check = await customers.checkCredit(customerId, currencyId, 0);
-    final action = await settings.getString(
-      'parties.credit_limit_action',
-      'warn',
-    );
-    return CreditLimitGate(
-      creditLimit: check.creditLimit,
-      action: action,
-      currentBalance: check.balance,
-    );
   }
 
   Future<void> _saveQuotation() async {
@@ -330,119 +263,6 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
     }
   }
 
-  // ── البناء ────────────────────────────────────────────────────────
-
-  @override
-  Widget build(BuildContext context) {
-    final vm = context.watch<SellCartViewModel>();
-    final l10n = AppLocalizations.of(context)!;
-    final state = vm.state;
-    // UX-2a — أسماء أسطر البيع تحت التكلفة (فارغة عند إيقاف التحذير).
-    final belowCostNames = vm.belowCostLineNames;
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go('/sell')),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.sellScreenTitle),
-            Text(
-              state.nextInvoiceNo ?? l10n.sellNewInvoiceLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-                fontFeatures: FinText.tabularNums,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          if (state.lines.isNotEmpty)
-            IconButton(
-              tooltip: l10n.sellClearCartTooltip,
-              icon: const Icon(Icons.delete_sweep_rounded),
-              onPressed: _confirmClearCart,
-            ),
-        ],
-      ),
-      body: state.loading
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
-            )
-          : state.error != null
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: [
-                ErrorState(
-                  title: l10n.genericErrorTitle,
-                  message: l10n.dbOpenErrorMessage,
-                  technicalDetails: state.error.toString(),
-                  retryLabel: l10n.commonRetry,
-                  onRetry: vm.load,
-                  compact: true,
-                ),
-              ],
-            )
-          : SafeArea(
-              top: false,
-              bottom: false,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                      children: [
-                        _TargetsStrip(
-                          expanded: _headerExpanded,
-                          onToggle: () => setState(
-                            () => _headerExpanded = !_headerExpanded,
-                          ),
-                          onPickCustomer: _openCustomerPicker,
-                          onPickCash: () => context
-                              .read<SellCartViewModel>()
-                              .setCashCustomer(),
-                          onPickCurrency: (currencyId) => context
-                              .read<SellCartViewModel>()
-                              .setCurrency(currencyId),
-                        ),
-                        const SizedBox(height: 12),
-                        if (state.postError != null) ...[
-                          _PostErrorBanner(message: state.postError!),
-                          const SizedBox(height: 12),
-                        ],
-                        // UX-2a — `invoicing.discount_below_margin`: لافتة
-                        // تحذير عند بيع أسطر تحت التكلفة (تحذير لا منع).
-                        if (belowCostNames.isNotEmpty) ...[
-                          _BelowCostBanner(lineNames: belowCostNames),
-                          const SizedBox(height: 12),
-                        ],
-                        if (state.lines.isEmpty)
-                          _EmptyCart(onAdd: _openItemPicker)
-                        else
-                          for (var i = 0; i < state.lines.length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _CartLineCard(index: i),
-                            ),
-                      ],
-                    ),
-                  ),
-                  _BottomBar(
-                    onAddItem: _openItemPicker,
-                    onPay: _openPayment,
-                    onSaveQuotation: _saveQuotation,
-                    onInvoiceDiscount: _editInvoiceDiscount,
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
   Future<void> _editInvoiceDiscount() async {
     final vm = context.read<SellCartViewModel>();
     final l10n = AppLocalizations.of(context)!;
@@ -456,810 +276,126 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       vm.setInvoiceDiscount(result.$1, result.$2);
     }
   }
-}
 
-/// شريط الأهداف القابل للطي (عميل + عملة + تاريخ) — §6.5.
-class _TargetsStrip extends StatelessWidget {
-  const _TargetsStrip({
-    required this.expanded,
-    required this.onToggle,
-    required this.onPickCustomer,
-    required this.onPickCash,
-    required this.onPickCurrency,
-  });
-
-  final bool expanded;
-  final VoidCallback onToggle;
-  final VoidCallback onPickCustomer;
-  final VoidCallback onPickCash;
-  final ValueChanged<int> onPickCurrency;
+  // ── البناء ────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<SellCartViewModel>();
     final state = vm.state;
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
 
-    final customerLabel = state.customer?.name ?? l10n.sellCashCustomer;
-    final currency = state.selectedCurrency;
-    return FinCard(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.person_pin_circle_rounded,
-                  color: scheme.primary,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    customerLabel,
-                    style: Theme.of(context).textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w800),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                StatusChip(
-                  label: currency?.code ?? '—',
-                  tone: ChipTone.brand,
-                  dense: true,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  sellFormatDate(now),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontFeatures: FinText.tabularNums,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                AnimatedRotation(
-                  turns: expanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 220),
-                  child: Icon(
-                    Icons.expand_more_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 240),
-            crossFadeState: expanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(width: double.infinity),
-            secondChild: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: onPickCustomer,
-                          icon: const Icon(Icons.search_rounded, size: 18),
-                          label: Text(l10n.sellPickCustomer),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: onPickCash,
-                          icon: const Icon(Icons.person_off_outlined, size: 18),
-                          label: Text(l10n.sellCashCustomer),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  CurrencyPickerRow(
-                    currencies: [
-                      for (final c in state.currencies)
-                        CurrencyOption(
-                          id: c.id,
-                          code: c.code,
-                          isBase: c.isBase,
-                          rateKnown: c.isBase || c.id == state.currencyId
-                              ? state.rateKnown
-                              : true,
-                        ),
-                    ],
-                    selectedId: state.currencyId,
-                    todayRate: state.todayRate,
-                    onSelect: onPickCurrency,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// لافتة رفض الترحيل — رسالة عربية واضحة والسلة محفوظة.
-class _PostErrorBanner extends StatelessWidget {
-  const _PostErrorBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = FinColors.of(context);
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      accent: colors.negative,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline_rounded, color: colors.negative, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: IconButton(
-              tooltip: AppLocalizations.of(context)!.commonDone,
-              onPressed: () =>
-                  context.read<SellCartViewModel>().clearPostError(),
-              icon: const Icon(Icons.close_rounded, size: 18),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// لافتة تحذير البيع تحت التكلفة (UX-2a —
-/// `invoicing.discount_below_margin` = on): صافي السطر بعد كل الخصومات
-/// أدنى من تكلفته — تحذير ذهبي للمستخدم لا منع للترحيل.
-class _BelowCostBanner extends StatelessWidget {
-  const _BelowCostBanner({required this.lineNames});
-
-  final List<String> lineNames;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = FinColors.of(context);
-    final names = lineNames.take(3).join(' · ');
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      accent: colors.warning,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.trending_down_rounded, color: colors.warning, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              l10n.settings2BelowCostWarning(names),
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// حالة السلة الفارغة — CTA واحد كبير لإضافة أول صنف.
-class _EmptyCart extends StatelessWidget {
-  const _EmptyCart({required this.onAdd});
-
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: EmptyState(
-        icon: Icons.shopping_cart_outlined,
-        title: l10n.sellEmptyCartTitle,
-        message: l10n.sellEmptyCartBody,
-        actionLabel: l10n.sellAddItem,
-        onAction: onAdd,
-      ),
-    );
-  }
-}
-
-/// بطاقة سطر سلة واحدة — qty stepper + سعر قابل للتعديل + خصم سطر +
-/// إجمالي السطر الحي + «المتاح: N» بتحذير التجاوز (FR-02-02) + حذف بسحب.
-class _CartLineCard extends StatelessWidget {
-  const _CartLineCard({required this.index});
-
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    final vm = context.watch<SellCartViewModel>();
-    final state = vm.state;
-    if (index >= state.lines.length) return const SizedBox.shrink();
-    final line = state.lines[index];
-    final pricedLine = vm.pricedCart?.lines[index];
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final netFinal = pricedLine?.netFinal ?? line.qty * line.unitPrice;
-
-    return Dismissible(
-      key: ValueKey('cart_line_${line.productId}'),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) => vm.removeLine(index),
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 20),
-        decoration: BoxDecoration(
-          color: colors.negativeContainer,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Icon(Icons.delete_rounded, color: colors.onNegativeContainer),
-      ),
-      child: FinCard(
-        padding: const EdgeInsets.all(12),
-        // R16-a: نقرة صف السطر تفتح محرر السطر الموحّد (الكمية/الكمية
-        // المجانية/السعر/الخصم) — عناصر التحكم الداخلية (الدرّج/السعر/
-        // الخصم) تسبق هذه النقرة داخل ساحة الإيماءات.
-        onTap: () => _openLineEditor(context, vm, index),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go('/sell')),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: (line.isService ? scheme.tertiary : scheme.primary)
-                        .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(FinRadius.control),
-                  ),
-                  child: Icon(
-                    line.isService
-                        ? Icons.miscellaneous_services_rounded
-                        : Icons.inventory_2_rounded,
-                    size: 19,
-                    color: line.isService ? scheme.tertiary : scheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        line.name,
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      if (line.availableQty != null)
-                        Text(
-                          line.exceedsAvailable
-                              ? l10n.sellLineOverAvailable(
-                                  sellQtyText(line.availableQty!),
-                                )
-                              : l10n.sellLineAvailable(
-                                  sellQtyText(line.availableQty!),
-                                ),
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: line.exceedsAvailable
-                                    ? colors.negative
-                                    : scheme.onSurfaceVariant,
-                                fontWeight: line.exceedsAvailable
-                                    ? FontWeight.w800
-                                    : FontWeight.w400,
-                                fontFeatures: FinText.tabularNums,
-                              ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    AmountText(amount: netFinal, decimals: _decimals(netFinal)),
-                    Text(
-                      l10n.sellLineTotal,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Builder(
-              // R16-a — ثورة الكميات المجانية: شارة «(+N مجاني)» تظهر
-              // **حصراً عندما freeQty>0** (ديناميكياً بلا أي شرط إعدادات)،
-              // وحين تظهر ينتقل السعر (ومعه الخصم عند إظهار الخصومات)
-              // لسطر مستقل — صف الكمية + الشارة + السعر معاً يفيض 35px
-              // على 390dp (خلل كشفه اختبار UX-4-finish)؛ بلا بونص يبقى
-              // الصف الواحد كما اليوم حرفياً. إدخال البونص دائم التوفر
-              // بمحرر السطر الموحّد (نقرة على صف السطر).
-              builder: (context) {
-                Future<void> editDiscount() async {
-                  final result = await showDiscountEditSheet(
-                    context,
-                    title: l10n.sellLineDiscountTitle(line.name),
-                    initialType: line.discountType,
-                    initialValue: line.discountValue,
-                  );
-                  if (result != null) {
-                    vm.setLineDiscount(index, result.$1, result.$2);
-                  }
-                }
-
-                Future<void> editQty() async {
-                  // R17-a — نقرة قيمة الكمية: تحرير رقمي فوري (نقرة واحدة +
-                  // كتابة) بدل فتح محرر السطر الكامل — نفس قيود setQty
-                  // (> 0 ورقم سليم) وتجاوز المتاح يبقى بسياسة التفضيلات
-                  // (warn بصرياً / block عند الترحيل) كما بمحرر السطر.
-                  final value = await showNumberEditSheet(
-                    context,
-                    title: l10n.sellQtyEditTitle(line.name),
-                    initial: line.qty,
-                    confirmLabel: l10n.commonConfirm,
-                    allowZero: false,
-                    decimals: 3,
-                    icon: Icons.edit_outlined,
-                  );
-                  if (value != null && value > 0) {
-                    vm.setQty(index, value);
-                  }
-                }
-
-                Future<void> editPrice() async {
-                  final value = await showNumberEditSheet(
-                    context,
-                    title: l10n.sellEditPriceTitle(line.name),
-                    initial: line.unitPrice,
-                    confirmLabel: l10n.commonConfirm,
-                    icon: Icons.sell_outlined,
-                  );
-                  if (value != null) {
-                    vm.setUnitPrice(index, value);
-                  }
-                }
-
-                final priceButton = _PriceButton(
-                  price: line.unitPrice,
-                  onTap: editPrice,
-                );
-                final discountChip = _LineDiscountChip(
-                  type: line.discountType,
-                  value: line.discountValue,
-                  onTap: editDiscount,
-                );
-                final hasBonus = line.freeQty > 0.000001;
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        QtyStepper(
-                          qty: line.qty,
-                          onChanged: (qty) => vm.setQty(index, qty),
-                          onValueTap: editQty,
-                        ),
-                        // الشارة الديناميكية: عند وجود بونص حصراً — نقرة
-                        // تفتح محرر السطر (الحقل دائم التوفر هناك).
-                        if (hasBonus) ...[
-                          const SizedBox(width: 8),
-                          _BonusQtyChip(
-                            freeQty: line.freeQty,
-                            onTap: () => _openLineEditor(context, vm, index),
-                          ),
-                        ],
-                        if (!hasBonus) ...[
-                          const Spacer(),
-                          priceButton,
-                          // UX-2a — `sale.show_discounts` = off: خصم السطر
-                          // يختفي (الكاشير المبسّط بلا خصومات) والحسابات
-                          // مستمرة كالمعتاد.
-                          if (state.showDiscounts) ...[
-                            const SizedBox(width: 8),
-                            discountChip,
-                          ],
-                        ],
-                      ],
-                    ),
-                    // مع البونص: السعر والخصم بسطر مستقل — السعر بنهاية
-                    // الصف (نفس موضعه دائماً) والخصم بجواره.
-                    if (hasBonus) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Spacer(),
-                          priceButton,
-                          if (state.showDiscounts) ...[
-                            const SizedBox(width: 8),
-                            discountChip,
-                          ],
-                        ],
-                      ),
-                    ],
-                  ],
-                );
-              },
+            Text(AppLocalizations.of(context)!.sellScreenTitle),
+            Text(
+              state.nextInvoiceNo ??
+                  AppLocalizations.of(context)!.sellNewInvoiceLabel,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                fontFeatures: FinText.tabularNums,
+              ),
             ),
           ],
         ),
+        actions: [
+          if (state.lines.isNotEmpty)
+            IconButton(
+              tooltip: AppLocalizations.of(context)!.sellClearCartTooltip,
+              icon: const Icon(Icons.delete_sweep_rounded),
+              onPressed: _confirmClearCart,
+            ),
+        ],
       ),
+      body: _buildBody(context, vm, state),
     );
   }
 
-  /// يفتح محرر السطر الموحّد (R16-a): الكمية/الكمية المجانية/السعر/الخصم
-  /// — الدخول من نقرة صف السطر أو شارة البونص، وحقل البونص دائم التوفر
-  /// هناك بلا أي بوابة.
-  Future<void> _openLineEditor(
+  /// جسم الشاشة بحرّاس خروج مبكرين — نفس دلالة السلاسل المتداخلة
+  /// الأصلية حرفياً: تحميل ← خطأ ← المحتوى.
+  Widget _buildBody(
     BuildContext context,
     SellCartViewModel vm,
-    int index,
-  ) async {
-    final state = vm.state;
-    if (index < 0 || index >= state.lines.length) return;
-    final line = state.lines[index];
+    SellCartState state,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    final result = await showSellLineEditSheet(
-      context,
-      title: l10n.sellLineEditTitle(line.name),
-      initialQty: line.qty,
-      initialFreeQty: line.freeQty,
-      initialPrice: line.unitPrice,
-      initialDiscountType: line.discountType,
-      initialDiscountValue: line.discountValue,
-    );
-    if (result == null) return;
-    final (qty, freeQty, price, discountType, discountValue) = result;
-    if (qty != line.qty) {
-      vm.setQty(index, qty);
+    if (state.loading) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: const [ListSkeleton(rows: 6)],
+      );
     }
-    if (freeQty != line.freeQty) {
-      vm.setFreeQty(index, freeQty);
-    }
-    if (price != line.unitPrice) {
-      vm.setUnitPrice(index, price);
-    }
-    if (discountType != line.discountType ||
-        discountValue != line.discountValue) {
-      vm.setLineDiscount(index, discountType, discountValue);
-    }
-  }
-
-  static int _decimals(double value) =>
-      value == value.truncateToDouble() ? 0 : 2;
-}
-
-/// شارة الكمية المجانية (بونص — R16-a): «+N مجاني» **تظهر حصراً عند
-/// freeQty>0** (ديناميكية بلا أي إعدادات — لا وجود لها حين لا بونص)؛
-/// نقرة تفتح محرر السطر الموحّد (الصفر يمسح البونص هناك).
-class _BonusQtyChip extends StatelessWidget {
-  const _BonusQtyChip({required this.freeQty, required this.onTap});
-
-  final double freeQty;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = FinColors.of(context);
-    return InkWell(
-      key: const Key('sell_line_bonus_chip'),
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: colors.positiveContainer,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.redeem_rounded,
-              size: 15,
-              color: colors.onPositiveContainer,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              l10n.bonusQtyChipValue(sellQtyText(freeQty)),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: colors.onPositiveContainer,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PriceButton extends StatelessWidget {
-  const _PriceButton({required this.price, required this.onTap});
-
-  final double price;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AmountText(
-              amount: price,
-              decimals: price == price.truncateToDouble() ? 0 : 2,
-            ),
-            Text(
-              l10n.sellUnitPriceLabel,
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LineDiscountChip extends StatelessWidget {
-  const _LineDiscountChip({
-    required this.type,
-    required this.value,
-    required this.onTap,
-  });
-
-  final SaleDiscountType type;
-  final double value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = FinColors.of(context);
-    final label = value <= 0
-        ? l10n.sellLineDiscountNone
-        : type == SaleDiscountType.percent
-        ? l10n.sellLineDiscountPercent(value.toStringAsFixed(0))
-        : l10n.sellLineDiscountAmount(value.toStringAsFixed(2));
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: value > 0
-              ? colors.negativeContainer
-              : Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              value > 0 ? Icons.discount_rounded : Icons.add_rounded,
-              size: 15,
-              color: value > 0 ? colors.onNegativeContainer : null,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: value > 0 ? colors.onNegativeContainer : null,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// الشريط السفلي الثابت — ملخص حي + خصم الفاتورة + الدفع + عرض السعر.
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.onAddItem,
-    required this.onPay,
-    required this.onSaveQuotation,
-    required this.onInvoiceDiscount,
-  });
-
-  final VoidCallback onAddItem;
-  final VoidCallback onPay;
-  final VoidCallback onSaveQuotation;
-  final VoidCallback onInvoiceDiscount;
-
-  @override
-  Widget build(BuildContext context) {
-    final vm = context.watch<SellCartViewModel>();
-    final state = vm.state;
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final priced = vm.pricedCart;
-    final hasError = vm.cartError != null;
-    final canPay =
-        !state.posting &&
-        state.lines.isNotEmpty &&
-        !hasError &&
-        state.warehouseId != null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(top: BorderSide(color: colors.cardBorder, width: 1)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Wrap لا Row: زرا «إضافة صنف/خصم الفاتورة» يلتفان لسطر ثانٍ
-              // عند الشاشات الضيقة أو خطوط أعرض بدل فيض أفقي.
-              //
-              // UX-2a — `sale.show_discounts` = off: زر خصم الفاتورة يختفي
-              // (نفس إخفاء خصم السطر أعلاه).
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  SizedBox(
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      onPressed: onAddItem,
-                      icon: const Icon(
-                        Icons.add_shopping_cart_rounded,
-                        size: 20,
-                      ),
-                      label: Text(l10n.sellAddItem),
-                    ),
-                  ),
-                  if (state.showDiscounts)
-                    SizedBox(
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: onInvoiceDiscount,
-                        icon: Icon(
-                          state.invoiceDiscountValue > 0
-                              ? Icons.discount_rounded
-                              : Icons.percent_rounded,
-                          size: 20,
-                          color: state.invoiceDiscountValue > 0
-                              ? colors.negative
-                              : null,
-                        ),
-                        label: Text(
-                          state.invoiceDiscountValue > 0
-                              ? (state.invoiceDiscountType ==
-                                        SaleDiscountType.percent
-                                    ? l10n.sellInvoiceDiscountPercent(
-                                        state.invoiceDiscountValue
-                                            .toStringAsFixed(0),
-                                      )
-                                    : l10n.sellInvoiceDiscountAmount(
-                                        state.invoiceDiscountValue
-                                            .toStringAsFixed(2),
-                                      ))
-                              : l10n.sellInvoiceDiscountButton,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              if (priced != null) ...[
-                const SizedBox(height: 8),
-                CartTotalsPanel(
-                  totals: priced.totals,
-                  currencyCode: state.selectedCurrency?.code,
-                ),
-              ],
-              if (hasError) ...[
-                const SizedBox(height: 8),
-                Text(
-                  vm.cartError!,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: colors.negative,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: FilledButton.icon(
-                      onPressed: canPay ? onPay : null,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(56),
-                        textStyle: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      icon: const Icon(Icons.payments_rounded),
-                      label: Text(
-                        priced == null
-                            ? l10n.sellPayButton
-                            : l10n.sellPayButtonWithTotal(
-                                AmountText.formatFor(
-                                  context,
-                                  priced.totals.grandTotal,
-                                  priced.totals.grandTotal ==
-                                          priced.totals.grandTotal
-                                              .truncateToDouble()
-                                      ? 0
-                                      : 2,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed:
-                          state.lines.isEmpty || hasError || state.posting
-                          ? null
-                          : onSaveQuotation,
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(56),
-                      ),
-                      icon: const Icon(Icons.request_quote_rounded, size: 20),
-                      label: Text(l10n.sellSaveQuotation),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    if (state.error != null) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          ErrorState(
+            title: l10n.genericErrorTitle,
+            message: l10n.dbOpenErrorMessage,
+            technicalDetails: state.error.toString(),
+            retryLabel: l10n.commonRetry,
+            onRetry: vm.load,
+            compact: true,
           ),
-        ),
+        ],
+      );
+    }
+    // UX-2a — أسماء أسطر البيع تحت التكلفة (فارغة عند إيقاف التحذير).
+    final belowCostNames = vm.belowCostLineNames;
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              children: [
+                SellTargetsStrip(
+                  expanded: _headerExpanded,
+                  onToggle: () =>
+                      setState(() => _headerExpanded = !_headerExpanded),
+                  onPickCustomer: _openCustomerPicker,
+                  onPickCash: () =>
+                      context.read<SellCartViewModel>().setCashCustomer(),
+                  onPickCurrency: (currencyId) =>
+                      context.read<SellCartViewModel>().setCurrency(currencyId),
+                ),
+                const SizedBox(height: 12),
+                if (state.postError != null) ...[
+                  SellPostErrorBanner(message: state.postError!),
+                  const SizedBox(height: 12),
+                ],
+                // UX-2a — `invoicing.discount_below_margin`: لافتة
+                // تحذير عند بيع أسطر تحت التكلفة (تحذير لا منع).
+                if (belowCostNames.isNotEmpty) ...[
+                  SellBelowCostBanner(lineNames: belowCostNames),
+                  const SizedBox(height: 12),
+                ],
+                if (state.lines.isEmpty)
+                  SellEmptyCart(onAdd: _openItemPicker)
+                else
+                  for (var i = 0; i < state.lines.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: SellCartLineCard(index: i),
+                    ),
+              ],
+            ),
+          ),
+          SellBottomBar(
+            onAddItem: _openItemPicker,
+            onPay: _openPayment,
+            onSaveQuotation: _saveQuotation,
+            onInvoiceDiscount: _editInvoiceDiscount,
+          ),
+        ],
       ),
     );
   }
