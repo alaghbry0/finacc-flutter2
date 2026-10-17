@@ -363,7 +363,10 @@ void main() {
       // 10×25 + 200−20 = 430 كأن البونص غير موجود.
       expect(withBonus.totals.grandTotal, 430);
       // والتحقق يقبلها (بونص سليم ≥ 0).
-      expect(SalePricing.validateCart(withBonus.lines.map((l) => l.line).toList()), isNull);
+      expect(
+        SalePricing.validateCart(withBonus.lines.map((l) => l.line).toList()),
+        isNull,
+      );
     });
 
     test('validateCart يرفض بونص سالباً وغير الرقمي برسالة تحدد السطر', () {
@@ -381,7 +384,12 @@ void main() {
       );
       expect(
         SalePricing.validateCart([
-          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: double.infinity),
+          CartLine(
+            productId: 1,
+            qty: 1,
+            unitPrice: 10,
+            freeQty: double.infinity,
+          ),
         ]),
         contains('كمية البونص للسطر 1 غير صالحة'),
       );

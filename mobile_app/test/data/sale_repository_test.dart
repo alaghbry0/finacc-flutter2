@@ -1369,7 +1369,9 @@ void main() {
     test('بلا بونص: السلوك مطابق لما قبل UX-4 حرفياً (free_qty=0)', () async {
       final pen = await makeProduct('قلم', cost: 10, price: 25, qty: 50);
       final result = await sales.postSale(
-        cashDraft([CartLine(productId: pen, qty: 10, unitPrice: 25)], paidCash: 250),
+        cashDraft([
+          CartLine(productId: pen, qty: 10, unitPrice: 25),
+        ], paidCash: 250),
         userId: userId,
         now: at,
       );
@@ -1390,101 +1392,120 @@ void main() {
       expect(audit['details'] as String, isNot(contains('free=')));
     });
 
-    test('متتبع دفعات: FEFO يستهلك المنصرف الكلي (10+2 من دفعة واحدة)', () async {
-      // متتبع برصيد افتتاحي 20 (دفعة افتتاحية تلقائية من v2).
-      final milk = await makeProduct(
-        'لبن 1ل',
-        cost: 900,
-        price: 1100,
-        qty: 20,
-        tracked: true,
-      );
-      final result = await sales.postSale(
-        cashDraft([
-          CartLine(productId: milk, qty: 10, unitPrice: 1100, freeQty: 2),
-        ], paidCash: 11000),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+    test(
+      'متتبع دفعات: FEFO يستهلك المنصرف الكلي (10+2 من دفعة واحدة)',
+      () async {
+        // متتبع برصيد افتتاحي 20 (دفعة افتتاحية تلقائية من v2).
+        final milk = await makeProduct(
+          'لبن 1ل',
+          cost: 900,
+          price: 1100,
+          qty: 20,
+          tracked: true,
+        );
+        final result = await sales.postSale(
+          cashDraft([
+            CartLine(productId: milk, qty: 10, unitPrice: 1100, freeQty: 2),
+          ], paidCash: 11000),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
 
-      // الدفعة استُهلكت 12 (الكلية) — لا 10.
-      final batchRow = await row('batch');
-      expect((batchRow['qty'] as num).toDouble(), 8);
-      expect((await row('stock_level'))['qty'], 8);
+        // الدفعة استُهلكت 12 (الكلية) — لا 10.
+        final batchRow = await row('batch');
+        expect((batchRow['qty'] as num).toDouble(), 8);
+        expect((await row('stock_level'))['qty'], 8);
 
-      // حركة الدفعة الواحدة بكمية −12 وبوسم البونص.
-      final movements = await handle.db.query(
-        'stock_movement',
-        where: "product_id = $milk AND movement_type = 'sale'",
-      );
-      expect(movements, hasLength(1));
-      expect((movements.first['qty'] as num).toDouble(), -12);
-      expect(movements.first['notes'] as String, contains('بونص: 2'));
+        // حركة الدفعة الواحدة بكمية −12 وبوسم البونص.
+        final movements = await handle.db.query(
+          'stock_movement',
+          where: "product_id = $milk AND movement_type = 'sale'",
+        );
+        expect(movements, hasLength(1));
+        expect((movements.first['qty'] as num).toDouble(), -12);
+        expect(movements.first['notes'] as String, contains('بونص: 2'));
 
-      // السطر يحمل الدفعة وملخص 12 والملاحظة تحمل البونص.
-      final item = await row('invoice_item');
-      expect(item['batch_id'], batchRow['id']);
-      expect(item['notes'] as String, contains('افتتاحي-'));
-      expect(item['notes'] as String, contains('×12'));
-      expect(item['line_cost'], 10800); // 12 × 900.
-    });
+        // السطر يحمل الدفعة وملخص 12 والملاحظة تحمل البونص.
+        final item = await row('invoice_item');
+        expect(item['batch_id'], batchRow['id']);
+        expect(item['notes'] as String, contains('افتتاحي-'));
+        expect(item['notes'] as String, contains('×12'));
+        expect(item['line_cost'], 10800); // 12 × 900.
+      },
+    );
 
-    test('عجز يشمل المجاني: متاح 11 والمطلوب الكلي 12 → رفض برسالة تشمل 12', () async {
-      final pen = await makeProduct('قلم', cost: 10, price: 25, qty: 11);
-      final result = await sales.postSale(
-        cashDraft([
-          CartLine(productId: pen, qty: 10, unitPrice: 25, freeQty: 2),
-        ], paidCash: 250),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isErr, isTrue);
-      final message = result.errorOrNull!;
-      expect(message, contains('الكمية غير متوفرة'));
-      expect(message, contains('12'), reason: 'المطلوب الكلي بالمجاني');
-      expect(message, contains('مجاني'), reason: 'الرسالة تميّز نصيب المجاني');
-      // ولا شيء كُتب إطلاقاً (ذرّية الفشل) — حركة الافتتاح وحدها باقية.
-      expect(await count('invoice'), 0);
-      expect(await count('invoice_item'), 0);
-      expect(await count('stock_movement', where: "movement_type = 'sale'"), 0);
-      expect((await row('stock_level'))['qty'], 11);
-    });
+    test(
+      'عجز يشمل المجاني: متاح 11 والمطلوب الكلي 12 → رفض برسالة تشمل 12',
+      () async {
+        final pen = await makeProduct('قلم', cost: 10, price: 25, qty: 11);
+        final result = await sales.postSale(
+          cashDraft([
+            CartLine(productId: pen, qty: 10, unitPrice: 25, freeQty: 2),
+          ], paidCash: 250),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isErr, isTrue);
+        final message = result.errorOrNull!;
+        expect(message, contains('الكمية غير متوفرة'));
+        expect(message, contains('12'), reason: 'المطلوب الكلي بالمجاني');
+        expect(
+          message,
+          contains('مجاني'),
+          reason: 'الرسالة تميّز نصيب المجاني',
+        );
+        // ولا شيء كُتب إطلاقاً (ذرّية الفشل) — حركة الافتتاح وحدها باقية.
+        expect(await count('invoice'), 0);
+        expect(await count('invoice_item'), 0);
+        expect(
+          await count('stock_movement', where: "movement_type = 'sale'"),
+          0,
+        );
+        expect((await row('stock_level'))['qty'], 11);
+      },
+    );
 
-    test('عجز داخل المعاملة بحارس stock_level يشمل المجاني (متتبع بدفتر أنقص)', () async {
-      // متتبع: الفحص المسبق يقرأ الدفعات (12 ✓) بينما دفتر stock_level
-      // أنقص خارجياً (11) فيصطدم الحارس داخل المعاملة بالمطلوب الكلي —
-      // وترتد المعاملة كاملة (الدفعة تُعاد ولا فاتورة).
-      final milk = await makeProduct(
-        'لبن 1ل',
-        cost: 900,
-        price: 1100,
-        qty: 12,
-        tracked: true,
-      );
-      await handle.db.rawUpdate(
-        'UPDATE stock_level SET qty = 11 WHERE product_id = ?',
-        [milk],
-      );
-      final result = await sales.postSale(
-        cashDraft([
-          CartLine(productId: milk, qty: 10, unitPrice: 1100, freeQty: 2),
-        ], paidCash: 11000),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isErr, isTrue);
-      final message = result.errorOrNull!;
-      expect(message, contains('الرصيد الدفتري'));
-      expect(message, contains('12'), reason: 'المطلوب الكلي');
-      expect(message, contains('مجاني'), reason: 'نصيب المجاني ظاهر');
-      // الذرّية الكاملة: الدفعة لم تُستهلك ولا فاتورة ولا حركة بيع
-      // (حركة الافتتاح وحدها باقية).
-      expect((await row('batch'))['qty'], 12);
-      expect(await count('invoice'), 0);
-      expect(await count('stock_movement', where: "movement_type = 'sale'"), 0);
-      expect((await row('stock_level'))['qty'], 11);
-    });
+    test(
+      'عجز داخل المعاملة بحارس stock_level يشمل المجاني (متتبع بدفتر أنقص)',
+      () async {
+        // متتبع: الفحص المسبق يقرأ الدفعات (12 ✓) بينما دفتر stock_level
+        // أنقص خارجياً (11) فيصطدم الحارس داخل المعاملة بالمطلوب الكلي —
+        // وترتد المعاملة كاملة (الدفعة تُعاد ولا فاتورة).
+        final milk = await makeProduct(
+          'لبن 1ل',
+          cost: 900,
+          price: 1100,
+          qty: 12,
+          tracked: true,
+        );
+        await handle.db.rawUpdate(
+          'UPDATE stock_level SET qty = 11 WHERE product_id = ?',
+          [milk],
+        );
+        final result = await sales.postSale(
+          cashDraft([
+            CartLine(productId: milk, qty: 10, unitPrice: 1100, freeQty: 2),
+          ], paidCash: 11000),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isErr, isTrue);
+        final message = result.errorOrNull!;
+        expect(message, contains('الرصيد الدفتري'));
+        expect(message, contains('12'), reason: 'المطلوب الكلي');
+        expect(message, contains('مجاني'), reason: 'نصيب المجاني ظاهر');
+        // الذرّية الكاملة: الدفعة لم تُستهلك ولا فاتورة ولا حركة بيع
+        // (حركة الافتتاح وحدها باقية).
+        expect((await row('batch'))['qty'], 12);
+        expect(await count('invoice'), 0);
+        expect(
+          await count('stock_movement', where: "movement_type = 'sale'"),
+          0,
+        );
+        expect((await row('stock_level'))['qty'], 11);
+      },
+    );
 
     test('أسطر متعددة لنفس الصنف: البونص يجمع بالمنصرف الكلي للفحص', () async {
       // سطران: 8+1 و2+1 = 12 كلياً من متاح 11 → رفض.
@@ -1512,7 +1533,10 @@ void main() {
       expect(ok.isOk, isTrue, reason: '${ok.errorOrNull}');
       final invoice = await row('invoice', where: "total = 250");
       expect(invoice['cost_total'], 120); // (9+3)×10.
-      expect((await row('stock_level', where: "product_id = $chalk"))['qty'], 0);
+      expect(
+        (await row('stock_level', where: "product_id = $chalk"))['qty'],
+        0,
+      );
     });
 
     test('بونص مع خصومات: الخصم من المدفوع حصراً والإيراد غير مشوه', () async {
@@ -1564,56 +1588,67 @@ void main() {
       expect((movement['qty'] as num).toDouble(), -5.5);
     });
 
-    test('الصنف الخدمي ببونص: بلا مخزون والتكلفة صفر والإيراد من المدفوع', () async {
-      final service = await makeProduct(
-        'تركيب صيانة',
-        cost: 0,
-        price: 500,
-        service: true,
-      );
-      final result = await sales.postSale(
-        cashDraft([
-          CartLine(productId: service, qty: 3, unitPrice: 500, freeQty: 1),
-        ], paidCash: 1500),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      final invoice = await row('invoice');
-      expect(invoice['total'], 1500);
-      expect(invoice['cost_total'], 0); // خدمي: لا تكلفة.
-      final item = await row('invoice_item');
-      expect(item['free_qty'], 1);
-      expect(item['line_cost'], 0);
-      // لا حركات مخزون للخدمي إطلاقاً.
-      expect(await count('stock_movement'), 0);
-      expect(await count('stock_level'), 0);
-    });
+    test(
+      'الصنف الخدمي ببونص: بلا مخزون والتكلفة صفر والإيراد من المدفوع',
+      () async {
+        final service = await makeProduct(
+          'تركيب صيانة',
+          cost: 0,
+          price: 500,
+          service: true,
+        );
+        final result = await sales.postSale(
+          cashDraft([
+            CartLine(productId: service, qty: 3, unitPrice: 500, freeQty: 1),
+          ], paidCash: 1500),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        final invoice = await row('invoice');
+        expect(invoice['total'], 1500);
+        expect(invoice['cost_total'], 0); // خدمي: لا تكلفة.
+        final item = await row('invoice_item');
+        expect(item['free_qty'], 1);
+        expect(item['line_cost'], 0);
+        // لا حركات مخزون للخدمي إطلاقاً.
+        expect(await count('stock_movement'), 0);
+        expect(await count('stock_level'), 0);
+      },
+    );
 
-    test('آجل ببونص: الدين من المدفوع حصراً (الائتمان لا يرى المجاني)', () async {
-      final customer = await makeCustomer('سالم');
-      final pen = await makeProduct('قلم', cost: 10, price: 25, qty: 50);
-      final result = await sales.postSale(
-        SaleDraft(
-          customerId: customer,
-          currencyId: baseCurrencyId,
-          lines: [CartLine(productId: pen, qty: 10, unitPrice: 25, freeQty: 5)],
-          paidCash: 0,
-          paymentMethod: SalePaymentMethod.credit,
-          warehouseId: warehouseId,
-          issuedAt: at,
-        ),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      final invoice = await row('invoice');
-      expect(invoice['due_amount'], 250); // الدين = 10×25 فقط.
-      expect(invoice['cost_total'], 150); // COGS على 15.
-      // رصيد العميل 250 (لا خصم للمجاني الذي لم يُدفع).
-      expect(await customers.balanceInCurrency(customer, baseCurrencyId), 250);
-      // والمخزون نقص 15.
-      expect((await row('stock_level'))['qty'], 35);
-    });
+    test(
+      'آجل ببونص: الدين من المدفوع حصراً (الائتمان لا يرى المجاني)',
+      () async {
+        final customer = await makeCustomer('سالم');
+        final pen = await makeProduct('قلم', cost: 10, price: 25, qty: 50);
+        final result = await sales.postSale(
+          SaleDraft(
+            customerId: customer,
+            currencyId: baseCurrencyId,
+            lines: [
+              CartLine(productId: pen, qty: 10, unitPrice: 25, freeQty: 5),
+            ],
+            paidCash: 0,
+            paymentMethod: SalePaymentMethod.credit,
+            warehouseId: warehouseId,
+            issuedAt: at,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        final invoice = await row('invoice');
+        expect(invoice['due_amount'], 250); // الدين = 10×25 فقط.
+        expect(invoice['cost_total'], 150); // COGS على 15.
+        // رصيد العميل 250 (لا خصم للمجاني الذي لم يُدفع).
+        expect(
+          await customers.balanceInCurrency(customer, baseCurrencyId),
+          250,
+        );
+        // والمخزون نقص 15.
+        expect((await row('stock_level'))['qty'], 35);
+      },
+    );
   });
 }

@@ -47,13 +47,16 @@ void main() {
     settings = SettingsRepository(handle.db);
     warehouseId =
         (await handle.db.rawQuery('SELECT id FROM warehouse LIMIT 1'))
-            .first['id'] as int;
+                .first['id']
+            as int;
     userId =
         (await handle.db.rawQuery('SELECT id FROM app_user LIMIT 1'))
-            .first['id'] as int;
+                .first['id']
+            as int;
     baseCurrencyId =
         (await handle.db.rawQuery('SELECT id FROM currency WHERE is_base = 1'))
-            .first['id'] as int;
+                .first['id']
+            as int;
     final supplierResult = await suppliers.createSupplier(
       SupplierDraft(name: 'مورد البونص'),
       userId: userId,
@@ -147,81 +150,85 @@ void main() {
       expect(withBonus.lines.single.unitCostEffective, 120);
     });
 
-    test('validateCart يرفض بونص سالباً وأدق من ثلاث منازل برسالة تحدد البند',
-        () {
-      expect(
-        PurchasePricing.validateCart([
-          PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: -1),
-        ]),
-        contains('كمية بونص البند 1 لا يمكن أن تكون سالبة'),
-      );
-      expect(
-        PurchasePricing.validateCart([
-          PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: 0.0005),
-        ]),
-        contains('لا تقبل دقة أعلى من ثلاث منازل'),
-      );
-      // السليم يمر (ثالث منزلة كاملة).
-      expect(
-        PurchasePricing.validateCart([
-          PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: 1.005),
-        ]),
-        isNull,
-      );
-    });
+    test(
+      'validateCart يرفض بونص سالباً وأدق من ثلاث منازل برسالة تحدد البند',
+      () {
+        expect(
+          PurchasePricing.validateCart([
+            PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: -1),
+          ]),
+          contains('كمية بونص البند 1 لا يمكن أن تكون سالبة'),
+        );
+        expect(
+          PurchasePricing.validateCart([
+            PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: 0.0005),
+          ]),
+          contains('لا تقبل دقة أعلى من ثلاث منازل'),
+        );
+        // السليم يمر (ثالث منزلة كاملة).
+        expect(
+          PurchasePricing.validateCart([
+            PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: 1.005),
+          ]),
+          isNull,
+        );
+      },
+    );
   });
 
   // ── المحاكاة الملزمة: 10+2 مجاني بتكلفة 1200 → 12 وحدة WAC=100 ──
 
   group('postPurchase — المستلم الكلي وWAC المخفوض (قرار R16-a)', () {
-    test('شراء 10+2 مجاني بتكلفة 1200: رصيد 12 وحركة +12 وWAC=100 والمورد 1200',
-        () async {
-      final item = await makeProduct('شامبو بونص');
-      final result = await purchases.postPurchase(
-        draft(
-          [PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2)],
-          paidCash: 1200,
-          method: PurchasePaymentMethod.cash,
-        ),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      final receipt = result.valueOrNull!;
+    test(
+      'شراء 10+2 مجاني بتكلفة 1200: رصيد 12 وحركة +12 وWAC=100 والمورد 1200',
+      () async {
+        final item = await makeProduct('شامبو بونص');
+        final result = await purchases.postPurchase(
+          draft(
+            [PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2)],
+            paidCash: 1200,
+            method: PurchasePaymentMethod.cash,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        final receipt = result.valueOrNull!;
 
-      // المورد يُستحق من المدفوع حصراً — كأن البونص غير موجود إطلاقاً.
-      expect(receipt.totals.subtotal, 1200);
-      expect(receipt.totals.grandTotal, 1200);
-      expect(receipt.remainingCredit, 0);
+        // المورد يُستحق من المدفوع حصراً — كأن البونص غير موجود إطلاقاً.
+        expect(receipt.totals.subtotal, 1200);
+        expect(receipt.totals.grandTotal, 1200);
+        expect(receipt.remainingCredit, 0);
 
-      // رأس الفاتورة: الصافي بالمدفوع وقيمة المخزون الوارد = 1200.
-      final invoice = await row('invoice');
-      expect(invoice['total'], 1200);
-      expect(invoice['total_base'], 1200);
-      expect(invoice['cost_total'], 1200);
+        // رأس الفاتورة: الصافي بالمدفوع وقيمة المخزون الوارد = 1200.
+        final invoice = await row('invoice');
+        expect(invoice['total'], 1200);
+        expect(invoice['total_base'], 1200);
+        expect(invoice['cost_total'], 1200);
 
-      // السطر: qty=10 وfree_qty=2 وline_cost = الكلي × 100 = 1200.
-      final line = await row('invoice_item');
-      expect(line['qty'], 10);
-      expect((line['free_qty'] as num?)?.toDouble(), 2);
-      expect(line['line_total'], 1200);
-      expect(line['line_cost'], 1200);
+        // السطر: qty=10 وfree_qty=2 وline_cost = الكلي × 100 = 1200.
+        final line = await row('invoice_item');
+        expect(line['qty'], 10);
+        expect((line['free_qty'] as num?)?.toDouble(), 2);
+        expect(line['line_total'], 1200);
+        expect(line['line_cost'], 1200);
 
-      // المخزون استقبل الكلي: 12 وحدة بحركة موجبة بتكلفة 100 موسومة
-      // بالبونص (تتبع/تدقيق).
-      expect(await stockQty(item), 12);
-      final movement = await row(
-        'stock_movement',
-        where: "product_id = $item AND movement_type = 'purchase'",
-      );
-      expect((movement['qty'] as num).toDouble(), 12);
-      expect(movement['unit_cost'], 100);
-      expect(movement['notes'] as String, contains('بونص: 2'));
+        // المخزون استقبل الكلي: 12 وحدة بحركة موجبة بتكلفة 100 موسومة
+        // بالبونص (تتبع/تدقيق).
+        expect(await stockQty(item), 12);
+        final movement = await row(
+          'stock_movement',
+          where: "product_id = $item AND movement_type = 'purchase'",
+        );
+        expect((movement['qty'] as num).toDouble(), 12);
+        expect(movement['unit_cost'], 100);
+        expect(movement['notes'] as String, contains('بونص: 2'));
 
-      // **WAC = إجمالي التكلفة ÷ المستلم الكلي = 1200 ÷ 12 = 100** —
-      // البونص خفّض التكلفة الوحدوية من 120 إلى 100.
-      expect(await productCost(item), 100);
-    });
+        // **WAC = إجمالي التكلفة ÷ المستلم الكلي = 1200 ÷ 12 = 100** —
+        // البونص خفّض التكلفة الوحدوية من 120 إلى 100.
+        expect(await productCost(item), 100);
+      },
+    );
 
     test('متتبع بدفعة: الدفعة الواردة تستقبل 12 وحدة بتكلفة 100', () async {
       final item = await makeProduct('دواء بونص', tracked: true);
@@ -252,23 +259,30 @@ void main() {
       expect(line['notes'] as String, contains('بونص: 2'));
     });
 
-    test('خلط WAC: قديم 5×80 + وارد 12×100 → WAC = 1600/17 = 94.1176', () async {
-      final item = await makeProduct('خلط بونص', cost: 80, qty: 5);
-      final result = await purchases.postPurchase(
-        draft([PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2)]),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+    test(
+      'خلط WAC: قديم 5×80 + وارد 12×100 → WAC = 1600/17 = 94.1176',
+      () async {
+        final item = await makeProduct('خلط بونص', cost: 80, qty: 5);
+        final result = await purchases.postPurchase(
+          draft([
+            PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2),
+          ]),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
 
-      expect(await stockQty(item), 17);
-      expect(await productCost(item), closeTo(94.1176, 0.00005));
-    });
+        expect(await stockQty(item), 17);
+        expect(await productCost(item), closeTo(94.1176, 0.00005));
+      },
+    );
 
     test('بونص كسري: 0.5 مجاني يدخل الكلي بدقة NUMERIC(12,3)', () async {
       final item = await makeProduct('بونص كسري');
       final result = await purchases.postPurchase(
-        draft([PurchaseLine(productId: item, qty: 4, unitCost: 100, freeQty: 0.5)]),
+        draft([
+          PurchaseLine(productId: item, qty: 4, unitCost: 100, freeQty: 0.5),
+        ]),
         userId: userId,
         now: at,
       );
@@ -278,67 +292,86 @@ void main() {
       expect(await productCost(item), closeTo(88.8889, 0.00005));
     });
 
-    test('آجل ببونص: دين المورد من المدفوع حصراً (لا تضخيم بال مجاني)', () async {
-      final item = await makeProduct('آجل بونص');
-      final result = await purchases.postPurchase(
-        draft([PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2)]),
-        userId: userId,
-        now: at,
-      );
-      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-      final invoice = await row('invoice');
-      expect(invoice['pay_status'], 'credit');
-      expect(invoice['total'], 1200);
-      expect(invoice['due_amount'], 1200, reason: 'الدين بالمدفوع فقط');
-      expect(invoice['paid_amount'], 0);
-    });
+    test(
+      'آجل ببونص: دين المورد من المدفوع حصراً (لا تضخيم بال مجاني)',
+      () async {
+        final item = await makeProduct('آجل بونص');
+        final result = await purchases.postPurchase(
+          draft([
+            PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2),
+          ]),
+          userId: userId,
+          now: at,
+        );
+        expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+        final invoice = await row('invoice');
+        expect(invoice['pay_status'], 'credit');
+        expect(invoice['total'], 1200);
+        expect(invoice['due_amount'], 1200, reason: 'الدين بالمدفوع فقط');
+        expect(invoice['paid_amount'], 0);
+      },
+    );
   });
 
   // ── المرتجع: Snapshot تكلفة الوحدة = line_cost ÷ المستلم الكلي ────
 
   group('postPurchaseReturn — بونص الشراء (مرآة قرار 8 للبيع)', () {
-    test('مرتجع وحدة من شراء 10+2: تكلفة الوحدة 100 (1200÷12) والرد 120', () async {
-      final item = await makeProduct('مرتجع بونص');
-      final purchase = await purchases.postPurchase(
-        draft([PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2)]),
-        userId: userId,
-        now: at,
-      );
-      expect(purchase.isOk, isTrue);
-      final purchaseId = purchase.valueOrNull!.invoiceId;
+    test(
+      'مرتجع وحدة من شراء 10+2: تكلفة الوحدة 100 (1200÷12) والرد 120',
+      () async {
+        final item = await makeProduct('مرتجع بونص');
+        final purchase = await purchases.postPurchase(
+          draft([
+            PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2),
+          ]),
+          userId: userId,
+          now: at,
+        );
+        expect(purchase.isOk, isTrue);
+        final purchaseId = purchase.valueOrNull!.invoiceId;
 
-      final returnResult = await returns.postPurchaseReturn(
-        PurchaseReturnDraft(
-          originalInvoiceId: purchaseId,
-          lines: [
-            ReturnLineInput(invoiceItemId: await firstItemId(purchaseId), qty: 1),
-          ],
-          refundMethod: ReturnRefundMethod.credit,
-          issuedAt: at,
-        ),
-        userId: userId,
-        now: at,
-      );
-      expect(returnResult.isOk, isTrue, reason: '${returnResult.errorOrNull}');
+        final returnResult = await returns.postPurchaseReturn(
+          PurchaseReturnDraft(
+            originalInvoiceId: purchaseId,
+            lines: [
+              ReturnLineInput(
+                invoiceItemId: await firstItemId(purchaseId),
+                qty: 1,
+              ),
+            ],
+            refundMethod: ReturnRefundMethod.credit,
+            issuedAt: at,
+          ),
+          userId: userId,
+          now: at,
+        );
+        expect(
+          returnResult.isOk,
+          isTrue,
+          reason: '${returnResult.errorOrNull}',
+        );
 
-      // الرد النقدي للمورد من وحدة مدفوعة واحدة = 120 (unit_price الأصلي).
-      expect(returnResult.valueOrNull!.refundTotal, 120);
-      // تكلفة الوحدة المنقولة Snapshot = 1200 ÷ 12 = 100 — الوحدات تخرج
-      // بقيمتها الصحيحة بلا تضخيم.
-      final returnLine = await row(
-        'invoice_item',
-        where: "invoice_id = (SELECT id FROM invoice WHERE doc_type = 'purchase_return')",
-      );
-      expect(returnLine['line_cost'], 100);
-      // المخزون 12 − 1 = 11 وWAC يبقى 100.
-      expect(await stockQty(item), 11);
-      expect(await productCost(item), 100);
-    });
+        // الرد النقدي للمورد من وحدة مدفوعة واحدة = 120 (unit_price الأصلي).
+        expect(returnResult.valueOrNull!.refundTotal, 120);
+        // تكلفة الوحدة المنقولة Snapshot = 1200 ÷ 12 = 100 — الوحدات تخرج
+        // بقيمتها الصحيحة بلا تضخيم.
+        final returnLine = await row(
+          'invoice_item',
+          where: "invoice_id = (SELECT id FROM invoice WHERE doc_type = 'purchase_return')",
+        );
+        expect(returnLine['line_cost'], 100);
+        // المخزون 12 − 1 = 11 وWAC يبقى 100.
+        expect(await stockQty(item), 11);
+        expect(await productCost(item), 100);
+      },
+    );
 
     test('سقف الإرجاع = المدفوع حصراً: 11 وحدة من 10+2 مرفوضة', () async {
       final item = await makeProduct('سقف بونص');
       final purchase = await purchases.postPurchase(
-        draft([PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2)]),
+        draft([
+          PurchaseLine(productId: item, qty: 10, unitCost: 120, freeQty: 2),
+        ]),
         userId: userId,
         now: at,
       );
@@ -348,7 +381,10 @@ void main() {
         PurchaseReturnDraft(
           originalInvoiceId: purchaseId,
           lines: [
-            ReturnLineInput(invoiceItemId: await firstItemId(purchaseId), qty: 11),
+            ReturnLineInput(
+              invoiceItemId: await firstItemId(purchaseId),
+              qty: 11,
+            ),
           ],
           refundMethod: ReturnRefundMethod.credit,
           issuedAt: at,
@@ -365,32 +401,35 @@ void main() {
 
   // ── غياب البونص: سلوك ما قبل R16-a حرفياً ────────────────────────
 
-  test('بلا بونص: السلوك مطابق لما قبل R16-a (free_qty=0 وحياد كامل)', () async {
-    final item = await makeProduct('بلا بونص');
-    final result = await purchases.postPurchase(
-      draft(
-        [PurchaseLine(productId: item, qty: 4, unitCost: 25)],
-        paidCash: 100,
-        method: PurchasePaymentMethod.cash,
-      ),
-      userId: userId,
-      now: at,
-    );
-    expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
-    final line = await row('invoice_item');
-    expect((line['free_qty'] as num?)?.toDouble(), 0);
-    expect(line['line_cost'], 100);
-    expect(line['notes'], isNull, reason: 'لا وسم بونص');
-    expect(await stockQty(item), 4);
-    expect(await productCost(item), 25);
-    final movement = await row(
-      'stock_movement',
-      where: "product_id = $item AND movement_type = 'purchase'",
-    );
-    expect((movement['qty'] as num).toDouble(), 4);
-    expect(movement['unit_cost'], 25);
-    expect(movement['notes'] as String, isNot(contains('بونص')));
-    // المفتاح المتقاعد غير موجود أصلاً (هجرة v6).
-    expect(await settings.raw('sale.free_qty'), isNull);
-  });
+  test(
+    'بلا بونص: السلوك مطابق لما قبل R16-a (free_qty=0 وحياد كامل)',
+    () async {
+      final item = await makeProduct('بلا بونص');
+      final result = await purchases.postPurchase(
+        draft(
+          [PurchaseLine(productId: item, qty: 4, unitCost: 25)],
+          paidCash: 100,
+          method: PurchasePaymentMethod.cash,
+        ),
+        userId: userId,
+        now: at,
+      );
+      expect(result.isOk, isTrue, reason: '${result.errorOrNull}');
+      final line = await row('invoice_item');
+      expect((line['free_qty'] as num?)?.toDouble(), 0);
+      expect(line['line_cost'], 100);
+      expect(line['notes'], isNull, reason: 'لا وسم بونص');
+      expect(await stockQty(item), 4);
+      expect(await productCost(item), 25);
+      final movement = await row(
+        'stock_movement',
+        where: "product_id = $item AND movement_type = 'purchase'",
+      );
+      expect((movement['qty'] as num).toDouble(), 4);
+      expect(movement['unit_cost'], 25);
+      expect(movement['notes'] as String, isNot(contains('بونص')));
+      // المفتاح المتقاعد غير موجود أصلاً (هجرة v6).
+      expect(await settings.raw('sale.free_qty'), isNull);
+    },
+  );
 }

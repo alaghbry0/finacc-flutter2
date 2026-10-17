@@ -107,52 +107,46 @@ void main() {
   }
 
   group('البونص دائم التوفر — بلا أي بوابة إعدادات (R16-a)', () {
-    test(
-      'setFreeQty تسري فوراً بلا أي إعداد وبلا أي أثر بالتسعير، '
-      'والمفتاح المتقاعد غير معتمد بالمستودع',
-      () async {
-        await openDb();
-        // لم يُكتب أي إعداد — الحقل متاح دائماً الآن.
-        final vm = await newVm();
-        await addStockedItem(vm);
+    test('setFreeQty تسري فوراً بلا أي إعداد وبلا أي أثر بالتسعير، '
+        'والمفتاح المتقاعد غير معتمد بالمستودع', () async {
+      await openDb();
+      // لم يُكتب أي إعداد — الحقل متاح دائماً الآن.
+      final vm = await newVm();
+      await addStockedItem(vm);
 
-        // تحرير البونص: قيمة السطر تتغير والإجمالي لا يمس إطلاقاً.
-        expect(vm.grandTotal, 100);
-        vm.setFreeQty(0, 2);
-        expect(vm.state.lines.single.freeQty, 2);
-        expect(vm.grandTotal, 100, reason: 'البونص لا يدخل أي تسعير');
-        expect(vm.pricedCart!.lines.single.netFinal, 100);
-        // ويسري للترحيل عبر CartLine (المنصرف الكلي هناك).
-        expect(vm.cartLines.single.freeQty, 2);
+      // تحرير البونص: قيمة السطر تتغير والإجمالي لا يمس إطلاقاً.
+      expect(vm.grandTotal, 100);
+      vm.setFreeQty(0, 2);
+      expect(vm.state.lines.single.freeQty, 2);
+      expect(vm.grandTotal, 100, reason: 'البونص لا يدخل أي تسعير');
+      expect(vm.pricedCart!.lines.single.netFinal, 100);
+      // ويسري للترحيل عبر CartLine (المنصرف الكلي هناك).
+      expect(vm.cartLines.single.freeQty, 2);
 
-        // المنصرف الكلي (9 مدفوعة + 2 مجاني) يتجاوز المتاح 10 → تحذير
-        // التجاوز المرئي (FR-02-02) — البونص يخرج من المخزون كالمدفوع.
-        vm.setQty(0, 9);
-        expect(vm.state.lines.single.exceedsAvailable, isTrue);
-        // بالمقابل 8+2 = 10 = المتاح → لا تجاوز.
-        vm.setQty(0, 8);
-        expect(vm.state.lines.single.exceedsAvailable, isFalse);
+      // المنصرف الكلي (9 مدفوعة + 2 مجاني) يتجاوز المتاح 10 → تحذير
+      // التجاوز المرئي (FR-02-02) — البونص يخرج من المخزون كالمدفوع.
+      vm.setQty(0, 9);
+      expect(vm.state.lines.single.exceedsAvailable, isTrue);
+      // بالمقابل 8+2 = 10 = المتاح → لا تجاوز.
+      vm.setQty(0, 8);
+      expect(vm.state.lines.single.exceedsAvailable, isFalse);
 
-        // القيم المرفوضة (سالب / أدق من ثلاث منازل): إشعار والسطر ثابت.
-        vm.setFreeQty(0, -1);
-        expect(vm.state.notice, isNotNull);
-        expect(vm.state.lines.single.freeQty, 2);
-        vm.setFreeQty(0, 0.0005);
-        expect(vm.state.notice, isNotNull);
-        expect(vm.state.lines.single.freeQty, 2);
-        // والصفر يمسح البونص.
-        vm.setFreeQty(0, 0);
-        expect(vm.state.lines.single.freeQty, 0);
+      // القيم المرفوضة (سالب / أدق من ثلاث منازل): إشعار والسطر ثابت.
+      vm.setFreeQty(0, -1);
+      expect(vm.state.notice, isNotNull);
+      expect(vm.state.lines.single.freeQty, 2);
+      vm.setFreeQty(0, 0.0005);
+      expect(vm.state.notice, isNotNull);
+      expect(vm.state.lines.single.freeQty, 2);
+      // والصفر يمسح البونص.
+      vm.setFreeQty(0, 0);
+      expect(vm.state.lines.single.freeQty, 0);
 
-        // المفتاح المتقاعد: هجرة v6 حذفته وكتابته تُرفض (FR-13-09 —
-        // أي مفتاح خارج السجل ممنوع).
-        expect(
-          () => settings.set('sale.free_qty', 'on'),
-          throwsArgumentError,
-        );
-        expect(await settings.raw('sale.free_qty'), isNull);
-      },
-    );
+      // المفتاح المتقاعد: هجرة v6 حذفته وكتابته تُرفض (FR-13-09 —
+      // أي مفتاح خارج السجل ممنوع).
+      expect(() => settings.set('sale.free_qty', 'on'), throwsArgumentError);
+      expect(await settings.raw('sale.free_qty'), isNull);
+    });
 
     test('غياب مستودع الإعدادات لا يخفي البونص — الحقل دائم التوفر', () async {
       await openDb();
@@ -253,10 +247,7 @@ void main() {
           // إعادة فتح المحرر ومسح البونص (صفر) → الشارة تختفي والسطر باقٍ.
           await tester.tap(find.byKey(const Key('sell_line_bonus_chip')));
           await pumpQuietly(tester, 6);
-          expect(
-            find.byKey(const Key('sell_line_edit_sheet')),
-            findsOneWidget,
-          );
+          expect(find.byKey(const Key('sell_line_edit_sheet')), findsOneWidget);
           await tester.enterText(
             find.byKey(const Key('sell_line_edit_bonus_field')),
             '0',

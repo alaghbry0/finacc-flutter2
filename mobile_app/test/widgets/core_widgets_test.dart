@@ -24,7 +24,10 @@ void main() {
         ),
       );
       await pumpQuietly(tester);
-      expect(find.text('المبلغ المدفوع يتجاوز إجمالي الفاتورة'), findsOneWidget);
+      expect(
+        find.text('المبلغ المدفوع يتجاوز إجمالي الفاتورة'),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
     });
   });
@@ -181,10 +184,7 @@ void main() {
       // زر المسح غائب قبل أي نص.
       expect(find.byIcon(Icons.close_rounded), findsNothing);
 
-      await tester.enterText(
-        find.byKey(const Key('core_search_field')),
-        'زيت',
-      );
+      await tester.enterText(find.byKey(const Key('core_search_field')), 'زيت');
       await pumpQuietly(tester, 3);
       expect(queries, ['زيت']);
       // ظهر زر المسح مع النص.

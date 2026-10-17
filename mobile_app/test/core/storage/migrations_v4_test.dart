@@ -39,26 +39,30 @@ void main() {
     return db;
   }
 
-  test('قاعدة فارغة: الجدول مبني والقالبان مبذوران والبسيط نشط (الحراري حُذف بv6)', () async {
-    final app = await openUniqueFileApp();
-    addTearDown(app.close);
+  test(
+    'قاعدة فارغة: الجدول مبني والقالبان مبذوران والبسيط نشط (الحراري حُذف بv6)',
+    () async {
+      final app = await openUniqueFileApp();
+      addTearDown(app.close);
 
-    final rows = await app.db.query('print_template', orderBy: 'id ASC');
-    expect(rows, hasLength(2), reason: 'قالبان لفواتير البيع — الحراري حُذف بهجرة v6');
-    expect(rows.map((r) => r['code']).toList(), [
-      'classic_a4',
-      'simple_a4',
-    ]);
-    expect(rows.every((r) => r['doc_type'] == 'sale'), isTrue);
-    // البسيط A4 هو الافتراضي — سلوك المتاجر القائمة كما هو.
-    final defaults = rows.where((r) => r['is_default'] == 1).toList();
-    expect(defaults, hasLength(1));
-    expect(defaults.single['code'], 'simple_a4');
-    // config JSON مفكوك سليماً لكل صف.
-    for (final row in rows) {
-      expect((row['config'] as String).contains('"templateId"'), isTrue);
-    }
-  });
+      final rows = await app.db.query('print_template', orderBy: 'id ASC');
+      expect(
+        rows,
+        hasLength(2),
+        reason: 'قالبان لفواتير البيع — الحراري حُذف بهجرة v6',
+      );
+      expect(rows.map((r) => r['code']).toList(), ['classic_a4', 'simple_a4']);
+      expect(rows.every((r) => r['doc_type'] == 'sale'), isTrue);
+      // البسيط A4 هو الافتراضي — سلوك المتاجر القائمة كما هو.
+      final defaults = rows.where((r) => r['is_default'] == 1).toList();
+      expect(defaults, hasLength(1));
+      expect(defaults.single['code'], 'simple_a4');
+      // config JSON مفكوك سليماً لكل صف.
+      for (final row in rows) {
+        expect((row['config'] as String).contains('"templateId"'), isTrue);
+      }
+    },
+  );
 
   test('ترقية قاعدة v3 قائمة: v4 تضيف الجدول والبذر بلا فقد القديم', () async {
     final db = await buildDbAtVersion(3, '_upgrade');
@@ -73,15 +77,20 @@ void main() {
 
     await applyMigrations(db);
 
-    expect(
-      (await db.query('_migrations')).map((r) => r['version']).toList(),
-      [1, 2, 3, 4, 5, 6],
-    );
+    expect((await db.query('_migrations')).map((r) => r['version']).toList(), [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+    ]);
     final templates = await db.query('print_template');
     expect(templates, hasLength(2));
     // مفاتيح v3 بقت كما هي (لا فقد بالترقية).
     final byKey = {
-      for (final r in await db.query('settings')) r['key'] as String: r['value'],
+      for (final r in await db.query('settings'))
+        r['key'] as String: r['value'],
     };
     expect(byKey['sale.default_payment'], '"cash"');
     expect(byKey['display.font_scale'], '"normal"');
