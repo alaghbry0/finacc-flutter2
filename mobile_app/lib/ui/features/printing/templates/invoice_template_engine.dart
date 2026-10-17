@@ -18,7 +18,7 @@ import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../core/print_fonts.dart';
-import '../print_docs.dart';
+import '../docs/print_docs.dart';
 import 'classic_a4_template.dart';
 import '../../../../data/models/invoice_template_settings.dart';
 import 'simple_a4_template.dart';

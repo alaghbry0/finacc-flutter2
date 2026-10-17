@@ -11,7 +11,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../core/print_fonts.dart';
 import '../core/print_palette.dart';
-import '../print_docs.dart';
+import '../docs/print_docs.dart';
 
 /// يحوّل [VoucherPrintDoc] إلى `pw.Document` جاهز للمعاينة/الطباعة/
 /// المشاركة (استدعِ `PrintFonts.load()` أولاً — يحدث داخل [build]).

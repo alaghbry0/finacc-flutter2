@@ -8,10 +8,10 @@
 /// جاهزة، والتواريخ بصيغة `يوم/شهر/سنة` بأرقام غربية.
 library;
 
-import '../../../domain/models/company.dart';
-import '../../../domain/models/party.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../core/widgets/amount_text.dart';
+import '../../../../domain/models/company.dart';
+import '../../../../domain/models/party.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/amount_text.dart';
 import 'print_docs.dart';
 
 /// سطر حركة في جدول الكشف — كل القيم سلاسل جاهزة للعرض.

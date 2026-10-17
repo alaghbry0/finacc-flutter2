@@ -12,7 +12,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/session/app_controller.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../printing/services/statement_pdf_builder.dart';
-import '../../../printing/statement_print_doc.dart';
+import '../../../printing/docs/statement_print_doc.dart';
 import '../../../printing/views/pdf_preview_dialog.dart';
 import '../../view_models/party_detail_view_model.dart';
 

@@ -26,7 +26,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../core/print_fonts.dart';
 import '../core/print_palette.dart';
-import '../print_docs.dart';
+import '../docs/print_docs.dart';
 
 /// نغمة سطر البند (لون القيمة المطبوع).
 enum ProfitLineTone {

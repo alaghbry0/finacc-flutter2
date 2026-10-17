@@ -13,7 +13,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/session/app_controller.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../printing/services/shift_report_pdf_builder.dart';
-import '../../../printing/shift_print_doc.dart';
+import '../../../printing/docs/shift_print_doc.dart';
 import '../../../printing/views/pdf_preview_dialog.dart';
 import '../../view_models/shift_view_model.dart';
 import 'shift_format.dart';

@@ -24,7 +24,7 @@ import '../../../../../domain/models/sale.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/session/app_controller.dart';
 import '../../../../core/widgets/amount_text.dart';
-import '../../../printing/print_docs.dart';
+import '../../../printing/docs/print_docs.dart';
 import '../../../printing/templates/invoice_template_engine.dart';
 import '../../../../../data/models/invoice_template_settings.dart';
 import '../../../printing/views/pdf_preview_dialog.dart';

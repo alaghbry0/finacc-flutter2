@@ -14,9 +14,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:mobile_app/l10n/app_localizations.dart';
-import 'package:mobile_app/ui/features/printing/print_docs.dart';
-import 'package:mobile_app/ui/features/printing/shift_print_doc.dart';
-import 'package:mobile_app/ui/features/printing/statement_print_doc.dart';
+import 'package:mobile_app/ui/features/printing/docs/print_docs.dart';
+import 'package:mobile_app/ui/features/printing/docs/shift_print_doc.dart';
+import 'package:mobile_app/ui/features/printing/docs/statement_print_doc.dart';
 
 /// الأسماء السبعة عشر من تجربة pdfprobe/names2 (بينها 9 كاسرة مؤكدة:
 /// فاطمة/سالم/النور/عبدالله…) + لاتيني خالص + عربي بأرقام + مختلط —

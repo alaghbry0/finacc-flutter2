@@ -9,10 +9,10 @@
 /// `يوم/شهر/سنة ساعة:دقيقة` بأرقام غربية.
 library;
 
-import '../../../data/repositories/shift_repository.dart';
-import '../../../domain/models/company.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../core/widgets/amount_text.dart';
+import '../../../../data/repositories/shift_repository.dart';
+import '../../../../domain/models/company.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../core/widgets/amount_text.dart';
 import 'print_docs.dart';
 
 /// سطر بند في جدول المعادلة — القيم سلاسل جاهزة للعرض.

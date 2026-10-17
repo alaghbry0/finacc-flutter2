@@ -19,7 +19,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../core/widgets/amount_text.dart';
 import '../core/print_fonts.dart';
 import '../core/print_palette.dart';
-import '../print_docs.dart';
+import '../docs/print_docs.dart';
 import '../../../../data/models/invoice_template_settings.dart';
 import '../templates/template_colors.dart';
 

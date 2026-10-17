@@ -23,7 +23,7 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
-import '../../printing/print_docs.dart';
+import '../../printing/docs/print_docs.dart';
 import '../../printing/services/voucher_pdf_builder.dart';
 import '../../printing/views/pdf_preview_dialog.dart';
 import '../view_models/movements_view_model.dart';

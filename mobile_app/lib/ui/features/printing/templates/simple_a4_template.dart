@@ -11,7 +11,7 @@ library;
 
 import 'package:pdf/widgets.dart' as pw;
 
-import '../print_docs.dart';
+import '../docs/print_docs.dart';
 import '../services/invoice_pdf_builder.dart';
 import '../../../../data/models/invoice_template_settings.dart';
 

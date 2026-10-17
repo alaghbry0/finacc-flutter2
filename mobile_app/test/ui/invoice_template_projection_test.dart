@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import 'package:mobile_app/ui/features/printing/print_docs.dart';
+import 'package:mobile_app/ui/features/printing/docs/print_docs.dart';
 import 'package:mobile_app/ui/features/printing/templates/invoice_template_engine.dart';
 import 'package:mobile_app/data/models/invoice_template_settings.dart';
 
