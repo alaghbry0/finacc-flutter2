@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/batch_repository.dart';
 import '../../../../data/repositories/item_repository.dart';
+import '../../../../domain/models/batch.dart';
+import '../../../../domain/models/item.dart';
 
 /// حالة لوحة المخزن.
 class InventoryHomeState {
@@ -53,8 +55,8 @@ class InventoryHomeViewModel extends ChangeNotifier {
       ]);
       _state = InventoryHomeState(
         loading: false,
-        lowStockCount: (results[0] as List<dynamic>).length,
-        expiringCount: (results[1] as List<dynamic>).length,
+        lowStockCount: (results[0] as List<ItemStockInfo>).length,
+        expiringCount: (results[1] as List<BatchExpiryAlert>).length,
       );
     } catch (error) {
       _state = InventoryHomeState(loading: false, error: error);

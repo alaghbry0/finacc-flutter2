@@ -352,9 +352,13 @@ pw.Widget _itemsTable(
   FinPdfFonts fonts,
   InvoicePdfData data,
 ) {
-  final rows = <List<dynamic>>[
+  // الصفوف عندنا **مطبوعة بالكامل**: كل خلية String أو int — والتحويل
+  // إلى `List<List<dynamic>>` (مطلب واجهة حزمة pdf عند `fromTextArray`)
+  // يحدث بالتغاير التلقائي عند حدّ الاستدعاء وحده، فلا يخرج dynamic
+  // خارج حدود هذا الاستدعاء.
+  final rows = <List<Object>>[
     // الترويسة: الإجمالي | الخصم | السعر | الكمية | الصنف | #
-    <dynamic>[
+    <Object>[
       data.colTotal,
       data.colDiscount,
       data.colPrice,
@@ -363,7 +367,7 @@ pw.Widget _itemsTable(
       data.colNum,
     ],
     for (var i = 0; i < data.lines.length; i++)
-      <dynamic>[
+      <Object>[
         pdfMoney(data.lines[i].lineTotal),
         data.lines[i].discountAmount > 0
             ? pdfMoney(data.lines[i].discountAmount)
