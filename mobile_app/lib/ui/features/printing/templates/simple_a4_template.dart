@@ -13,7 +13,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../print_docs.dart';
 import '../services/invoice_pdf_builder.dart';
-import 'invoice_template_settings.dart';
+import '../../../../data/models/invoice_template_settings.dart';
 
 /// بنّاء قالب simple_a4 — مغلّف رفيع فوق [InvoicePdfBuilder].
 class SimpleA4InvoiceTemplate {

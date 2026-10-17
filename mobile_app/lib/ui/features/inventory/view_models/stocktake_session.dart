@@ -11,7 +11,6 @@
 /// بدل نموذج يحمل مستودعات قاعدة مغلقة.
 library;
 
-import '../../../../core/storage/app_database.dart';
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/stocktake_repository.dart';
 import '../../../../data/repositories/user_repository.dart';
@@ -20,12 +19,20 @@ import 'stocktake_view_model.dart';
 /// جلسة مسودة جرد واحدة لكل تشغيل تطبيق.
 class StocktakeSession {
   StocktakeViewModel? _viewModel;
-  AppDatabase? _database;
+
+  /// مقبض القاعدة الحالية — يُقارن بالهوية حصراً ولا يُستعمل للوصول:
+  /// المتصل يمرر كائن القاعدة الحي من `AppController.database`، وبعد
+  /// المسح/الاستعادة يتبدّل المقبض فتُبنى المسودة فوق القاعدة الجديدة.
+  /// (R18-D1: نوع المقبض أصبح `Object` لتفكي استيراد `core/storage`
+  /// من طبقة العرض — الجلسة لا تحتاج سوى الهوية.)
+  Object? _database;
 
   /// يعيد نموذج الجرد الحي — ينشئه عند أول طلب (أو بعد تغيّر القاعدة)
   /// ثم يعيد نفس الكائن مهما تنقّل المستخدم بين الشاشات أو قُفل التطبيق.
+  ///
+  /// [database] مقبض القاعدة الحية (يُقارن بالهوية فقط — انظر الحقل).
   StocktakeViewModel attach({
-    required AppDatabase database,
+    required Object database,
     required StocktakeRepository stocktakeRepo,
     required UserRepository userRepo,
     required CompanyRepository companyRepo,

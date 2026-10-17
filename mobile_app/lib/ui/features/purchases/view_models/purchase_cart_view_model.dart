@@ -21,7 +21,6 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../../core/storage/doc_sequence.dart';
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/exchange_rate_repository.dart';
 import '../../../../data/repositories/purchase_repository.dart';
@@ -217,18 +216,20 @@ class PurchaseCartViewModel extends ChangeNotifier {
     required CompanyRepository companyRepo,
     required ExchangeRateRepository fxRepo,
     required PurchaseRepository purchaseRepo,
+
+    /// مقبض القاعدة — يُبقى حصراً لتوافق الاستدعاءات القائمة (الجلسة/
+    /// الشاشة/الاختبارات)؛ لم يعد يُستعمل داخل النموذج منذ R18-D1:
+    /// معاينة رقم الفاتورة صارت عبر `PurchaseRepository.previewNextPurchaseNo`.
     required Database database,
     DateTime Function()? clock,
   }) : _companies = companyRepo,
        _fx = fxRepo,
        _purchases = purchaseRepo,
-       _db = database,
        _clock = clock ?? DateTime.now;
 
   final CompanyRepository _companies;
   final ExchangeRateRepository _fx;
   final PurchaseRepository _purchases;
-  final Database _db;
   final DateTime Function() _clock;
 
   PurchaseCartState _state = PurchaseCartState.initial;
@@ -733,13 +734,11 @@ class PurchaseCartViewModel extends ChangeNotifier {
   }
 
   /// معاينة رقم PUR القادم (آخر رقم مُصدر + 1) — عرض فقط، الترقيم الحقيقي
-  /// يستهلك ذرّياً داخل معاملة الترحيل.
+  /// يستهلك ذرّياً داخل معاملة الترحيل. (R18-D1: عبر مستودع المشتريات —
+  /// طبقة العرض لا تلمس `core/storage/doc_sequence`.)
   Future<String?> _nextPurchasePreview() async {
     try {
-      final year = _clock().year;
-      final last = await DocSequenceService(_db)
-          .lastIssuedNumber(DocSequenceType.purchase, year);
-      return formatDocNumber(DocSequenceType.purchase, year, last + 1);
+      return await _purchases.previewNextPurchaseNo(_clock().year);
     } catch (_) {
       return null;
     }

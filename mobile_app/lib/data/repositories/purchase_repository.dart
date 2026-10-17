@@ -146,6 +146,18 @@ class PurchaseRepository {
   final ExchangeRateRepository _rates;
   final SettingsRepository _settings;
 
+  /// معاينة رقم PUR القادم للسنة (آخر مُصدر + 1) — عرضٌ فقط بلا استهلاك؛
+  /// الترقيم الحقيقي يستهلك ذرّياً داخل معاملة الترحيل نفسها.
+  ///
+  /// (R18-D1: كان هذا المنطق داخل نموذج فاتورة الشراء الحية — نُقل
+  /// للمستودع ليبقى لمس `core/storage/doc_sequence` في طبقة البيانات
+  /// حصراً.)
+  Future<String> previewNextPurchaseNo(int year) async {
+    final last = await DocSequenceService(_db)
+        .lastIssuedNumber(DocSequenceType.purchase, year);
+    return formatDocNumber(DocSequenceType.purchase, year, last + 1);
+  }
+
   /// دفعات FEFO — لخصم الوارد عند الإبطال (نفس تركيبة محرك المرتجعات).
   final BatchRepository _batches;
 

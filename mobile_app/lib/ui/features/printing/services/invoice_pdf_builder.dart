@@ -20,7 +20,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../core/print_fonts.dart';
 import '../core/print_palette.dart';
 import '../print_docs.dart';
-import '../templates/invoice_template_settings.dart';
+import '../../../../data/models/invoice_template_settings.dart';
 import '../templates/template_colors.dart';
 
 /// يحوّل [InvoicePrintDoc] إلى `pw.Document` جاهز للمعاينة/الطباعة/
@@ -182,10 +182,7 @@ class InvoicePdfBuilder {
   /// شبكة البيانات: العميل والتاريخ يميناً (أساسية)، العملة وهاتف
   /// العميل يساراً — داخل إطار مستدير خفيف. (UX-3: الرقم الضريبي تحت
   /// العملة حين يطلبه المالك ويتوفر.)
-  pw.Widget _metaGrid(
-    InvoicePrintDoc doc,
-    InvoiceTemplateSettings? settings,
-  ) {
+  pw.Widget _metaGrid(InvoicePrintDoc doc, InvoiceTemplateSettings? settings) {
     final partyPhone = (doc.partyPhone ?? '').trim();
     final taxNumber = (doc.taxNumber ?? '').trim();
     final showTax =
@@ -209,8 +206,7 @@ class InvoicePdfBuilder {
                   doc.labels.currency,
                   doc.currencyCode.isEmpty ? '—' : doc.currencyCode,
                 ),
-                if (showTax)
-                  _kvLine(doc.templateLabels!.taxNumber!, taxNumber),
+                if (showTax) _kvLine(doc.templateLabels!.taxNumber!, taxNumber),
               ],
             ),
           ),

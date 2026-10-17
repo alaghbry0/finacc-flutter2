@@ -13,7 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/ui/features/printing/print_docs.dart';
 import 'package:mobile_app/ui/features/printing/templates/invoice_template_engine.dart';
-import 'package:mobile_app/ui/features/printing/templates/invoice_template_settings.dart';
+import 'package:mobile_app/data/models/invoice_template_settings.dart';
 
 import '../helpers/printing_docs_for_tests.dart';
 
@@ -22,7 +22,10 @@ void main() {
     InvoicePrintDoc doc,
     InvoiceTemplateSettings settings,
   ) async {
-    final pdf = await const InvoiceTemplateEngine().build(doc, settings: settings);
+    final pdf = await const InvoiceTemplateEngine().build(
+      doc,
+      settings: settings,
+    );
     return pdf.save();
   }
 
@@ -55,9 +58,7 @@ void main() {
     });
   }, timeout: const Timeout(Duration(minutes: 2)));
 
-  testWidgets('بسيط A4: إدراج عمود الوحدة يضيف خاناته للرسم', (
-    tester,
-  ) async {
+  testWidgets('بسيط A4: إدراج عمود الوحدة يضيف خاناته للرسم', (tester) async {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       // الوحدة متوفرة بالمسقط + تسمية العمود معربة.
@@ -152,5 +153,4 @@ void main() {
       expect(pdfPageCount(withoutUnit), 1);
     });
   }, timeout: const Timeout(Duration(minutes: 2)));
-
 }

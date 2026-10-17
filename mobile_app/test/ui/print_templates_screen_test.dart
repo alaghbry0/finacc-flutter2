@@ -14,7 +14,7 @@ import 'package:mobile_app/ui/core/router/app_router.dart';
 import 'package:mobile_app/ui/core/session/app_controller.dart';
 import 'package:mobile_app/ui/features/settings/view_models/print_templates_view_model.dart';
 import 'package:mobile_app/ui/features/settings/views/print_templates_screen.dart';
-import 'package:mobile_app/ui/features/printing/templates/invoice_template_settings.dart';
+import 'package:mobile_app/data/models/invoice_template_settings.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/app_for_tests.dart';
@@ -58,10 +58,7 @@ void main() {
             .toList();
         expect(switches, hasLength(5), reason: 'خصم/وحدة/باركود/ضريبة/تذييل');
         // علامة الاختيار على البسيط حصراً.
-        expect(
-          find.byIcon(Icons.check_circle_rounded),
-          findsOneWidget,
-        );
+        expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
       });
     });
 
@@ -94,10 +91,7 @@ void main() {
         // والشاشة تعرض الآن مفاتيح الكلاسيكي كاملة (توقيعات/ختم/ملاحظات).
         expect(find.textContaining('خانات التوقيع'), findsOneWidget);
         expect(find.textContaining('مكان الختم'), findsOneWidget);
-        expect(
-          tester.widgetList<Switch>(find.byType(Switch)).length,
-          8,
-        );
+        expect(tester.widgetList<Switch>(find.byType(Switch)).length, 8);
       });
     });
 
@@ -152,8 +146,9 @@ void main() {
         // المستخدم فعّل الكلاسيكي وخصّصه (إخفاء عمود الخصم).
         await repo.save(
           kInvoiceTemplateClassicA4,
-          kPrintTemplateSeedConfigs[kInvoiceTemplateClassicA4]!
-              .copyWith(showDiscountColumn: false),
+          kPrintTemplateSeedConfigs[kInvoiceTemplateClassicA4]!.copyWith(
+            showDiscountColumn: false,
+          ),
         );
 
         await tester.pumpWidget(
@@ -174,12 +169,18 @@ void main() {
 
         final active = await repo.activeFor('sale');
         expect(active!.code, kPrintTemplateDefaultCode);
-        expect(active.config.showDiscountColumn, isTrue,
-            reason: 'بذر البسيط مستعاد');
+        expect(
+          active.config.showDiscountColumn,
+          isTrue,
+          reason: 'بذر البسيط مستعاد',
+        );
         final classic = (await repo.allFor('sale'))
             .firstWhere((r) => r.code == kInvoiceTemplateClassicA4);
-        expect(classic.config.showDiscountColumn, isTrue,
-            reason: 'بذر الكلاسيكي مستعاد');
+        expect(
+          classic.config.showDiscountColumn,
+          isTrue,
+          reason: 'بذر الكلاسيكي مستعاد',
+        );
       });
     });
   });
@@ -221,8 +222,10 @@ void main() {
           await pumpQuietly(tester, 6);
         }
 
-        expect(router.routerDelegate.currentConfiguration.uri.path,
-            '/more/print-templates');
+        expect(
+          router.routerDelegate.currentConfiguration.uri.path,
+          '/more/print-templates',
+        );
         expect(find.byType(PrintTemplatesScreen), findsOneWidget);
         // الشاشة حمّلت القالبين من القاعدة الحقيقية (بلا seam —
         // عبر AppController.printTemplates).

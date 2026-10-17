@@ -18,7 +18,6 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../../core/storage/doc_sequence.dart';
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/exchange_rate_repository.dart';
 import '../../../../data/repositories/item_repository.dart';
@@ -106,8 +105,7 @@ class CartUiLine {
   /// UX-4: المقارنة بالمنصرف الكلي (مدفوع + مجاني) — البونص يخرج من
   /// المخزون مثل المدفوع.
   bool get exceedsAvailable =>
-      availableQty != null &&
-      qty + freeQty > availableQty! + _qtyEpsilon;
+      availableQty != null && qty + freeQty > availableQty! + _qtyEpsilon;
 
   CartUiLine copyWith({
     double? qty,
@@ -249,6 +247,10 @@ class SellCartViewModel extends ChangeNotifier {
     required ExchangeRateRepository fxRepo,
     required SaleRepository saleRepo,
     required QuotationRepository quotationRepo,
+
+    /// مقبض القاعدة — يُبقى حصراً لتوافق الاستدعاءات القائمة (الجلسات/
+    /// الشاشات/الاختبارات)؛ لم يعد يُستعمل داخل النموذج منذ R18-D1:
+    /// معاينة رقم الفاتورة صارت عبر `SaleRepository.previewNextInvoiceNo`.
     required Database database,
     SettingsRepository? settingsRepo,
     DateTime Function()? clock,
@@ -257,7 +259,6 @@ class SellCartViewModel extends ChangeNotifier {
        _fx = fxRepo,
        _sales = saleRepo,
        _quotations = quotationRepo,
-       _db = database,
        _settings = settingsRepo,
        _clock = clock ?? DateTime.now;
 
@@ -266,7 +267,6 @@ class SellCartViewModel extends ChangeNotifier {
   final ExchangeRateRepository _fx;
   final SaleRepository _sales;
   final QuotationRepository _quotations;
-  final Database _db;
 
   /// مستودع الإعدادات (UX-2a) — اختياري: غيابه يبقي سلوك v0.x
   /// (warn / خصومات ظاهرة / بلا تحذير هامش) فلا تنكسر شاشات بلا وصول.
@@ -897,13 +897,11 @@ class SellCartViewModel extends ChangeNotifier {
       : qty.toStringAsFixed(3);
 
   /// معاينة رقم INV القادم (آخر رقم مُصدر + 1) — عرض فقط، الترقيم الحقيقي
-  /// يستهلك ذرّياً داخل معاملة الترحيل.
+  /// يستهلك ذرّياً داخل معاملة الترحيل. (R18-D1: عبر مستودع المبيعات —
+  /// طبقة العرض لا تلمس `core/storage/doc_sequence`.)
   Future<String?> _nextInvoicePreview() async {
     try {
-      final year = _clock().year;
-      final last = await DocSequenceService(_db)
-          .lastIssuedNumber(DocSequenceType.invoice, year);
-      return formatDocNumber(DocSequenceType.invoice, year, last + 1);
+      return await _sales.previewNextInvoiceNo(_clock().year);
     } catch (_) {
       return null;
     }

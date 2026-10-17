@@ -12,7 +12,7 @@ import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
 
-import '../../ui/features/printing/templates/invoice_template_settings.dart';
+import '../models/invoice_template_settings.dart';
 
 /// صف قالب طباعة مقروء.
 class PrintTemplateRow {
@@ -164,10 +164,7 @@ class PrintTemplateRepository {
     for (final entry in kPrintTemplateSeedConfigs.entries) {
       await _db.update(
         'print_template',
-        {
-          'config': jsonEncode(entry.value.toJson()),
-          'updated_at': now,
-        },
+        {'config': jsonEncode(entry.value.toJson()), 'updated_at': now},
         where: 'doc_type = ? AND code = ?',
         whereArgs: [docType, entry.key],
       );

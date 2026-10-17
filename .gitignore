@@ -53,5 +53,7 @@ dev.out.log
 prompt
 
 server.log
-# Skills directory
-/skills/tool-results/
+
+# مخلفات التشغيل (R18-D1): نتائج أدوات الوكيل وذاكرة بايثون — أي مكان
+tool-results/
+__pycache__/

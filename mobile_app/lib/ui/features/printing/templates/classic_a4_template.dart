@@ -24,7 +24,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../core/widgets/amount_text.dart';
 import '../core/print_palette.dart';
 import '../print_docs.dart';
-import 'invoice_template_settings.dart';
+import '../../../../data/models/invoice_template_settings.dart';
 import 'template_colors.dart';
 
 /// سقف البنود لصفحة الكلاسيكي المُأطَّرة الواحدة (A4 أفقي: ~198مم ارتفاع
@@ -88,10 +88,7 @@ class ClassicA4InvoiceTemplate {
             _gap(2),
             _totalsRow(doc, settings),
             _gap(3),
-            if (settings.showSignatures) ...[
-              _signaturesRow(doc),
-              _gap(2),
-            ],
+            if (settings.showSignatures) ...[_signaturesRow(doc), _gap(2)],
             if (settings.showBarcode && _docNoIsEncodable(doc)) _barcode(doc),
             if (settings.showFooter) _footerRow(doc),
           ],
@@ -127,10 +124,7 @@ class ClassicA4InvoiceTemplate {
           crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
             _gap(2),
-            if (settings.showSignatures) ...[
-              _signaturesRow(doc),
-              _gap(2),
-            ],
+            if (settings.showSignatures) ...[_signaturesRow(doc), _gap(2)],
             if (settings.showBarcode && _docNoIsEncodable(doc)) _barcode(doc),
             if (settings.showFooter) _footerRow(doc),
           ],
@@ -185,7 +179,10 @@ class ClassicA4InvoiceTemplate {
                 alignment: pw.Alignment.centerRight,
                 child: pw.Text(
                   doc.header.name,
-                  style: PrintText.head(color: PrintPalette.brandDeep, size: 16),
+                  style: PrintText.head(
+                    color: PrintPalette.brandDeep,
+                    size: 16,
+                  ),
                   textDirection: pw.TextDirection.rtl,
                 ),
               ),
@@ -249,7 +246,9 @@ class ClassicA4InvoiceTemplate {
           w = maxW;
           h = w * pxH / pxW;
         }
-        return pw.Center(child: pw.Image(image, width: w, height: h));
+        return pw.Center(
+          child: pw.Image(image, width: w, height: h),
+        );
       }
     }
     return pw.Container(
@@ -400,7 +399,9 @@ class ClassicA4InvoiceTemplate {
           // UX-4: لاحقة البونص بجوار الكمية (qtyCellLabel) — لا عمود جديد.
           line.qtyCellLabel,
           if (spec.showUnit)
-            (line.unitLabel ?? '').trim().isEmpty ? '—' : line.unitLabel!.trim(),
+            (line.unitLabel ?? '').trim().isEmpty
+                ? '—'
+                : line.unitLabel!.trim(),
           line.desc,
         ],
     ];
@@ -489,8 +490,7 @@ class ClassicA4InvoiceTemplate {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              if (settings.showNotes &&
-                  doc.templateLabels?.notesTitle != null)
+              if (settings.showNotes && doc.templateLabels?.notesTitle != null)
                 _notesBox(doc, settings),
               if (settings.showStampArea &&
                   doc.templateLabels?.stampArea != null) ...[
@@ -633,7 +633,10 @@ class ClassicA4InvoiceTemplate {
                   style: style == _TotalRowStyle.red
                       ? PrintText.head(color: red, size: 10.5)
                       : style == _TotalRowStyle.cream
-                      ? PrintText.head(color: PrintPalette.brandDeep, size: 10.5)
+                      ? PrintText.head(
+                          color: PrintPalette.brandDeep,
+                          size: 10.5,
+                        )
                       : PrintText.body(color: PrintPalette.inkSoft, size: 9.5),
                   textDirection: pw.TextDirection.rtl,
                 ),
@@ -740,8 +743,7 @@ class ClassicA4InvoiceTemplate {
   // مساعدات
   // -------------------------------------------------------------------
 
-  pw.SizedBox _gap(double mm) =>
-      pw.SizedBox(height: mm * pw.PdfPageFormat.mm);
+  pw.SizedBox _gap(double mm) => pw.SizedBox(height: mm * pw.PdfPageFormat.mm);
 
   /// هل رقم الفاتورة قابلاً للترميز Code128؟ (لاتيني/أرقام حصراً —
   /// الأكواد الحالية `INV-YYYY-NNNNN` دائماً كذلك).

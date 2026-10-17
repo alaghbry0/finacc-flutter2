@@ -17,7 +17,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/ui/features/printing/print_docs.dart';
 import 'package:mobile_app/ui/features/printing/templates/classic_a4_template.dart';
 import 'package:mobile_app/ui/features/printing/templates/invoice_template_engine.dart';
-import 'package:mobile_app/ui/features/printing/templates/invoice_template_settings.dart';
+import 'package:mobile_app/data/models/invoice_template_settings.dart';
 
 import '../helpers/printing_docs_for_tests.dart';
 
@@ -26,7 +26,10 @@ void main() {
     InvoicePrintDoc doc,
     InvoiceTemplateSettings? settings,
   ) async {
-    final pdf = await const InvoiceTemplateEngine().build(doc, settings: settings);
+    final pdf = await const InvoiceTemplateEngine().build(
+      doc,
+      settings: settings,
+    );
     final bytes = await pdf.save();
     return (bytes, pdfPageCount(bytes));
   }
@@ -34,11 +37,7 @@ void main() {
   /// يفك أبعاد أول MediaBox `[x0 y0 x1 y1]`.
   (double, double) firstPageSize(Uint8List bytes) {
     final box = pdfMediaBoxes(bytes).first;
-    final parts = box
-        .trim()
-        .split(RegExp(r'\s+'))
-        .map(double.parse)
-        .toList();
+    final parts = box.trim().split(RegExp(r'\s+')).map(double.parse).toList();
     return (parts[2] - parts[0], parts[3] - parts[1]);
   }
 
@@ -96,8 +95,7 @@ void main() {
       // تُقرأ كلاسيكياً فتبني مستنداً أفقياً A4 كلاسيكياً.
       final legacy = InvoiceTemplateSettings.fromJson(
         Map<String, Object?>.from(
-          jsonDecode('{"templateId":"thermal_80","showBarcode":true}')
-              as Map,
+          jsonDecode('{"templateId":"thermal_80","showBarcode":true}') as Map,
         ),
       );
       expect(legacy.templateId, kInvoiceTemplateClassicA4);
@@ -204,9 +202,13 @@ void main() {
       isFalse,
     );
     // الملاحظات: الكلاسيكي حصراً، لا البسيط (يبقى كما كان).
-    expect(templateSupports(kInvoiceTemplateSimpleA4, TemplateFeature.notes),
-        isFalse);
-    expect(templateSupports(kInvoiceTemplateClassicA4, TemplateFeature.notes),
-        isTrue);
+    expect(
+      templateSupports(kInvoiceTemplateSimpleA4, TemplateFeature.notes),
+      isFalse,
+    );
+    expect(
+      templateSupports(kInvoiceTemplateClassicA4, TemplateFeature.notes),
+      isTrue,
+    );
   });
 }

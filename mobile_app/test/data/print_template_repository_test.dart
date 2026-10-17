@@ -6,7 +6,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/core/storage/app_database.dart';
 import 'package:mobile_app/data/repositories/print_template_repository.dart';
-import 'package:mobile_app/ui/features/printing/templates/invoice_template_settings.dart';
+import 'package:mobile_app/data/models/invoice_template_settings.dart';
 
 import '../helpers/app_for_tests.dart';
 
@@ -34,23 +34,26 @@ void main() {
     expect(active.config.showUnitColumn, isFalse);
   });
 
-  test('allFor: القالبان المبذوران بترتيب البذر (كلاسيكي/بسيط) — الحراري محذوف', () async {
-    final rows = await repo.allFor('sale');
-    expect(rows.map((r) => r.code).toList(), [
-      kInvoiceTemplateClassicA4,
-      kInvoiceTemplateSimpleA4,
-    ]);
-    // بذور الكلاسيكي: أزرق سماوي + عمود وحدة.
-    final classic = rows[0];
-    expect(classic.config.tableHeadArgb, 0xFF9DC3E6);
-    expect(classic.config.showUnitColumn, isTrue);
-    // صف الحراري القديم حُذف بهجرة v6 — لا وجود له بقاعدة جديدة.
-    expect(
-      rows.where((r) => r.code == kLegacyInvoiceTemplateThermal80),
-      isEmpty,
-      reason: 'الحراري محذوف نهائياً بقرار المالك',
-    );
-  });
+  test(
+    'allFor: القالبان المبذوران بترتيب البذر (كلاسيكي/بسيط) — الحراري محذوف',
+    () async {
+      final rows = await repo.allFor('sale');
+      expect(rows.map((r) => r.code).toList(), [
+        kInvoiceTemplateClassicA4,
+        kInvoiceTemplateSimpleA4,
+      ]);
+      // بذور الكلاسيكي: أزرق سماوي + عمود وحدة.
+      final classic = rows[0];
+      expect(classic.config.tableHeadArgb, 0xFF9DC3E6);
+      expect(classic.config.showUnitColumn, isTrue);
+      // صف الحراري القديم حُذف بهجرة v6 — لا وجود له بقاعدة جديدة.
+      expect(
+        rows.where((r) => r.code == kLegacyInvoiceTemplateThermal80),
+        isEmpty,
+        reason: 'الحراري محذوف نهائياً بقرار المالك',
+      );
+    },
+  );
 
   test('activeFor لنوع بلا صفوف = null (المستدعي يرد للافتراضي)', () async {
     expect(await repo.activeFor('voucher'), isNull);
@@ -69,24 +72,27 @@ void main() {
     expect(defaults.single.code, kInvoiceTemplateClassicA4);
   });
 
-  test('تحويل قراءة الصف القديم: thermal_80 المحفوظ قبل الحذف يُقرأ كلاسيكياً', () async {
-    // قاعدة قديمة لم تمر بهجرة v6 بعد (أو صف متبقٍ) — طبقة normalize
-    // بالمستودع تحوله لكلاسيكي فلا يعرفه المحرك/الشاشة أبداً.
-    await app.db.rawInsert(
-      "INSERT OR IGNORE INTO print_template(doc_type, code, is_default, config, "
-      "created_at, updated_at) VALUES('sale', 'thermal_80', 0, "
-      "'{\"templateId\":\"classic_a4\"}', "
-      "strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
-    );
-    final rows = await repo.allFor('sale');
-    final legacy = rows.where((r) => r.code == kInvoiceTemplateClassicA4);
-    expect(legacy, isNotEmpty, reason: 'الصف القديم يُقرأ كلاسيكياً');
-    expect(
-      rows.map((r) => r.code),
-      everyElement(isNot(kLegacyInvoiceTemplateThermal80)),
-      reason: 'لا يُكشف الحراري أبداً للمحرك/الشاشة',
-    );
-  });
+  test(
+    'تحويل قراءة الصف القديم: thermal_80 المحفوظ قبل الحذف يُقرأ كلاسيكياً',
+    () async {
+      // قاعدة قديمة لم تمر بهجرة v6 بعد (أو صف متبقٍ) — طبقة normalize
+      // بالمستودع تحوله لكلاسيكي فلا يعرفه المحرك/الشاشة أبداً.
+      await app.db.rawInsert(
+        "INSERT OR IGNORE INTO print_template(doc_type, code, is_default, config, "
+        "created_at, updated_at) VALUES('sale', 'thermal_80', 0, "
+        "'{\"templateId\":\"classic_a4\"}', "
+        "strftime('%Y-%m-%dT%H:%M:%SZ','now'), strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+      );
+      final rows = await repo.allFor('sale');
+      final legacy = rows.where((r) => r.code == kInvoiceTemplateClassicA4);
+      expect(legacy, isNotEmpty, reason: 'الصف القديم يُقرأ كلاسيكياً');
+      expect(
+        rows.map((r) => r.code),
+        everyElement(isNot(kLegacyInvoiceTemplateThermal80)),
+        reason: 'لا يُكشف الحراري أبداً للمحرك/الشاشة',
+      );
+    },
+  );
 
   test('save يخزّن config كاملة وتستعاد الحقول بعد إعادة القراءة', () async {
     const custom = InvoiceTemplateSettings(
@@ -161,7 +167,10 @@ void main() {
       "WHERE code = 'simple_a4'",
     );
     final active = await repo.activeFor('sale');
-    expect(active!.config, const InvoiceTemplateSettings(),
-        reason: 'JSON التالف = إعدادات البسيط الافتراضية');
+    expect(
+      active!.config,
+      const InvoiceTemplateSettings(),
+      reason: 'JSON التالف = إعدادات البسيط الافتراضية',
+    );
   });
 }

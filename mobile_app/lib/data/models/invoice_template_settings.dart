@@ -201,8 +201,7 @@ class InvoiceTemplateSettings {
     if (json == null) return const InvoiceTemplateSettings();
     int argb(Object? value, int fallback) =>
         value is int && (value & 0xFF000000) != 0 ? value : fallback;
-    bool flag(Object? value, bool fallback) =>
-        value is bool ? value : fallback;
+    bool flag(Object? value, bool fallback) => value is bool ? value : fallback;
     final templateId = switch (json['templateId']) {
       // R16-b — تحويل قراءة: القالب الحراري حُذف بقرار المالك؛ أي
       // قيمة محفوظة 'thermal_80' (بذر v4 قديم أو تخصيص سابق) تُقرأ

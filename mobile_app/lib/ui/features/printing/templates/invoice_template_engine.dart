@@ -20,7 +20,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../core/print_fonts.dart';
 import '../print_docs.dart';
 import 'classic_a4_template.dart';
-import 'invoice_template_settings.dart';
+import '../../../../data/models/invoice_template_settings.dart';
 import 'simple_a4_template.dart';
 
 /// بطاقة قالب في فهرس المحرك — تسميات العرض تبنيها الشاشة من l10n
@@ -73,12 +73,7 @@ class InvoiceTemplateEngine {
     switch (effective.templateId) {
       case kInvoiceTemplateClassicA4:
         final pdf = _document(doc);
-        const ClassicA4InvoiceTemplate().addPages(
-          pdf,
-          doc,
-          effective,
-          logoPng,
-        );
+        const ClassicA4InvoiceTemplate().addPages(pdf, doc, effective, logoPng);
         return pdf;
       default:
         return const SimpleA4InvoiceTemplate().build(doc, effective);
@@ -92,6 +87,9 @@ class InvoiceTemplateEngine {
     title: doc.docNo,
     author: doc.header.name,
     creator: kPrintAppCredit,
-    theme: pw.ThemeData.withFont(base: PrintFonts.regular, bold: PrintFonts.bold),
+    theme: pw.ThemeData.withFont(
+      base: PrintFonts.regular,
+      bold: PrintFonts.bold,
+    ),
   );
 }

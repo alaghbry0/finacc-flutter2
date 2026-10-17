@@ -26,7 +26,7 @@ import '../../../../core/session/app_controller.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../printing/print_docs.dart';
 import '../../../printing/templates/invoice_template_engine.dart';
-import '../../../printing/templates/invoice_template_settings.dart';
+import '../../../../../data/models/invoice_template_settings.dart';
 import '../../../printing/views/pdf_preview_dialog.dart';
 import 'sell_widgets.dart';
 
@@ -161,26 +161,24 @@ void openLoadedInvoicePdfPreview(
   final app = context.read<AppController>();
   final company = app.company;
   final invoice = detail.invoice;
-  unawaited(
-    () async {
-      final settings = await activeInvoicePrintSettings(app);
-      if (!context.mounted) return;
-      await showPdfPreviewDialog(
-        context,
-        title: invoice.invoiceNo,
-        build: () => const InvoiceTemplateEngine().build(
-          buildInvoicePrintDoc(l10n, detail, company),
-          settings: settings,
-          logoPng: company?.logoPng,
-        ),
-        whatsappPhone: company?.whatsapp ?? detail.customerPhone,
-        shareMessage: l10n.printingShareMessageInvoice(
-          invoice.invoiceNo,
-          AmountText.format(invoice.total, invoicePrintDecimals(detail)),
-        ),
-      );
-    }(),
-  );
+  unawaited(() async {
+    final settings = await activeInvoicePrintSettings(app);
+    if (!context.mounted) return;
+    await showPdfPreviewDialog(
+      context,
+      title: invoice.invoiceNo,
+      build: () => const InvoiceTemplateEngine().build(
+        buildInvoicePrintDoc(l10n, detail, company),
+        settings: settings,
+        logoPng: company?.logoPng,
+      ),
+      whatsappPhone: company?.whatsapp ?? detail.customerPhone,
+      shareMessage: l10n.printingShareMessageInvoice(
+        invoice.invoiceNo,
+        AmountText.format(invoice.total, invoicePrintDecimals(detail)),
+      ),
+    );
+  }());
 }
 
 /// يفتح نافذة معاينة الطباعة لفاتورة **بمعرّفها** — إيصال نجاح الكاشير
@@ -255,8 +253,11 @@ Future<void> openInvoiceTemplatePreview(
   await showPdfPreviewDialog(
     context,
     title: doc.docNo,
-    build: () =>
-        const InvoiceTemplateEngine().build(doc, settings: settings, logoPng: company?.logoPng),
+    build: () => const InvoiceTemplateEngine().build(
+      doc,
+      settings: settings,
+      logoPng: company?.logoPng,
+    ),
     whatsappPhone: company?.whatsapp,
     shareMessage: l10n.printingShareMessageInvoice(
       doc.docNo,
@@ -286,10 +287,7 @@ Future<InvoicePrintDoc> _sampleInvoicePrintDoc(
 
 /// فاتورة نموذجية للمعاينة حين لا توجد أي فاتورة مرحّلة بعد — تسميات
 /// l10n نفسها وأرقام بأرقام غربية بفواصل آلاف (قاعدة المسقط).
-InvoicePrintDoc dummyInvoicePrintDoc(
-  AppLocalizations l10n,
-  Company? company,
-) {
+InvoicePrintDoc dummyInvoicePrintDoc(AppLocalizations l10n, Company? company) {
   return InvoicePrintDoc(
     header: PrintHeader(
       name: company?.name ?? 'متجر النور للأدوية',

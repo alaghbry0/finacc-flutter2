@@ -7,7 +7,7 @@ library;
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/ui/features/printing/templates/invoice_template_settings.dart';
+import 'package:mobile_app/data/models/invoice_template_settings.dart';
 
 void main() {
   test('copyWith يعدّل المفتاح المطلوب حصراً ويبقي البقية', () {
@@ -85,18 +85,30 @@ void main() {
   });
 
   test('fromJsonString: null/فارغ/ليس JSON/ليس Map → الافتراضي دائماً', () {
-    expect(InvoiceTemplateSettings.fromJsonString(null),
-        const InvoiceTemplateSettings());
-    expect(InvoiceTemplateSettings.fromJsonString(''),
-        const InvoiceTemplateSettings());
-    expect(InvoiceTemplateSettings.fromJsonString('   '),
-        const InvoiceTemplateSettings());
-    expect(InvoiceTemplateSettings.fromJsonString('{not json'),
-        const InvoiceTemplateSettings());
-    expect(InvoiceTemplateSettings.fromJsonString('[1,2,3]'),
-        const InvoiceTemplateSettings());
-    expect(InvoiceTemplateSettings.fromJsonString('"plain"'),
-        const InvoiceTemplateSettings());
+    expect(
+      InvoiceTemplateSettings.fromJsonString(null),
+      const InvoiceTemplateSettings(),
+    );
+    expect(
+      InvoiceTemplateSettings.fromJsonString(''),
+      const InvoiceTemplateSettings(),
+    );
+    expect(
+      InvoiceTemplateSettings.fromJsonString('   '),
+      const InvoiceTemplateSettings(),
+    );
+    expect(
+      InvoiceTemplateSettings.fromJsonString('{not json'),
+      const InvoiceTemplateSettings(),
+    );
+    expect(
+      InvoiceTemplateSettings.fromJsonString('[1,2,3]'),
+      const InvoiceTemplateSettings(),
+    );
+    expect(
+      InvoiceTemplateSettings.fromJsonString('"plain"'),
+      const InvoiceTemplateSettings(),
+    );
     // وسليم يُفك.
     expect(
       InvoiceTemplateSettings.fromJsonString(
@@ -144,10 +156,7 @@ void main() {
     // فلا يمكن بناء إعدادات حرارية جديدة من JSON البائد أصلاً.
     // equality بالقيمة (نفس JSON = نفس الكائن منطقياً).
     expect(const InvoiceTemplateSettings(), simple);
-    expect(
-      simple.copyWith(showBarcode: true) == simple,
-      isFalse,
-    );
+    expect(simple.copyWith(showBarcode: true) == simple, isFalse);
     expect(simple.hashCode, const InvoiceTemplateSettings().hashCode);
   });
 }

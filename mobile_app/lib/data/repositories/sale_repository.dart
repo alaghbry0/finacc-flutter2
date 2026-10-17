@@ -143,6 +143,17 @@ class SaleRepository {
   final CustomerRepository _customers;
   final BatchRepository _batches;
 
+  /// معاينة رقم INV القادم للسنة (آخر مُصدر + 1) — عرضٌ فقط بلا استهلاك؛
+  /// الترقيم الحقيقي يستهلك ذرّياً داخل معاملة الترحيل نفسها.
+  ///
+  /// (R18-D1: كان هذا المنطق داخل نموذج سلة الكاشير — نُقل للمستودع
+  /// ليبقى لمس `core/storage/doc_sequence` في طبقة البيانات حصراً.)
+  Future<String> previewNextInvoiceNo(int year) async {
+    final last = await DocSequenceService(_db)
+        .lastIssuedNumber(DocSequenceType.invoice, year);
+    return formatDocNumber(DocSequenceType.invoice, year, last + 1);
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // الترحيل الذرّي (FR-02-06 / 5.4-4)
   // ─────────────────────────────────────────────────────────────────────

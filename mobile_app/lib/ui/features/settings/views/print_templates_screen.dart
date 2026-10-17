@@ -25,7 +25,7 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../printing/templates/invoice_template_engine.dart';
-import '../../printing/templates/invoice_template_settings.dart';
+import '../../../../data/models/invoice_template_settings.dart';
 import '../../sell/views/widgets/invoice_pdf_preview.dart';
 import '../view_models/print_templates_view_model.dart';
 
@@ -172,7 +172,10 @@ class _PrintTemplatesList extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _CardHeader(icon: Icons.palette_rounded, title: l10n.tmplColorsTitle),
+              _CardHeader(
+                icon: Icons.palette_rounded,
+                title: l10n.tmplColorsTitle,
+              ),
               const SizedBox(height: 12),
               _ColorPickerRow(
                 label: l10n.tmplColorTableHead,
@@ -217,9 +220,8 @@ class _PrintTemplatesList extends StatelessWidget {
                   title: toggle.title,
                   subtitle: toggle.subtitle,
                   value: toggle.read(state.settings),
-                  onChanged: (on) => vm.updateSettings(
-                    toggle.write(state.settings, on),
-                  ),
+                  onChanged: (on) =>
+                      vm.updateSettings(toggle.write(state.settings, on)),
                 ),
               ],
             ],
@@ -247,7 +249,8 @@ class _PrintTemplatesList extends StatelessWidget {
                     Expanded(
                       child: Padding(
                         padding: EdgeInsetsDirectional.only(
-                          end: mode == InvoiceBadgeMode.none ||
+                          end:
+                              mode == InvoiceBadgeMode.none ||
                                   mode == InvoiceBadgeMode.original
                               ? 8
                               : 0,
@@ -274,10 +277,7 @@ class _PrintTemplatesList extends StatelessWidget {
             Expanded(
               child: FilledButton.icon(
                 onPressed: () => unawaited(
-                  openInvoiceTemplatePreview(
-                    context,
-                    settings: state.settings,
-                  ),
+                  openInvoiceTemplatePreview(context, settings: state.settings),
                 ),
                 icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
                 label: Text(l10n.tmplPreviewButton),
@@ -301,10 +301,8 @@ class _PrintTemplatesList extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               l10n.tmplWriteFailed,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: scheme.error,
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(color: scheme.error, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -380,9 +378,7 @@ class _PrintTemplatesList extends StatelessWidget {
         read: (s) => s.showNotes,
         write: (s, on) => s.copyWith(showNotes: on),
       ),
-    ]
-        .where((t) => templateSupports(code, t.feature))
-        .toList();
+    ].where((t) => templateSupports(code, t.feature)).toList();
   }
 }
 
@@ -414,9 +410,8 @@ class _CardHeader extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.bodyLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );
@@ -551,9 +546,8 @@ class _ColorPickerRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         SizedBox(
@@ -624,16 +618,14 @@ class _ToggleRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ],
             ),

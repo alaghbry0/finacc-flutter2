@@ -21,7 +21,7 @@
 |---|---|
 | `lib/main.dart` → `lib/app.dart` | الإقلاع + التمهيد المنصاتي (web/io) |
 | `lib/core/storage/` | فتح القاعدة، WAL، الهجرات، `doc_sequence` الذرّي، `db_factory_io/web` |
-| `lib/data/schema.dart` | **كل الجداول (34)** — مجمّدة بموجب SRS §5.3. أي تعديل = هجرة جديدة إلزامًا |
+| `lib/core/storage/schema.dart` | **كل الجداول (34)** — مجمّدة بموجب SRS §5.3. أي تعديل = هجرة جديدة إلزامًا |
 | `lib/data/repositories/` | sale / purchase / return / quotation / batch / item / party / fx / cash / audit … |
 | `lib/domain/` | models + services نقية بلا I/O (تسعير/خصومات/FEFO) |
 | `lib/ui/features/<feature>/` | `views/` + `view_models/` لكل ميزة (feature-first) |

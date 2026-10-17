@@ -10,7 +10,7 @@ library;
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/print_template_repository.dart';
-import '../../../../ui/features/printing/templates/invoice_template_settings.dart';
+import '../../../../data/models/invoice_template_settings.dart';
 
 /// حالة الشاشة.
 class PrintTemplatesState {
