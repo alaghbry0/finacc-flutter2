@@ -160,7 +160,7 @@ class PartyFormViewModel extends ChangeNotifier {
        _lookup = partyLookup,
        _kind = partyKind,
        _editId = editPartyId,
-       _today = (reference ?? DateTime.now());
+       _today = reference ?? DateTime.now();
 
   final CustomerRepository _customers;
   final SupplierRepository _suppliers;

@@ -112,7 +112,7 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
     }
     if (exact != null) {
       _pick(exact);
-      setState(() => _barcodeController.clear());
+      setState(_barcodeController.clear);
       return;
     }
     setState(() => _barcodeError = l10n.sellPickerBarcodeNotFound(trimmed));

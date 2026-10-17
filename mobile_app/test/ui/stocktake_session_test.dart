@@ -23,10 +23,8 @@ import '../helpers/app_for_tests.dart';
 void main() {
   setUpAll(initFfiForTests);
 
-  setUp(() {
-    // الجلسة مفردة تطبيقية — نظّفها قبل كل اختبار (بداية نظيفة).
-    stocktakeSession.reset();
-  });
+  // الجلسة مفردة تطبيقية — نظّفها قبل كل اختبار (بداية نظيفة).
+  setUp(stocktakeSession.reset);
 
   /// يبذر صنفاً مخزنياً برصيده ويرجع معرّفه.
   Future<int> seedProduct(AppDatabase app, String name, double qty) async {

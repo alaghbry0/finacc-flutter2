@@ -290,7 +290,7 @@ class _CurrencySelector extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    (selected?.code ?? '—'),
+                    selected?.code ?? '—',
                     style: Theme.of(context).textTheme.labelLarge
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),

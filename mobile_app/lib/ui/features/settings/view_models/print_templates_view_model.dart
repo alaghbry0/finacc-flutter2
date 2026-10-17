@@ -123,10 +123,8 @@ class PrintTemplatesViewModel extends ChangeNotifier {
     try {
       await _print.resetToDefault(docType: docType);
     } catch (error) {
+      // فشل الاستعادة يُعرض للمستخدم عبر writeError.
       _state = _state.copyWith(writeError: 'WRITE_FAILED');
-      if (kDebugMode) {
-        debugPrint('PrintTemplatesViewModel.resetToDefault: $error');
-      }
       notifyListeners();
       return;
     }
@@ -148,10 +146,8 @@ class PrintTemplatesViewModel extends ChangeNotifier {
     try {
       await write();
     } catch (error) {
+      // فشل الكتابة يُعرض للمستخدم عبر writeError مع بقاء القيمة الحية القديمة.
       _state = _state.copyWith(writeError: 'WRITE_FAILED');
-      if (kDebugMode) {
-        debugPrint('PrintTemplatesViewModel._write: $error');
-      }
       notifyListeners();
     }
   }

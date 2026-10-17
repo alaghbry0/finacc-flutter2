@@ -152,7 +152,7 @@ class _ChangePinBodyState extends State<_ChangePinBody> {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: vm.entered.length >= 4 && !vm.submitting
-                    ? () => vm.submit()
+                    ? vm.submit
                     : null,
                 icon: const Icon(Icons.arrow_back_rounded, size: 20),
                 label: Text(l10n.commonContinue),

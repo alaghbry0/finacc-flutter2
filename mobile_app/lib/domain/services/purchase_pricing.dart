@@ -89,8 +89,7 @@ class PurchasePricing {
       }
       // دقة NUMERIC(12,3): يقبل ثالث منزلة كاملة ويرفض الرابعة فصاعداً
       // (نفس حارس sale_pricing حرفياً مع تفاوت ضجيج النقطة العائمة).
-      if (((line.freeQty * 1000).roundToDouble() - line.freeQty * 1000)
-              .abs() >
+      if (((line.freeQty * 1000).roundToDouble() - line.freeQty * 1000).abs() >
           0.001) {
         return 'كمية بونص البند $no لا تقبل دقة أعلى من ثلاث منازل '
             'عشرية — راجع الكمية.';

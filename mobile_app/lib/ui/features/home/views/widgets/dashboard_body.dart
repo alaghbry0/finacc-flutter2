@@ -49,7 +49,7 @@ class DashboardBody extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
-          onRefresh: () => vm.load(),
+          onRefresh: vm.load,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             // قاع القوائم الموحد 32 (UX-2b — كان 28 شاذاً بين 28/32/96).

@@ -58,7 +58,7 @@ class UserRepository {
 
   /// يحاول إدخال PIN — يحدّث العدّاد والقفل ذرّياً ويعيد الحالة.
   Future<PinVerifyOutcome> verifyPin(String pin, {DateTime? now}) async {
-    final at = (now ?? DateTime.now());
+    final at = now ?? DateTime.now();
     return _db.transaction((txn) async {
       final rows = await txn.query(
         'app_user',

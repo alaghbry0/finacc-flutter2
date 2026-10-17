@@ -136,6 +136,6 @@ class Currency {
     code: row['code'] as String,
     name: row['name'] as String,
     isBase: (row['is_base'] as int? ?? 0) == 1,
-    decimals: (row['decimals'] as int? ?? 2),
+    decimals: row['decimals'] as int? ?? 2,
   );
 }

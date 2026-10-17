@@ -138,7 +138,7 @@ class DashboardRepository {
     return DashboardTodayStats(
       sales: sales,
       profit: sales - cost,
-      invoiceCount: (salesRows.first['n'] as int? ?? 0),
+      invoiceCount: salesRows.first['n'] as int? ?? 0,
       netCash: (cashRows.first['net'] as num?)?.toDouble() ?? 0,
     );
   }

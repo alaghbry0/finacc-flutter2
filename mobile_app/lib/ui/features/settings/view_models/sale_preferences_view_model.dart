@@ -155,10 +155,8 @@ class SalePreferencesViewModel extends ChangeNotifier {
     try {
       await write();
     } catch (error) {
+      // فشل الكتابة يُعرض للمستخدم عبر writeError مع بقاء القيمة الحية القديمة.
       _state = _state.copyWith(writeError: 'WRITE_FAILED');
-      if (kDebugMode) {
-        debugPrint('SalePreferencesViewModel._write: $error');
-      }
       notifyListeners();
     }
   }

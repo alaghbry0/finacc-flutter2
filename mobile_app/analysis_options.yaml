@@ -26,3 +26,11 @@ linter:
     avoid_slow_async_io: true
     cancel_subscriptions: true
     use_super_parameters: true
+    # ── R18-D5 تشديد آمن (يعمل نظيفاً على الكود الحالي) ──
+    unnecessary_lambdas: true
+    unnecessary_parenthesis: true
+    prefer_const_declarations: true
+    prefer_final_in_for_each: true
+    # دين المرحلة القادمة (يُفعَّل لاحقاً بعد مسح مواقع كثيرة):
+    # prefer_const_constructors (73 موضعاً) و avoid_redundant_argument_values
+    # (522) — تجاوزتا سقف الجولة (>20) فأُجِّلتا لجولة تنظيف قادمة.

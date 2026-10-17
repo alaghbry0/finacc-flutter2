@@ -48,12 +48,12 @@ class FinCard extends StatelessWidget {
               ]
             : <BoxShadow>[
                 BoxShadow(
-                  color: const Color(0xFF06322C).withValues(alpha: 0.06),
+                  color: FinBrandColors.cardShadow.withValues(alpha: 0.06),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
                 BoxShadow(
-                  color: const Color(0xFF06322C).withValues(alpha: 0.04),
+                  color: FinBrandColors.cardShadow.withValues(alpha: 0.04),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),

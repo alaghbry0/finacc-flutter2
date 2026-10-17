@@ -249,10 +249,8 @@ class CompanyProfileViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (error) {
+      // فشل الحفظ يُعرض للمستخدم عبر saveError.
       _state = _state.copyWith(saving: false, saveError: 'SAVE_FAILED');
-      if (kDebugMode) {
-        debugPrint('CompanyProfileViewModel.save: $error');
-      }
       notifyListeners();
       return false;
     }

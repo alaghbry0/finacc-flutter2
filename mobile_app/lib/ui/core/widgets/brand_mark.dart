@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_typography.dart';
 
@@ -116,17 +117,17 @@ class _LedgerPainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFE7CB8C), Color(0xFFC79A3E)],
+        colors: [FinBrandColors.coinHighlight, FinBrandColors.coinDeep],
       ).createShader(Rect.fromCircle(center: coinCenter, radius: 11 * s));
     canvas.drawCircle(coinCenter, 11 * s, coinPaint);
     final coinRing = Paint()
-      ..color = const Color(0xFF8F6A22)
+      ..color = FinBrandColors.coinEdge
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.6 * s;
     canvas.drawCircle(coinCenter, 8.2 * s, coinRing);
     // شطرنج رمز الريال المبسط على القطعة.
     final rialPaint = Paint()
-      ..color = const Color(0xFF8F6A22)
+      ..color = FinBrandColors.coinEdge
       ..strokeWidth = 2.1 * s
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(

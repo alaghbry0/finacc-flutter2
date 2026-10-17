@@ -156,6 +156,23 @@ class FinColors {
   }
 }
 
+/// ألوان الهوية الثابتة — لا تتكيف مع الوضعين الفاتح/الداكن (هوية بصرية
+/// مجمدة): صبغة ظل البطاقات الفاتحة ودرجات القطعة النقدية في شعار FinAcc.
+abstract final class FinBrandColors {
+  /// صبغة الظل الناعم متعدد الطبقات للبطاقات في الوضع الفاتح
+  /// (FinCard — أخضر عميق شبه أسود يُلطَّف بشفافية).
+  static const Color cardShadow = Color(0xFF06322C);
+
+  /// بداية تدرّج القطعة النقدية الذهبية في شعار FinAcc.
+  static const Color coinHighlight = Color(0xFFE7CB8C);
+
+  /// نهاية تدرّج القطعة النقدية الذهبية في شعار FinAcc.
+  static const Color coinDeep = Color(0xFFC79A3E);
+
+  /// حدّ القطعة النقدية ورمز الريال المبسط في شعار FinAcc.
+  static const Color coinEdge = Color(0xFF8F6A22);
+}
+
 /// نتيجة الحساب المالي باتجاهه — العلامة غير اللونية الملزمة (§6.1).
 enum FinSign {
   /// وارد/قبض (+).

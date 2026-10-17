@@ -142,7 +142,7 @@ class DashboardViewModel extends ChangeNotifier {
       // 17-c: استعلامات الشهر/الأصناف في حزمة معزولة — فشل أحدها
       // يُخفض قسمه إلى null (غياب البطاقة) دون إسقاط اللوحة.
       final month = await _guard(() => _repo.monthStats(now));
-      final topItems = await _guard(() => _repo.topItems());
+      final topItems = await _guard(_repo.topItems);
       _state = DashboardState(
         loading: false,
         stats: stats,

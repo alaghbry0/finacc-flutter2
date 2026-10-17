@@ -84,7 +84,7 @@ void main() {
         'وغير المتتبع لا يُمس (idempotent)', () async {
       final seeded = await openSeededApp();
       final db = seeded.$1.db;
-      addTearDown(() => seeded.$1.close());
+      addTearDown(seeded.$1.close);
 
       final warehouseId =
           (await db.rawQuery('SELECT id FROM warehouse LIMIT 1')).first['id']

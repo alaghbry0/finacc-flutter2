@@ -127,7 +127,7 @@ void main() {
 
       // الزر معطّل قبل الملء.
       expect(
-        (tester.widget<FilledButton>(buttonFinder)).onPressed,
+        tester.widget<FilledButton>(buttonFinder).onPressed,
         isNull,
         reason: 'الزر معطّل قبل تطابق الحقلين',
       );
@@ -140,7 +140,7 @@ void main() {
 
       // الزر يتحول للعمل (passphraseFormValid).
       expect(
-        (tester.widget<FilledButton>(buttonFinder)).onPressed,
+        tester.widget<FilledButton>(buttonFinder).onPressed,
         isNotNull,
         reason: 'الزر مفعّل بعد تطابق الحقلين',
       );
