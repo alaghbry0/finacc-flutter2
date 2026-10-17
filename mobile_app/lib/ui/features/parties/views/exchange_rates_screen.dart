@@ -20,6 +20,7 @@ import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/status_chip.dart';
@@ -238,7 +239,7 @@ class _TodayCard extends StatelessWidget {
     final hijriText = localizeDigits(
       '${hijri.day} ${hijri.monthName} ${hijri.year} هـ',
     );
-    final gregorianText = localizeDigits('${now.day}/${now.month}/${now.year}');
+    final gregorianText = FinDateText.date(context, now);
 
     return FinCard(
       accent: colors.gold,

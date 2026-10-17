@@ -18,6 +18,7 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
+import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
@@ -235,26 +236,17 @@ class _InvoicePickerSectionState extends State<_InvoicePickerSection> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          child: TextField(
-            key: const Key('ret_invoice_search_field'),
+          child: FinSearchField(
+            fieldKey: const Key('ret_invoice_search_field'),
             controller: _searchController,
             onChanged: vm.setFilter,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: widget.isSale
-                  ? l10n.retPickInvoiceSearchHint
-                  : l10n.retPickPurchaseSearchHint,
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _searchController.text.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      onPressed: () {
-                        _searchController.clear();
-                        vm.setFilter('');
-                      },
-                    ),
-            ),
+            hint: widget.isSale
+                ? l10n.retPickInvoiceSearchHint
+                : l10n.retPickPurchaseSearchHint,
+            onCleared: () {
+              _searchController.clear();
+              vm.setFilter('');
+            },
           ),
         ),
         const SizedBox(height: 10),

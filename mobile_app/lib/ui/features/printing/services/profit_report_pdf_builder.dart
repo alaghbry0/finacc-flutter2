@@ -25,6 +25,7 @@ import '../../../../domain/models/company.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/widgets/amount_text.dart';
 import '../core/print_fonts.dart';
+import '../core/print_widgets.dart';
 import '../core/print_palette.dart';
 import '../docs/print_docs.dart';
 
@@ -343,7 +344,8 @@ class ProfitReportPdfBuilder {
           marginRight: 12 * pw.PdfPageFormat.mm,
         ),
         header: (context) => _brandBand(doc),
-        footer: (context) => _footerLine(doc),
+        footer: (context) =>
+            printFooterLine(doc.header.footerText, doc.labels.footerThanks),
         build: (context) => [
           pw.SizedBox(height: 4 * pw.PdfPageFormat.mm),
           _titleRow(doc),
@@ -388,7 +390,7 @@ class ProfitReportPdfBuilder {
             alignment: pw.Alignment.center,
             decoration: const pw.BoxDecoration(color: PrintPalette.brand),
             child: pw.Text(
-              _monogram(doc.header.name),
+              printMonogram(doc.header.name),
               style: PrintText.head(color: pw.PdfColors.white, size: 17),
             ),
           ),
@@ -630,34 +632,6 @@ class ProfitReportPdfBuilder {
     );
   }
 
-  /// التذييل: شكر + نص المنشأة يميناً، ونسب التطبيق يساراً.
-  pw.Widget _footerLine(ProfitPrintDoc doc) {
-    final companyFooter = (doc.header.footerText ?? '').trim();
-    final thanks = doc.labels.footerThanks;
-    final right = companyFooter.isEmpty ? thanks : '$thanks · $companyFooter';
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-      children: [
-        pw.Divider(color: PrintPalette.rule, thickness: 0.6),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(
-              kPrintAppCredit,
-              style: PrintText.body(color: PrintPalette.inkSoft, size: 7.5),
-              textDirection: pw.TextDirection.rtl,
-            ),
-            pw.Text(
-              right,
-              style: PrintText.body(color: PrintPalette.inkSoft, size: 8),
-              textDirection: pw.TextDirection.rtl,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   // -------------------------------------------------------------------
   // مساعدات
   // -------------------------------------------------------------------
@@ -714,11 +688,6 @@ class ProfitReportPdfBuilder {
         ],
       ),
     );
-  }
-
-  String _monogram(String name) {
-    final trimmed = name.trim();
-    return trimmed.isEmpty ? 'ف' : trimmed.substring(0, 1);
   }
 }
 

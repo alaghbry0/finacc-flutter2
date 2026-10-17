@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/profit_report_repository.dart';
-import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -23,8 +22,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/numerals_scope.dart';
 import '../../printing/services/profit_report_pdf_builder.dart';
 import '../../printing/views/pdf_preview_dialog.dart';
 import '../view_models/profit_report_view_model.dart';
@@ -460,8 +459,8 @@ class _MetaFooter extends StatelessWidget {
       children: [
         Text(
           l10n.profitPeriodLabel(
-            _fmtDate(context, report.from),
-            _fmtDate(context, report.to),
+            FinDateText.date(context, report.from),
+            FinDateText.date(context, report.to),
           ),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelSmall
@@ -471,7 +470,7 @@ class _MetaFooter extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              l10n.profitGeneratedAt(_fmtDateTime(context, loadedAt)),
+              l10n.profitGeneratedAt(FinDateText.dateTime(context, loadedAt)),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall
                   ?.copyWith(color: scheme.onSurfaceVariant),
@@ -609,19 +608,6 @@ void _openProfitPdf(BuildContext context, ProfitReportViewModel vm) {
   );
 }
 
-/// تاريخ للعرض `يوم/شهر/سنة` بنظام أرقام السياق (نمط شاشة الأعمار).
-String _fmtDate(BuildContext context, DateTime date) {
-  final plain = _fmtPlainDate(date);
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
-}
-
-/// تاريخ ووقت للعرض `يوم/شهر/سنة ساعة:دقيقة` بنظام أرقام السياق.
-String _fmtDateTime(BuildContext context, DateTime date) {
-  final plain =
-      '${_fmtPlainDate(date)} '
-      '${date.hour.toString().padLeft(2, '0')}:'
-      '${date.minute.toString().padLeft(2, '0')}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
-}
-
+/// تاريخ `يوم/شهر/سنة` بأرقام غربية — لرسالة المشاركة خارج التطبيق
+/// (واتساب لا يعرف نظام أرقام العرض الحي).
 String _fmtPlainDate(DateTime date) => '${date.day}/${date.month}/${date.year}';

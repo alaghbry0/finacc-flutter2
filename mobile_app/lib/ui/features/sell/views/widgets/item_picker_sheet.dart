@@ -15,6 +15,8 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
+import '../../../../core/widgets/fin_search_field.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/status_chip.dart';
@@ -130,7 +132,6 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
   Widget build(BuildContext context) {
     final vm = context.watch<ItemPickerViewModel>();
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final height = MediaQuery.of(context).size.height;
 
     return Padding(
@@ -144,16 +145,7 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+              const FinSheetDragHandle(),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -177,24 +169,15 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
                 onSubmit: _submitBarcode,
               ),
               const SizedBox(height: 10),
-              TextField(
-                key: const Key('sell_picker_search_field'),
+              FinSearchField(
+                fieldKey: const Key('sell_picker_search_field'),
                 controller: _searchController,
                 onChanged: vm.onQueryChanged,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.sellPickerSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            unawaited(vm.search(''));
-                          },
-                        ),
-                ),
+                hint: l10n.sellPickerSearchHint,
+                onCleared: () {
+                  _searchController.clear();
+                  unawaited(vm.search(''));
+                },
               ),
               const SizedBox(height: 12),
               Expanded(child: _buildResults(context, vm)),

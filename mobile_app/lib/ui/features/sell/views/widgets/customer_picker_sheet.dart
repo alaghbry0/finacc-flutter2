@@ -13,10 +13,11 @@ import '../../../../../data/repositories/customer_repository.dart';
 import '../../../../../domain/core/result.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/fin_search_field.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
+import '../../../../core/widgets/party_balance_row.dart';
 import '../../view_models/customer_picker_view_model.dart';
 
 /// يفتح منتقي العميل — [onPick] عند اختيار عميل، [onCashCustomer] لعميل
@@ -104,7 +105,6 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
   Widget build(BuildContext context) {
     final vm = context.watch<CustomerPickerViewModel>();
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final height = MediaQuery.of(context).size.height;
 
     return Padding(
@@ -118,16 +118,7 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+              const FinSheetDragHandle(),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -145,24 +136,15 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
                 ],
               ),
               const SizedBox(height: 10),
-              TextField(
-                key: const Key('sell_customer_search_field'),
+              FinSearchField(
+                fieldKey: const Key('sell_customer_search_field'),
                 controller: _searchController,
                 onChanged: vm.onQueryChanged,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.sellCustomerPickerSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            unawaited(vm.search(''));
-                          },
-                        ),
-                ),
+                hint: l10n.sellCustomerPickerSearchHint,
+                onCleared: () {
+                  _searchController.clear();
+                  unawaited(vm.search(''));
+                },
               ),
               const SizedBox(height: 12),
               _CashCustomerCard(
@@ -245,10 +227,17 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
       itemCount: state.matches.length,
       itemBuilder: (context, index) {
         final match = state.matches[index];
+        final balanceColor = _customerBalanceColor(context, match.balance);
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: _CustomerRow(
-            match: match,
+          child: PartyBalanceRow(
+            name: match.name,
+            phone: match.phone,
+            balance: match.balance,
+            currencyCode: match.currencyCode,
+            label: _customerBalanceLabel(context, match.balance),
+            labelColor: balanceColor,
+            currencyColor: balanceColor,
             onTap: () {
               widget.onPick(match);
               Navigator.of(context).pop();
@@ -258,6 +247,26 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
       },
     );
   }
+}
+
+/// دلالة رصيد العميل — موجب: دين عليه لنا، سالب: دائن، صفر: خالص.
+String _customerBalanceLabel(BuildContext context, double balance) {
+  final l10n = AppLocalizations.of(context)!;
+  return balance > 0
+      ? l10n.sellCustomerOwes
+      : balance < 0
+      ? l10n.sellCustomerCredit
+      : l10n.sellCustomerClear;
+}
+
+/// لون دلالة رصيد العميل (تحذيري/إيجابي/محايد).
+Color _customerBalanceColor(BuildContext context, double balance) {
+  final colors = FinColors.of(context);
+  return balance > 0
+      ? colors.warning
+      : balance < 0
+      ? colors.positive
+      : Theme.of(context).colorScheme.onSurfaceVariant;
 }
 
 /// بطاقة «عميل نقدي» — الخيار الافتراضي للكاشير.
@@ -316,114 +325,6 @@ class _CashCustomerCard extends StatelessWidget {
               Icon(
                 Icons.chevron_left_rounded,
                 color: scheme.onPrimaryContainer,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CustomerRow extends StatelessWidget {
-  const _CustomerRow({required this.match, required this.onTap});
-
-  final CustomerPick match;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final balanceColor = match.balance > 0
-        ? colors.warning
-        : match.balance < 0
-        ? colors.positive
-        : scheme.onSurfaceVariant;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colors.cardBorder),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    match.name.trim().isEmpty
-                        ? '؟'
-                        : match.name.trim().characters.first,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      match.name,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (match.phone != null && match.phone!.isNotEmpty)
-                      Text(
-                        match.phone!,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(fontFeatures: FinText.tabularNums),
-                        maxLines: 1,
-                      ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      AmountText(
-                        amount: match.balance.abs(),
-                        size: AmountSize.row,
-                        decimals: 2,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        match.currencyCode,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: balanceColor,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    match.balance > 0
-                        ? AppLocalizations.of(context)!.sellCustomerOwes
-                        : match.balance < 0
-                        ? AppLocalizations.of(context)!.sellCustomerCredit
-                        : AppLocalizations.of(context)!.sellCustomerClear,
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: balanceColor),
-                  ),
-                ],
               ),
             ],
           ),
@@ -502,16 +403,7 @@ class _QuickCustomerSheetState extends State<_QuickCustomerSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+              const FinSheetDragHandle(),
               const SizedBox(height: 12),
               Row(
                 children: [

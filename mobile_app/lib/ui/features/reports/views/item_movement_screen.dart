@@ -18,16 +18,17 @@ import 'package:provider/provider.dart';
 import '../../../../data/repositories/item_repository.dart';
 import '../../../../data/repositories/movement_reports_repository.dart';
 import '../../../../domain/models/item.dart';
-import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/amount_text.dart';
+import '../../../core/widgets/fin_search_field.dart';
+import '../../../core/widgets/fin_sheet_drag_handle.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/numerals_scope.dart';
 import '../view_models/movement_reports_view_model.dart';
 import 'widgets/period_preset_bar.dart';
 
@@ -203,10 +204,10 @@ class _ItemMovementBody extends StatelessWidget {
       Text(
         state.currencyCode.isEmpty
             ? l10n.itemMovementPeriodLabel(
-                _fmtDate(context, report.from),
-                _fmtDate(context, report.to),
+                FinDateText.date(context, report.from),
+                FinDateText.date(context, report.to),
               )
-            : '${l10n.itemMovementPeriodLabel(_fmtDate(context, report.from), _fmtDate(context, report.to))} · ${state.currencyCode}',
+            : '${l10n.itemMovementPeriodLabel(FinDateText.date(context, report.from), FinDateText.date(context, report.to))} · ${state.currencyCode}',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.labelSmall
             ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -513,7 +514,7 @@ class _MovementTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _fmtDateTime(context, row.movedAt),
+                  FinDateText.dateTime(context, row.movedAt),
                   style: Theme.of(context).textTheme.labelMedium
                       ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
@@ -726,7 +727,6 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final height = MediaQuery.of(context).size.height;
 
     return Padding(
@@ -740,16 +740,7 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+              const FinSheetDragHandle(),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -767,25 +758,16 @@ class _ProductPickerSheetState extends State<_ProductPickerSheet> {
                 ],
               ),
               const SizedBox(height: 10),
-              TextField(
-                key: const Key('itemMovement_picker_search_field'),
+              FinSearchField(
+                fieldKey: const Key('itemMovement_picker_search_field'),
                 controller: _searchController,
                 onChanged: _onQueryChanged,
-                textInputAction: TextInputAction.search,
+                hint: l10n.itemMovementPickerSearchHint,
                 autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.itemMovementPickerSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            unawaited(_search(''));
-                          },
-                        ),
-                ),
+                onCleared: () {
+                  _searchController.clear();
+                  unawaited(_search(''));
+                },
               ),
               const SizedBox(height: 12),
               Expanded(child: _buildResults(context)),
@@ -944,18 +926,3 @@ String _qtyText(double qty) =>
 
 /// مقدار صادر للعرض بإشارة السالب (المستودع يعيده موجباً).
 String _qtyOut(double magnitude) => '−${_qtyPlain(magnitude)}';
-
-/// تاريخ للعرض `يوم/شهر/سنة` بنظام أرقام السياق (نمط شاشة الأرباح).
-String _fmtDate(BuildContext context, DateTime date) {
-  final plain = '${date.day}/${date.month}/${date.year}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
-}
-
-/// تاريخ ووقت للعرض `يوم/شهر/سنة ساعة:دقيقة` بنظام أرقام السياق.
-String _fmtDateTime(BuildContext context, DateTime date) {
-  final plain =
-      '${date.day}/${date.month}/${date.year} '
-      '${date.hour.toString().padLeft(2, '0')}:'
-      '${date.minute.toString().padLeft(2, '0')}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
-}

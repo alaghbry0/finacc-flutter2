@@ -10,11 +10,10 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../../../../../domain/services/numerals.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/fin_card.dart';
-import '../../../../core/widgets/numerals_scope.dart';
+import '../../../../core/widgets/fin_date_text.dart';
 
 /// فترة التقرير المسبقة.
 enum ReportPeriod {
@@ -146,7 +145,7 @@ class PeriodPresetBar extends StatelessWidget {
                               child: Text(
                                 key: const Key('periodFrom'),
                                 '${l10n.periodFrom} '
-                                '${_fmtDate(context, currentFrom!)}',
+                                '${FinDateText.date(context, currentFrom!)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall
@@ -167,7 +166,7 @@ class PeriodPresetBar extends StatelessWidget {
                               child: Text(
                                 key: const Key('periodTo'),
                                 '${l10n.periodTo} '
-                                '${_fmtDate(context, currentTo!)}',
+                                '${FinDateText.date(context, currentTo!)}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall
@@ -263,10 +262,4 @@ class _PeriodChip extends StatelessWidget {
       ReportPeriod.custom => l10n.periodCustom,
     };
   }
-}
-
-/// تاريخ للعرض `يوم/شهر/سنة` بنظام أرقام السياق (نمط شاشة الأعمار).
-String _fmtDate(BuildContext context, DateTime date) {
-  final plain = '${date.day}/${date.month}/${date.year}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
 }

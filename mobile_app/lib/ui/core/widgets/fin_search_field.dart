@@ -16,6 +16,7 @@ class FinSearchField extends StatelessWidget {
     required this.onCleared,
     this.fieldKey,
     this.hint,
+    this.autofocus = false,
   });
 
   final TextEditingController controller;
@@ -29,6 +30,9 @@ class FinSearchField extends StatelessWidget {
   /// تلميح البحث المترجم.
   final String? hint;
 
+  /// تركيز تلقائي عند الفتح (منتقي حركة الصنف يفتح جاهزاً للكتابة).
+  final bool autofocus;
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TextEditingValue>(
@@ -39,6 +43,7 @@ class FinSearchField extends StatelessWidget {
           controller: controller,
           onChanged: onChanged,
           textInputAction: TextInputAction.search,
+          autofocus: autofocus,
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: const Icon(Icons.search_rounded),

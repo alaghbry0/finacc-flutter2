@@ -18,6 +18,7 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
+import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
@@ -141,25 +142,16 @@ class _MovementsBodyState extends State<_MovementsBody> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: TextField(
+            child: FinSearchField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: l10n.cashMovementsSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () {
-                          _searchController.clear();
-                          final vm = context.read<MovementsViewModel>();
-                          vm.onSearchChanged('');
-                          unawaited(vm.load());
-                        },
-                      ),
-              ),
+              hint: l10n.cashMovementsSearchHint,
+              onCleared: () {
+                _searchController.clear();
+                final vm = context.read<MovementsViewModel>();
+                vm.onSearchChanged('');
+                unawaited(vm.load());
+              },
             ),
           ),
           const SizedBox(height: 10),
@@ -866,9 +858,10 @@ bool _isPrintableVoucher(CashMovementRow movement) =>
     (movement.voucherNo ?? '').isNotEmpty &&
     (movement.txTypeCode == 'RVT' || movement.txTypeCode == 'PMT');
 
-/// منازل العملة للطباعة — قرار المستدعي: YER = 0 (قاعدة 5.4-9) والباقي 2.
+/// منازل العملة للطباعة (يفوّض إلى `AmountText.decimalsFor` — قاعدة 5.4-9
+/// بمصدرها الموحد؛ الخرج مطابق حرفياً).
 int _voucherDecimals(CashMovementRow movement) =>
-    movement.currencyCode == 'YER' ? 0 : 2;
+    AmountText.decimalsFor(movement.currencyCode);
 
 /// يبني إسقاط السند من صف الحركة + رأس المنشأة — كل تسمية مسبقة التعريب
 /// من l10n، والمبلغ عبر `AmountText.format` (غربي بفواصل آلاف).

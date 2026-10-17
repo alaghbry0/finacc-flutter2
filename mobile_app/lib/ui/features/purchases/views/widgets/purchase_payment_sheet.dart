@@ -13,6 +13,7 @@ import '../../../../../domain/services/purchase_pricing.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/amount_text.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
 import '../../../../core/widgets/fin_card.dart';
 import '../../../../core/widgets/fin_error_card.dart';
 import 'purchase_widgets.dart';
@@ -185,7 +186,6 @@ class _PurchasePaymentSheetState extends State<_PurchasePaymentSheet> {
 
   Widget _buildPayForm(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final paid = _paidCash ?? 0;
     final settlement = PurchasePricing.settlePayment(widget.grandTotal, paid);
 
@@ -193,7 +193,7 @@ class _PurchasePaymentSheetState extends State<_PurchasePaymentSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(child: _dragHandle(scheme)),
+        const FinSheetDragHandle(),
         const SizedBox(height: 12),
         _TotalHeader(
           grandTotal: widget.grandTotal,
@@ -301,7 +301,7 @@ class _PurchasePaymentSheetState extends State<_PurchasePaymentSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(child: _dragHandle(Theme.of(context).colorScheme)),
+        const FinSheetDragHandle(),
         const SizedBox(height: 8),
         PostedPurchaseReceiptCard(
           receipt: _receipt!,
@@ -323,15 +323,6 @@ class _PurchasePaymentSheetState extends State<_PurchasePaymentSheet> {
       ],
     );
   }
-
-  static Widget _dragHandle(ColorScheme scheme) => Container(
-    width: 44,
-    height: 5,
-    decoration: BoxDecoration(
-      color: scheme.outlineVariant,
-      borderRadius: BorderRadius.circular(999),
-    ),
-  );
 }
 
 /// رأس النافذة — الصافي كبير + رمز العملة + المورد.

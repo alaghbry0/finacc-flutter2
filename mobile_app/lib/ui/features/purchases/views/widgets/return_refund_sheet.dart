@@ -14,6 +14,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
 import '../../../../core/widgets/fin_card.dart';
 import '../../../../core/widgets/fin_error_card.dart';
 import '../../../../core/widgets/status_chip.dart';
@@ -208,7 +209,7 @@ class _ReturnRefundSheetState extends State<_ReturnRefundSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(child: _dragHandle(scheme)),
+        const FinSheetDragHandle(),
         const SizedBox(height: 12),
         Column(
           children: [
@@ -392,7 +393,7 @@ class _ReturnRefundSheetState extends State<_ReturnRefundSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(child: _dragHandle(Theme.of(context).colorScheme)),
+        const FinSheetDragHandle(),
         const SizedBox(height: 8),
         PostedReturnReceiptCard(receipt: _receipt!),
         const SizedBox(height: 18),
@@ -411,15 +412,6 @@ class _ReturnRefundSheetState extends State<_ReturnRefundSheet> {
       ],
     );
   }
-
-  static Widget _dragHandle(ColorScheme scheme) => Container(
-    width: 44,
-    height: 5,
-    decoration: BoxDecoration(
-      color: scheme.outlineVariant,
-      borderRadius: BorderRadius.circular(999),
-    ),
-  );
 }
 
 class _PreviewRow extends StatelessWidget {

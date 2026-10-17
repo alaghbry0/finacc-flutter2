@@ -6,12 +6,11 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../../../domain/models/party.dart';
-import '../../../../../domain/services/numerals.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
-import '../../../../core/widgets/numerals_scope.dart';
+import '../../../../core/widgets/fin_date_text.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../view_models/party_kind.dart';
 
@@ -293,11 +292,8 @@ class CurrencyTotalsRow extends StatelessWidget {
 }
 
 /// ينسّق تاريخاً للعرض `يوم/شهر/سنة` بنظام أرقام السياق الحي.
-String partyFormatDate(BuildContext context, DateTime? date) {
-  if (date == null) return '';
-  final plain = '${date.day}/${date.month}/${date.year}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
-}
+String partyFormatDate(BuildContext context, DateTime? date) =>
+    date == null ? '' : FinDateText.date(context, date);
 
 /// أيقونة قيد كشف الحساب + لونها الدلالي (§6.1 — الوارد أخضر، الصادر
 /// أحمر، الآجل/الافتتاحي ذهبي/محايد).

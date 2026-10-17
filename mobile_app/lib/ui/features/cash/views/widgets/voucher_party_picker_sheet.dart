@@ -9,10 +9,10 @@ import 'package:flutter/material.dart';
 import '../../../../../domain/models/party.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/fin_search_field.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/party_balance_row.dart';
 import '../../view_models/voucher_view_model.dart';
 import 'cash_widgets.dart';
 
@@ -110,23 +110,14 @@ class _VoucherPartyPickerSheetState extends State<VoucherPartyPickerSheet> {
                 ],
               ),
               const SizedBox(height: 10),
-              TextField(
+              FinSearchField(
                 controller: _searchController,
                 onChanged: _onQueryChanged,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.cashVoucherPickerSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            unawaited(_search(''));
-                          },
-                        ),
-                ),
+                hint: l10n.cashVoucherPickerSearchHint,
+                onCleared: () {
+                  _searchController.clear();
+                  unawaited(_search(''));
+                },
               ),
               const SizedBox(height: 12),
               Expanded(child: _buildList(context)),
@@ -177,11 +168,21 @@ class _VoucherPartyPickerSheetState extends State<VoucherPartyPickerSheet> {
       itemCount: _matches.length,
       itemBuilder: (context, index) {
         final match = _matches[index];
+        final (label, color) = _voucherBalanceMeaning(
+          context,
+          widget.vm.isReceipt,
+          match.balance,
+        );
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: _PartyRow(
-            match: match,
-            isReceipt: widget.vm.isReceipt,
+          child: PartyBalanceRow(
+            name: match.name,
+            phone: match.phone,
+            balance: match.balance,
+            currencyCode: match.currencyCode,
+            label: label,
+            labelColor: color,
+            currencyColor: FinColors.of(context).gold,
             onTap: () {
               widget.vm.setParty(match);
               Navigator.of(context).pop();
@@ -193,126 +194,31 @@ class _VoucherPartyPickerSheetState extends State<VoucherPartyPickerSheet> {
   }
 }
 
-class _PartyRow extends StatelessWidget {
-  const _PartyRow({
-    required this.match,
-    required this.isReceipt,
-    required this.onTap,
-  });
-
-  final PartyBalance match;
-  final bool isReceipt;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    // موجب = طرف مدينة لنا (عميل مدين/ مورد ندين له) — إشارة العملة حسب
-    // نوع السند (قبض من عميل/صرف لمورد).
-    final label = isReceipt
-        ? (match.balance > 0
-              ? l10n.cashVoucherPartyOwesYou
-              : match.balance < 0
-              ? l10n.cashVoucherPartyCredit
-              : l10n.sellCustomerClear)
-        : (match.balance > 0
-              ? l10n.cashVoucherPartyWeOwe
-              : match.balance < 0
-              ? l10n.cashVoucherPartyCredit
-              : l10n.sellCustomerClear);
-    final color = match.balance > 0
-        ? (isReceipt ? colors.positive : colors.warning)
-        : match.balance < 0
-        ? (isReceipt ? colors.neutral : colors.positive)
-        : scheme.onSurfaceVariant;
-
-    return Material(
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colors.cardBorder),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    match.name.trim().isEmpty
-                        ? '؟'
-                        : match.name.trim().characters.first,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      match.name,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (match.phone != null && match.phone!.isNotEmpty)
-                      Text(
-                        match.phone!,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(fontFeatures: FinText.tabularNums),
-                        maxLines: 1,
-                      ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      AmountText(
-                        amount: match.balance.abs(),
-                        size: AmountSize.row,
-                        decimals: 2,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        match.currencyCode,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colors.gold,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: color),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+/// دلالة رصيد طرف السند بلونها — موجب = طرف مدينة لنا (عميل مدين/
+/// مورد ندين له)؛ الإشارة تتبدّل حسب نوع السند (قبض من عميل/صرف لمورد).
+(String, Color) _voucherBalanceMeaning(
+  BuildContext context,
+  bool isReceipt,
+  double balance,
+) {
+  final l10n = AppLocalizations.of(context)!;
+  final scheme = Theme.of(context).colorScheme;
+  final colors = FinColors.of(context);
+  final label = isReceipt
+      ? (balance > 0
+            ? l10n.cashVoucherPartyOwesYou
+            : balance < 0
+            ? l10n.cashVoucherPartyCredit
+            : l10n.sellCustomerClear)
+      : (balance > 0
+            ? l10n.cashVoucherPartyWeOwe
+            : balance < 0
+            ? l10n.cashVoucherPartyCredit
+            : l10n.sellCustomerClear);
+  final color = balance > 0
+      ? (isReceipt ? colors.positive : colors.warning)
+      : balance < 0
+      ? (isReceipt ? colors.neutral : colors.positive)
+      : scheme.onSurfaceVariant;
+  return (label, color);
 }

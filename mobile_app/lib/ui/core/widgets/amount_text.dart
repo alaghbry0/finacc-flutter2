@@ -48,6 +48,11 @@ class AmountText extends StatelessWidget {
     return NumberFormat(pattern, 'en_US').format(value);
   }
 
+  /// منازل عرض المبلغ برمز عملته (YER = 0 — قاعدة 5.4-9، والباقي 2):
+  /// المصدر الموحد لقرار المنازل عند عرض/طباعة مبلغ بعملة غير معروفة
+  /// المنازل (R19-D2 — كان مكرراً بثلاثة مواضع).
+  static int decimalsFor(String? currencyCode) => currencyCode == 'YER' ? 0 : 2;
+
   /// تنسيق المبلغ بنظام أرقام السياق (`display.numerals`).
   static String formatFor(BuildContext context, double value, int decimals) {
     final formatted = format(value, decimals);

@@ -18,6 +18,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../core/widgets/amount_text.dart';
 import '../core/print_fonts.dart';
+import '../core/print_widgets.dart';
 import '../core/print_palette.dart';
 import '../docs/print_docs.dart';
 import '../../../../data/models/invoice_template_settings.dart';
@@ -69,8 +70,9 @@ class InvoicePdfBuilder {
         marginRight: 12 * pw.PdfPageFormat.mm,
       ),
       header: (context) => _brandBand(doc),
-      footer: (context) =>
-          showFooter ? _footerLine(doc) : pw.SizedBox(height: 4),
+      footer: (context) => showFooter
+          ? printFooterLine(doc.header.footerText, doc.labels.footerThanks)
+          : pw.SizedBox(height: 4),
       build: (context) => [
         pw.SizedBox(height: 4 * pw.PdfPageFormat.mm),
         _titleRow(doc),
@@ -121,7 +123,7 @@ class InvoicePdfBuilder {
             alignment: pw.Alignment.center,
             decoration: const pw.BoxDecoration(color: PrintPalette.brand),
             child: pw.Text(
-              _monogram(doc.header.name),
+              printMonogram(doc.header.name),
               style: PrintText.head(color: pw.PdfColors.white, size: 17),
             ),
           ),
@@ -407,34 +409,6 @@ class InvoicePdfBuilder {
     );
   }
 
-  /// التذييل: شكر + نص المنشأة يميناً، ونسب التطبيق يساراً.
-  pw.Widget _footerLine(InvoicePrintDoc doc) {
-    final companyFooter = (doc.header.footerText ?? '').trim();
-    final thanks = doc.labels.footerThanks;
-    final right = companyFooter.isEmpty ? thanks : '$thanks · $companyFooter';
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-      children: [
-        pw.Divider(color: PrintPalette.rule, thickness: 0.6),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(
-              kPrintAppCredit,
-              style: PrintText.body(color: PrintPalette.inkSoft, size: 7.5),
-              textDirection: pw.TextDirection.rtl,
-            ),
-            pw.Text(
-              right,
-              style: PrintText.body(color: PrintPalette.inkSoft, size: 8),
-              textDirection: pw.TextDirection.rtl,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   // -------------------------------------------------------------------
   // مساعدات
   // -------------------------------------------------------------------
@@ -515,10 +489,5 @@ class InvoicePdfBuilder {
   String _fmtGrandTotal(InvoicePrintDoc doc) {
     final value = _fmtMoney(doc, doc.total);
     return doc.currencyCode.isEmpty ? value : '$value ${doc.currencyCode}';
-  }
-
-  String _monogram(String name) {
-    final trimmed = name.trim();
-    return trimmed.isEmpty ? 'ف' : trimmed.substring(0, 1);
   }
 }

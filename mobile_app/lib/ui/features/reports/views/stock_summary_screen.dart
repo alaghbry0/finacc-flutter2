@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/movement_reports_repository.dart';
-import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -21,8 +20,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/numerals_scope.dart';
 import '../view_models/movement_reports_view_model.dart';
 import 'widgets/period_preset_bar.dart';
 
@@ -179,10 +178,10 @@ class _StockSummaryBody extends StatelessWidget {
       Text(
         state.currencyCode.isEmpty
             ? l10n.stockSummaryPeriodLabel(
-                _fmtDate(context, state.from!),
-                _fmtDate(context, state.to!),
+                FinDateText.date(context, state.from!),
+                FinDateText.date(context, state.to!),
               )
-            : '${l10n.stockSummaryPeriodLabel(_fmtDate(context, state.from!), _fmtDate(context, state.to!))} · ${state.currencyCode}',
+            : '${l10n.stockSummaryPeriodLabel(FinDateText.date(context, state.from!), FinDateText.date(context, state.to!))} · ${state.currencyCode}',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.labelSmall
             ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -440,10 +439,4 @@ String _qtyText(double qty) {
   final formatted = AmountText.format(qty.abs(), decimals);
   final marker = qty < 0 ? '−' : '+';
   return '$marker$formatted';
-}
-
-/// تاريخ للعرض `يوم/شهر/سنة` بنظام أرقام السياق (نمط شاشة الأرباح).
-String _fmtDate(BuildContext context, DateTime date) {
-  final plain = '${date.day}/${date.month}/${date.year}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
 }

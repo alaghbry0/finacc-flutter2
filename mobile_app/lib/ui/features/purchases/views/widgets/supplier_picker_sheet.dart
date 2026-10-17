@@ -11,10 +11,11 @@ import '../../../../../data/repositories/supplier_repository.dart';
 import '../../../../../domain/models/party.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/fin_search_field.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
+import '../../../../core/widgets/party_balance_row.dart';
 import '../../view_models/supplier_picker_view_model.dart';
 
 /// اختيار مورد من النافذة — [onPick] عند الاختيار.
@@ -62,7 +63,6 @@ class _SupplierPickerSheetState extends State<_SupplierPickerSheet> {
   Widget build(BuildContext context) {
     final vm = context.watch<SupplierPickerViewModel>();
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
     final height = MediaQuery.of(context).size.height;
 
     return Padding(
@@ -76,16 +76,7 @@ class _SupplierPickerSheetState extends State<_SupplierPickerSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+              const FinSheetDragHandle(),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -103,24 +94,15 @@ class _SupplierPickerSheetState extends State<_SupplierPickerSheet> {
                 ],
               ),
               const SizedBox(height: 10),
-              TextField(
-                key: const Key('pur_supplier_search_field'),
+              FinSearchField(
+                fieldKey: const Key('pur_supplier_search_field'),
                 controller: _searchController,
                 onChanged: vm.onQueryChanged,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l10n.purSupplierPickerSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            unawaited(vm.search(''));
-                          },
-                        ),
-                ),
+                hint: l10n.purSupplierPickerSearchHint,
+                onCleared: () {
+                  _searchController.clear();
+                  unawaited(vm.search(''));
+                },
               ),
               const SizedBox(height: 12),
               Expanded(child: _buildList(context, vm)),
@@ -182,10 +164,17 @@ class _SupplierPickerSheetState extends State<_SupplierPickerSheet> {
       itemCount: state.matches.length,
       itemBuilder: (context, index) {
         final match = state.matches[index];
+        final balanceColor = _supplierBalanceColor(context, match.balance);
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: _SupplierRow(
-            match: match,
+          child: PartyBalanceRow(
+            name: match.name,
+            phone: match.phone,
+            balance: match.balance,
+            currencyCode: match.currencyCode,
+            label: _supplierBalanceLabel(context, match.balance),
+            labelColor: balanceColor,
+            currencyColor: balanceColor,
             onTap: () {
               widget.onPick(match);
               Navigator.of(context).pop();
@@ -197,112 +186,23 @@ class _SupplierPickerSheetState extends State<_SupplierPickerSheet> {
   }
 }
 
-class _SupplierRow extends StatelessWidget {
-  const _SupplierRow({required this.match, required this.onTap});
+/// دلالة رصيد المورد — موجب: دَين لنا في ذمته (ندين له)، سالب: دائن،
+/// صفر: خالص.
+String _supplierBalanceLabel(BuildContext context, double balance) {
+  final l10n = AppLocalizations.of(context)!;
+  return balance > 0
+      ? l10n.purSupplierOwes
+      : balance < 0
+      ? l10n.purSupplierCredit
+      : l10n.sellCustomerClear;
+}
 
-  final PartyBalance match;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    // موجب = دَين لنا في ذمة المورد (ندين له) — تحذيري.
-    final balanceColor = match.balance > 0
-        ? colors.warning
-        : match.balance < 0
-        ? colors.positive
-        : scheme.onSurfaceVariant;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colors.cardBorder),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    match.name.trim().isEmpty
-                        ? '؟'
-                        : match.name.trim().characters.first,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      match.name,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (match.phone != null && match.phone!.isNotEmpty)
-                      Text(
-                        match.phone!,
-                        style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(fontFeatures: FinText.tabularNums),
-                        maxLines: 1,
-                      ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      AmountText(
-                        amount: match.balance.abs(),
-                        size: AmountSize.row,
-                        decimals: 2,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        match.currencyCode,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: balanceColor,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    match.balance > 0
-                        ? l10n.purSupplierOwes
-                        : match.balance < 0
-                        ? l10n.purSupplierCredit
-                        : l10n.sellCustomerClear,
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: balanceColor),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+/// لون دلالة رصيد المورد (تحذيري/إيجابي/محايد).
+Color _supplierBalanceColor(BuildContext context, double balance) {
+  final colors = FinColors.of(context);
+  return balance > 0
+      ? colors.warning
+      : balance < 0
+      ? colors.positive
+      : Theme.of(context).colorScheme.onSurfaceVariant;
 }

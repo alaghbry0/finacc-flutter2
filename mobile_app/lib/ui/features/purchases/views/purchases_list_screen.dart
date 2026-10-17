@@ -16,6 +16,7 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/amount_text.dart';
+import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
@@ -79,24 +80,15 @@ class _PurchasesListBodyState extends State<_PurchasesListBody> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: TextField(
-              key: const Key('pur_invoices_search_field'),
+            child: FinSearchField(
+              fieldKey: const Key('pur_invoices_search_field'),
               controller: _searchController,
               onChanged: vm.setFilter,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: l10n.purInvoicesSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _searchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () {
-                          _searchController.clear();
-                          vm.setFilter('');
-                        },
-                      ),
-              ),
+              hint: l10n.purInvoicesSearchHint,
+              onCleared: () {
+                _searchController.clear();
+                vm.setFilter('');
+              },
             ),
           ),
           const SizedBox(height: 10),

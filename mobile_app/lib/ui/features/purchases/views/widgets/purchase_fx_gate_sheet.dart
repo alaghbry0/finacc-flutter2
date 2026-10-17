@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/fin_card.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
 import '../../view_models/purchase_cart_view_model.dart';
 
 /// يفتح بوابة إدخال سعر اليوم — يعيد `true` إذا حُفظ السعر.
@@ -89,16 +90,7 @@ class _FxRateGateSheetState extends State<_FxRateGateSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Container(
-                width: 44,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: scheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
+            const FinSheetDragHandle(),
             const SizedBox(height: 16),
             FinCard(
               accent: colors.warning,

@@ -12,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/debt_aging_repository.dart';
-import '../../../../domain/services/numerals.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -20,8 +19,8 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
+import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
-import '../../../core/widgets/numerals_scope.dart';
 import '../../../core/widgets/refresh_on_return.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../view_models/aging_view_model.dart';
@@ -913,9 +912,6 @@ Color _bucketColor(BuildContext context, int bucket) {
   };
 }
 
-/// تاريخ للعرض `يوم/شهر/سنة` بنظام أرقام السياق الحي.
-String _formatDate(BuildContext context, DateTime? date) {
-  if (date == null) return '—';
-  final plain = '${date.day}/${date.month}/${date.year}';
-  return NumeralsScope.of(context) ? Numerals.toArabicIndic(plain) : plain;
-}
+/// تاريخ للعرض `يوم/شهر/سنة` بنظام أرقام السياق الحي — «—» عند الغياب.
+String _formatDate(BuildContext context, DateTime? date) =>
+    date == null ? '—' : FinDateText.date(context, date);

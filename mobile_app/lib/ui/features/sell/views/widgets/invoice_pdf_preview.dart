@@ -30,9 +30,10 @@ import '../../../../../data/models/invoice_template_settings.dart';
 import '../../../printing/views/pdf_preview_dialog.dart';
 import 'sell_widgets.dart';
 
-/// منازل العملة للطباعة — قرار المستدعي: YER = 0 (قاعدة 5.4-9) والباقي 2.
+/// منازل العملة للطباعة (يفوّض إلى `AmountText.decimalsFor` — قاعدة 5.4-9
+/// بمصدرها الموحد؛ الخرج مطابق حرفياً).
 int invoicePrintDecimals(SaleInvoiceDetail detail) =>
-    detail.currencyCode == 'YER' ? 0 : 2;
+    AmountText.decimalsFor(detail.currencyCode);
 
 /// عنوان وضع الدفع معرّباً (صندوق الكلاسيكي وعنوان الإيصال الحراري).
 String _payStatusLabel(AppLocalizations l10n, SalePaymentMethod payStatus) =>

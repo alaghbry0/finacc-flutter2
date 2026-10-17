@@ -23,6 +23,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../core/widgets/amount_text.dart';
 import '../core/print_palette.dart';
+import '../core/print_widgets.dart';
 import '../docs/print_docs.dart';
 import '../../../../data/models/invoice_template_settings.dart';
 import 'template_colors.dart';
@@ -260,7 +261,7 @@ class ClassicA4InvoiceTemplate {
         borderRadius: pw.BorderRadius.circular(20),
       ),
       child: pw.Text(
-        _monogram(businessName),
+        printMonogram(businessName),
         style: PrintText.head(color: PrintPalette.brandDeep, size: 15),
       ),
     );
@@ -749,11 +750,6 @@ class ClassicA4InvoiceTemplate {
   /// الأكواد الحالية `INV-YYYY-NNNNN` دائماً كذلك).
   bool _docNoIsEncodable(InvoicePrintDoc doc) =>
       RegExp(r'^[\x00-\x7F]*$').hasMatch(doc.docNo);
-
-  String _monogram(String name) {
-    final trimmed = name.trim();
-    return trimmed.isEmpty ? 'ف' : trimmed.substring(0, 1);
-  }
 
   String _fmtMoney(InvoicePrintDoc doc, double value) =>
       AmountText.format(value, doc.decimals);

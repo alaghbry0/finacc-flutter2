@@ -13,6 +13,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/fin_card.dart';
+import '../../../../core/widgets/fin_sheet_drag_handle.dart';
 
 /// ─────────────────────────────────────────────────────────────────────
 /// دلالات الأنواع (ملحق و — إشارات الأرصدة الحرفية)
@@ -81,24 +82,13 @@ String cashFormatIsoDate(DateTime date) =>
 /// عناصر العرض
 /// ─────────────────────────────────────────────────────────────────────
 
-/// مقبض سحب نوافذ BottomSheet — القالب الموحد.
+/// مقبض سحب نوافذ BottomSheet — القالب الموحد (يفوِّض إلى
+/// `FinSheetDragHandle` بالنواة — مصدر الشكل الوحيد).
 class CashSheetDragHandle extends StatelessWidget {
   const CashSheetDragHandle({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Center(
-      child: Container(
-        width: 44,
-        height: 5,
-        decoration: BoxDecoration(
-          color: scheme.outlineVariant,
-          borderRadius: BorderRadius.circular(999),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const FinSheetDragHandle();
 }
 
 /// بلاطة وصول سريع (شبكة محور النقدية) — أيقونة ملونة + تسمية قصيرة.
