@@ -78,7 +78,9 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../core/storage/doc_sequence.dart';
+import '../../domain/core/numbers.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/batch.dart';
 import '../../domain/models/invoice_void.dart';
@@ -306,9 +308,9 @@ class SaleRepository {
             );
             if (action == 'block') {
               return Err(
-                'تجاوز حد الائتمان: رصيد العميل الحالي ${_num(credit.balance)} '
-                '+ الآجل الجديد ${_num(remainingCredit)} يتجاوز الحد '
-                '${_num(credit.creditLimit ?? 0)} — قلّل الآجل أو استوفِ أولاً.',
+                'تجاوز حد الائتمان: رصيد العميل الحالي ${formatNum(credit.balance)} '
+                '+ الآجل الجديد ${formatNum(remainingCredit)} يتجاوز الحد '
+                '${formatNum(credit.creditLimit ?? 0)} — قلّل الآجل أو استوفِ أولاً.',
               );
             }
           }
@@ -428,8 +430,8 @@ class SaleRepository {
             if (fefo.shorted) {
               throw _FlowError(
                 'الكمية غير متوفرة للصنف «${info.name}»: المتاح '
-                '${_num(fefo.allocatedQty)} والمطلوب ${_num(dispatchedQty)}'
-                '${freeQty > _qtyEpsilon ? ' (منها ${_num(freeQty)} مجاني)' : ''} — '
+                '${formatNum(fefo.allocatedQty)} والمطلوب ${formatNum(dispatchedQty)}'
+                '${freeQty > qtyEpsilon ? ' (منها ${formatNum(freeQty)} مجاني)' : ''} — '
                 'لا يسمح النظام بمخزون سالب.',
               );
             }
@@ -438,12 +440,12 @@ class SaleRepository {
           final batchSummary = fefo == null || fefo.allocations.isEmpty
               ? null
               : fefo.allocations
-                    .map((a) => '${a.batchNumber}×${_num(a.qty)}')
+                    .map((a) => '${a.batchNumber}×${formatNum(a.qty)}')
                     .join('، ');
           final lineNotes = [
             if ((pricedLine.line.notes ?? '').trim().isNotEmpty)
               pricedLine.line.notes!.trim(),
-            if (freeQty > _qtyEpsilon) 'بونص: ${_num(freeQty)}',
+            if (freeQty > qtyEpsilon) 'بونص: ${formatNum(freeQty)}',
             if (batchSummary != null) 'دفعة: $batchSummary',
           ].join(' — ');
 
@@ -490,8 +492,8 @@ class SaleRepository {
                 'moved_at': issuedIso,
                 'notes':
                     'رقم الدفعة ${allocation.batchNumber} (تنتهي '
-                    '${_dateOnly(allocation.expiryDate)})'
-                    '${freeQty > _qtyEpsilon ? ' — بونص: ${_num(freeQty)}' : ''}',
+                    '${dateOnly(allocation.expiryDate)})'
+                    '${freeQty > qtyEpsilon ? ' — بونص: ${formatNum(freeQty)}' : ''}',
                 'created_at': at.toUtc().toIso8601String(),
                 'created_by': userId,
               });
@@ -507,8 +509,8 @@ class SaleRepository {
               'ref_type': 'invoice',
               'ref_id': invoiceId,
               'moved_at': issuedIso,
-              'notes': freeQty > _qtyEpsilon
-                  ? '$invoiceNo — بونص: ${_num(freeQty)}'
+              'notes': freeQty > qtyEpsilon
+                  ? '$invoiceNo — بونص: ${formatNum(freeQty)}'
                   : invoiceNo,
               'created_at': at.toUtc().toIso8601String(),
               'created_by': userId,
@@ -531,8 +533,8 @@ class SaleRepository {
           if (consumed == 0) {
             throw _FlowError(
               'الكمية غير متوفرة للصنف «${info.name}» بالمخزن — '
-              'الرصيد الدفتري أقل من المطلوب (${_num(dispatchedQty)}'
-              '${freeQty > _qtyEpsilon ? ' منها ${_num(freeQty)} مجاني' : ''}) — '
+              'الرصيد الدفتري أقل من المطلوب (${formatNum(dispatchedQty)}'
+              '${freeQty > qtyEpsilon ? ' منها ${formatNum(freeQty)} مجاني' : ''}) — '
               'لا يسمح النظام بمخزون سالب.',
             );
           }
@@ -604,7 +606,7 @@ class SaleRepository {
               'paid=$netPaid due=$remainingCredit '
               'currency=$currencyCode rate=$exchangeRate'
               '${rateIsFallback ? ' fallback=1' : ''}'
-              '${freeTotal > _qtyEpsilon ? ' free=${_num(freeTotal)}' : ''}',
+              '${freeTotal > qtyEpsilon ? ' free=${formatNum(freeTotal)}' : ''}',
           'at': at.toUtc().toIso8601String(),
         });
 
@@ -753,7 +755,7 @@ class SaleRepository {
           final qty = (item['qty'] as num?)?.toDouble() ?? 0;
           final freeQty = (item['free_qty'] as num?)?.toDouble() ?? 0;
           final dispatched = roundCost(qty + freeQty);
-          if (dispatched <= _qtyEpsilon) continue;
+          if (dispatched <= qtyEpsilon) continue;
           final divisor = dispatched > 0 ? dispatched : 1;
           final snapshotUnit = roundCost(
             ((item['line_cost'] as num?)?.toDouble() ?? 0) / divisor,
@@ -794,7 +796,7 @@ class SaleRepository {
             }
             for (final key in order) {
               final cap = consumed[key] ?? 0;
-              if (cap <= _qtyEpsilon) continue;
+              if (cap <= qtyEpsilon) continue;
               final parts = key.split('|');
               final batchRows = await txn.query(
                 'batch',
@@ -845,7 +847,7 @@ class SaleRepository {
           final residual = roundCost(
             dispatched - entries.fold(0.0, (sum, e) => sum + e.qty),
           );
-          if (residual > _qtyEpsilon) {
+          if (residual > qtyEpsilon) {
             await txn.insert('stock_movement', {
               'product_id': productId,
               'warehouse_id': warehouseId,
@@ -857,7 +859,7 @@ class SaleRepository {
               'moved_at': atIso,
               'notes':
                   '$invoiceNo — إبطال'
-                  '${freeQty > _qtyEpsilon ? ' (بونص مرتجع: ${_num(freeQty)})' : ''}',
+                  '${freeQty > qtyEpsilon ? ' (بونص مرتجع: ${formatNum(freeQty)})' : ''}',
               'created_at': atIso,
               'created_by': userId,
             });
@@ -998,8 +1000,8 @@ class SaleRepository {
           'details':
               'no=$invoiceNo doc_type=sale '
               'reason=${cleanReason.isEmpty ? '-' : cleanReason} '
-              'reversed_cash=${_num(reversalCash)} '
-              'restored_qty=${_num(restoredQty)} '
+              'reversed_cash=${formatNum(reversalCash)} '
+              'restored_qty=${formatNum(restoredQty)} '
               'stock_moves=$stockMoves cash_reversals=$cashReversals '
               'voucher_refunds=$voucherRefunds total=${orig['total']} '
               'paid=${orig['paid_amount']} due=${orig['due_amount']}',
@@ -1125,7 +1127,7 @@ class SaleRepository {
       WHERE doc_type = 'sale' AND status = 'completed'
         AND date(issued_at) >= ? AND date(issued_at) <= ?
     ''',
-      [_dateOnly(from), _dateOnly(to)],
+      [dateOnly(from), dateOnly(to)],
     );
     final cashRows = await _db.rawQuery(
       '''
@@ -1140,7 +1142,7 @@ class SaleRepository {
             AND date(i.issued_at) >= ? AND date(i.issued_at) <= ?
         )
     ''',
-      [_dateOnly(from), _dateOnly(to)],
+      [dateOnly(from), dateOnly(to)],
     );
     return SalesPeriodTotals(
       invoiceCount: (salesRows.first['n'] as int?) ?? 0,
@@ -1207,13 +1209,13 @@ class SaleRepository {
       final info = products[line.productId]!;
       if (info.isService) continue;
       requested[info.id] = (requested[info.id] ?? 0) + line.qty + line.freeQty;
-      if (line.freeQty > _qtyEpsilon) {
+      if (line.freeQty > qtyEpsilon) {
         requestedFree[info.id] = (requestedFree[info.id] ?? 0) + line.freeQty;
       }
     }
     if (requested.isEmpty) return null;
 
-    final cutoff = _dateOnly(asOf);
+    final cutoff = dateOnly(asOf);
     final ids = requested.keys.toList();
     final inClause = List.filled(ids.length, '?').join(',');
 
@@ -1246,11 +1248,11 @@ class SaleRepository {
       final available = info.trackBatches
           ? (batchQty[entry.key] ?? 0)
           : (plainQty[entry.key] ?? 0);
-      if (available + _qtyEpsilon < entry.value) {
+      if (available + qtyEpsilon < entry.value) {
         final free = requestedFree[entry.key] ?? 0;
         return 'الكمية غير متوفرة للصنف «${info.name}»: المتاح '
-            '${_num(available)} والمطلوب ${_num(entry.value)}'
-            '${free > _qtyEpsilon ? ' (منها ${_num(free)} مجاني)' : ''} — '
+            '${formatNum(available)} والمطلوب ${formatNum(entry.value)}'
+            '${free > qtyEpsilon ? ' (منها ${formatNum(free)} مجاني)' : ''} — '
             'لا يسمح النظام بمخزون سالب.';
       }
     }
@@ -1286,24 +1288,3 @@ class SaleRepository {
 /// هل الخطأ خرقاً لقيد CHECK؟ (لا مساعد جاهز في sqflite — نقرأ الرسالة).
 bool _isCheckFailure(DatabaseException e) =>
     e.toString().toUpperCase().contains('CHECK');
-
-/// تفاوت الكميات (NUMERIC(12,3) بالمخطط).
-const double _qtyEpsilon = 0.000001;
-
-/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
-String _num(double v) {
-  if (v.isNaN || v.isInfinite) {
-    return v.toString();
-  }
-  final rounded = (v * 1000).round() / 1000;
-  if (rounded == rounded.round()) {
-    return rounded.toInt().toString();
-  }
-  return rounded.toStringAsFixed(3);
-}
-
-/// `YYYY-MM-DD` بتاريخ التقويم المحلي ليوم العمل (نمط المستودعات).
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';

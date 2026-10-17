@@ -15,6 +15,8 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
+
 /// إحصاءات اليوم الواحد.
 class DashboardTodayStats {
   const DashboardTodayStats({
@@ -101,7 +103,7 @@ class DashboardRepository {
 
   /// إحصاءات اليوم (وقت الجهاز المحلي — يوم العمل).
   Future<DashboardTodayStats> todayStats(DateTime now) async {
-    final today = _dateOnly(now);
+    final today = dateOnly(now);
     final salesRows = await _db.rawQuery(
       "SELECT COALESCE(SUM(total_base), 0) AS s, "
       "COALESCE(SUM(cost_total), 0) AS c, COUNT(*) AS n "
@@ -149,7 +151,7 @@ class DashboardRepository {
       "WHERE doc_type = 'sale' AND status = 'completed' "
       "AND date(issued_at) >= date(?, '-29 days') "
       "GROUP BY date(issued_at)",
-      [_dateOnly(now)],
+      [dateOnly(now)],
     );
     final byDate = <String, double>{
       for (final row in rows)
@@ -161,7 +163,7 @@ class DashboardRepository {
         now.month,
         now.day,
       ).subtract(Duration(days: 29 - index));
-      final key = _dateOnly(day);
+      final key = dateOnly(day);
       return DailySalesPoint(date: key, total: byDate[key] ?? 0);
     });
   }
@@ -237,7 +239,7 @@ class DashboardRepository {
       "GROUP BY ii.product_id "
       "ORDER BY qtySold DESC, revenueBase DESC "
       "LIMIT ?",
-      [_dateOnly(effectiveFrom), _dateOnly(effectiveTo), limit],
+      [dateOnly(effectiveFrom), dateOnly(effectiveTo), limit],
     );
     return [
       for (final row in rows)
@@ -249,11 +251,6 @@ class DashboardRepository {
         ),
     ];
   }
-
-  static String _dateOnly(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
 
   static String _monthOnly(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'

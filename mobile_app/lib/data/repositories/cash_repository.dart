@@ -59,7 +59,9 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../core/storage/doc_sequence.dart';
+import '../../domain/core/numbers.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/cash.dart';
 import '../../domain/services/purchase_pricing.dart'
@@ -723,8 +725,8 @@ class CashRepository {
         }
         if (left > moneyEpsilon) {
           return Err(
-            'المبلغ ${_num(amount)} يتجاوز المديونية المفتوحة '
-            '(${_num(roundMoney(amount - left))} بعملة السند) — قلّل '
+            'المبلغ ${formatNum(amount)} يتجاوز المديونية المفتوحة '
+            '(${formatNum(roundMoney(amount - left))} بعملة السند) — قلّل '
             'المبلغ أو اختر «على الحساب».',
           );
         }
@@ -1347,8 +1349,8 @@ class CashRepository {
     final args = <Object?>[
       ?cashboxId,
       ?txType,
-      if (from != null) _dateOnly(from),
-      if (to != null) _dateOnly(to),
+      if (from != null) dateOnly(from),
+      if (to != null) dateOnly(to),
       if ((search ?? '').trim().isNotEmpty) ...[like, like, like, like, like],
     ];
     final rows = await _db.rawQuery(
@@ -1561,7 +1563,7 @@ class CashRepository {
       };
       head =
           '$transferLabel من $sourceBoxName إلى $targetBoxName'
-          '${cross ? ' (يصل ${_num(targetAmount)})' : ''}';
+          '${cross ? ' (يصل ${formatNum(targetAmount)})' : ''}';
     } else {
       head = switch (draft.kind) {
         QuickMovementKind.expense => 'مصروف — $sourceBoxName',
@@ -1590,18 +1592,4 @@ class _BoxAgg {
   _BoxAgg(this.box);
   final CashboxInfo box;
   final Map<int, double> buckets = <int, double>{};
-}
-
-/// `YYYY-MM-DD` بتاريخ التقويم المحلي ليوم العمل.
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';
-
-/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
-String _num(double v) {
-  if (v.isNaN || v.isInfinite) return v.toString();
-  final rounded = (v * 1000).round() / 1000;
-  if (rounded == rounded.round()) return rounded.toInt().toString();
-  return rounded.toStringAsFixed(3);
 }

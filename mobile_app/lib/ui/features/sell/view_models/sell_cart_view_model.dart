@@ -24,15 +24,13 @@ import '../../../../data/repositories/item_repository.dart';
 import '../../../../data/repositories/quotation_repository.dart';
 import '../../../../data/repositories/sale_repository.dart';
 import '../../../../data/repositories/settings_repository.dart';
+import '../../../../domain/core/numbers.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/item.dart';
 import '../../../../domain/models/quotation.dart';
 import '../../../../domain/models/sale.dart';
 import '../../../../domain/services/sale_pricing.dart';
-
-/// تفاوت الكميات عند مقارنة المتاح (NUMERIC(12,3)).
-const double _qtyEpsilon = 0.000001;
 
 /// علامة «أبقِ القيمة الحالية» للحقول القابلة للتصفير في `_stateWith`.
 const Object _keep = Object();
@@ -105,7 +103,7 @@ class CartUiLine {
   /// UX-4: المقارنة بالمنصرف الكلي (مدفوع + مجاني) — البونص يخرج من
   /// المخزون مثل المدفوع.
   bool get exceedsAvailable =>
-      availableQty != null && qty + freeQty > availableQty! + _qtyEpsilon;
+      availableQty != null && qty + freeQty > availableQty! + qtyEpsilon;
 
   CartUiLine copyWith({
     double? qty,
@@ -411,7 +409,7 @@ class SellCartViewModel extends ChangeNotifier {
       final line = state.lines[i];
       if (line.isService || line.costPrice <= 0) continue;
       final costTotal = line.costPrice * line.qty;
-      if (pricedLines[i].netFinal < costTotal - _qtyEpsilon) {
+      if (pricedLines[i].netFinal < costTotal - qtyEpsilon) {
         names.add(line.name);
       }
     }

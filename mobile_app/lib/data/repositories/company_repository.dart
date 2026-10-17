@@ -6,6 +6,7 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/company.dart';
 import '../../domain/use_cases/setup_company.dart';
@@ -160,8 +161,8 @@ class CompanyRepository {
       // 6) السنة المالية الحالية (مفتوحة).
       await txn.insert('fiscal_year', {
         'year': draft.fiscalYear,
-        'start_date': _dateOnly(draft.fiscalStart),
-        'end_date': _dateOnly(draft.fiscalEnd),
+        'start_date': dateOnly(draft.fiscalStart),
+        'end_date': dateOnly(draft.fiscalEnd),
         'status': 'open',
         'created_at': iso,
         'updated_at': iso,
@@ -237,11 +238,6 @@ class CompanyRepository {
     return rows.first['id'] as int;
   }
 }
-
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';
 
 /// خطأ تنفيذ التأسيس موصوفاً بكلمات المستخدم (نمط §6.3).
 Result<T, DomainError> setupError<T>(Object error) => Err(

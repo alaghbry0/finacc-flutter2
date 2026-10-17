@@ -8,6 +8,7 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/exchange_rate.dart';
 
@@ -39,7 +40,7 @@ class ExchangeRateRepository {
     }
     final at = now ?? DateTime.now();
     final iso = at.toUtc().toIso8601String();
-    final dateStr = _dateOnly(date);
+    final dateStr = dateOnly(date);
 
     return _db.transaction<Result<void, String>>((txn) async {
       final currencyRows = await txn.query(
@@ -87,7 +88,7 @@ class ExchangeRateRepository {
       'exchange_rate',
       columns: ['rate'],
       where: 'currency_id = ? AND rate_date = ?',
-      whereArgs: [currencyId, _dateOnly(date)],
+      whereArgs: [currencyId, dateOnly(date)],
       limit: 1,
     );
     if (rows.isEmpty) return null;
@@ -101,7 +102,7 @@ class ExchangeRateRepository {
       'SELECT rate FROM exchange_rate '
       'WHERE currency_id = ? AND rate_date <= ? '
       'ORDER BY rate_date DESC LIMIT 1',
-      <Object>[currencyId, _dateOnly(date)],
+      <Object>[currencyId, dateOnly(date)],
     );
     if (rows.isEmpty) return null;
     return (rows.first['rate'] as num?)?.toDouble();
@@ -128,7 +129,7 @@ class ExchangeRateRepository {
       'FROM exchange_rate er '
       'JOIN currency c ON c.id = er.currency_id AND c.is_active = 1 '
       'WHERE er.rate_date = ?',
-      <Object>[_dateOnly(today)],
+      <Object>[dateOnly(today)],
     );
     return <int, double>{
       for (final row in rows)
@@ -141,14 +142,8 @@ class ExchangeRateRepository {
     final rows = await _db.rawQuery(
       'SELECT EXISTS(SELECT 1 FROM exchange_rate '
       'WHERE currency_id = ? AND rate_date = ?) AS ok',
-      <Object>[currencyId, _dateOnly(date)],
+      <Object>[currencyId, dateOnly(date)],
     );
     return ((rows.first['ok'] as int?) ?? 0) == 1;
   }
 }
-
-/// `YYYY-MM-DD` بتاريخ التقويم المحلي ليوم العمل.
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';

@@ -94,7 +94,9 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../core/storage/doc_sequence.dart';
+import '../../domain/core/numbers.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/invoice_void.dart';
 import '../../domain/models/purchase.dart';
@@ -400,7 +402,7 @@ class PurchaseRepository {
               'product_id': info.id,
               'warehouse_id': draft.warehouseId,
               'batch_number': batchNo,
-              'expiry_date': _dateOnly(pricedLine.line.expiryDate!),
+              'expiry_date': dateOnly(pricedLine.line.expiryDate!),
               'cost_price': unitCostBase,
               'qty': receivedQty,
               'created_at': at.toUtc().toIso8601String(),
@@ -411,8 +413,8 @@ class PurchaseRepository {
           final lineNotes = [
             if ((pricedLine.line.notes ?? '').trim().isNotEmpty)
               pricedLine.line.notes!.trim(),
-            if (batchId != null) 'دفعة: $batchNo×${_num(receivedQty)}',
-            if (freeQty > _qtyEpsilon) 'بونص: ${_num(freeQty)}',
+            if (batchId != null) 'دفعة: $batchNo×${formatNum(receivedQty)}',
+            if (freeQty > qtyEpsilon) 'بونص: ${formatNum(freeQty)}',
           ].join(' — ');
 
           await txn.insert('invoice_item', {
@@ -463,12 +465,12 @@ class PurchaseRepository {
             'ref_id': invoiceId,
             'moved_at': issuedIso,
             'notes': batchId == null
-                ? (freeQty > _qtyEpsilon
-                      ? '$docNo — بونص: ${_num(freeQty)}'
+                ? (freeQty > qtyEpsilon
+                      ? '$docNo — بونص: ${formatNum(freeQty)}'
                       : docNo)
                 : '$docNo — دفعة $batchNo (تنتهي '
-                      '${_dateOnly(pricedLine.line.expiryDate!)})'
-                      '${freeQty > _qtyEpsilon ? ' — بونص: ${_num(freeQty)}' : ''}',
+                      '${dateOnly(pricedLine.line.expiryDate!)})'
+                      '${freeQty > qtyEpsilon ? ' — بونص: ${formatNum(freeQty)}' : ''}',
             'created_at': at.toUtc().toIso8601String(),
             'created_by': userId,
           });
@@ -674,7 +676,7 @@ class PurchaseRepository {
           final qty = (item['qty'] as num?)?.toDouble() ?? 0;
           final freeQty = (item['free_qty'] as num?)?.toDouble() ?? 0;
           final received = roundCost(qty + freeQty);
-          if (received <= _qtyEpsilon) continue;
+          if (received <= qtyEpsilon) continue;
           final divisor = received > 0 ? received : 1;
           final snapshotUnit = roundCost(
             ((item['line_cost'] as num?)?.toDouble() ?? 0) / divisor,
@@ -711,7 +713,7 @@ class PurchaseRepository {
                 final available =
                     (batchRows.first['qty'] as num?)?.toDouble() ?? 0;
                 final take = available < remaining ? available : remaining;
-                if (take > _qtyEpsilon) {
+                if (take > qtyEpsilon) {
                   final affected = await txn.rawUpdate(
                     'UPDATE batch SET qty = qty - ?, updated_at = ? '
                     'WHERE id = ? AND qty >= ?',
@@ -729,7 +731,7 @@ class PurchaseRepository {
                 }
               }
             }
-            if (remaining > _qtyEpsilon) {
+            if (remaining > qtyEpsilon) {
               final fefo = await _batches.allocateFefo(
                 txn,
                 productId: productId,
@@ -741,8 +743,8 @@ class PurchaseRepository {
               if (fefo.shorted) {
                 throw _FlowError(
                   'الكمية غير متوفرة بدفعات الصنف «${info.name}»: المتاح '
-                  '${_num(received - remaining + fefo.allocatedQty)} '
-                  'والمطلوب ${_num(received)} — لا يسمح النظام بمخزون سالب.',
+                  '${formatNum(received - remaining + fefo.allocatedQty)} '
+                  'والمطلوب ${formatNum(received)} — لا يسمح النظام بمخزون سالب.',
                 );
               }
               await _batches.applyAllocation(txn, fefo.allocations, now: at);
@@ -750,7 +752,7 @@ class PurchaseRepository {
                 deductions.add((
                   batchId: a.batchId,
                   batchNumber: a.batchNumber,
-                  expiryDate: _dateOnly(a.expiryDate),
+                  expiryDate: dateOnly(a.expiryDate),
                   qty: a.qty,
                 ));
               }
@@ -789,7 +791,7 @@ class PurchaseRepository {
               'moved_at': atIso,
               'notes':
                   '$invoiceNo — إبطال'
-                  '${freeQty > _qtyEpsilon ? ' (بونص خارج: ${_num(freeQty)})' : ''}',
+                  '${freeQty > qtyEpsilon ? ' (بونص خارج: ${formatNum(freeQty)})' : ''}',
               'created_at': atIso,
               'created_by': userId,
             });
@@ -805,7 +807,7 @@ class PurchaseRepository {
           if (consumed == 0) {
             throw _FlowError(
               'الكمية غير متوفرة للصنف «${info.name}» بالمخزن — الرصيد '
-              'الدفتري أقل من المطلوب إخراجه (${_num(received)}) — لا '
+              'الدفتري أقل من المطلوب إخراجه (${formatNum(received)}) — لا '
               'يسمح النظام بمخزون سالب (ما بِيع من الوارد لا يُبطَل شراؤه).',
             );
           }
@@ -813,7 +815,7 @@ class PurchaseRepository {
           // إعادة حساب WAC على المتبقي (بصيغة PRN حرفياً — قاعدة 5.4-3).
           final remainingQty = wacBefore.qty - received;
           double newCost;
-          if (remainingQty <= _qtyEpsilon) {
+          if (remainingQty <= qtyEpsilon) {
             newCost = 0; // خرج كل المخزون — قيمة المخزون صفر.
           } else {
             newCost = roundCost(
@@ -948,8 +950,8 @@ class PurchaseRepository {
           'details':
               'no=$invoiceNo doc_type=purchase '
               'reason=${cleanReason.isEmpty ? '-' : cleanReason} '
-              'reversed_cash=${_num(reversalCash)} '
-              'reversed_qty=${_num(reversedQtyTotal)} '
+              'reversed_cash=${formatNum(reversalCash)} '
+              'reversed_qty=${formatNum(reversedQtyTotal)} '
               'stock_moves=$stockMoves cash_reversals=$cashReversals '
               'voucher_refunds=$voucherRefunds total=${orig['total']} '
               'paid=${orig['paid_amount']} due=${orig['due_amount']}',
@@ -1090,7 +1092,7 @@ class PurchaseRepository {
     final costOld = (rows.first['cost'] as num?)?.toDouble() ?? 0;
     final qtyOld = (rows.first['qty'] as num?)?.toDouble() ?? 0;
     double newCost;
-    if (qtyOld <= _qtyEpsilon) {
+    if (qtyOld <= qtyEpsilon) {
       newCost = costNew; // المخزون معدوم/سالب دفترياً → التكلفة الجديدة.
     } else {
       newCost = roundCost(
@@ -1178,10 +1180,10 @@ class PurchaseRepository {
       final available = tracked
           ? (batchQty[entry.key] ?? 0)
           : (plainQty[entry.key] ?? 0);
-      if (available + _qtyEpsilon < entry.value) {
+      if (available + qtyEpsilon < entry.value) {
         return 'لا يمكن إبطال الفاتورة: الكمية غير متوفرة للصنف '
-            '«${names[entry.key]}» — المتاح ${_num(available)} والمطلوب '
-            'إخراجه ${_num(entry.value)} (ما بِيع من الوارد لا يُبطَل '
+            '«${names[entry.key]}» — المتاح ${formatNum(available)} والمطلوب '
+            'إخراجه ${formatNum(entry.value)} (ما بِيع من الوارد لا يُبطَل '
             'شراؤه — لا يسمح النظام بمخزون سالب).';
       }
     }
@@ -1247,24 +1249,3 @@ class PurchaseRepository {
 /// هل الخطأ خرقاً لقيد CHECK؟ (لا مساعد جاهز في sqflite — نقرأ الرسالة).
 bool _isCheckFailure(DatabaseException e) =>
     e.toString().toUpperCase().contains('CHECK');
-
-/// تفاوت الكميات (NUMERIC(12,3) بالمخطط).
-const double _qtyEpsilon = 0.000001;
-
-/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
-String _num(double v) {
-  if (v.isNaN || v.isInfinite) {
-    return v.toString();
-  }
-  final rounded = (v * 1000).round() / 1000;
-  if (rounded == rounded.round()) {
-    return rounded.toInt().toString();
-  }
-  return rounded.toStringAsFixed(3);
-}
-
-/// `YYYY-MM-DD` بتاريخ التقويم المحلي (صيغة `batch.expiry_date` الموحدة).
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';

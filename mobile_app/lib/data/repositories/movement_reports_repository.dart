@@ -44,6 +44,8 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
+
 /// صف حركة واحد داخل بطاقة الصنف — الرصيد التراكمي محسوب مسبقاً.
 class ItemMovementRow {
   const ItemMovementRow({
@@ -219,8 +221,8 @@ class MovementReportsRepository {
     required DateTime to,
     int? warehouseId,
   }) async {
-    final fromDay = _dateOnly(from);
-    final toDay = _dateOnly(to);
+    final fromDay = dateOnly(from);
+    final toDay = dateOnly(to);
 
     // (أ) الصنف: الاسم والتكلفة الحالية (WAC) — أو خطأ إن غاب.
     final productRows = await _db.rawQuery(
@@ -299,8 +301,8 @@ class MovementReportsRepository {
     required DateTime to,
     int? warehouseId,
   }) async {
-    final fromDay = _dateOnly(from);
-    final toDay = _dateOnly(to);
+    final fromDay = dateOnly(from);
+    final toDay = dateOnly(to);
     final warehouseClause = warehouseId != null
         ? ' AND sm.warehouse_id = ?'
         : '';
@@ -391,8 +393,8 @@ class MovementReportsRepository {
     required DateTime from,
     required DateTime to,
   }) async {
-    final fromDay = _dateOnly(from);
-    final toDay = _dateOnly(to);
+    final fromDay = dateOnly(from);
+    final toDay = dateOnly(to);
 
     // الفترة السابقة: [من − N، من − 1] — متلاصقة أمام البداية (قرار 7).
     final lengthDays =
@@ -412,8 +414,8 @@ class MovementReportsRepository {
       from.month,
       from.day,
     ).subtract(const Duration(days: 1));
-    final prevFromDay = _dateOnly(prevFrom);
-    final prevToDay = _dateOnly(prevTo);
+    final prevFromDay = dateOnly(prevFrom);
+    final prevToDay = dateOnly(prevTo);
 
     // (أ) تجميع الفترة الحالية.
     final currentRows = await _salesAggregate(dimension, fromDay, toDay);
@@ -432,7 +434,7 @@ class MovementReportsRepository {
       if (dimension != SalesByDimension.day) return label;
       final day = DateTime.tryParse(label);
       if (day == null) return label;
-      return _dateOnly(day.subtract(Duration(days: lengthDays)));
+      return dateOnly(day.subtract(Duration(days: lengthDays)));
     }
 
     final previousByLabel = <String, double>{
@@ -525,10 +527,4 @@ class MovementReportsRepository {
       <Object?>[fromDay, toDay],
     );
   }
-
-  /// `YYYY-MM-DD` ليوم التقويم (نفس مساعد `dashboard_repository`).
-  static String _dateOnly(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
 }

@@ -28,6 +28,7 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../core/storage/doc_sequence.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/quotation.dart';
@@ -169,7 +170,7 @@ class QuotationRepository {
           'issued_at': issuedIso,
           'valid_until': draft.validUntil == null
               ? null
-              : _dateOnly(draft.validUntil!),
+              : dateOnly(draft.validUntil!),
           'status': 'draft',
           'subtotal': priced.totals.subtotal,
           'discount_amount': roundMoney(priced.totals.totalDiscount),
@@ -508,9 +509,3 @@ class QuotationRepository {
 /// هل الخطأ خرقاً لقيد CHECK؟ (لا مساعد جاهز في sqflite — نقرأ الرسالة).
 bool _isCheckFailure(DatabaseException e) =>
     e.toString().toUpperCase().contains('CHECK');
-
-/// `YYYY-MM-DD` بتاريخ التقويم المحلي (نمط المستودعات).
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';

@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../data/repositories/return_repository.dart';
+import '../../../../domain/core/numbers.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/services/purchase_pricing.dart';
 
@@ -253,10 +254,10 @@ class ReturnViewModel extends ChangeNotifier {
       }
     }
     if (line == null) return;
-    if (qty > line.availableQty + _qtyEpsilon) {
+    if (qty > line.availableQty + qtyEpsilon) {
       _postErrorNotice(
         'الكمية المطلوب إرجاعها من «${line.lineDesc ?? 'بند'}» ($qty) '
-        'تتجاوز المتاح للإرجاع (${_num(line.availableQty)}).',
+        'تتجاوز المتاح للإرجاع (${formatNum(line.availableQty)}).',
       );
       return;
     }
@@ -439,15 +440,4 @@ class ReturnViewModel extends ChangeNotifier {
     lastReceipt: lastReceipt ?? _state.lastReceipt,
     error: _state.error,
   );
-}
-
-/// تفاوت الكميات (NUMERIC(12,3) بالمخطط).
-const double _qtyEpsilon = 0.000001;
-
-/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
-String _num(double v) {
-  if (v.isNaN || v.isInfinite) return v.toString();
-  final rounded = (v * 1000).round() / 1000;
-  if (rounded == rounded.round()) return rounded.toInt().toString();
-  return rounded.toStringAsFixed(3);
 }

@@ -46,6 +46,7 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/numbers.dart';
 import '../../domain/services/purchase_pricing.dart' show roundMoney;
 
 /// تفاوت عشري مقبول في مقارنات الكميات (NUMERIC(12,3) في القاعدة).
@@ -61,9 +62,6 @@ class StocktakeException implements Exception {
   @override
   String toString() => message;
 }
-
-/// يقرب كمية إلى ثلاث منازل (دقة أعمدة NUMERIC(12,3)).
-double _roundQty(double value) => (value * 1000).round() / 1000;
 
 /// مستودع مرجعي صغير للمخزن (قائمة اختيار الشاشة).
 class StocktakeWarehouse {
@@ -124,7 +122,7 @@ class StocktakeLineDraft {
   double? get diff {
     final counted = countedQty;
     if (counted == null) return null;
-    return _roundQty(counted - bookQty);
+    return roundTo3(counted - bookQty);
   }
 }
 
@@ -283,7 +281,7 @@ class StocktakeRepository {
           productId: row['product_id'] as int,
           name: row['product_name'] as String,
           unitName: row['unit_name'] as String?,
-          bookQty: _roundQty((row['book_qty'] as num?)?.toDouble() ?? 0),
+          bookQty: roundTo3((row['book_qty'] as num?)?.toDouble() ?? 0),
           unitCost: (row['unit_cost'] as num?)?.toDouble() ?? 0,
         ),
     ];
@@ -391,10 +389,10 @@ class StocktakeRepository {
         var diffsCount = 0;
         for (final (productId, _, countedRaw) in lines) {
           final row = byId[productId]!;
-          final book = _roundQty((row['book_qty'] as num?)?.toDouble() ?? 0);
-          final counted = _roundQty(countedRaw);
+          final book = roundTo3((row['book_qty'] as num?)?.toDouble() ?? 0);
+          final counted = roundTo3(countedRaw);
           final cost = (row['cost_price'] as num?)?.toDouble() ?? 0;
-          final diff = _roundQty(counted - book);
+          final diff = roundTo3(counted - book);
           if (diff.abs() > _qtyEps) {
             diffsCount++;
             totalDiff = roundMoney(totalDiff + roundMoney(diff * cost));
@@ -537,16 +535,16 @@ class StocktakeRepository {
         await txn.rawUpdate(
           'UPDATE batch SET qty = qty - ?, updated_at = ? '
           'WHERE id = ? AND qty >= ?',
-          <Object?>[_roundQty(take), nowIso, row['id'], _roundQty(take)],
+          <Object?>[roundTo3(take), nowIso, row['id'], roundTo3(take)],
         );
-        remaining = _roundQty(remaining - take);
+        remaining = roundTo3(remaining - take);
       }
     } else if (diff > _qtyEps) {
       // زيادة: تُضاف إلى الدفعة الأبعد انتهاءً (آخر صف في ترتيب FEFO).
       final latestId = rows.last['id'] as int;
       await txn.rawUpdate(
         'UPDATE batch SET qty = qty + ?, updated_at = ? WHERE id = ?',
-        <Object?>[_roundQty(diff), nowIso, latestId],
+        <Object?>[roundTo3(diff), nowIso, latestId],
       );
     }
   }

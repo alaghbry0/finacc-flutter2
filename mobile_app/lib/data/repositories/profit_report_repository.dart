@@ -50,6 +50,8 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
+
 /// تقرير الأرباح والخسائر لفترة `[from, to]` — كل المبالغ بالعملة
 /// الأساسية (انظر رأس الملف لمصدر كل سطر من خريطة الترحيل).
 class ProfitReport {
@@ -172,8 +174,8 @@ class ProfitReportRepository {
     required DateTime from,
     required DateTime to,
   }) async {
-    final fromDay = _dateOnly(from);
-    final toDay = _dateOnly(to);
+    final fromDay = dateOnly(from);
+    final toDay = dateOnly(to);
 
     // ── سطرا 1+3: فواتير البيع المكتملة (المبيعات + COGS + العدد) ──
     final saleRows = await _db.rawQuery(
@@ -253,9 +255,4 @@ class ProfitReportRepository {
       returnInvoiceCount: returnRows.first['n'] as int? ?? 0,
     );
   }
-
-  static String _dateOnly(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
 }

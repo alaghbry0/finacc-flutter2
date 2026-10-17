@@ -19,8 +19,10 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../domain/core/result.dart';
 import '../../domain/models/party.dart';
+import 'party_query.dart';
 
 class CustomerRepository {
   CustomerRepository(this._db);
@@ -177,17 +179,8 @@ class CustomerRepository {
 
   /// هل للعميل حركات (أي صف فاتورة، أو سند نقدي، أو رصيد افتتاحي
   /// غير صفري)؟ — أساس قرار «أرشفة فقط» (FR-03-09).
-  Future<bool> hasMovements(int id) async {
-    final rows = await _db.rawQuery(
-      'SELECT '
-      ' (SELECT COUNT(*) FROM invoice WHERE customer_id = ?) '
-      ' + (SELECT COUNT(*) FROM cash_tx WHERE customer_id = ?) '
-      ' + (SELECT CASE WHEN opening_balance IS NOT NULL AND opening_balance <> 0 '
-      '     THEN 1 ELSE 0 END FROM customer WHERE id = ?) AS n',
-      <Object>[id, id, id],
-    );
-    return ((rows.first['n'] as int?) ?? 0) > 0;
-  }
+  Future<bool> hasMovements(int id) =>
+      partyHasMovements(_db, PartySide.customer, id);
 
   // ── الأرصدة (FR-03-02) ───────────────────────────────────────────
 
@@ -199,137 +192,16 @@ class CustomerRepository {
   Future<List<PartyBalance>> listWithBalances({
     String? search,
     bool includeArchived = false,
-  }) async {
-    final baseRows = await _db.rawQuery(
-      'SELECT id FROM currency WHERE is_base = 1 LIMIT 1',
-    );
-    final baseCurrencyId = baseRows.isEmpty
-        ? null
-        : baseRows.first['id'] as int;
-    final rows = await _db.rawQuery(
-      '''
-      WITH sale_dues AS (
-        SELECT customer_id AS pid, currency_id AS cur, SUM(due_amount) AS amt
-        FROM invoice
-        WHERE doc_type = 'sale' AND status = 'completed'
-          AND customer_id IS NOT NULL
-        GROUP BY customer_id, currency_id
-      ),
-      return_credits AS (
-        SELECT customer_id AS pid, currency_id AS cur, SUM(due_amount) AS amt
-        FROM invoice
-        WHERE doc_type = 'sale_return' AND status = 'completed'
-          AND customer_id IS NOT NULL
-        GROUP BY customer_id, currency_id
-      ),
-      receipts AS (
-        SELECT customer_id AS pid, currency_id AS cur, SUM(amount) AS amt
-        FROM cash_tx
-        WHERE tx_type = 'receipt' AND is_voided = 0
-          AND customer_id IS NOT NULL
-        GROUP BY customer_id, currency_id
-      ),
-      openings AS (
-        SELECT id AS pid, opening_balance_currency_id AS cur,
-               opening_balance AS amt
-        FROM customer
-        WHERE opening_balance_currency_id IS NOT NULL
-          AND opening_balance <> 0
-      ),
-      combined AS (
-        SELECT pid, cur, amt FROM sale_dues
-        UNION ALL SELECT pid, cur, -amt FROM return_credits
-        UNION ALL SELECT pid, cur, -amt FROM receipts
-        UNION ALL SELECT pid, cur, amt FROM openings
-      ),
-      per_currency AS (
-        SELECT pid, cur, SUM(amt) AS bal
-        FROM combined
-        GROUP BY pid, cur
-      ),
-      last_pay AS (
-        SELECT customer_id AS pid, currency_id AS cur, MAX(tx_date) AS d
-        FROM cash_tx
-        WHERE tx_type = 'receipt' AND is_voided = 0
-          AND customer_id IS NOT NULL
-        GROUP BY customer_id, currency_id
-      ),
-      oldest_open AS (
-        SELECT customer_id AS pid, currency_id AS cur, MIN(issued_at) AS d
-        FROM invoice
-        WHERE doc_type = 'sale' AND status = 'completed'
-          AND due_amount > 0 AND customer_id IS NOT NULL
-        GROUP BY customer_id, currency_id
-      )
-      SELECT c.id AS party_id, c.name AS p_name, c.phone AS p_phone,
-             cu.code AS cur_code,
-             COALESCE(pc.bal, 0) AS balance,
-             lp.d AS last_payment_date,
-             oo.d AS oldest_open_invoice_date
-      FROM customer c
-      LEFT JOIN per_currency pc ON pc.pid = c.id
-      LEFT JOIN currency cu
-        ON cu.id = CASE WHEN pc.cur IS NULL THEN ? ELSE pc.cur END
-      LEFT JOIN last_pay lp ON lp.pid = c.id AND lp.cur = pc.cur
-      LEFT JOIN oldest_open oo ON oo.pid = c.id AND oo.cur = pc.cur
-      WHERE (? = 1 OR c.is_archived = 0)
-        AND (? IS NULL OR c.name LIKE '%' || ? || '%'
-                       OR c.phone LIKE '%' || ? || '%')
-      ORDER BY c.name COLLATE NOCASE ASC, cur_code ASC
-      ''',
-      <Object?>[
-        baseCurrencyId,
-        includeArchived ? 1 : 0,
-        search,
-        search,
-        search,
-      ],
-    );
-    return <PartyBalance>[
-      for (final row in rows)
-        PartyBalance(
-          partyId: row['party_id'] as int,
-          name: row['p_name'] as String,
-          phone: row['p_phone'] as String?,
-          currencyCode: (row['cur_code'] as String?) ?? '',
-          balance: (row['balance'] as num?)?.toDouble() ?? 0,
-          lastPaymentDate: _tryParseUtc(row['last_payment_date'] as String?),
-          oldestOpenInvoiceDate: _utcMidnightOrNull(
-            row['oldest_open_invoice_date'] as String?,
-          ),
-        ),
-    ];
-  }
+  }) => partyListWithBalances(
+    _db,
+    PartySide.customer,
+    search: search,
+    includeArchived: includeArchived,
+  );
 
   /// رصيد العميل في عملة واحدة — صيغة FR-03-02 حصراً (0 عند لا حركة).
-  Future<double> balanceInCurrency(int customerId, int currencyId) async {
-    final rows = await _db.rawQuery(
-      'SELECT '
-      ' COALESCE((SELECT SUM(due_amount) FROM invoice '
-      "   WHERE doc_type = 'sale' AND status = 'completed' "
-      '     AND customer_id = ? AND currency_id = ?), 0) '
-      ' - COALESCE((SELECT SUM(due_amount) FROM invoice '
-      "   WHERE doc_type = 'sale_return' AND status = 'completed' "
-      '     AND customer_id = ? AND currency_id = ?), 0) '
-      ' - COALESCE((SELECT SUM(amount) FROM cash_tx '
-      "   WHERE tx_type = 'receipt' AND is_voided = 0 "
-      '     AND customer_id = ? AND currency_id = ?), 0) '
-      ' + COALESCE((SELECT CASE WHEN opening_balance_currency_id = ? '
-      '     THEN opening_balance ELSE 0 END '
-      '   FROM customer WHERE id = ?), 0) AS balance',
-      <Object>[
-        customerId,
-        currencyId,
-        customerId,
-        currencyId,
-        customerId,
-        currencyId,
-        currencyId,
-        customerId,
-      ],
-    );
-    return (rows.first['balance'] as num?)?.toDouble() ?? 0;
-  }
+  Future<double> balanceInCurrency(int customerId, int currencyId) =>
+      partyBalanceInCurrency(_db, PartySide.customer, customerId, currencyId);
 
   /// الأعمال المتعثرة (FR-03-06): العملاء برصيد موجب (>= [minBalance])
   /// في أي عملة، مرتَّبين بأقدم فاتورة آجلة مفتوحة تصاعدياً، مع
@@ -339,35 +211,12 @@ class CustomerRepository {
   Future<List<PartyBalance>> receivablesList({
     int minBalance = 1,
     DateTime? now,
-  }) async {
-    final reference = (now ?? DateTime.now()).toUtc();
-    final all = await listWithBalances(includeArchived: false);
-    final result = <PartyBalance>[
-      for (final row in all)
-        if (row.balance > 0 && row.balance >= minBalance)
-          PartyBalance(
-            partyId: row.partyId,
-            name: row.name,
-            phone: row.phone,
-            currencyCode: row.currencyCode,
-            balance: row.balance,
-            lastPaymentDate: row.lastPaymentDate,
-            oldestOpenInvoiceDate: row.oldestOpenInvoiceDate,
-            daysLate: _daysLate(reference, row.oldestOpenInvoiceDate),
-          ),
-    ];
-    result.sort((a, b) {
-      final aOldest = a.oldestOpenInvoiceDate;
-      final bOldest = b.oldestOpenInvoiceDate;
-      if (aOldest == null && bOldest == null) {
-        return a.partyId.compareTo(b.partyId);
-      }
-      if (aOldest == null) return 1;
-      if (bOldest == null) return -1;
-      return aOldest.compareTo(bOldest);
-    });
-    return result;
-  }
+  }) => partyOverdueList(
+    _db,
+    PartySide.customer,
+    minBalance: minBalance,
+    now: now,
+  );
 
   // ── حد الائتمان (FR-03-05) ───────────────────────────────────────
 
@@ -415,160 +264,14 @@ class CustomerRepository {
     required int currencyId,
     DateTime? from,
     DateTime? to,
-  }) async {
-    final currencyCode = await _currencyCode(currencyId);
-    final raw = await _statementRows(customerId, currencyId);
-    final fromStr = from == null ? null : _dateOnly(from);
-    final toStr = to == null ? null : _dateOnly(to);
-
-    var carryIn = 0.0;
-    var carryInEmitted = false;
-    final entries = <StatementEntry>[];
-    for (final row in raw) {
-      final day = _dayOf(row.dateStr);
-      if (fromStr != null && day.compareTo(fromStr) < 0) {
-        carryIn += row.amount;
-        continue;
-      }
-      if (toStr != null && day.compareTo(toStr) > 0) {
-        continue;
-      }
-      // أول قيد داخل الفترة: أظهر «رصيد ماضٍ» إن تراكم شيء قبله.
-      if (fromStr != null && !carryInEmitted && carryIn != 0) {
-        carryInEmitted = true;
-        entries.add(
-          StatementEntry(
-            date: _utcMidnightOf(from!),
-            code: StatementEntryCode.carryIn,
-            amount: carryIn,
-            runningBalance: carryIn,
-            currencyCode: currencyCode,
-          ),
-        );
-      }
-      final running = entries.isEmpty ? carryIn : entries.last.runningBalance;
-      entries.add(
-        StatementEntry(
-          date: _utcMidnightOrNull(row.dateStr) ?? _epoch,
-          code: row.code,
-          docNo: row.docNo,
-          amount: row.amount,
-          runningBalance: running + row.amount,
-          currencyCode: currencyCode,
-          refId: row.refId,
-        ),
-      );
-    }
-    // فترة محددة بلا قيود داخلها لكن برصيد ماضٍ — القيد وحده.
-    if (fromStr != null && entries.isEmpty && carryIn != 0) {
-      entries.add(
-        StatementEntry(
-          date: _utcMidnightOf(from!),
-          code: StatementEntryCode.carryIn,
-          amount: carryIn,
-          runningBalance: carryIn,
-          currencyCode: currencyCode,
-        ),
-      );
-    }
-    return StatementResult(
-      entries: entries,
-      openingBalance: carryIn,
-      finalBalance: entries.isEmpty ? carryIn : entries.last.runningBalance,
-      currencyId: currencyId,
-      currencyCode: currencyCode,
-    );
-  }
-
-  /// قيود كشف حساب العميل خاماً — الافتتاحي (عند تطابق العملة) ثم
-  /// الحركات، مرتَّبة زمنياً (التاريخ، ثم نوع القيد، ثم المعرّف).
-  Future<List<_StatementRow>> _statementRows(
-    int customerId,
-    int currencyId,
-  ) async {
-    final raw = <_StatementRow>[];
-    final customerRows = await _db.query(
-      'customer',
-      where: 'id = ?',
-      whereArgs: [customerId],
-      limit: 1,
-    );
-    if (customerRows.isNotEmpty) {
-      final row = customerRows.first;
-      final openingCurrency = row['opening_balance_currency_id'] as int?;
-      final openingAmount = (row['opening_balance'] as num?)?.toDouble() ?? 0;
-      if (openingCurrency == currencyId && openingAmount != 0) {
-        raw.add(
-          _StatementRow(
-            dateStr: (row['opening_balance_date'] as String?) ?? '',
-            rank: 0,
-            refId: null,
-            code: StatementEntryCode.opening,
-            docNo: null,
-            amount: openingAmount,
-          ),
-        );
-      }
-    }
-    final movementRows = await _db.rawQuery(
-      '''
-      SELECT * FROM (
-        SELECT issued_at AS d, 'invoice' AS kind, invoice_no AS doc_no,
-               due_amount AS amt, id AS ref_id
-        FROM invoice
-        WHERE doc_type = 'sale' AND status = 'completed'
-          AND customer_id = ? AND currency_id = ? AND due_amount <> 0
-        UNION ALL
-        SELECT issued_at, 'sale_return', invoice_no, -due_amount, id
-        FROM invoice
-        WHERE doc_type = 'sale_return' AND status = 'completed'
-          AND customer_id = ? AND currency_id = ? AND due_amount <> 0
-        UNION ALL
-        SELECT tx_date, 'receipt', voucher_no, -amount, id
-        FROM cash_tx
-        WHERE tx_type = 'receipt' AND is_voided = 0
-          AND customer_id = ? AND currency_id = ?
-      ) ORDER BY d ASC,
-          CASE kind WHEN 'invoice' THEN 0 WHEN 'sale_return' THEN 1 ELSE 2 END ASC,
-          ref_id ASC
-      ''',
-      <Object>[
-        customerId,
-        currencyId,
-        customerId,
-        currencyId,
-        customerId,
-        currencyId,
-      ],
-    );
-    raw.addAll(<_StatementRow>[
-      for (final row in movementRows)
-        _StatementRow(
-          dateStr: row['d'] as String,
-          rank: (row['kind'] as String) == 'invoice'
-              ? 1
-              : (row['kind'] as String) == 'sale_return'
-              ? 2
-              : 3,
-          refId: row['ref_id'] as int?,
-          code: (row['kind'] as String) == 'invoice'
-              ? StatementEntryCode.invoice
-              : (row['kind'] as String) == 'sale_return'
-              ? StatementEntryCode.saleReturn
-              : StatementEntryCode.receipt,
-          docNo: row['doc_no'] as String?,
-          amount: (row['amt'] as num?)?.toDouble() ?? 0,
-        ),
-    ]);
-    raw.sort(
-      (a, b) => a.dateStr.compareTo(b.dateStr) != 0
-          ? a.dateStr.compareTo(b.dateStr)
-          : a.rank != b.rank
-          ? a.rank.compareTo(b.rank)
-          : (a.refId ?? 0).compareTo(b.refId ?? 0),
-    );
-    return raw;
-  }
+  }) => partyStatement(
+    _db,
+    PartySide.customer,
+    customerId,
+    currencyId: currencyId,
+    from: from,
+    to: to,
+  );
 
   // ── مساعدات داخلية ───────────────────────────────────────────────
 
@@ -606,48 +309,6 @@ class CustomerRepository {
     );
     return rows.isEmpty ? 'العملة المحددة للرصيد الافتتاحي غير موجودة.' : null;
   }
-
-  Future<String> _currencyCode(int currencyId) async {
-    final rows = await _db.query(
-      'currency',
-      columns: ['code'],
-      where: 'id = ?',
-      whereArgs: [currencyId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return '';
-    return rows.first['code'] as String;
-  }
-}
-
-/// قيد خام في كشف الحساب قبل بناء الأرصدة الرأسية.
-class _StatementRow {
-  const _StatementRow({
-    required this.dateStr,
-    required this.rank,
-    required this.refId,
-    required this.code,
-    required this.docNo,
-    required this.amount,
-  });
-
-  /// التاريخ كما في القاعدة (ISO كامل أو `YYYY-MM-DD` للافتتاحي).
-  final String dateStr;
-
-  /// رتبة الترتيب داخل اليوم نفسه (افتتاحي 0 / دَين 1 / مرتجع 2 / سند 3).
-  final int rank;
-
-  /// معرّف المستند المرجعي أو `null`.
-  final int? refId;
-
-  /// نوع القيد.
-  final StatementEntryCode code;
-
-  /// رقم المستند أو `null`.
-  final String? docNo;
-
-  /// المبلغ الموقَّع.
-  final double amount;
 }
 
 // ── مساعدات تنسيق عامة للملف ──────────────────────────────────────
@@ -661,40 +322,4 @@ String? _blankToNull(String? value) {
 
 /// تاريخ بديل عند غيابه (تاريخ اليوم) بصيغة `YYYY-MM-DD`.
 String? _dateOrNull(DateTime? date, DateTime fallback) =>
-    _dateOnly(date ?? fallback);
-
-/// `YYYY-MM-DD` بتاريخ التقويم المحلي ليوم العمل.
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';
-
-/// يوم القيد من نص ISO (أول 10 محارف) — `YYYY-MM-DD`.
-String _dayOf(String iso) => iso.length <= 10 ? iso : iso.substring(0, 10);
-
-final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-/// يحلّ نص ISO كاملاً (سندات/فواتير) إلى UTC — أو `null`.
-DateTime? _tryParseUtc(String? iso) {
-  if (iso == null) return null;
-  final parsed = DateTime.tryParse(iso);
-  return parsed?.toUtc();
-}
-
-/// منتصف ليل UTC ليوم التقويم من نص ISO — أو `null`.
-DateTime? _utcMidnightOrNull(String? iso) {
-  if (iso == null) return null;
-  final parsed = DateTime.tryParse(iso);
-  if (parsed == null) return null;
-  return DateTime.utc(parsed.year, parsed.month, parsed.day);
-}
-
-/// منتصف ليل UTC ليوم التقويم من [DateTime].
-DateTime _utcMidnightOf(DateTime d) => DateTime.utc(d.year, d.month, d.day);
-
-/// أيام التأخير منذ أقدم فاتورة مفتوحة (صفر يوم كحد أدنى).
-int? _daysLate(DateTime reference, DateTime? oldestOpenInvoiceDate) {
-  if (oldestOpenInvoiceDate == null) return null;
-  final days = reference.difference(oldestOpenInvoiceDate).inDays;
-  return days < 0 ? 0 : days;
-}
+    dateOnly(date ?? fallback);

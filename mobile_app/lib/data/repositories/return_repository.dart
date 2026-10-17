@@ -83,7 +83,9 @@ library;
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../domain/core/dates.dart';
 import '../../core/storage/doc_sequence.dart';
+import '../../domain/core/numbers.dart';
 import '../../domain/core/result.dart';
 import '../../domain/services/purchase_pricing.dart';
 import 'batch_repository.dart';
@@ -107,9 +109,6 @@ final RegExp _originItemPattern = RegExp(r'أصل البند #(\d+)');
 final RegExp _batchNotePattern = RegExp(
   r'رقم الدفعة (.+?) \(تنتهي (\d{4}-\d{2}-\d{2})\)',
 );
-
-/// تفاوت الكميات (NUMERIC(12,3) بالمخطط).
-const double _qtyEpsilon = 0.000001;
 
 // ─────────────────────────────────────────────────────────────────────
 // نماذج المرتجعات (مدخلات/مخرجات المستودع — نماذج نقية)
@@ -466,8 +465,8 @@ class ReturnRepository {
           var remaining = lineQty;
           if (caps != null) {
             for (final cap in caps) {
-              if (remaining <= _qtyEpsilon) break;
-              if (cap.qty <= _qtyEpsilon) continue;
+              if (remaining <= qtyEpsilon) break;
+              if (cap.qty <= qtyEpsilon) continue;
               final take = cap.qty < remaining ? cap.qty : remaining;
               entries.add(
                 _BatchCap(
@@ -486,13 +485,13 @@ class ReturnRepository {
           final batchSummary = entries.isEmpty
               ? null
               : entries
-                    .map((e) => '${e.batchNumber}×${_num(e.qty)}')
+                    .map((e) => '${e.batchNumber}×${formatNum(e.qty)}')
                     .join('، ');
           final lineNotes = [
             'أصل البند #${input.invoiceItemId}',
             if (batchSummary != null) 'دفعة: $batchSummary',
-            if (residual > _qtyEpsilon)
-              'مرتجع بلا دفعة (${_num(residual)} أضيف للمخزون العام)',
+            if (residual > qtyEpsilon)
+              'مرتجع بلا دفعة (${formatNum(residual)} أضيف للمخزون العام)',
           ].join(' — ');
 
           await txn.insert('invoice_item', {
@@ -539,7 +538,7 @@ class ReturnRepository {
             });
           }
           // المتبقي بلا دفعة → مخزون عام (القرار 3) بحركة مستقلة.
-          if (residual > _qtyEpsilon) {
+          if (residual > qtyEpsilon) {
             await txn.insert('stock_movement', {
               'product_id': productId,
               'warehouse_id': orig.row['warehouse_id'],
@@ -813,7 +812,7 @@ class ReturnRepository {
                 final available =
                     (batchRows.first['qty'] as num?)?.toDouble() ?? 0;
                 final take = available < remaining ? available : remaining;
-                if (take > _qtyEpsilon) {
+                if (take > qtyEpsilon) {
                   final affected = await txn.rawUpdate(
                     'UPDATE batch SET qty = qty - ?, updated_at = ? '
                     'WHERE id = ? AND qty >= ?',
@@ -835,7 +834,7 @@ class ReturnRepository {
             }
             // المتبقي بدفعات الصنف النشطة FEFO (المنتهية مشمولة — إرجاعها
             // للمورد جائز) — أحراس السالب بداخلها ترمي فتتراجع المعاملة.
-            if (remaining > _qtyEpsilon) {
+            if (remaining > qtyEpsilon) {
               final fefo = await _batches.allocateFefo(
                 txn,
                 productId: productId,
@@ -848,8 +847,8 @@ class ReturnRepository {
                 throw _FlowError(
                   'الكمية غير متوفرة بدفعات الصنف '
                   '«${info.name}»: المتاح '
-                  '${_num(lineQty - remaining + fefo.allocatedQty)} '
-                  'والمطلوب ${_num(lineQty)} — لا يسمح النظام بمخزون سالب.',
+                  '${formatNum(lineQty - remaining + fefo.allocatedQty)} '
+                  'والمطلوب ${formatNum(lineQty)} — لا يسمح النظام بمخزون سالب.',
                 );
               }
               await _batches.applyAllocation(txn, fefo.allocations, now: at);
@@ -858,7 +857,7 @@ class ReturnRepository {
                   _BatchCap(
                     batchId: a.batchId,
                     batchNumber: a.batchNumber,
-                    expiryDate: _dateOnly(a.expiryDate),
+                    expiryDate: dateOnly(a.expiryDate),
                     qty: a.qty,
                   ),
                 );
@@ -869,7 +868,7 @@ class ReturnRepository {
           final batchSummary = deductions.isEmpty
               ? null
               : deductions
-                    .map((d) => '${d.batchNumber}×${_num(d.qty)}')
+                    .map((d) => '${d.batchNumber}×${formatNum(d.qty)}')
                     .join('، ');
           final lineNotes = [
             'أصل البند #${input.invoiceItemId}',
@@ -941,7 +940,7 @@ class ReturnRepository {
           if (consumed == 0) {
             throw _FlowError(
               'الكمية غير متوفرة للصنف «${info.name}» بالمخزن — '
-              'الرصيد الدفتري أقل من المطلوب (${_num(lineQty)}) — '
+              'الرصيد الدفتري أقل من المطلوب (${formatNum(lineQty)}) — '
               'لا يسمح النظام بمخزون سالب.',
             );
           }
@@ -950,7 +949,7 @@ class ReturnRepository {
           if (wacBefore != null) {
             final remainingQty = wacBefore.qty - lineQty;
             double newCost;
-            if (remainingQty <= _qtyEpsilon) {
+            if (remainingQty <= qtyEpsilon) {
               newCost = 0; // أُرجع كل المخزون — قيمة المخزون صفر.
             } else {
               newCost = roundCost(
@@ -1208,14 +1207,14 @@ class ReturnRepository {
       final origQty = (item['qty'] as num?)?.toDouble() ?? 0;
       final alreadyReturned = returned[entry.key] ?? 0;
       final available = _available(origQty, alreadyReturned);
-      if (entry.value > available + _qtyEpsilon) {
+      if (entry.value > available + qtyEpsilon) {
         return (
           items: items,
           error:
               'الكمية المطلوب إرجاعها من البند '
-              '«${item['line_desc'] ?? entry.key}» (${_num(entry.value)}) '
-              'تتجاوز المتاح للإرجاع (${_num(available)}) — الأصلي '
-              '${_num(origQty)} والمرتجع سابقاً ${_num(alreadyReturned)}.',
+              '«${item['line_desc'] ?? entry.key}» (${formatNum(entry.value)}) '
+              'تتجاوز المتاح للإرجاع (${formatNum(available)}) — الأصلي '
+              '${formatNum(origQty)} والمرتجع سابقاً ${formatNum(alreadyReturned)}.',
         );
       }
     }
@@ -1257,11 +1256,11 @@ class ReturnRepository {
         origQty[entry.key] ?? 0,
         returned[entry.key] ?? 0,
       );
-      if (entry.value > available + _qtyEpsilon) {
+      if (entry.value > available + qtyEpsilon) {
         throw _FlowError(
           'تغيّر المتبقي للإرجاع من البند '
           '«${names[entry.key] ?? entry.key}» قبل الحفظ — المتاح الآن '
-          '${_num(available)} والمطلوب ${_num(entry.value)}. أعد المحاولة.',
+          '${formatNum(available)} والمطلوب ${formatNum(entry.value)}. أعد المحاولة.',
         );
       }
     }
@@ -1499,9 +1498,9 @@ class ReturnRepository {
       final available = tracked
           ? (batchQty[entry.key] ?? 0)
           : (plainQty[entry.key] ?? 0);
-      if (available + _qtyEpsilon < entry.value) {
+      if (available + qtyEpsilon < entry.value) {
         return 'الكمية غير متوفرة للصنف «${names[entry.key]}»: المتاح '
-            '${_num(available)} والمطلوب إرجاعه ${_num(entry.value)} — '
+            '${formatNum(available)} والمطلوب إرجاعه ${formatNum(entry.value)} — '
             'لا يسمح النظام بمخزون سالب.';
       }
     }
@@ -1587,7 +1586,7 @@ class ReturnRepository {
     final caps = <_BatchCap>[];
     for (final key in order) {
       final effective = (consumed[key] ?? 0) - (priorReturned[key] ?? 0);
-      if (effective <= _qtyEpsilon) continue;
+      if (effective <= qtyEpsilon) continue;
       final parts = key.split('|');
       final batchRows = await txn.query(
         'batch',
@@ -1662,7 +1661,7 @@ class ReturnRepository {
   static double _available(double originalQty, double returnedQty) {
     final available = originalQty - returnedQty;
     if (available <= 0) return 0;
-    if ((available * 1000).round() / 1000 <= 0) return 0;
+    if (roundTo3(available) <= 0) return 0;
     return available;
   }
 
@@ -1755,21 +1754,3 @@ class _BatchCap {
   final String expiryDate;
   double qty;
 }
-
-/// يصيغ رقماً للعرض في الرسائل بلا أصفار زائدة.
-String _num(double v) {
-  if (v.isNaN || v.isInfinite) {
-    return v.toString();
-  }
-  final rounded = (v * 1000).round() / 1000;
-  if (rounded == rounded.round()) {
-    return rounded.toInt().toString();
-  }
-  return rounded.toStringAsFixed(3);
-}
-
-/// `YYYY-MM-DD` (صيغة `batch.expiry_date`).
-String _dateOnly(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-'
-    '${d.month.toString().padLeft(2, '0')}-'
-    '${d.day.toString().padLeft(2, '0')}';
