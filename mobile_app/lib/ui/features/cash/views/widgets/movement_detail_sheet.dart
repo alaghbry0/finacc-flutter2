@@ -1,6 +1,10 @@
 /// نافذة تفاصيل حركة الصندوق + الإبطال (R19-D3a — مستخرجة حرفياً من
 /// `movements_screen.dart` بلا أي تغيير دلالة؛ كانت `showMovementDetailSheet`
 /// و`_MovementDetailSheet` و`_DetailRow` و`_RateRow`).
+///
+/// الرسوم (بطاقة الحقول/بطاقة التخصيصات/إجراء الإبطال) بملفاتها
+/// المركزّعة بجوارها (R20-D3d) — هذا الملف: آلة الحالة (التحميل/
+/// الإبطال/معاينة سند PDF) بنمط payment_sheet.
 library;
 
 import 'dart:async';
@@ -11,8 +15,6 @@ import 'package:provider/provider.dart';
 import '../../../../../domain/models/cash.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/session/app_controller.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/amount_text.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
@@ -21,6 +23,9 @@ import '../../../printing/services/voucher_pdf_builder.dart';
 import '../../../printing/views/pdf_preview_dialog.dart';
 import '../../view_models/movements_view_model.dart';
 import 'cash_widgets.dart';
+import 'movement_detail_allocations_card.dart';
+import 'movement_detail_fields_card.dart';
+import 'movement_detail_void_action.dart';
 import 'movement_voucher_pdf.dart';
 
 /// يفتح نافذة التفاصيل؛ بعد إغلاقها يُعاد تحميل السجل إن تغيّر (الإبطال
@@ -178,8 +183,6 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -230,100 +233,7 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              FinCard(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _DetailRow(
-                      label: l10n.cashMovementFieldDate,
-                      value: cashFormatDate(_detail!.movement.txDate),
-                    ),
-                    _DetailRow(
-                      label: l10n.cashMovementFieldBox,
-                      value:
-                          '${_detail!.movement.cashboxName} '
-                          '(${_detail!.movement.currencyCode})',
-                    ),
-                    if (_detail!.movement.toCashboxName != null)
-                      _DetailRow(
-                        label: l10n.cashMovementFieldTo,
-                        value: _detail!.movement.toCashboxName!,
-                      ),
-                    if (_detail!.movement.voucherNo != null)
-                      _DetailRow(
-                        label: l10n.cashMovementFieldVoucher,
-                        value: _detail!.movement.voucherNo!,
-                      ),
-                    if (_detail!.movement.customerName != null)
-                      _DetailRow(
-                        label: l10n.cashMovementFieldParty,
-                        value: _detail!.movement.customerName!,
-                      ),
-                    if (_detail!.movement.supplierName != null)
-                      _DetailRow(
-                        label: l10n.cashMovementFieldParty,
-                        value: _detail!.movement.supplierName!,
-                      ),
-                    if (_detail!.movement.expenseCategoryName != null)
-                      _DetailRow(
-                        label: l10n.cashMovementFieldCategory,
-                        value: _detail!.movement.expenseCategoryName!,
-                      ),
-                    _RateRow(
-                      label: l10n.cashMovementFieldRate,
-                      value: _detail!.movement.exchangeRate,
-                    ),
-                    if (_detail!.movement.settlementRate != null)
-                      _RateRow(
-                        label: l10n.cashMovementFieldSettlement,
-                        value: _detail!.movement.settlementRate!,
-                      ),
-                    if ((_detail!.movement.fxGainLoss.abs()) > 0.005)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                l10n.cashMovementFieldFx,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: scheme.onSurfaceVariant),
-                              ),
-                            ),
-                            AmountText(
-                              amount: _detail!.movement.fxGainLoss,
-                              sign: _detail!.movement.fxGainLoss > 0
-                                  ? FinSign.incoming
-                                  : FinSign.outgoing,
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (_detail!.movement.description != null &&
-                        _detail!.movement.description!.trim().isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.cashMovementFieldDescription,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _detail!.movement.description!,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              MovementDetailFieldsCard(movement: _detail!.movement),
               // طباعة سند PDF (الشريحة 7) — لسندات RVT/PMT المرقّمة فقط.
               if (movementIsPrintableVoucher(_detail!.movement)) ...[
                 const SizedBox(height: 12),
@@ -339,108 +249,16 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
               ],
               if (_detail!.allocations.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                FinCard(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.cashMovementAllocationsTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      for (final allocation in _detail!.allocations)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      allocation.invoiceNo,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            fontFeatures: FinText.tabularNums,
-                                          ),
-                                    ),
-                                    Text(
-                                      allocation.invoiceTypeCode == 'sale'
-                                          ? l10n.cashAllocSaleInvoice
-                                          : l10n.cashAllocPurchaseInvoice,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              AmountText(
-                                amount: allocation.allocatedAmount,
-                                showSignMarker: false,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                allocation.currencyCode,
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: colors.gold,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
+                MovementDetailAllocationsCard(
+                  allocations: _detail!.allocations,
                 ),
               ],
               const SizedBox(height: 16),
-              if (_detail!.movement.isVoidable)
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.negative,
-                    foregroundColor: colors.onNegative,
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                  onPressed: widget.vm.state.voidingId == _detail!.movement.id
-                      ? null
-                      : () => unawaited(_confirmVoid(_detail!.movement)),
-                  icon: widget.vm.state.voidingId == _detail!.movement.id
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.4),
-                        )
-                      : const Icon(Icons.block_rounded, size: 20),
-                  label: Text(l10n.cashMovementVoidButton),
-                )
-              else if (!_detail!.movement.isVoided)
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 18,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.cashMovementNotVoidableNote,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              MovementDetailVoidAction(
+                movement: _detail!.movement,
+                voiding: widget.vm.state.voidingId == _detail!.movement.id,
+                onVoid: () => unawaited(_confirmVoid(_detail!.movement)),
+              ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -449,77 +267,6 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontFeatures: FinText.tabularNums,
-              ),
-              textAlign: TextAlign.end,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RateRow extends StatelessWidget {
-  const _RateRow({required this.label, required this.value});
-
-  final String label;
-  final double value;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          Text(
-            AmountText.format(value, 4),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontFeatures: FinText.tabularNums,
-            ),
-          ),
-        ],
       ),
     );
   }

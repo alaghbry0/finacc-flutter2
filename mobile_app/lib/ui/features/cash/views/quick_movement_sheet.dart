@@ -4,6 +4,10 @@
 /// للأنواع ذات الساقين) + بوابات أسعار اليوم للعملات غير الأساس
 /// (FR-08-09) + تحذير بصري عند رصيد متوقع سالب (FR-04-09 — تحذير بلا
 /// منع). تُفتح فوق شريط التبويبات (useRootNavigator على افتراضه false حصراً).
+///
+/// الرسوم (النموذج/المعاينة الحية/إيصال النجاح) بملفاتها المركزّعة
+/// بجوارها (R20-D3d) — هذا الملف: آلة الحالة والحرّاس والتحقق
+/// والترحيل (نمط payment_sheet).
 library;
 
 import 'dart:async';
@@ -15,15 +19,12 @@ import 'package:provider/provider.dart';
 import '../../../../domain/models/cash.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/fin_card.dart';
-import '../../../core/widgets/fin_error_card.dart';
 import '../view_models/quick_movement_view_model.dart';
 import 'widgets/cash_widgets.dart';
+import 'widgets/quick_movement_form.dart';
+import 'widgets/quick_movement_receipt_view.dart';
 
 /// يفتح نافذة الحركة السريعة بنوع ابتدائي — تُغلق بنفسها عند «تم».
 ///
@@ -161,7 +162,6 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
 
   Widget _buildForm(BuildContext context, QuickMovementViewModel vm) {
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
 
     if (vm.loading) {
       return const Column(
@@ -215,446 +215,24 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
     final projected = _projectedSourceAfter(vm);
     final willGoNegative = projected != null && projected < -0.005;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const CashSheetDragHandle(),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Icon(Icons.bolt_rounded, color: scheme.primary, size: 24),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                l10n.cashQmSheetTitle,
-                style: Theme.of(context).textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w800),
-              ),
-            ),
-            IconButton(
-              tooltip: l10n.commonCancel,
-              icon: const Icon(Icons.close_rounded),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final (kind, label) in [
-              (QuickMovementKind.expense, l10n.cashQmKindExpense),
-              (QuickMovementKind.ownerDraw, l10n.cashQmKindOwnerDraw),
-              (QuickMovementKind.capitalIn, l10n.cashQmKindCapitalIn),
-              (QuickMovementKind.boxTransfer, l10n.cashQmKindTransfer),
-              (QuickMovementKind.bankDeposit, l10n.cashQmKindBankDeposit),
-              (QuickMovementKind.bankWithdraw, l10n.cashQmKindBankWithdraw),
-            ])
-              ChoiceChip(
-                label: Text(label),
-                selected: vm.kind == kind,
-                onSelected: (_) => vm.setKind(kind),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        CashAmountField(
-          controller: _amountController,
-          label: l10n.cashQmAmountLabel,
-          helper: l10n.cashQmAmountHint,
-          suffixCode: vm.selectedBox?.box.currencyCode,
-          enabled: !vm.saving,
-          onChanged: (raw) => vm.setAmount(CashAmountField.parse(raw)),
-        ),
-        const SizedBox(height: 12),
-        CashBoxPickerField(
-          boxes: vm.boxes,
-          selectedId: vm.boxId,
-          label: l10n.cashQmSourceBoxLabel,
-          onChanged: vm.setBox,
-          enabled: !vm.saving,
-        ),
-        if (vm.needsTargetBox) ...[
-          const SizedBox(height: 12),
-          CashBoxPickerField(
-            boxes: vm.boxes,
-            selectedId: vm.targetBoxId,
-            label: l10n.cashQmTargetBoxLabel,
-            onChanged: vm.setTargetBox,
-            enabled: !vm.saving,
-            icon: Icons.account_balance_rounded,
-          ),
-        ],
-        if (vm.needsCategory) ...[
-          const SizedBox(height: 12),
-          DropdownButtonFormField<int>(
-            initialValue: vm.categoryId,
-            onChanged: vm.saving ? null : vm.setCategory,
-            decoration: InputDecoration(
-              labelText: l10n.cashQmCategoryLabel,
-              helperText: l10n.cashQmCategoryHint,
-              prefixIcon: const Icon(Icons.category_rounded),
-            ),
-            items: [
-              for (final category in vm.categories)
-                DropdownMenuItem<int>(
-                  value: category.id,
-                  child: Text(category.name),
-                ),
-            ],
-          ),
-        ],
-        const SizedBox(height: 12),
-        InkWell(
-          onTap: vm.saving ? null : () => unawaited(_pickDate(vm)),
-          borderRadius: BorderRadius.circular(12),
-          child: InputDecorator(
-            decoration: InputDecoration(
-              labelText: l10n.cashQmDateLabel,
-              prefixIcon: const Icon(Icons.event_rounded),
-              border: const OutlineInputBorder(),
-            ),
-            child: Text(
-              cashFormatDate(vm.txDate),
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(fontFeatures: FinText.tabularNums),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _descriptionController,
-          enabled: !vm.saving,
-          maxLines: 2,
-          maxLength: 140,
-          onChanged: vm.setDescription,
-          decoration: InputDecoration(
-            labelText: l10n.cashQmDescriptionLabel,
-            helperText: l10n.cashQmDescriptionHint,
-            prefixIcon: const Icon(Icons.notes_rounded),
-          ),
-        ),
-        const SizedBox(height: 6),
-        _MovementPreview(
-          vm: vm,
-          projected: projected,
-          willGoNegative: willGoNegative,
-        ),
-        if (vm.saveError != null) ...[
-          const SizedBox(height: 12),
-          FinErrorCard(message: vm.saveError!),
-        ],
-        const SizedBox(height: 18),
-        FilledButton(
-          onPressed: vm.saving ? null : () => unawaited(_save(vm)),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(56),
-            textStyle: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          child: vm.saving
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.4),
-                )
-              : Text(l10n.cashQmSave),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: vm.saving ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
-        ),
-      ],
+    return QuickMovementForm(
+      vm: vm,
+      amountController: _amountController,
+      descriptionController: _descriptionController,
+      projected: projected,
+      willGoNegative: willGoNegative,
+      onPickDate: () => unawaited(_pickDate(vm)),
+      onSave: () => unawaited(_save(vm)),
     );
   }
 
   // ── إيصال النجاح ───────────────────────────────────────────────────
 
   Widget _buildReceipt(BuildContext context, QuickMovementViewModel vm) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final receipt = _receipt!;
-    final targetCode = vm.selectedTargetBox?.box.currencyCode;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const CashSheetDragHandle(),
-        const SizedBox(height: 14),
-        FinCard(
-          accent: colors.positive,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: colors.positive,
-                    size: 26,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.cashQmReceiptTitle,
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  AmountText(amount: receipt.amount, size: AmountSize.large),
-                  const SizedBox(width: 8),
-                  Text(
-                    receipt.currencyCode,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: colors.gold,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _ReceiptRow(
-                icon: Icons.account_balance_wallet_rounded,
-                label: l10n.cashQmSourceBoxLabel,
-                value: receipt.sourceBoxName,
-              ),
-              if (receipt.targetBoxName != null)
-                _ReceiptRow(
-                  icon: Icons.account_balance_rounded,
-                  label: l10n.cashQmTargetBoxLabel,
-                  value: receipt.targetBoxName!,
-                ),
-              if (receipt.targetAmount != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.currency_exchange_rounded,
-                        size: 16,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.cashQmReceiptArrived,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ),
-                      AmountText(
-                        amount: receipt.targetAmount!,
-                        showSignMarker: false,
-                      ),
-                      if (targetCode != null && targetCode.isNotEmpty) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          targetCode,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        FilledButton.icon(
-          onPressed: () => _startAnother(vm),
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
-          icon: const Icon(Icons.post_add_rounded),
-          label: Text(l10n.cashQmNewMovement),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonDone),
-        ),
-      ],
-    );
-  }
-}
-
-/// معاينة حية: رصيد المصدر بعد الحركة + تحذير السالب (FR-04-09) +
-/// وصول المبلغ المحوّل للهدف عند اختلاف العملتين.
-class _MovementPreview extends StatelessWidget {
-  const _MovementPreview({
-    required this.vm,
-    required this.projected,
-    required this.willGoNegative,
-  });
-
-  final QuickMovementViewModel vm;
-  final double? projected;
-  final bool willGoNegative;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final targetAmount = vm.projectedTargetAmount;
-    final target = vm.selectedTargetBox;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (projected != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.functions_rounded,
-                  size: 16,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.cashQmProjectedSource,
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ),
-                AmountText(
-                  amount: projected!.abs(),
-                  // DS-18: علامة غير لونية إلزامية — رصيد متوقع سالب يظهر
-                  // «−2,500.00» لا «2,500.00» بحمراء فقط (إصلاح جولة 13).
-                  sign: projected! < 0 ? FinSign.outgoing : FinSign.neutral,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  vm.selectedBox?.box.currencyCode ?? '',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: projected! < 0 ? colors.negative : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (targetAmount != null && target != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.currency_exchange_rounded,
-                  size: 16,
-                  color: colors.gold,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.cashQmArrivesAtTarget(
-                      AmountText.format(targetAmount, 2),
-                      target.box.name,
-                      target.box.currencyCode,
-                    ),
-                    style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        // تحذير بصري متحرك — لا منع أبداً (FR-04-09).
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 220),
-          crossFadeState: willGoNegative
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          firstChild: const SizedBox(width: double.infinity),
-          secondChild: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.negativeContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    color: colors.negative,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.cashQmNegativeWarning,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colors.onNegativeContainer,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReceiptRow extends StatelessWidget {
-  const _ReceiptRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
+    return QuickMovementReceiptView(
+      vm: vm,
+      receipt: _receipt!,
+      onStartAnother: () => _startAnother(vm),
     );
   }
 }
