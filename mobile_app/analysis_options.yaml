@@ -36,9 +36,25 @@ linter:
     avoid_redundant_argument_values: true
     # ── R19-D5 تشديد إضافي (قِيس صفرَ مواضع) ──
     prefer_const_literals_to_create_immutables: true
+    # ── R20-D5 خمس قواعد صحة قِيسن صفرَ مواضع (تحقق مزدوج: محلل بمخبأة
+    # نظيفة + grep مستقل لكل نمط) ففُعِّلت بلا أي لمسة كود ──
+    empty_catches: true
+    only_throw_errors: true
+    close_sinks: true
+    valid_regexps: true
+    avoid_type_to_string: true
     # دين مؤجل (سياسة R18-D5: >20 موضعاً): prefer_single_quotes ‏(46 موضعاً —
+    # أعيد عدّها بR20-D5 على SDK هذه الحاوية فثبتت 46 كما هي —
     # رأيُ تنسيقٍ خارج flutter_lints لا قاعدة صحة، فلا تُفعَّل ما لم تُتبنَّ قراراً).
-    # مرشحان قِيسا واستُبعدا: unnecessary_import وunused_field ليسا اسمَي قاعدتين
+    # مرشحون قِيسوا بR20-D5 وأُجِّلوا لمواضع لهم: use_named_constants (5 —
+    # منشآت حالة قابلة لثابت .initial بخمسة متحكمات) وprefer_expression_function_bodies
+    # (127 — رأي أسلوب) وavoid_catches_without_on_clauses (123 — الالتقاط العام
+    # مقصود بتدفق أخطاء موجه للمستخدم).
+    # مرشحون استُبعدوا بR20-D5: unnecessary_final (تعارض مع prefer_final_in_for_each
+    # الفعالة) وunnecessary_await_in_return (مهجورة بهذا الإصدار) و
+    # avoid_returning_null_for_future (محذوفة منذ Dart 3.3)؛ وavoid_print و
+    # sort_child_properties_last وno_logic_in_create_state تأتي أصلاً مع flutter_lints.
+    # مرشحان قِيسا واستُبعدا (R19-D5): unnecessary_import وunused_field ليسا اسمَي قاعدتين
     # معرفتين في إصدار SDK هذا (التغطية المكافئة عبر تشخيصات المحلل المدمجة)؛
     # وavoid_unnecessary_containers/unnecessary_this/unnecessary_string_interpolations
     # تأتي أصلاً مع flutter_lints/recommended وصفر مواضع.
