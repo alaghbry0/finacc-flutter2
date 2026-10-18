@@ -223,7 +223,7 @@ void main() {
         ),
       );
       await tester.tap(find.text('افتح'));
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
     }
 
     testWidgets('cash: حقل النقد مملوء بالصافي كاملاً', (tester) async {
@@ -252,7 +252,7 @@ void main() {
       tester,
     ) async {
       await tester.runAsync(() async {
-        await pumpSheet(tester, initialPayMode: 'credit', customerName: null);
+        await pumpSheet(tester, initialPayMode: 'credit');
         expect(find.byType(TextField), findsOneWidget);
         final field = tester.widget<TextField>(find.byType(TextField));
         expect(field.controller!.text, '250');

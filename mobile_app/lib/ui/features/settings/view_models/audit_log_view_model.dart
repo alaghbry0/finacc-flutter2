@@ -7,9 +7,6 @@ import 'package:flutter/foundation.dart';
 import '../../../../data/repositories/audit_repository.dart';
 import '../../../../domain/models/audit_event.dart';
 
-/// حجم الصفحة الواحدة.
-const _pageSize = 40;
-
 /// حالة السجل المعروضة.
 class AuditLogState {
   const AuditLogState({
@@ -68,7 +65,7 @@ class AuditLogViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       final results = await Future.wait<Object?>([
-        _repo.page(limit: _pageSize, offset: 0, category: _state.filter),
+        _repo.page(category: _state.filter),
         _repo.counts(),
       ]);
       final page = results[0] as AuditPage;
@@ -113,7 +110,6 @@ class AuditLogViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       final page = await _repo.page(
-        limit: _pageSize,
         offset: _state.events.length,
         category: _state.filter,
       );

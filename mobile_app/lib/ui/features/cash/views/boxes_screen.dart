@@ -174,7 +174,6 @@ class _ArchivedBoxCard extends StatelessWidget {
       box: box,
       dimmed: true,
       busy: busy,
-      onTap: null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -318,8 +317,6 @@ class _BoxCardShell extends StatelessWidget {
                   children: [
                     AmountText(
                       amount: box.nativeBalance,
-                      size: AmountSize.row,
-                      decimals: 2,
                       sign: negative ? FinSign.outgoing : FinSign.neutral,
                     ),
                     if (negative)
@@ -368,7 +365,6 @@ class _BoxCardShell extends StatelessWidget {
                     ),
                     AmountText(
                       amount: bucket.amount,
-                      decimals: 2,
                       sign: bucket.amount < 0
                           ? FinSign.outgoing
                           : FinSign.neutral,

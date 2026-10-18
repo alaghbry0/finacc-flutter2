@@ -30,7 +30,7 @@ void main() {
     });
 
     test('lockedUntilAfter يضيف المدة إلى اللحظة الحالية', () {
-      final now = DateTime(2026, 10, 6, 13, 0, 0);
+      final now = DateTime(2026, 10, 6, 13);
       expect(
         PinPolicy.lockedUntilAfter(5, now),
         DateTime(2026, 10, 6, 13, 0, 30),

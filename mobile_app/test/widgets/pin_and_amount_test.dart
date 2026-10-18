@@ -87,9 +87,9 @@ void main() {
     ) async {
       await tester.pumpWidget(
         wrapWithL10n(
-          NumeralsScope(
+          const NumeralsScope(
             arabicIndic: true,
-            child: const AmountText(amount: 1234.5, sign: FinSign.outgoing),
+            child: AmountText(amount: 1234.5, sign: FinSign.outgoing),
           ),
         ),
       );

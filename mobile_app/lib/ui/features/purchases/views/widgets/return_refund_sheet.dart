@@ -43,8 +43,6 @@ Future<bool> showReturnRefundSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => _ReturnRefundSheet(
       refundTotal: refundTotal,
       decimals: decimals,
@@ -221,7 +219,6 @@ class _ReturnRefundSheetState extends State<_ReturnRefundSheet> {
             const SizedBox(height: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               textBaseline: TextBaseline.alphabetic,
               children: [
                 AmountText(
@@ -526,7 +523,6 @@ class PostedReturnReceiptCard extends StatelessWidget {
               label: l10n.sellFallbackRateBadge,
               tone: ChipTone.warning,
               icon: Icons.price_change_rounded,
-              dense: false,
             ),
           ],
           const SizedBox(height: 14),

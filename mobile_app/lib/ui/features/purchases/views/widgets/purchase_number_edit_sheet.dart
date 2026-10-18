@@ -21,8 +21,6 @@ Future<double?> showPurchaseNumberEditSheet(
 }) => showModalBottomSheet<double>(
   context: context,
   isScrollControlled: true,
-  // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-  useRootNavigator: false,
   builder: (sheetContext) => _PurchaseNumberEditSheet(
     title: title,
     initial: initial,
@@ -132,7 +130,6 @@ class _PurchaseNumberEditSheetState extends State<_PurchaseNumberEditSheet> {
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
-                signed: false,
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),

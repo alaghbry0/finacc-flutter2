@@ -76,8 +76,8 @@ class PartyDetailPeriodControls extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final vm = context.read<PartyDetailViewModel>();
     final now = DateTime.now();
-    final thisMonth = DateTime(now.year, now.month, 1);
-    final thisYear = DateTime(now.year, 1, 1);
+    final thisMonth = DateTime(now.year, now.month);
+    final thisYear = DateTime(now.year);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

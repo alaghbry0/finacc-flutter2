@@ -164,7 +164,7 @@ class _HubCard extends StatelessWidget {
             ),
             onTap: () => context.go('/parties/customers'),
           ),
-          _PartyHubDivider(),
+          const _PartyHubDivider(),
           _PartyHubRow(
             index: 1,
             icon: Icons.local_shipping_rounded,
@@ -181,7 +181,7 @@ class _HubCard extends StatelessWidget {
             ),
             onTap: () => context.go('/parties/suppliers'),
           ),
-          _PartyHubDivider(),
+          const _PartyHubDivider(),
           _PartyHubRow(
             index: 2,
             icon: Icons.trending_up_rounded,
@@ -199,7 +199,7 @@ class _HubCard extends StatelessWidget {
                 : null,
             onTap: () => context.go('/parties/receivables'),
           ),
-          _PartyHubDivider(),
+          const _PartyHubDivider(),
           _PartyHubRow(
             index: 3,
             icon: Icons.trending_down_rounded,
@@ -217,7 +217,7 @@ class _HubCard extends StatelessWidget {
                 : null,
             onTap: () => context.go('/parties/payables'),
           ),
-          _PartyHubDivider(),
+          const _PartyHubDivider(),
           // أعمار الديون (FR-09-05 — الشريحة 9): تصنيف FIFO للمستحقات.
           _PartyHubRow(
             index: 4,
@@ -233,7 +233,7 @@ class _HubCard extends StatelessWidget {
             color: colors.negative,
             onTap: () => context.go('/reports/aging'),
           ),
-          _PartyHubDivider(),
+          const _PartyHubDivider(),
           _PartyHubRow(
             index: 5,
             icon: Icons.currency_exchange_rounded,

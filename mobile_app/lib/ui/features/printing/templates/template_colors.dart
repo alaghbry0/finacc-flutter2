@@ -4,6 +4,8 @@ library;
 
 import 'package:pdf/pdf.dart' as pw;
 
+import '../core/print_palette.dart';
+
 /// يحوّل ARGB صحيحاً (0xFFRRGGBB) إلى PdfColor.
 pw.PdfColor templatePdfColor(int argb) => pw.PdfColor.fromInt(argb);
 
@@ -22,7 +24,5 @@ pw.PdfColor templateDarken(pw.PdfColor color, [double factor = 0.55]) =>
 pw.PdfColor templateOnColor(pw.PdfColor fill) {
   // الإضاءة المدركَة (نسب WCAG التقريبية).
   final luminance = 0.299 * fill.red + 0.587 * fill.green + 0.114 * fill.blue;
-  return luminance >= 0.55
-      ? const pw.PdfColor.fromInt(0xFF1A2420)
-      : pw.PdfColors.white;
+  return luminance >= 0.55 ? PrintPalette.ink : pw.PdfColors.white;
 }

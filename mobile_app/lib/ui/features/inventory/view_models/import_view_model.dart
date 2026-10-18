@@ -141,14 +141,14 @@ class ImportViewModel extends ChangeNotifier {
   /// تبديل الوضع (ملف / لصق).
   void setFileMode(bool fileMode) {
     if (fileMode == _state.fileMode) return;
-    _state = _copy(fileMode: fileMode, error: null);
+    _state = _copy(fileMode: fileMode);
     notifyListeners();
   }
 
   /// نص CSV الملصق (حقل اللصق).
   void setPasteText(String text) {
     if (text == _state.pasteText) return;
-    _state = _copy(pasteText: text, error: null);
+    _state = _copy(pasteText: text);
     notifyListeners();
   }
 
@@ -205,7 +205,7 @@ class ImportViewModel extends ChangeNotifier {
 
   /// تثبيت ربط حقل دلالي بحرف عمود ('' = تجاهل).
   void setMappingField(String semantic, String letter) {
-    _state = _copy(mapping: {..._state.mapping, semantic: letter}, error: null);
+    _state = _copy(mapping: {..._state.mapping, semantic: letter});
     notifyListeners();
   }
 
@@ -232,12 +232,7 @@ class ImportViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    _state = _copy(
-      analyzing: true,
-      error: null,
-      repoError: null,
-      acknowledged: false,
-    );
+    _state = _copy(analyzing: true, acknowledged: false);
     notifyListeners();
     try {
       final mapping = {
@@ -279,7 +274,7 @@ class ImportViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    _state = _copy(committing: true, repoError: null);
+    _state = _copy(committing: true);
     notifyListeners();
     final result = await _import.commitValid(
       preview,

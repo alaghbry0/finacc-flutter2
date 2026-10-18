@@ -104,7 +104,6 @@ class AgingViewModel extends ChangeNotifier {
       if (currencies.isEmpty) {
         _state = AgingState(
           loading: false,
-          currencies: const <Currency>[],
           report: keepReport ? _state.report : null,
           decimals: _state.decimals,
         );

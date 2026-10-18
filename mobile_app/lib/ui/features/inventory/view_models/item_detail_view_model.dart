@@ -158,7 +158,6 @@ class ItemDetailViewModel extends ChangeNotifier {
       userId: userId,
       archived: _state.archived,
       archiving: true,
-      archiveError: null,
     );
     notifyListeners();
     final result = await _items.archiveItem(_targetItemId, userId: userId);

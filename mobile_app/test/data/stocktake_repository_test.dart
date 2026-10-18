@@ -491,7 +491,7 @@ void main() {
 
     final older = await repo.post(
       warehouseId: warehouseId,
-      countedAt: DateTime.utc(2026, 10, 1),
+      countedAt: DateTime.utc(2026, 10),
       countedBy: 'أحمد',
       lines: [(a, 10, 8)],
       userId: 1,

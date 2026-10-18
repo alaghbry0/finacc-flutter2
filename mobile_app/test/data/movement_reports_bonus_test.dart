@@ -73,7 +73,6 @@ void main() {
             CartLine(productId: rice, qty: 3, unitPrice: 100, freeQty: 2),
           ],
           paidCash: 300,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: issuedAt,
         ),
@@ -87,7 +86,7 @@ void main() {
       // (1) بطاقة حركة الصنف: صف بيع واحد بكمية −5 (لا −3) والرصيد 25.
       final card = await repo.itemMovement(
         productId: rice,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(card.openingBalance, 30, reason: 'الافتتاحي قبل الفترة');
@@ -100,7 +99,7 @@ void main() {
 
       // (2) ملخص حركة المخزون: صادر 5 (لا 3) ورصيد ختامي 25.
       final summary = await repo.stockSummary(
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(summary, hasLength(1));

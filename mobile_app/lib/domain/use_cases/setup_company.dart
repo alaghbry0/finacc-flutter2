@@ -131,7 +131,7 @@ class SetupCompanyValidator {
         pinHash: PinHasher.hash(pin),
         passphraseHash: PinHasher.hash(passphrase),
         fiscalYear: now.year,
-        fiscalStart: DateTime(now.year, 1, 1),
+        fiscalStart: DateTime(now.year),
         fiscalEnd: DateTime(now.year, 12, 31),
       ),
     );

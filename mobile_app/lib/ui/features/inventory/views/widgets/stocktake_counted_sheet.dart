@@ -137,7 +137,6 @@ class _CountedRowState extends State<_CountedRow> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Text(
@@ -183,7 +182,6 @@ class _CountedRowState extends State<_CountedRow> {
             ),
             const SizedBox(height: 8),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _QtyColumn(
                   label: l10n.stocktakeBookQty,

@@ -93,7 +93,7 @@ void main() {
       );
       expect(
         PurchasePricing.validateCart([
-          line(1, 1, 100, batchNo: 'B-1', expiry: DateTime(2027, 1, 1)),
+          line(1, 1, 100, batchNo: 'B-1', expiry: DateTime(2027)),
         ]),
         isNull,
       );

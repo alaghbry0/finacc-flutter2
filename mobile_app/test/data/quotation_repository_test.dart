@@ -202,7 +202,7 @@ void main() {
     );
 
     test('تسلسل QTE مستقل عن INV ورفض المدخلات المعيبة', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 100);
+      final pen = await makeProduct('قلم', price: 10, qty: 100);
       final first = await quotations.createQuotation(
         quoteDraft([QuotationLine(productId: pen, qty: 1, unitPrice: 10)]),
         userId: userId,
@@ -222,7 +222,6 @@ void main() {
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 10)],
           paidCash: 10,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -239,7 +238,9 @@ void main() {
       expect(empty.errorOrNull, contains('بنداً واحداً'));
 
       final unknownProduct = await quotations.createQuotation(
-        quoteDraft([QuotationLine(productId: 999, qty: 1, unitPrice: 10)]),
+        quoteDraft([
+          const QuotationLine(productId: 999, qty: 1, unitPrice: 10),
+        ]),
         userId: userId,
         now: at,
       );
@@ -256,7 +257,7 @@ void main() {
     });
 
     test('عرض بعملة SAR: نفس سياسة سعر الصرف المفقود (FR-08-09)', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 100);
+      final pen = await makeProduct('قلم', price: 10, qty: 100);
       final blocked = await quotations.createQuotation(
         quoteDraft([
           QuotationLine(productId: pen, qty: 1, unitPrice: 10),
@@ -293,7 +294,7 @@ void main() {
       () async {
         final customerA = await makeCustomer('أ');
         final customerB = await makeCustomer('ب');
-        final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 100);
+        final pen = await makeProduct('قلم', price: 10, qty: 100);
         final q1 = (await quotations.createQuotation(
           quoteDraft([
             QuotationLine(productId: pen, qty: 1, unitPrice: 10),
@@ -336,7 +337,7 @@ void main() {
 
     test('quotationDetail: الرأس والبنود وأسماء العميل/العملة', () async {
       final customer = await makeCustomer('سالم');
-      final pen = await makeProduct('قلم', cost: 0, price: 25, qty: 50);
+      final pen = await makeProduct('قلم', price: 25, qty: 50);
       final created = (await quotations.createQuotation(
         quoteDraft([
           QuotationLine(productId: pen, qty: 2, unitPrice: 25),
@@ -361,7 +362,7 @@ void main() {
     test(
       'markSent من sent يُرفض، وcancelQuotation يجعل الحالة rejected',
       () async {
-        final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 100);
+        final pen = await makeProduct('قلم', price: 10, qty: 100);
         final created = (await quotations.createQuotation(
           quoteDraft([QuotationLine(productId: pen, qty: 1, unitPrice: 10)]),
           userId: userId,
@@ -485,8 +486,8 @@ void main() {
     test(
       'تحويل بنفس الأسعار والخصومات الفعلية: الأرقام تتطابق حرفياً',
       () async {
-        final a = await makeProduct('أ', cost: 0, price: 100, qty: 10);
-        final b = await makeProduct('ب', cost: 0, price: 100, qty: 10);
+        final a = await makeProduct('أ', price: 100, qty: 10);
+        final b = await makeProduct('ب', price: 100, qty: 10);
         final quotation = (await quotations.createQuotation(
           quoteDraft(
             [
@@ -501,7 +502,6 @@ void main() {
                 productId: b,
                 qty: 1,
                 unitPrice: 100,
-                lineDiscountType: SaleDiscountType.amount,
                 lineDiscountValue: 10,
               ),
             ],
@@ -539,7 +539,7 @@ void main() {
 
     test('تحويل مختلط: جزء نقدي وجزء آجل على حساب العميل', () async {
       final customer = await makeCustomer('نور');
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final quotation = (await quotations.createQuotation(
         quoteDraft([
           QuotationLine(productId: pen, qty: 1, unitPrice: 100),
@@ -570,7 +570,7 @@ void main() {
     });
 
     test('نقص المخزون عند التحويل → رفض والعرض يبقى draft (ذرّية)', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 5);
+      final pen = await makeProduct('قلم', price: 10, qty: 5);
       final quotation = (await quotations.createQuotation(
         quoteDraft([QuotationLine(productId: pen, qty: 10, unitPrice: 10)]),
         userId: userId,
@@ -616,7 +616,7 @@ void main() {
     test(
       'عرض بعملة SAR: الفاتورة بسعر يوم التحويل (Snapshot FR-08-05)',
       () async {
-        final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+        final pen = await makeProduct('قلم', price: 100, qty: 10);
         // سعر يوم إنشاء العرض.
         await rates.setRate(
           currencyId: sarId,

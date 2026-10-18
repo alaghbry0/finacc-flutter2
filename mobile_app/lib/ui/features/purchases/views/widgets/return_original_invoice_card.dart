@@ -51,11 +51,7 @@ class ReturnOriginalInvoiceCard extends StatelessWidget {
                 ),
               ),
               if (!invoice.hasParty && isSale)
-                StatusChip(
-                  label: l10n.sellCashCustomer,
-                  tone: ChipTone.neutral,
-                  dense: true,
-                ),
+                StatusChip(label: l10n.sellCashCustomer, dense: true),
             ],
           ),
           const SizedBox(height: 4),

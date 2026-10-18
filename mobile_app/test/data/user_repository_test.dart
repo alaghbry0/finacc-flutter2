@@ -200,7 +200,6 @@ void main() {
     await users.audit(
       'settings_change',
       entity: 'settings',
-      entityId: null,
       details: 'security.autolock_minutes=10',
       at: DateTime.utc(2026, 10, 6, 17),
     );

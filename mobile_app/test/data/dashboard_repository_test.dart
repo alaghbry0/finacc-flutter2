@@ -270,7 +270,7 @@ void main() {
       );
 
       final items = await repo.topItems(
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(
@@ -311,7 +311,7 @@ void main() {
 
     // نافذة أكتوبر حصراً: صنف أ وحده.
     final october = await repo.topItems(
-      from: DateTime(2026, 10, 1),
+      from: DateTime(2026, 10),
       to: DateTime(2026, 10, 31),
     );
     expect(october, hasLength(1));
@@ -319,7 +319,7 @@ void main() {
 
     // نافذة نوفمبر بحد 1: الأعلى كميّاً (ب).
     final limited = await repo.topItems(
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
       limit: 1,
     );
@@ -329,7 +329,7 @@ void main() {
 
   test('topItems: فراغ احتفالي عند لا مبيعات', () async {
     final items = await repo.topItems(
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(items, isEmpty);

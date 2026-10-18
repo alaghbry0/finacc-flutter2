@@ -79,7 +79,7 @@ class _BackupBody extends StatelessWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
     if (state.loading) {
-      return const [ListSkeleton(rows: 6)];
+      return const [ListSkeleton()];
     }
     if (state.error != null) {
       return [

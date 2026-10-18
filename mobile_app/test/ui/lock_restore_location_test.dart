@@ -40,7 +40,7 @@ void main() {
         ),
       ),
     );
-    await pumpQuietly(tester, 8);
+    await pumpQuietly(tester);
     return (router, controller);
   }
 
@@ -53,7 +53,7 @@ void main() {
 
       // مسار عميق: قائمة الأصناف داخل فرع المخزون.
       router.go('/inventory/items');
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         '/inventory/items',
@@ -61,12 +61,12 @@ void main() {
 
       // قفل تلقائي/يدوي أثناء العمل هناك.
       controller.lock();
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(router.routerDelegate.currentConfiguration.uri.path, '/lock');
 
       // فتح ناجح → العودة للمسار العميق لا للرئيسية.
       controller.unlockSession();
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         '/inventory/items',
@@ -95,7 +95,7 @@ void main() {
 
       // إعادة التوجيه من داخل /lock نفسه لا تعيد التخزين (لا حلقات).
       controller.unlockSession();
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
       expect(
         controller.lockedFromPathForTest,
@@ -109,7 +109,7 @@ void main() {
       controller.lock();
       await pumpQuietly(tester, 6);
       controller.unlockSession();
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(router.routerDelegate.currentConfiguration.uri.path, '/cash');
 
       router.dispose();

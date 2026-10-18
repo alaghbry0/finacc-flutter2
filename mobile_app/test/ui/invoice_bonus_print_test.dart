@@ -105,9 +105,7 @@ void main() {
 
       final pdf = await const InvoiceTemplateEngine().build(
         doc,
-        settings: const InvoiceTemplateSettings(
-          templateId: kInvoiceTemplateSimpleA4,
-        ),
+        settings: const InvoiceTemplateSettings(),
       );
       final bytes = await pdf.save();
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');

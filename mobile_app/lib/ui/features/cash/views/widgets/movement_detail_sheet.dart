@@ -34,8 +34,6 @@ Future<void> showMovementDetailSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => _MovementDetailSheet(vm: vm, movementId: movementId),
   );
 }
@@ -295,7 +293,6 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
                             ),
                             AmountText(
                               amount: _detail!.movement.fxGainLoss,
-                              decimals: 2,
                               sign: _detail!.movement.fxGainLoss > 0
                                   ? FinSign.incoming
                                   : FinSign.outgoing,
@@ -384,7 +381,6 @@ class _MovementDetailSheetState extends State<_MovementDetailSheet> {
                               ),
                               AmountText(
                                 amount: allocation.allocatedAmount,
-                                decimals: 2,
                                 showSignMarker: false,
                               ),
                               const SizedBox(width: 4),

@@ -71,7 +71,7 @@ class AgingCurrencySelector extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(width: 2),
-                  Icon(Icons.arrow_drop_down_rounded, size: 20),
+                  const Icon(Icons.arrow_drop_down_rounded, size: 20),
                 ],
               ),
             ),

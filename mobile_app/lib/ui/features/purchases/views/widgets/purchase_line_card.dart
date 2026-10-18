@@ -151,7 +151,6 @@ class PurchaseLineCard extends StatelessWidget {
                       title: l10n.purBonusEditTitle(line.name),
                       initial: line.freeQty,
                       confirmLabel: l10n.commonConfirm,
-                      allowZero: true,
                       decimals: 3,
                       icon: Icons.redeem_outlined,
                     );

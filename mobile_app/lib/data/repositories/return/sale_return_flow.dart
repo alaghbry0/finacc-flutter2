@@ -70,7 +70,7 @@ Future<Result<ReturnPostedReceipt, String>> postSaleReturnFlow(
 
     // (6) حساب العميل للجزء المخصوم (FR-02-07: اتجاه المبلغ).
     if (refundCredit > moneyEpsilon && orig.row['customer_id'] == null) {
-      return Err(
+      return const Err(
         'الفاتورة الأصلية بلا عميل مسجَّل (بيع نقدي مجهول) — لا حساب '
         'يُخصم منه؛ اختر رد القيمة نقداً من الصندوق.',
       );
@@ -91,7 +91,7 @@ Future<Result<ReturnPostedReceipt, String>> postSaleReturnFlow(
     if (refundCash > moneyEpsilon) {
       final boxId = await defaultCashboxId(db);
       if (boxId == null) {
-        return Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
+        return const Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
       }
       cashboxId = boxId;
     }

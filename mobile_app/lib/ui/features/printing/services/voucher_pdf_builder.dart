@@ -116,7 +116,7 @@ class VoucherPdfBuilder {
                   child: pw.Text(
                     contact,
                     style: PrintText.body(
-                      color: const pw.PdfColor.fromInt(0xFFBEE5D8),
+                      color: PrintPalette.highlight,
                       size: 8,
                     ),
                     textDirection: pw.TextDirection.rtl,
@@ -135,7 +135,7 @@ class VoucherPdfBuilder {
     return pw.Center(
       child: pw.Text(
         doc.isReceipt ? doc.labels.titleReceipt : doc.labels.titlePayment,
-        style: PrintText.extraHead(color: PrintPalette.brandDeep, size: 20),
+        style: PrintText.extraHead(color: PrintPalette.brandDeep),
         textDirection: pw.TextDirection.rtl,
       ),
     );
@@ -152,10 +152,7 @@ class VoucherPdfBuilder {
         children: [
           pw.Text(
             doc.voucherNo,
-            style: PrintText.head(
-              color: const pw.PdfColor.fromInt(0xFF332405),
-              size: 11,
-            ),
+            style: PrintText.head(color: PrintPalette.inkOnGold),
           ),
           _pair(doc.labels.date, doc.dateLabel),
         ],
@@ -171,7 +168,7 @@ class VoucherPdfBuilder {
     return pw.Container(
       padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PrintPalette.brand, width: 1),
+        border: pw.Border.all(color: PrintPalette.brand),
         borderRadius: pw.BorderRadius.circular(4),
         color: PrintPalette.zebra,
       ),
@@ -293,18 +290,12 @@ class VoucherPdfBuilder {
         // القيمة (تاريخ/رقم) بالخط الجدولي المرافق (UX-2b).
         pw.Text(
           value,
-          style: PrintText.tabular(
-            color: const pw.PdfColor.fromInt(0xFF332405),
-            size: 10,
-          ),
+          style: PrintText.tabular(color: PrintPalette.inkOnGold, size: 10),
         ),
         pw.SizedBox(width: 5),
         pw.Text(
           label,
-          style: PrintText.body(
-            color: const pw.PdfColor.fromInt(0xFF332405),
-            size: 10,
-          ),
+          style: PrintText.body(color: PrintPalette.inkOnGold, size: 10),
           textDirection: pw.TextDirection.rtl,
         ),
       ],

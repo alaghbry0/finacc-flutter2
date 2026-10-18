@@ -51,7 +51,7 @@ class InventoryHomeViewModel extends ChangeNotifier {
     try {
       final results = await Future.wait<Object?>([
         _items.lowStockItems(),
-        _batches.expiryAlerts(withinDays: 30),
+        _batches.expiryAlerts(),
       ]);
       _state = InventoryHomeState(
         loading: false,

@@ -41,7 +41,7 @@ Future<bool> showConfirmWordDialog(BuildContext context) async {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(null),
+          onPressed: () => Navigator.of(dialogContext).pop(),
           child: Text(l10n.commonCancel),
         ),
         FilledButton(

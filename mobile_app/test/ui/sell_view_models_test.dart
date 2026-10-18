@@ -87,7 +87,7 @@ void main() {
 
   Future<int> makeCustomer(String name, {double? creditLimit}) async {
     final result = await customers.createCustomer(
-      CustomerDraft(name: name, creditLimit: creditLimit, openingBalance: 0),
+      CustomerDraft(name: name, creditLimit: creditLimit),
       userId: userId,
       now: at,
     );
@@ -127,7 +127,7 @@ void main() {
       'سطر + خصم سطر + خصم فاتورة (مبلغ ونسبة) بأرقام محسوبة يدوياً',
       () async {
         await open();
-        final item = await makeItem('سكر', cost: 40, price: 100, qty: 20);
+        final item = await makeItem('سكر', cost: 40, qty: 20);
         final vm = cartVm();
         await vm.load();
         vm.addItemFromInfo(await findInfo(item));
@@ -212,7 +212,7 @@ void main() {
       'نقدي كامل بلا عميل: INV متسلسلة + مخزون وصندوق + تفريغ السلة',
       () async {
         await open();
-        final item = await makeItem('زيت', cost: 60, price: 120, qty: 10);
+        final item = await makeItem('زيت', cost: 60, price: 120);
         final vm = cartVm();
         await vm.load();
         vm.addItemFromInfo(await findInfo(item));
@@ -247,7 +247,7 @@ void main() {
 
     test('آجل بعميل نقدي مجهول يُرفض؛ بعميل حقيقي ينجح ويرفع رصيده', () async {
       await open();
-      final item = await makeItem('دقيق', price: 80, qty: 10);
+      final item = await makeItem('دقيق', price: 80);
       final customer = await makeCustomer('بهاء الدين');
       final vm = cartVm();
       await vm.load();
@@ -278,7 +278,7 @@ void main() {
       'مختلط: جزء نقدي والباقي آجلاً بعميل — الإيصال يفصل الاثنين',
       () async {
         await open();
-        final item = await makeItem('معمول', price: 90, qty: 10);
+        final item = await makeItem('معمول', price: 90);
         final customer = await makeCustomer('سومية');
         final vm = cartVm();
         await vm.load();

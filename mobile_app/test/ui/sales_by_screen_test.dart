@@ -29,24 +29,24 @@ void main() {
   /// صفوف «العميل» المعلَّبة: نمو + تراجع + نقدي بلا فترة سابقة
   /// (مرتّبة بالمبيعات تنازلياً — مسؤولية المستودع فتُقدَّم جاهزة).
   List<SalesByRow> customerRows() => [
-    SalesByRow(
+    const SalesByRow(
       label: 'أحمد سعيد',
       salesBase: 500,
       invoiceCount: 2,
       changePct: 25.0,
     ),
-    SalesByRow(
+    const SalesByRow(
       label: 'سارة',
       salesBase: 100,
       invoiceCount: 1,
       changePct: -50.0,
     ),
-    SalesByRow(label: '', salesBase: 50, invoiceCount: 1),
+    const SalesByRow(label: '', salesBase: 50, invoiceCount: 1),
   ];
 
   /// صفوف «الصنف» بعد التبديل.
   List<SalesByRow> itemRows() => [
-    SalesByRow(label: 'أرز بسمتي', salesBase: 200, invoiceCount: 3),
+    const SalesByRow(label: 'أرز بسمتي', salesBase: 200, invoiceCount: 3),
   ];
 
   /// يبذر حالة جاهزة: قاعدة مؤسَّسة + متحكم جلسة + نموذج فوق مستودع

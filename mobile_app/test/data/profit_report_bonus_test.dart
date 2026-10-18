@@ -102,7 +102,6 @@ void main() {
           CartLine(productId: soap, qty: 10, unitPrice: 50),
         ],
         paidCash: 1500,
-        paymentMethod: SalePaymentMethod.cash,
         warehouseId: warehouseId,
         issuedAt: issuedAt,
       ),
@@ -132,11 +131,11 @@ void main() {
       );
 
       final november = await repo.report(
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       final december = await repo.report(
-        from: DateTime(2026, 12, 1),
+        from: DateTime(2026, 12),
         to: DateTime(2026, 12, 31),
       );
 
@@ -170,11 +169,11 @@ void main() {
       );
 
       final november = await repo.report(
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       final december = await repo.report(
-        from: DateTime(2026, 12, 1),
+        from: DateTime(2026, 12),
         to: DateTime(2026, 12, 31),
       );
 

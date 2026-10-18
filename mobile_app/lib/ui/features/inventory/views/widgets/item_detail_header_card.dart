@@ -71,7 +71,6 @@ class ItemDetailHeaderCard extends StatelessWidget {
               if (item.trackBatches)
                 StatusChip(
                   label: l10n.itemDetailBatchesBadge,
-                  tone: ChipTone.neutral,
                   icon: Icons.layers_rounded,
                 ),
               if (state.archived)

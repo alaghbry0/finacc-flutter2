@@ -98,7 +98,7 @@ void main() {
         ),
       ),
     );
-    await pumpQuietly(tester, 8);
+    await pumpQuietly(tester);
 
     final vm = purchaseCartSession.attach(
       companyRepo: companies,
@@ -219,7 +219,7 @@ void main() {
         await tester.tap(valueTap);
         await pumpQuietly(tester, 6);
         await tester.tap(find.widgetWithText(TextButton, 'إلغاء'));
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         expect(vm.state.lines.single.qty, 2.5);
 
         // ── صفر: يرفض داخل النافذة (رسالة خطأ) ولا يصل setQty ────

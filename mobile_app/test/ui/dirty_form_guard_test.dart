@@ -177,7 +177,7 @@ void main() {
           router.go('/form');
           await pumpQuietly(tester, 4);
           await Future<void>.delayed(const Duration(milliseconds: 300));
-          await pumpQuietly(tester, 8);
+          await pumpQuietly(tester);
           expect(find.byKey(const Key('item_form_name_field')), findsOneWidget);
 
           // تعديل الاسم → وسخ.

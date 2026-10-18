@@ -169,7 +169,7 @@ void main() {
         customerId: customer,
         currencyId: yer,
         dueAmount: 425,
-        issuedAt: DateTime.utc(2026, 11, 1),
+        issuedAt: DateTime.utc(2026, 11),
         dueDate: DateTime.utc(2026, 12, 10), // −٢٥ يوماً
       );
       await seedInvoice(
@@ -178,7 +178,7 @@ void main() {
         customerId: customer,
         currencyId: yer,
         dueAmount: 130,
-        issuedAt: DateTime.utc(2026, 11, 1),
+        issuedAt: DateTime.utc(2026, 11),
         dueDate: DateTime.utc(2026, 12, 15), // −٣٠ يوماً
       );
 
@@ -226,7 +226,7 @@ void main() {
         customerId: ahmed,
         currencyId: yer,
         dueAmount: 120,
-        issuedAt: DateTime.utc(2026, 7, 1),
+        issuedAt: DateTime.utc(2026, 7),
         dueDate: DateTime.utc(2026, 7, 15),
       );
       // أحمد: ٧٥ يوماً (٦١–٩٠) ٢٥٠.
@@ -237,7 +237,7 @@ void main() {
         currencyId: yer,
         dueAmount: 250,
         issuedAt: DateTime.utc(2026, 8, 20),
-        dueDate: DateTime.utc(2026, 9, 1),
+        dueDate: DateTime.utc(2026, 9),
       );
       // أحمد: ٤٥ يوماً (٣١–٦٠) ٥٠٠ — مسددة جزئياً (total=800/paid=300).
       await seedInvoice(
@@ -247,8 +247,8 @@ void main() {
         currencyId: yer,
         dueAmount: 500,
         total: 800,
-        issuedAt: DateTime.utc(2026, 9, 1),
-        dueDate: DateTime.utc(2026, 10, 1),
+        issuedAt: DateTime.utc(2026, 9),
+        dueDate: DateTime.utc(2026, 10),
       );
       // أحمد: ١٠ أيام (٠–٣٠) ١٠٠٠.
       await seedInvoice(
@@ -278,7 +278,7 @@ void main() {
         customerId: bayt,
         currencyId: yer,
         dueAmount: 200,
-        issuedAt: DateTime.utc(2026, 11, 1),
+        issuedAt: DateTime.utc(2026, 11),
       );
 
       // سعيد: ١٨٩ يوماً (+٩٠) ٧٠٠.
@@ -288,7 +288,7 @@ void main() {
         customerId: saeed,
         currencyId: yer,
         dueAmount: 700,
-        issuedAt: DateTime.utc(2026, 5, 1),
+        issuedAt: DateTime.utc(2026, 5),
         dueDate: DateTime.utc(2026, 5, 10),
       );
 
@@ -375,7 +375,7 @@ void main() {
       final partiallyPaid = ahmedRow.details[2];
       expect(partiallyPaid.dueAmount, closeTo(500, 0.001));
       expect(partiallyPaid.invoiceNo, startsWith('AG-'));
-      expect(partiallyPaid.dueDate, DateTime.utc(2026, 10, 1));
+      expect(partiallyPaid.dueDate, DateTime.utc(2026, 10));
 
       // سطر سعيد — بلا أي رقم للواتساب، دلو +٩٠ فقط.
       final saeedRow = report.rows[1];
@@ -442,7 +442,7 @@ void main() {
       customerId: customer,
       currencyId: sar,
       dueAmount: 999,
-      issuedAt: DateTime.utc(2026, 7, 1),
+      issuedAt: DateTime.utc(2026, 7),
       dueDate: DateTime.utc(2026, 7, 15),
     );
     // دولار: ٤٥ يوماً (٣١–٦٠).
@@ -452,8 +452,8 @@ void main() {
       customerId: customer,
       currencyId: usd,
       dueAmount: 50,
-      issuedAt: DateTime.utc(2026, 9, 1),
-      dueDate: DateTime.utc(2026, 10, 1),
+      issuedAt: DateTime.utc(2026, 9),
+      dueDate: DateTime.utc(2026, 10),
     );
 
     final byYer = await repo.agingReport(currencyId: yer, asOf: _asOf);

@@ -189,12 +189,9 @@ class AppShell extends StatelessWidget {
     );
 
     return Scaffold(
+      // extendBody يبقى على افتراضه (false — قرار UX صريح): جسم الشاشة ينتهي
+      // فوق شريط التنقل فلا يختفي أي محتوى خلفه، والنوافذ المنبثقة تظهر فوقه.
       body: navigationShell,
-      // extendBody = false (قرار UX صريح): جسم الشاشة ينتهي فوق شريط
-      // التنقل — لا يبقى أي محتوى (أسفل القوائم/شريط الدفع) مختبئاً خلفه،
-      // والنوافذ المنبثقة (BottomSheets) تُفتح على متصفح الفرع فتظهر
-      // من فوق الشريط لا من أسفل الشاشة خلفه.
-      extendBody: false,
       bottomNavigationBar: BottomAppBar(
         elevation: 0,
         padding: EdgeInsets.zero,

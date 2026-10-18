@@ -26,8 +26,6 @@ Future<(PurchaseDiscountType, double)?> showPurchaseDiscountEditSheet(
   final result = await showModalBottomSheet<(PurchaseDiscountType, double)>(
     context: context,
     isScrollControlled: true,
-    // فوق شريط التبويبات (نفس قرار بقية نوافذ الوحدة).
-    useRootNavigator: false,
     builder: (sheetContext) {
       final l10n = AppLocalizations.of(sheetContext)!;
       return StatefulBuilder(

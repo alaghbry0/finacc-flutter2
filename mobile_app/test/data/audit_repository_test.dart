@@ -68,7 +68,7 @@ void main() {
         'at': '2026-10-$day\u005410:00:00Z',
       });
     }
-    final first = await repo.page(limit: 3, offset: 0);
+    final first = await repo.page(limit: 3);
     expect(first.events, hasLength(3));
     expect(first.hasMore, isTrue);
     expect(first.totalCount, 6, reason: 'تأسيس + 5 أحداث');

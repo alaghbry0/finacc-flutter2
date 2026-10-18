@@ -72,7 +72,7 @@ void main() {
       final doc = invoiceDocForTests(l10n);
       final (bytes, pages) = await buildBytes(
         doc,
-        const InvoiceTemplateSettings(templateId: kInvoiceTemplateSimpleA4),
+        const InvoiceTemplateSettings(),
       );
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');
       expect(bytes.length, greaterThan(15 * 1024));
@@ -145,7 +145,7 @@ void main() {
       final (noSettings, pagesNone) = await buildBytes(doc, null);
       final (simple, pagesSimple) = await buildBytes(
         doc,
-        const InvoiceTemplateSettings(templateId: kInvoiceTemplateSimpleA4),
+        const InvoiceTemplateSettings(),
       );
       expect(pagesNone, 1);
       expect(pagesSimple, 1);

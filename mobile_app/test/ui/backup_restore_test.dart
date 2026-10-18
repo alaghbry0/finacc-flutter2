@@ -97,8 +97,7 @@ void main() {
       final manifest = BackupManifest.forDbBytes(
         dbBytes,
         schemaVersion: currentSchemaVersion + 2,
-        createdAtUtc: DateTime.utc(2026, 1, 1),
-        kind: 'manual',
+        createdAtUtc: DateTime.utc(2026),
       );
       final bytes = encodeBackupArchive(dbBytes: dbBytes, manifest: manifest);
 
@@ -203,8 +202,7 @@ void main() {
         final manifest = BackupManifest.forDbBytes(
           dbBytes,
           schemaVersion: currentSchemaVersion + 5,
-          createdAtUtc: DateTime.utc(2026, 1, 1),
-          kind: 'manual',
+          createdAtUtc: DateTime.utc(2026),
         );
         final bytes = encodeBackupArchive(dbBytes: dbBytes, manifest: manifest);
 

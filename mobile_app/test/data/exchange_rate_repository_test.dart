@@ -183,7 +183,7 @@ void main() {
   test('latestBefore: أحدث سعر بتاريخ ≤ المطلوب (شاملاً)', () async {
     await repo.setRate(
       currencyId: usd,
-      date: DateTime.utc(2026, 10, 1),
+      date: DateTime.utc(2026, 10),
       rate: 1580,
       userId: adminId,
     );
@@ -203,7 +203,7 @@ void main() {
   test('history: تنازلياً بالتاريخ مع احترام الحد', () async {
     await repo.setRate(
       currencyId: aed,
-      date: DateTime.utc(2026, 10, 1),
+      date: DateTime.utc(2026, 10),
       rate: 430,
       userId: adminId,
     );

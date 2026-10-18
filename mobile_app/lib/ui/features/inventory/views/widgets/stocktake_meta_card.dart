@@ -91,7 +91,6 @@ class StocktakeMetaCard extends StatelessWidget {
           TextField(
             controller: notesController,
             enabled: !state.posting,
-            maxLines: 1,
             maxLength: 140,
             onChanged: vm.setNotes,
             decoration: InputDecoration(

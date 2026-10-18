@@ -154,7 +154,6 @@ class _CompareColumn extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           textBaseline: TextBaseline.alphabetic,
           children: [
             if (amount == null)

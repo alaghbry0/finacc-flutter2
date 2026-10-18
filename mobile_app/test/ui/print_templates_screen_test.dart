@@ -82,7 +82,7 @@ void main() {
         await pumpQuietly(tester, 10);
 
         await tester.tap(find.text('كلاسيكي A4 أفقي'));
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         // مهلة حقيقية قبل الفحص — الكتابة عبر FFI (نمط موثق).
         await Future<void>.delayed(const Duration(milliseconds: 200));
 
@@ -118,7 +118,7 @@ void main() {
         final discountSwitch = find.byType(Switch).at(0);
         expect(tester.widget<Switch>(discountSwitch).value, isTrue);
         await tester.tap(discountSwitch);
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         await Future<void>.delayed(const Duration(milliseconds: 200));
 
         // القيمة الحية انعكست والكتابة تمت للمستودع.

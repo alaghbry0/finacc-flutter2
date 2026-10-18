@@ -18,7 +18,7 @@ void main() {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       // تقرير بكل السطور ممتلئة + إشارات سالبة (فروق صرف خسارة).
       final report = ProfitReport(
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
         sales: 1250,
         salesReturns: 250,

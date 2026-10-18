@@ -171,7 +171,7 @@ void main() {
       'ref_type': 'invoice',
       'ref_id': null,
       'supplier_id': null,
-    }, at: '2026-10-06T12:00:00.000Z');
+    });
     await tx({
       'tx_type': 'payment',
       'amount': 250,

@@ -49,7 +49,6 @@ class AgingCustomerCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AgingCustomerAvatar(name: row.name),
               const SizedBox(width: 12),

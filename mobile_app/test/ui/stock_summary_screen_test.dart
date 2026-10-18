@@ -29,7 +29,7 @@ void main() {
   /// صفوف ملخص معلَّبة حتمية: ثلاجة (القيمة الأعلى) ثم مروحة —
   /// الترتيب بالقيمة تنازلياً مسؤولية المستودع فتُقدَّم مرتّبة جاهزة.
   List<StockSummaryRow> cannedRows() => [
-    StockSummaryRow(
+    const StockSummaryRow(
       productId: 1,
       name: 'ثلاجة',
       qtyIn: 3,
@@ -39,7 +39,7 @@ void main() {
       endBalance: 3,
       valueAtCost: 3000,
     ),
-    StockSummaryRow(
+    const StockSummaryRow(
       productId: 2,
       name: 'مروحة',
       qtyIn: 4,

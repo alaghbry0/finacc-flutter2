@@ -100,10 +100,7 @@ class ItemCategoryRow extends StatelessWidget {
               prefixIcon: const Icon(Icons.category_rounded),
             ),
             items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: Text(l10n.itemFormCategoryNone),
-              ),
+              DropdownMenuItem<int?>(child: Text(l10n.itemFormCategoryNone)),
               for (final category in state.categories)
                 DropdownMenuItem<int?>(
                   value: category.id,
@@ -146,10 +143,7 @@ class ItemUnitRow extends StatelessWidget {
               prefixIcon: const Icon(Icons.straighten_rounded),
             ),
             items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: Text(l10n.itemFormUnitNone),
-              ),
+              DropdownMenuItem<int?>(child: Text(l10n.itemFormUnitNone)),
               for (final unit in state.units)
                 DropdownMenuItem<int?>(value: unit.id, child: Text(unit.name)),
             ],

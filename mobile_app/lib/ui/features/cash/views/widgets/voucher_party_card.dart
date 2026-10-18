@@ -144,7 +144,6 @@ class VoucherPartyCard extends StatelessWidget {
                     children: [
                       AmountText(
                         amount: vm.partyBalance!.abs(),
-                        decimals: 2,
                         showSignMarker: false,
                       ),
                       const SizedBox(width: 4),

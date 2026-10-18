@@ -191,7 +191,7 @@ Future<Result<SalePostedReceipt, String>> postSaleFlow(
         limit: 1,
       );
       if (boxRows.isEmpty) {
-        return Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
+        return const Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
       }
       cashboxId = boxRows.first['id'] as int;
     }
@@ -449,7 +449,7 @@ Future<Result<SalePostedReceipt, String>> postSaleFlow(
           whereArgs: [draft.fromQuotationId],
         );
         if (converted == 0) {
-          throw SaleFlowError(
+          throw const SaleFlowError(
             'عرض السعر غير قابل للتحويل — حُوِّل أو أُلغي للتو من جهة أخرى.',
           );
         }

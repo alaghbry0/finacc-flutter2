@@ -124,7 +124,7 @@ class ShiftReportPdfBuilder {
                   child: pw.Text(
                     contact,
                     style: PrintText.body(
-                      color: const pw.PdfColor.fromInt(0xFFBEE5D8),
+                      color: PrintPalette.highlight,
                       size: 8.5,
                     ),
                     textDirection: pw.TextDirection.rtl,
@@ -140,7 +140,6 @@ class ShiftReportPdfBuilder {
   /// صف العنوان: «تقرير الوردية» يميناً + رقاقة الصندوق يساراً.
   pw.Widget _titleRow(ShiftPrintDoc doc) {
     return pw.Row(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
         pw.Expanded(
           child: pw.Align(
@@ -227,11 +226,11 @@ class ShiftReportPdfBuilder {
       headerStyle: PrintText.head(color: PrintPalette.brandDeep, size: 9.5),
       headerAlignments: _columnAlignments(),
       cellAlignments: _columnAlignments(),
-      cellStyle: PrintText.body(size: 9.5),
+      cellStyle: PrintText.body(),
       // عمود القيمة (0) بالخط المرافق الجدولي (UX-2b) — أرقام متساوية
       // العرض تستقيم بها القيم؛ الاتجاه/البند يبقيان Almarai للعربية.
       textStyleBuilder: (column, cell, rowNum) =>
-          column == 0 ? PrintText.tabular(size: 9.5) : null,
+          column == 0 ? PrintText.tabular() : null,
       oddRowDecoration: const pw.BoxDecoration(color: PrintPalette.zebra),
       headerDirection: pw.TextDirection.rtl,
       tableDirection: pw.TextDirection.rtl,
@@ -338,10 +337,7 @@ class ShiftReportPdfBuilder {
                     ),
                     pw.Text(
                       label,
-                      style: PrintText.head(
-                        color: PrintPalette.brandDeep,
-                        size: 11,
-                      ),
+                      style: PrintText.head(color: PrintPalette.brandDeep),
                       textDirection: pw.TextDirection.rtl,
                     ),
                   ],
@@ -364,7 +360,7 @@ class ShiftReportPdfBuilder {
       ),
       child: pw.Text(
         '${doc.labels.notesRow}: ${doc.notes}',
-        style: PrintText.body(color: PrintPalette.ink, size: 9.5),
+        style: PrintText.body(),
         textDirection: pw.TextDirection.rtl,
       ),
     );

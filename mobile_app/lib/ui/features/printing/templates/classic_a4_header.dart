@@ -30,7 +30,6 @@ pw.Widget classicTopHeader(
     crossAxisAlignment: pw.CrossAxisAlignment.stretch,
     children: [
       pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
           // بيانات المتجر — يسار الصفحة (فيزيائياً أولاً).
           pw.Expanded(
@@ -144,11 +143,9 @@ pw.Widget classicDocNoRow(
   final badgeText = classicBadgeText(doc, settings);
   return pw.Row(
     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-    crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
       // يسار (فيزيائياً أولاً): التاريخ وتحته/بجانبه شارة النسخة.
       pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
         children: [
           if (badgeText != null) ...[
             pw.Container(
@@ -169,7 +166,7 @@ pw.Widget classicDocNoRow(
           ],
           pw.Text(
             '${doc.labels.date}: ${doc.dateLabel}',
-            style: PrintText.body(color: PrintPalette.ink, size: 10),
+            style: PrintText.body(size: 10),
             textDirection: pw.TextDirection.rtl,
           ),
         ],

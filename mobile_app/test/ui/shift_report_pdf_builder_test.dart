@@ -20,12 +20,7 @@ void main() {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       // difference = 250 → صف «250 · زيادة» المختلط من التدقيق.
-      final doc = shiftDocForTests(
-        l10n,
-        userName: 'خالد سعيد',
-        boxName: 'الصندوق الرئيسي',
-        difference: 250,
-      );
+      final doc = shiftDocForTests(l10n);
       final pdf = await const ShiftReportPdfBuilder().build(doc);
       final bytes = await pdf.save();
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');

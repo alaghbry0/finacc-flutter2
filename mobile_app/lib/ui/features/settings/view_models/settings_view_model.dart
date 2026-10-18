@@ -78,9 +78,7 @@ class SettingsViewModel extends ChangeNotifier {
         _users.adminDisplayName(),
         _settings.autolockMinutes(),
         _settings.themeMode(),
-        _backup == null
-            ? Future<Object?>.value(null)
-            : _backup.databaseFileSize(),
+        _backup == null ? Future<Object?>.value() : _backup.databaseFileSize(),
       ]);
       _state = SettingsData(
         loading: false,

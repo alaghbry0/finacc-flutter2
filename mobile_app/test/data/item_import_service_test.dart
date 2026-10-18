@@ -188,8 +188,8 @@ void main() {
       ]);
       excel.appendRow(sheet, [
         TextCellValue('شامبو'),
-        IntCellValue(800),
-        DoubleCellValue(1200.5),
+        const IntCellValue(800),
+        const DoubleCellValue(1200.5),
       ]);
       final bytes = excel.encode();
 

@@ -74,7 +74,6 @@ class ShiftLiveCard extends StatelessWidget {
           ),
           const Divider(height: 20, thickness: 0.8),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Expanded(

@@ -59,7 +59,7 @@ class PurchasesHomeViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       final results = await Future.wait<Object?>([
-        _purchases.recentPurchases(limit: 50),
+        _purchases.recentPurchases(),
         _companies.findBaseCurrency(),
       ]);
       final recent = results[0]! as List<PurchaseInvoiceSummary>;

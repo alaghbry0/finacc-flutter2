@@ -130,7 +130,7 @@ void main() {
       productId: productId,
       warehouseId: warehouseId,
       batchNumber: 'بعيدة',
-      expiryDate: DateTime(2027, 6, 1),
+      expiryDate: DateTime(2027, 6),
       qty: 10,
       now: at,
     );
@@ -162,7 +162,7 @@ void main() {
       productId: productId,
       warehouseId: warehouseId,
       batchNumber: 'صفرية',
-      expiryDate: DateTime(2026, 11, 1),
+      expiryDate: DateTime(2026, 11),
       qty: 1,
       now: at,
     );
@@ -193,7 +193,7 @@ void main() {
           productId: productId,
           warehouseId: warehouseId,
           batchNumber: 'قريبة',
-          expiryDate: DateTime(2026, 11, 1),
+          expiryDate: DateTime(2026, 11),
           costPrice: 100,
           qty: 10,
           now: at,
@@ -202,7 +202,7 @@ void main() {
           productId: productId,
           warehouseId: warehouseId,
           batchNumber: 'بعيدة',
-          expiryDate: DateTime(2027, 5, 1),
+          expiryDate: DateTime(2027, 5),
           costPrice: 120,
           qty: 10,
           now: at,
@@ -293,7 +293,7 @@ void main() {
         productId: productId,
         warehouseId: warehouseId,
         batchNumber: 'أ',
-        expiryDate: DateTime(2026, 12, 1),
+        expiryDate: DateTime(2026, 12),
         qty: 6,
         now: at,
       );
@@ -301,7 +301,7 @@ void main() {
         productId: productId,
         warehouseId: warehouseId,
         batchNumber: 'ب',
-        expiryDate: DateTime(2027, 3, 1),
+        expiryDate: DateTime(2027, 3),
         qty: 6,
         now: at,
       );
@@ -326,14 +326,14 @@ void main() {
         productId: productId,
         warehouseId: warehouseId,
         batchNumber: 'وحيدة',
-        expiryDate: DateTime(2027, 1, 1),
+        expiryDate: DateTime(2027),
         qty: 5,
         now: at,
       );
       final doomed = BatchAllocation(
         batchId: await batchId('وحيدة'),
         batchNumber: 'وحيدة',
-        expiryDate: DateTime(2027, 1, 1),
+        expiryDate: DateTime(2027),
         qty: 6,
         costPrice: 0,
       );
@@ -354,7 +354,7 @@ void main() {
         productId: a,
         warehouseId: warehouseId,
         batchNumber: 'دفعة أ',
-        expiryDate: DateTime(2027, 1, 1),
+        expiryDate: DateTime(2027),
         qty: 10,
         now: at,
       );
@@ -408,10 +408,7 @@ void main() {
         now: at,
       );
 
-      final within30 = await batches.expiryAlerts(
-        withinDays: 30,
-        now: DateTime(2026, 10, 6),
-      );
+      final within30 = await batches.expiryAlerts(now: DateTime(2026, 10, 6));
       expect(within30.map((a) => a.batchNumber), ['منتهية', 'خلال 10']);
       expect(within30.first.daysToExpiry, -2);
       expect(within30.first.isExpired, isTrue);
@@ -449,16 +446,12 @@ void main() {
       );
 
       final inMain = await batches.expiryAlerts(
-        withinDays: 30,
         warehouseId: warehouseId,
         now: DateTime(2026, 10, 6),
       );
       expect(inMain, isEmpty);
 
-      final all = await batches.expiryAlerts(
-        withinDays: 30,
-        now: DateTime(2026, 10, 6),
-      );
+      final all = await batches.expiryAlerts(now: DateTime(2026, 10, 6));
       expect(all.single.batchNumber, 'بالفرعي');
       expect(all.single.warehouseId, secondWarehouseId);
     });

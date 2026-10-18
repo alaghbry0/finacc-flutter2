@@ -79,11 +79,11 @@ void main() {
     testWidgets('تعرض العنوان والوصف ومحتوى below بفتحته', (tester) async {
       await tester.pumpWidget(
         wrapWithL10n(
-          HubHeroCard(
+          const HubHeroCard(
             icon: Icons.point_of_sale_rounded,
             title: 'نقطة البيع',
-            subtitle: const Text('صافي اليوم'),
-            below: const Padding(
+            subtitle: Text('صافي اليوم'),
+            below: Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text('١٬٢٣٤٫٠٠ YER'),
             ),

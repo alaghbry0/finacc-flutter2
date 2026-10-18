@@ -167,7 +167,7 @@ class _AgingBodyState extends State<_AgingBody> {
     final report = state.report;
 
     if (state.loading && report == null) {
-      return const [ListSkeleton(rows: 6)];
+      return const [ListSkeleton()];
     }
     if (state.error != null && report == null) {
       return [

@@ -266,17 +266,17 @@ ShiftPrintDoc shiftDocForTests(
     currencyCode: 'YER',
     decimals: 0,
     lines: [
-      ShiftEquationLine(
+      const ShiftEquationLine(
         itemLabel: 'المبيعات النقدية',
         directionLabel: 'وارد (+)',
         valueLabel: '12,500',
       ),
-      ShiftEquationLine(
+      const ShiftEquationLine(
         itemLabel: 'التحصيلات',
         directionLabel: 'وارد (+)',
         valueLabel: '3,000',
       ),
-      ShiftEquationLine(
+      const ShiftEquationLine(
         itemLabel: 'المصاريف',
         directionLabel: 'صادر (−)',
         valueLabel: '1,000',

@@ -112,7 +112,7 @@ class PartiesHomeViewModel extends ChangeNotifier {
 
   /// تحميل كل مؤشرات المحور دفعة واحدة.
   Future<void> load() async {
-    _state = PartiesHomeState(loading: true);
+    _state = const PartiesHomeState(loading: true);
     notifyListeners();
     try {
       final today = _dayOf(_now ?? DateTime.now());

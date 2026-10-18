@@ -44,15 +44,13 @@ pw.Widget profitLinesTable(ProfitPrintDoc doc) {
       };
       final style = line.strong
           ? PrintText.head(color: color, size: 9.5)
-          : PrintText.body(color: color, size: 9.5);
+          : PrintText.body(color: color);
       rows.add(
         _tableRow(
           value: _cellText(line.valueLabel, style),
           item: _cellText(
             line.itemLabel,
-            line.strong
-                ? PrintText.head(color: PrintPalette.ink, size: 9.5)
-                : PrintText.body(color: PrintPalette.ink, size: 9.5),
+            line.strong ? PrintText.head(size: 9.5) : PrintText.body(),
             rtl: true,
           ),
           decoration: line.strong

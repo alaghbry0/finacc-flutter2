@@ -103,7 +103,7 @@ class MovementsViewModel extends ChangeNotifier {
             now.day,
           ).subtract(const Duration(days: 7));
         case CashPeriodFilter.month:
-          from = DateTime(now.year, now.month, 1);
+          from = DateTime(now.year, now.month);
       }
       final movements = await _cash.journal(
         cashboxId: _boxFilter,

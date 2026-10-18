@@ -38,8 +38,6 @@ Future<bool> showPurchasePaymentSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => _PurchasePaymentSheet(
       grandTotal: grandTotal,
       decimals: decimals,
@@ -354,7 +352,6 @@ class _TotalHeader extends StatelessWidget {
         const SizedBox(height: 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           textBaseline: TextBaseline.alphabetic,
           children: [
             AmountText(

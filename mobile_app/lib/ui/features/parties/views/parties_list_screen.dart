@@ -193,7 +193,7 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
     if (state.loading) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
-        children: const [ListSkeleton(rows: 6)],
+        children: const [ListSkeleton()],
       );
     }
     if (state.error != null) {
@@ -495,7 +495,6 @@ class _PartyRow extends StatelessWidget {
                         const SizedBox(width: 6),
                         StatusChip(
                           label: l10n.partiesArchivedBadge,
-                          tone: ChipTone.neutral,
                           icon: Icons.archive_rounded,
                           dense: true,
                         ),

@@ -68,8 +68,6 @@ Future<bool> showPaymentSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => _PaymentSheet(
       grandTotal: grandTotal,
       decimals: decimals,

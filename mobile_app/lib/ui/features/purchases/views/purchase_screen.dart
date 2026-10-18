@@ -243,7 +243,7 @@ class _PurchaseScreenBodyState extends State<_PurchaseScreenBody> {
       body: state.loading
           ? ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
+              children: const [ListSkeleton()],
             )
           : state.error != null
           ? ListView(

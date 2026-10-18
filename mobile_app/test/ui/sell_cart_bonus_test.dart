@@ -188,7 +188,7 @@ void main() {
               ),
             ),
           );
-          await pumpQuietly(tester, 8);
+          await pumpQuietly(tester);
 
           // جلسة سلة تحمل سطراً بلا بونص — لا إعدادات إطلاقاً.
           final vm = sellCartSession.attach(
@@ -233,7 +233,7 @@ void main() {
             '2',
           );
           await tester.tap(find.byKey(const Key('sell_line_edit_save')));
-          await pumpQuietly(tester, 8);
+          await pumpQuietly(tester);
 
           expect(vm.state.lines.single.freeQty, 2);
           expect(vm.grandTotal, 100, reason: 'البونص لا يدخل التسعير');
@@ -253,7 +253,7 @@ void main() {
             '0',
           );
           await tester.tap(find.byKey(const Key('sell_line_edit_save')));
-          await pumpQuietly(tester, 8);
+          await pumpQuietly(tester);
 
           expect(vm.state.lines.single.freeQty, 0);
           expect(vm.state.lines.single.qty, 1, reason: 'السطر باقٍ');

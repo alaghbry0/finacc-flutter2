@@ -124,7 +124,7 @@ class VoucherBoxDateCard extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: l10n.cashQmDateLabel,
                 prefixIcon: const Icon(Icons.event_rounded),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               child: Text(
                 cashFormatDate(vm.txDate),

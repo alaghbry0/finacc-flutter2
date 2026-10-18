@@ -96,7 +96,7 @@ class FinText {
 
   /// يبني TextTheme كاملاً فوق Almarai (Material 3).
   static TextTheme build(ColorScheme scheme) {
-    final base = TextStyle(fontFamily: fontFamily);
+    const base = TextStyle(fontFamily: fontFamily);
     return TextTheme(
       displaySmall: base.copyWith(
         fontWeight: FontWeight.w800,

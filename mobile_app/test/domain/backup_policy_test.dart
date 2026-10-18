@@ -44,10 +44,7 @@ void main() {
     final now = DateTime(2026, 10, 8, 12);
 
     test('الجدولة موقفة: لا استحقاق أبداً ولو بلا نسخة سابقة', () {
-      expect(
-        isBackupDue(schedule: BackupSchedule.off, now: now, lastBackupAt: null),
-        isFalse,
-      );
+      expect(isBackupDue(schedule: BackupSchedule.off, now: now), isFalse);
     });
 
     test('لا نسخة سابقة قط: مستحق فوراً (daily وweekly)', () {

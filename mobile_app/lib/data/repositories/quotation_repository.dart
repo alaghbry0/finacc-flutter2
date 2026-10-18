@@ -284,7 +284,7 @@ class QuotationRepository {
       orderBy: 'id ASC',
     );
     if (itemRows.isEmpty) {
-      return Err('عرض السعر بلا بنود — لا يُحوَّل إلى فاتورة.');
+      return const Err('عرض السعر بلا بنود — لا يُحوَّل إلى فاتورة.');
     }
 
     // البنود بنفس أسعارها وخصومها الفعلية (خصم الرأس موزَّع فيها أصلاً).
@@ -294,7 +294,6 @@ class QuotationRepository {
           productId: row['product_id'] as int,
           qty: (row['qty'] as num?)?.toDouble() ?? 0,
           unitPrice: (row['unit_price'] as num?)?.toDouble() ?? 0,
-          lineDiscountType: SaleDiscountType.amount,
           lineDiscountValue: (row['discount_amount'] as num?)?.toDouble() ?? 0,
           notes: row['notes'] as String?,
         ),

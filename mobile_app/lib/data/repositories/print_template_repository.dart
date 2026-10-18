@@ -70,11 +70,8 @@ const Map<String, InvoiceTemplateSettings> kPrintTemplateSeedConfigs =
         borderArgb: 0xFF37474F,
         showUnitColumn: true,
       ),
-      'simple_a4': InvoiceTemplateSettings(
-        templateId: kInvoiceTemplateSimpleA4,
-        tableHeadArgb: 0xFFDFEBE7,
-        borderArgb: 0xFFDCE7E1,
-      ),
+      // simple_a4: كل قيمه هي الافتراضيات المعلنة في المُنشئ نفسه.
+      'simple_a4': InvoiceTemplateSettings(),
     };
 
 /// القالب الافتراضي عند غياب أي صف (سلوك ما قبل الترقية).

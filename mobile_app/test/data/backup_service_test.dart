@@ -84,7 +84,6 @@ void main() {
       dbBytes,
       schemaVersion: schemaVersionOverride ?? await userVersionOf(app),
       createdAtUtc: DateTime.utc(2026, 1, 1, 9),
-      kind: 'manual',
     );
     final bytes = encodeBackupArchive(dbBytes: dbBytes, manifest: manifest);
     await store.writeBackupFile(name, bytes);

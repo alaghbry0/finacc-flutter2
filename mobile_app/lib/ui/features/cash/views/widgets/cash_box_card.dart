@@ -90,12 +90,7 @@ class CashBoxCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      AmountText(
-                        amount: box.nativeBalance,
-                        size: AmountSize.row,
-                        decimals: 2,
-                        sign: sign,
-                      ),
+                      AmountText(amount: box.nativeBalance, sign: sign),
                     ],
                   ),
                   if (negative) ...[
@@ -147,7 +142,6 @@ class CashBoxCard extends StatelessWidget {
                   ),
                   AmountText(
                     amount: bucket.amount,
-                    decimals: 2,
                     sign: bucket.amount < 0
                         ? FinSign.outgoing
                         : FinSign.neutral,

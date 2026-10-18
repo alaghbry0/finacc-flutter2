@@ -57,7 +57,7 @@ class _CategoriesUnitsBody extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           if (state.loading)
-            const ListSkeleton(rows: 6)
+            const ListSkeleton()
           else if (state.error != null)
             ErrorState(
               title: l10n.genericErrorTitle,
@@ -393,10 +393,7 @@ Future<void> _openAddCategoryDialog(
                   labelText: l10n.categoryParentLabel,
                 ),
                 items: [
-                  DropdownMenuItem<int?>(
-                    value: null,
-                    child: Text(l10n.categoryParentNone),
-                  ),
+                  DropdownMenuItem<int?>(child: Text(l10n.categoryParentNone)),
                   for (final root in roots)
                     DropdownMenuItem<int?>(
                       value: root.id,

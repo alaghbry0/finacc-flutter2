@@ -20,11 +20,7 @@ void main() {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       // 60 قيداً تُفيض إلى صفحة ثانية.
-      final doc = statementDocForTests(
-        l10n,
-        partyName: 'أحمد محمد الشرعبي',
-        lineCount: 60,
-      );
+      final doc = statementDocForTests(l10n, lineCount: 60);
       final pdf = await const StatementPdfBuilder().build(doc);
       final bytes = await pdf.save();
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');
@@ -39,7 +35,7 @@ void main() {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       for (final name in kPdfProbeNames) {
-        final doc = statementDocForTests(l10n, partyName: name, lineCount: 4);
+        final doc = statementDocForTests(l10n, partyName: name);
         final pdf = await const StatementPdfBuilder().build(doc);
         final bytes = await pdf.save();
         expect(String.fromCharCodes(bytes, 0, 4), '%PDF', reason: name);

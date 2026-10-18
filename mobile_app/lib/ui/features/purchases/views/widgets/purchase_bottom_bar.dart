@@ -44,7 +44,7 @@ class PurchaseBottomBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        border: Border(top: BorderSide(color: colors.cardBorder, width: 1)),
+        border: Border(top: BorderSide(color: colors.cardBorder)),
       ),
       child: SafeArea(
         top: false,

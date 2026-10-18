@@ -52,7 +52,6 @@ class PartyDetailInfoCard extends StatelessWidget {
                         if (record.archived)
                           StatusChip(
                             label: l10n.partiesArchivedBadge,
-                            tone: ChipTone.neutral,
                             icon: Icons.archive_rounded,
                             dense: true,
                           ),

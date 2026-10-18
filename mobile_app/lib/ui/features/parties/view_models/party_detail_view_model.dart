@@ -238,7 +238,7 @@ class PartyDetailViewModel extends ChangeNotifier {
 
   /// مسح الفترة — الكشف من أول حركة (يظهر الافتتاحي نفسه أول قيد).
   Future<void> clearPeriod() async {
-    _state = _copyWithPeriod(from: null, to: null);
+    _state = _copyWithPeriod();
     notifyListeners();
     await _refreshStatement();
   }

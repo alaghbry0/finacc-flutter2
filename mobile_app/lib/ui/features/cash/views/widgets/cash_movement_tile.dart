@@ -132,12 +132,7 @@ class CashMovementTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  AmountText(
-                    amount: movement.amount,
-                    size: AmountSize.row,
-                    decimals: 2,
-                    sign: sign,
-                  ),
+                  AmountText(amount: movement.amount, sign: sign),
                   const SizedBox(width: 4),
                   Text(
                     movement.currencyCode,

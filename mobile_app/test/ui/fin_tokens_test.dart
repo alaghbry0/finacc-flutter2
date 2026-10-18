@@ -60,10 +60,10 @@ void main() {
     });
 
     test('withTabularDigits يحوّل أي نمط دون مساس بقيمه الأخرى', () {
-      final base = TextStyle(
+      const base = TextStyle(
         fontWeight: FontWeight.w700,
         fontSize: 16,
-        color: const Color(0xFF123456),
+        color: Color(0xFF123456),
       );
       final out = FinText.withTabularDigits(base);
       expect(out.fontFamily, 'NotoSansArabic');
@@ -137,11 +137,7 @@ void main() {
     ) async {
       await tester.runAsync(() async {
         final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
-        final doc = invoiceDocForTests(
-          l10n,
-          partyName: 'أحمد محمد الشرعبي',
-          itemCount: 2,
-        );
+        final doc = invoiceDocForTests(l10n);
         final pdf = await const InvoicePdfBuilder().build(doc);
         final bytes = await pdf.save();
         expect(String.fromCharCodes(bytes, 0, 4), '%PDF');

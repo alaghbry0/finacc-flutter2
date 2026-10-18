@@ -210,9 +210,6 @@ class SellCartState {
     invoiceDiscountType: SaleDiscountType.amount,
     invoiceDiscountValue: 0,
     posting: false,
-    overAvailPolicy: 'warn',
-    showDiscounts: true,
-    warnBelowMargin: false,
   );
 }
 

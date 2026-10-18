@@ -68,7 +68,7 @@ class _AuditLogBody extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (state.loading)
-            const ListSkeleton(rows: 6)
+            const ListSkeleton()
           else if (state.error != null)
             ErrorState(
               title: l10n.genericErrorTitle,

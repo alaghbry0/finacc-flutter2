@@ -87,7 +87,7 @@ class SalePreferencesViewModel extends ChangeNotifier {
 
   /// تحميل السياسات في جولة واحدة.
   Future<void> load() async {
-    _state = _state.copyWith(loading: true, error: null);
+    _state = _state.copyWith(loading: true);
     notifyListeners();
     try {
       final results = await Future.wait<Object?>([

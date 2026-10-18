@@ -31,7 +31,7 @@ void main() {
     name: 'أرز بسمتي',
     unitCostNow: 150,
     openingBalance: 10,
-    from: DateTime(2026, 10, 1),
+    from: DateTime(2026, 10),
     to: DateTime(2026, 10, 8),
     rows: [
       ItemMovementRow(
@@ -245,7 +245,7 @@ void main() {
         name: 'صنف صامت',
         unitCostNow: 75,
         openingBalance: 0,
-        from: DateTime(2026, 10, 1),
+        from: DateTime(2026, 10),
         to: DateTime(2026, 10, 8),
         rows: const <ItemMovementRow>[],
       );

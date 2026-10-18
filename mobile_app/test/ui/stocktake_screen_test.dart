@@ -191,7 +191,7 @@ void main() {
 
       // إغلاق النافذة بلا ترحيل (FFI لا يتقدم في منطقة الاختبار الزائفة).
       await tester.tap(find.text('إلغاء'));
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(find.text('مراجعة فروقات الجرد'), findsNothing);
     });
   });

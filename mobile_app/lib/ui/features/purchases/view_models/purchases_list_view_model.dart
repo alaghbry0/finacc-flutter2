@@ -153,7 +153,6 @@ class PurchaseDetailViewModel extends ChangeNotifier {
       detail: _state.detail,
       error: _state.error,
       voiding: true,
-      voidError: null,
     );
     notifyListeners();
     try {
@@ -162,7 +161,6 @@ class PurchaseDetailViewModel extends ChangeNotifier {
         _state = PurchaseDetailState(
           loading: false,
           detail: _state.detail,
-          voiding: false,
           voidError:
               'لا يوجد مستخدم مدير نشط — الإبطال بصلاحية المدير '
               'حصراً (FR-02-15).',
@@ -183,7 +181,6 @@ class PurchaseDetailViewModel extends ChangeNotifier {
       _state = PurchaseDetailState(
         loading: false,
         detail: _state.detail,
-        voiding: false,
         voidError: result.errorOrNull,
       );
       notifyListeners();
@@ -192,7 +189,6 @@ class PurchaseDetailViewModel extends ChangeNotifier {
       _state = PurchaseDetailState(
         loading: false,
         detail: _state.detail,
-        voiding: false,
         voidError: error.toString(),
       );
       notifyListeners();

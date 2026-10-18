@@ -198,7 +198,6 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Column(
@@ -303,11 +302,7 @@ class _PdfPreviewDialogState extends State<_PdfPreviewDialog> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.memory(
-                  data.pagePngs[i],
-                  fit: BoxFit.fitWidth,
-                  filterQuality: FilterQuality.medium,
-                ),
+                child: Image.memory(data.pagePngs[i], fit: BoxFit.fitWidth),
               ),
             ),
           ),

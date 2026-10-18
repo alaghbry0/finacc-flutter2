@@ -350,7 +350,6 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   Future<void> startNewReturn() async {
     _state = _copy(
       phase: ReturnPhase.pickingInvoice,
-      selected: null,
       lines: const <ReturnUiLine>[],
       receipt: null,
       postError: null,

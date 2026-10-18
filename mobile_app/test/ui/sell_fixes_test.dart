@@ -138,10 +138,10 @@ void main() {
   // P0-2 / P2-1 / P2-2 / P2-3 — نافذة الدفع وإيصال النجاح
   // ─────────────────────────────────────────────────────────────────────
 
-  SalePostedReceipt testReceipt() => SalePostedReceipt(
+  SalePostedReceipt testReceipt() => const SalePostedReceipt(
     invoiceId: 7,
     invoiceNo: 'INV-2026-00007',
-    totals: const CartTotals(
+    totals: CartTotals(
       subtotal: 100,
       lineDiscountsTotal: 0,
       invoiceDiscount: 0,
@@ -211,7 +211,6 @@ void main() {
       final posted = ValueNotifier<bool>(false);
       await pumpPaymentSheet(
         tester,
-        mode: PrintOnSaveMode.ask,
         opener: (receipt) async => openedIds.add(receipt.invoiceId),
         onConfirm: (paidCash, method) async =>
             Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
@@ -305,7 +304,6 @@ void main() {
       final posted = ValueNotifier<bool>(false);
       await pumpPaymentSheet(
         tester,
-        mode: PrintOnSaveMode.ask,
         opener: (receipt) async => openedIds.add(receipt.invoiceId),
         onConfirm: (paidCash, method) async =>
             Future.value(Ok<SalePostedReceipt, String>(testReceipt())),
@@ -523,7 +521,7 @@ void main() {
       await tester.runAsync(() async {
         await open();
         final picked = ValueNotifier<CustomerPick?>(null);
-        await pumpPicker(tester, onCreate: null, picked: picked);
+        await pumpPicker(tester, picked: picked);
         expect(find.byKey(const Key('sell_customer_new_button')), findsNothing);
         // والمنتقي نفسه يعمل (بحث + عميل نقدي).
         expect(
@@ -652,7 +650,7 @@ void main() {
           ),
         ),
       );
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       return router;
     }
 
@@ -698,7 +696,7 @@ void main() {
           );
           await tester.ensureVisible(returnButton);
           await tester.tap(returnButton);
-          await pumpQuietly(tester, 8);
+          await pumpQuietly(tester);
 
           final uri = router.routerDelegate.currentConfiguration.uri;
           expect(uri.path, '/purchases/returns/sale');
@@ -761,7 +759,7 @@ void main() {
 
         await tester.ensureVisible(chip);
         await tester.tap(chip);
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         expect(
           router.routerDelegate.currentConfiguration.uri.path,
           '/sell/invoices/$invoiceId',
@@ -787,7 +785,7 @@ void main() {
         // مفتاح مستقر: الأيقونة تتبدل حسب نشاط فرع البيع.
         final sellButton = find.byKey(const Key('shell_sell_button'));
         await tester.tap(sellButton);
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         expect(
           router.routerDelegate.currentConfiguration.uri.path,
           '/sell/new',
@@ -809,9 +807,9 @@ void main() {
         vm.addItemFromInfo(await findInfo(item));
         expect(vm.state.lines, isNotEmpty);
         router.go('/sell');
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         await tester.tap(sellButton);
-        await pumpQuietly(tester, 8);
+        await pumpQuietly(tester);
         expect(
           router.routerDelegate.currentConfiguration.uri.path,
           '/sell',

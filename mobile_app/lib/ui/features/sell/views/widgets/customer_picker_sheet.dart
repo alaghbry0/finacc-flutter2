@@ -36,8 +36,6 @@ Future<void> showCustomerPickerSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => ChangeNotifierProvider<CustomerPickerViewModel>(
       create: (_) {
         final vm = CustomerPickerViewModel(customerRepo: customerRepo);
@@ -86,7 +84,6 @@ class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      useRootNavigator: false,
       builder: (_) => _QuickCustomerSheet(onCreate: create),
     );
     if (created != null && mounted) {

@@ -248,7 +248,7 @@ Future<List<PartyBalance>> partyOverdueList(
   DateTime? now,
 }) async {
   final reference = (now ?? DateTime.now()).toUtc();
-  final all = await partyListWithBalances(db, side, includeArchived: false);
+  final all = await partyListWithBalances(db, side);
   final result = <PartyBalance>[
     for (final row in all)
       if (row.balance > 0 && row.balance >= minBalance)

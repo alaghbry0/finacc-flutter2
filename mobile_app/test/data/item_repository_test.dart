@@ -591,9 +591,9 @@ void main() {
     test('المخزون ≤ الحد: مشمول، والخدمي والمؤرشف مستثنيان', () async {
       await createOk(draft('تحت الحد', minStock: 5, qty: 3));
       await createOk(draft('فوق الحد', minStock: 5, qty: 10));
-      await createOk(draft('نافد تماماً', minStock: 0, qty: 0));
-      await createOk(draft('خدمة', service: true, minStock: 5, qty: 0));
-      final archivedId = await createOk(draft('مؤرشف', minStock: 5, qty: 0));
+      await createOk(draft('نافد تماماً'));
+      await createOk(draft('خدمة', service: true, minStock: 5));
+      final archivedId = await createOk(draft('مؤرشف', minStock: 5));
       await repo.archiveItem(archivedId, userId: userId, now: at);
 
       final low = await repo.lowStockItems();
@@ -669,7 +669,7 @@ void main() {
     });
 
     test('hasMovements: خطأ لصنف بلا حركات', () async {
-      final id = await createOk(draft('بلا حركة', qty: 0));
+      final id = await createOk(draft('بلا حركة'));
       expect(await repo.hasMovements(id), isFalse);
     });
   });

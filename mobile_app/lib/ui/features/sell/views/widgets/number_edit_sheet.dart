@@ -21,9 +21,6 @@ Future<double?> showNumberEditSheet(
 }) => showModalBottomSheet<double>(
   context: context,
   isScrollControlled: true,
-  // فوق شريط التبويبات: تُفتح على متصفح الفرع لا الجذر — تنزلق
-  // من فوق الشريط السفلي بدل أن تغطيه من أسفل الشاشة.
-  useRootNavigator: false,
   builder: (sheetContext) => _NumberEditSheet(
     title: title,
     initial: initial,
@@ -131,7 +128,6 @@ class _NumberEditSheetState extends State<_NumberEditSheet> {
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
-                signed: false,
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),

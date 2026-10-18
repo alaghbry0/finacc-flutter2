@@ -11,7 +11,7 @@ import 'package:mobile_app/data/repositories/profit_report_repository.dart';
 import '../helpers/app_for_tests.dart';
 
 /// نافذة الاختبار — نوفمبر 2026 كاملاً (شاملة الطرفين بالتاريخ).
-final DateTime _from = DateTime(2026, 11, 1);
+final DateTime _from = DateTime(2026, 11);
 final DateTime _to = DateTime(2026, 11, 30);
 
 void main() {

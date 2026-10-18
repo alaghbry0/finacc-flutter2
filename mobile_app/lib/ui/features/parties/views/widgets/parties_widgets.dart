@@ -94,7 +94,6 @@ class CreditLimitChip extends StatelessWidget {
     if (creditLimit == null) {
       return StatusChip(
         label: l10n.partiesCreditUnlimited,
-        tone: ChipTone.neutral,
         icon: Icons.all_inclusive_rounded,
         dense: true,
       );
@@ -146,7 +145,6 @@ class PartyBalanceText extends StatelessWidget {
       return AmountText(
         amount: 0,
         decimals: decimals,
-        sign: FinSign.neutral,
         size: size,
         showSignMarker: false,
       );
@@ -162,7 +160,6 @@ class PartyBalanceText extends StatelessWidget {
     final formatted = AmountText.formatFor(context, balance.abs(), decimals);
     return Row(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showChip) ...[
           StatusChip(

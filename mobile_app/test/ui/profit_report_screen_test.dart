@@ -62,7 +62,7 @@ void main() {
 
   /// تقرير معلَّب حتمي: كل السطور بأرقام مميزة.
   ProfitReport cannedReport() => ProfitReport(
-    from: DateTime(2026, 10, 1),
+    from: DateTime(2026, 10),
     to: DateTime(2026, 10, 8),
     sales: 1250,
     salesReturns: 250,
@@ -158,7 +158,7 @@ void main() {
   ) async {
     await tester.runAsync(() async {
       final empty = ProfitReport.zero(
-        from: DateTime(2026, 10, 1),
+        from: DateTime(2026, 10),
         to: DateTime(2026, 10, 8),
       );
       final (app, controller, vm) = await pumpReady(tester, empty);

@@ -45,8 +45,6 @@ Future<void> showStocktakeReview(BuildContext context, StocktakeViewModel vm) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => ChangeNotifierProvider<StocktakeViewModel>.value(
       value: vm,
       child: const StocktakeReviewSheet(),

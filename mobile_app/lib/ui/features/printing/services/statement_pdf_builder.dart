@@ -118,7 +118,7 @@ class StatementPdfBuilder {
                   child: pw.Text(
                     contact,
                     style: PrintText.body(
-                      color: const pw.PdfColor.fromInt(0xFFBEE5D8),
+                      color: PrintPalette.highlight,
                       size: 8.5,
                     ),
                     textDirection: pw.TextDirection.rtl,
@@ -135,7 +135,6 @@ class StatementPdfBuilder {
   /// المستند — الكشف بلا رقم مستند، فالطرف هو هويته).
   pw.Widget _titleRow(StatementPrintDoc doc) {
     return pw.Row(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
         pw.Expanded(
           child: pw.Align(
@@ -266,12 +265,12 @@ class StatementPdfBuilder {
       headerStyle: PrintText.head(color: PrintPalette.brandDeep, size: 9.5),
       headerAlignments: _columnAlignments(),
       cellAlignments: _columnAlignments(),
-      cellStyle: PrintText.body(size: 9.5),
+      cellStyle: PrintText.body(),
       // أعمدة المبالغ (الرصيد/دائن/مدين = 0..2) والتاريخ (4) بالخط المرافق
       // الجدولي (UX-2b) — أرقام متساوية العرض تستقيم بها الأعمدة على
       // الورق؛ عمود البيان (3) يبقى Almarai لهوية النص العربي.
       textStyleBuilder: (column, cell, rowNum) =>
-          column == 3 ? null : PrintText.tabular(size: 9.5),
+          column == 3 ? null : PrintText.tabular(),
       oddRowDecoration: const pw.BoxDecoration(color: PrintPalette.zebra),
       headerDirection: pw.TextDirection.rtl,
       tableDirection: pw.TextDirection.rtl,
@@ -338,10 +337,7 @@ class StatementPdfBuilder {
                     ),
                     pw.Text(
                       label,
-                      style: PrintText.head(
-                        color: PrintPalette.brandDeep,
-                        size: 11,
-                      ),
+                      style: PrintText.head(color: PrintPalette.brandDeep),
                       textDirection: pw.TextDirection.rtl,
                     ),
                   ],

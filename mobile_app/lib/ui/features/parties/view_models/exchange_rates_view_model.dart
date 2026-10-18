@@ -127,7 +127,7 @@ class ExchangeRatesViewModel extends ChangeNotifier {
 
   /// تحميل العملات غير الأساسية + أسعار اليوم + سجل كل عملة.
   Future<void> load() async {
-    _state = ExchangeRatesState(loading: true, entries: const []);
+    _state = const ExchangeRatesState(loading: true, entries: []);
     notifyListeners();
     try {
       final currencies = await _companies.listActiveCurrencies();
@@ -240,7 +240,7 @@ class ExchangeRatesViewModel extends ChangeNotifier {
   /// يمسح إشعار آخر حفظ (بعد عرضه).
   void clearSavedFlag() {
     if (_state.savedCurrencyId == null) return;
-    _state = _copyEntries(savedCurrencyId: null);
+    _state = _copyEntries();
     notifyListeners();
   }
 

@@ -242,7 +242,7 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
         body: state.loading
             ? ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: const [ListSkeleton(rows: 6)],
+                children: const [ListSkeleton()],
               )
             : state.loadError != null
             ? ListView(

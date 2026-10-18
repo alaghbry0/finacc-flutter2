@@ -148,8 +148,6 @@ class _VoucherScreenBodyState extends State<_VoucherScreenBody> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-      useRootNavigator: false,
       builder: (_) => VoucherPartyPickerSheet(vm: vm),
     );
   }
@@ -239,7 +237,7 @@ class _VoucherScreenBodyState extends State<_VoucherScreenBody> {
     if (vm.loading) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: const [ListSkeleton(rows: 6)],
+        children: const [ListSkeleton()],
       );
     }
     if (vm.error != null) {

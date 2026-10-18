@@ -265,7 +265,7 @@ void main() {
       final manifest = BackupManifest(
         schemaVersion: 1,
         appVersion: kFinAccAppVersion,
-        createdAtUtc: DateTime.utc(2026, 1, 1),
+        createdAtUtc: DateTime.utc(2026),
         dbSha256: sha256Hex(bytes),
         dbBytesLength: 999, // طول كاذب.
       );
@@ -287,7 +287,7 @@ void main() {
       final manifest = BackupManifest(
         schemaVersion: 1,
         appVersion: kFinAccAppVersion,
-        createdAtUtc: DateTime.utc(2026, 1, 1),
+        createdAtUtc: DateTime.utc(2026),
         dbSha256: '0' * 64, // بصمة كاذبة.
         dbBytesLength: bytes.length,
       );

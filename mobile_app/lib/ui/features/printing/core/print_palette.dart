@@ -35,6 +35,14 @@ abstract final class PrintPalette {
   /// تعبئة صف Zebra الفردية.
   static const pw.PdfColor zebra = pw.PdfColor.fromInt(0xFFF2F7F4);
 
+  /// حبر بيانات الاتصال الفاتح فوق شريط الترويسة الداكن (نعناعي فاتح
+  /// من عائلة البذرة — كان خاماً بخمسة بُناة قبل R19-D5).
+  static const pw.PdfColor highlight = pw.PdfColor.fromInt(0xFFBEE5D8);
+
+  /// حبر داكن فوق الشرائط/الرقاقات الذهبية (السند — من `FinColors`
+  /// الفاتح onWarningContainer).
+  static const pw.PdfColor inkOnGold = pw.PdfColor.fromInt(0xFF332405);
+
   /// خلفية الورق (أبيض نقي لجودة الرستر).
   static const pw.PdfColor paper = pw.PdfColor.fromInt(0xFFFFFFFF);
 }

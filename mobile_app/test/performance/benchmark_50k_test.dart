@@ -748,7 +748,7 @@ void main() {
         reason: 'كل يوم من آخر 30 فيه مبيعات في بذرة 50K',
       );
 
-      final (topMs, top) = await _timed(() => dashboard.topItems(limit: 5));
+      final (topMs, top) = await _timed(() => dashboard.topItems());
       _record(
         'داشبورد: أعلى الأصناف مبيعاً (topItems)',
         '100,000 بند فاتورة',
@@ -836,7 +836,7 @@ void main() {
     test('تقرير أرباح الشهر < 3000ms + ملخص حركة المخزون (بونص)', () async {
       if (_skipUnlessBench()) return;
       final now = _benchNow;
-      final monthStart = DateTime(now.year, now.month, 1);
+      final monthStart = DateTime(now.year, now.month);
       final monthEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
       final (reportMs, report) = await _timed(
@@ -890,9 +890,7 @@ void main() {
     test('قائمة فواتير البيع الأخيرة (recentSales) < 3000ms — بونص', () async {
       if (_skipUnlessBench()) return;
 
-      final (listMs, invoices) = await _timed(
-        () => sales.recentSales(limit: 50),
-      );
+      final (listMs, invoices) = await _timed(() => sales.recentSales());
       _record(
         'قائمة فواتير البيع (recentSales) — بونص',
         '50,000 فاتورة',

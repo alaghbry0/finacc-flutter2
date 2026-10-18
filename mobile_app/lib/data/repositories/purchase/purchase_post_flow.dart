@@ -160,7 +160,7 @@ Future<Result<PurchasePostedReceipt, String>> postPurchaseFlow(
         limit: 1,
       );
       if (boxRows.isEmpty) {
-        return Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
+        return const Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
       }
       cashboxId = boxRows.first['id'] as int;
     }

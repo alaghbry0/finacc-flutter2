@@ -164,7 +164,6 @@ class _TodayStatsRow extends StatelessWidget {
             value: stats.todayTotalBase,
             icon: Icons.local_shipping_rounded,
             sign: FinSign.outgoing,
-            decimals: 2,
           ),
         ),
       ],

@@ -190,7 +190,7 @@ class PartyListViewModel extends ChangeNotifier {
           : effectiveQuery.trim();
       // قائمتان: النشطة (افتراض العرض) والكلية — الفرق = المؤرشفون.
       final results = await Future.wait<Object?>([
-        _repo.listWithBalances(search: search, includeArchived: false),
+        _repo.listWithBalances(search: search),
         _repo.listWithBalances(search: search, includeArchived: true),
         if (firstLoad || reset) _companies.listActiveCurrencies(),
       ]);

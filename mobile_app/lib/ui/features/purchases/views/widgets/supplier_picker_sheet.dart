@@ -28,8 +28,6 @@ Future<void> showSupplierPickerSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => ChangeNotifierProvider<SupplierPickerViewModel>(
       create: (_) {
         final vm = SupplierPickerViewModel(supplierRepo: supplierRepo);

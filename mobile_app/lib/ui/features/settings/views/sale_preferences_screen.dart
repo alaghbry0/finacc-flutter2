@@ -87,7 +87,7 @@ class _SalePreferencesBody extends StatelessWidget {
                 ),
               ],
             )
-          : _SalePrefsList(),
+          : const _SalePrefsList(),
     );
   }
 }

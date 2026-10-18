@@ -17,11 +17,7 @@ void main() {
   testWidgets('يبني سند قبض كاملاً بصفحة واحدة باسم طرف كاسر', (tester) async {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
-      final doc = voucherDocForTests(
-        l10n,
-        partyName: 'أحمد محمد الشرعبي',
-        boxName: 'الصندوق الرئيسي',
-      );
+      final doc = voucherDocForTests(l10n);
       final pdf = await const VoucherPdfBuilder().build(doc);
       final bytes = await pdf.save();
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');

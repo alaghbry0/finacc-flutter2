@@ -83,7 +83,7 @@ class PostedReceiptCard extends StatelessWidget {
           ),
           if (receipt.rateIsFallback) ...[
             const SizedBox(height: 12),
-            FallbackRateBadge(dense: false),
+            const FallbackRateBadge(dense: false),
           ],
           const SizedBox(height: 14),
           _ReceiptRow(

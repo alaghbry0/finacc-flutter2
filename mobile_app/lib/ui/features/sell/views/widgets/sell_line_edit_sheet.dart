@@ -33,8 +33,6 @@ Future<SellLineEditResult?> showSellLineEditSheet(
 }) => showModalBottomSheet<SellLineEditResult>(
   context: context,
   isScrollControlled: true,
-  // فوق شريط التبويبات (متصفح الفرع) — نفس قرار بقية نوافذ البيع.
-  useRootNavigator: false,
   builder: (sheetContext) => _SellLineEditSheet(
     title: title,
     initialQty: initialQty,
@@ -149,7 +147,6 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
-                signed: false,
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
@@ -170,7 +167,6 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
               controller: _bonusController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
-                signed: false,
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
@@ -190,7 +186,6 @@ class _SellLineEditSheetState extends State<_SellLineEditSheet> {
               controller: _priceController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
-                signed: false,
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),

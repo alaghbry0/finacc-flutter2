@@ -52,9 +52,7 @@ void main() {
     });
 
     test('خصم مبلغ 50: 2×125 → صافي 200', () {
-      final cart = SalePricing.priceCart([
-        line(1, 2, 125, type: SaleDiscountType.amount, discount: 50),
-      ]);
+      final cart = SalePricing.priceCart([line(1, 2, 125, discount: 50)]);
       expect(cart.lines.single.lineDiscountAmount, 50);
       expect(cart.lines.single.netFinal, 200);
     });
@@ -72,11 +70,11 @@ void main() {
 
   group('خصم رأس الفاتورة — توزيع pro-rata (قاعدة 5.4-3)', () {
     test('ثلاثة أسطر متساوية وخصم مبلغ 1.00: القرش الأخير للسطر الأخير', () {
-      final cart = SalePricing.priceCart(
-        [line(1, 1, 10), line(2, 1, 10), line(3, 1, 10)],
-        invoiceDiscountType: SaleDiscountType.amount,
-        invoiceDiscountValue: 1,
-      );
+      final cart = SalePricing.priceCart([
+        line(1, 1, 10),
+        line(2, 1, 10),
+        line(3, 1, 10),
+      ], invoiceDiscountValue: 1);
       expect(cart.lines[0].invoiceDiscountAllocated, 0.33);
       expect(cart.lines[1].invoiceDiscountAllocated, 0.33);
       expect(cart.lines[2].invoiceDiscountAllocated, 0.34);
@@ -117,14 +115,10 @@ void main() {
     });
 
     test('سطر بخصم 100% لا يستلم نصيباً من خصم الرأس', () {
-      final cart = SalePricing.priceCart(
-        [
-          line(1, 1, 100, type: SaleDiscountType.percent, discount: 100),
-          line(2, 1, 100),
-        ],
-        invoiceDiscountType: SaleDiscountType.amount,
-        invoiceDiscountValue: 10,
-      );
+      final cart = SalePricing.priceCart([
+        line(1, 1, 100, type: SaleDiscountType.percent, discount: 100),
+        line(2, 1, 100),
+      ], invoiceDiscountValue: 10);
       expect(cart.lines[0].invoiceDiscountAllocated, 0);
       expect(cart.lines[0].netFinal, 0);
       expect(cart.lines[1].invoiceDiscountAllocated, 10);
@@ -136,7 +130,7 @@ void main() {
       final cart = SalePricing.priceCart(
         [
           line(1, 2, 100, type: SaleDiscountType.percent, discount: 10),
-          line(2, 1, 100, type: SaleDiscountType.amount, discount: 10),
+          line(2, 1, 100, discount: 10),
         ],
         invoiceDiscountType: SaleDiscountType.percent,
         invoiceDiscountValue: 10,
@@ -175,9 +169,7 @@ void main() {
     test('سعر سالب وخصم سالب ونسبة > 100', () {
       expect(SalePricing.validateCart([line(1, 1, -5)]), contains('سالباً'));
       expect(
-        SalePricing.validateCart([
-          line(1, 1, 10, type: SaleDiscountType.amount, discount: -1),
-        ]),
+        SalePricing.validateCart([line(1, 1, 10, discount: -1)]),
         contains('سالباً'),
       );
       expect(
@@ -190,20 +182,14 @@ void main() {
 
     test('خصم سطر أكبر من قيمته', () {
       expect(
-        SalePricing.validateCart([
-          line(1, 1, 30, type: SaleDiscountType.amount, discount: 40),
-        ]),
+        SalePricing.validateCart([line(1, 1, 30, discount: 40)]),
         contains('أكبر من قيمة السطر'),
       );
     });
 
     test('خصم رأس يجعل الصافي ≤ 0 (FR-02-05)', () {
       expect(
-        SalePricing.validateCart(
-          [line(1, 1, 400)],
-          invoiceDiscountType: SaleDiscountType.amount,
-          invoiceDiscountValue: 400,
-        ),
+        SalePricing.validateCart([line(1, 1, 400)], invoiceDiscountValue: 400),
         contains('صفراً أو سالباً'),
       );
       expect(
@@ -335,13 +321,13 @@ void main() {
         line(2, 2, 100, type: SaleDiscountType.percent, discount: 10),
       ]);
       final withBonus = SalePricing.priceCart([
-        CartLine(
+        const CartLine(
           productId: 1,
           qty: 10,
           unitPrice: 25,
           freeQty: 2, // بونص على السطر الأول.
         ),
-        CartLine(
+        const CartLine(
           productId: 2,
           qty: 2,
           unitPrice: 100,
@@ -372,19 +358,24 @@ void main() {
     test('validateCart يرفض بونص سالباً وغير الرقمي برسالة تحدد السطر', () {
       expect(
         SalePricing.validateCart([
-          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: -0.5),
+          const CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: -0.5),
         ]),
         contains('كمية البونص للسطر 1 لا يمكن أن تكون سالبة'),
       );
       expect(
         SalePricing.validateCart([
-          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: double.nan),
+          const CartLine(
+            productId: 1,
+            qty: 1,
+            unitPrice: 10,
+            freeQty: double.nan,
+          ),
         ]),
         contains('كمية البونص للسطر 1 غير صالحة'),
       );
       expect(
         SalePricing.validateCart([
-          CartLine(
+          const CartLine(
             productId: 1,
             qty: 1,
             unitPrice: 10,
@@ -399,20 +390,20 @@ void main() {
       // 0.333 سليمة (ضجيج النقطة العائمة 332.99999…94 ضمن التفاوت).
       expect(
         SalePricing.validateCart([
-          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 0.333),
+          const CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 0.333),
         ]),
         isNull,
       );
       expect(
         SalePricing.validateCart([
-          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 2.5),
+          const CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 2.5),
         ]),
         isNull,
       );
       // 2.0005 أدق من الثالثة → رفض.
       expect(
         SalePricing.validateCart([
-          CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 2.0005),
+          const CartLine(productId: 1, qty: 1, unitPrice: 10, freeQty: 2.0005),
         ]),
         contains('ثلاث منازل عشرية'),
       );

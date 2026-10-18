@@ -424,7 +424,7 @@ void main() {
     final fromMonth = await repo.statement(
       id,
       currencyId: sar,
-      from: DateTime.utc(2026, 10, 1),
+      from: DateTime.utc(2026, 10),
     );
     expect(fromMonth.openingBalance, closeTo(300, 0.0001));
     expect(fromMonth.entries.first.code, StatementEntryCode.carryIn);

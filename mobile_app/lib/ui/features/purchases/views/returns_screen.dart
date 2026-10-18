@@ -49,7 +49,7 @@ class SaleReturnScreen extends StatelessWidget {
       // تحديث حي عند العودة من ترحيل مرتجع آخر (المتاح تغيّر — قاعدة §10).
       child: RefreshOnActive(
         routePattern: RegExp(r'^/purchases/returns/sale$'),
-        onActivate: () => vm.load(userIdLoader: null),
+        onActivate: () => vm.load(),
         child: const _SaleReturnBody(),
       ),
     );
@@ -79,7 +79,7 @@ class _SaleReturnBody extends StatelessWidget {
     if (state.loading) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: const [ListSkeleton(rows: 6)],
+        children: const [ListSkeleton()],
       );
     }
     if (state.error != null) {
@@ -91,7 +91,7 @@ class _SaleReturnBody extends StatelessWidget {
             message: AppLocalizations.of(context)!.dbOpenErrorMessage,
             technicalDetails: state.error.toString(),
             retryLabel: AppLocalizations.of(context)!.commonRetry,
-            onRetry: () => vm.load(userIdLoader: null),
+            onRetry: () => vm.load(),
             compact: true,
           ),
         ],
@@ -129,7 +129,7 @@ class PurchaseReturnScreen extends StatelessWidget {
       value: vm,
       child: RefreshOnActive(
         routePattern: RegExp(r'^/purchases/returns/purchase$'),
-        onActivate: () => vm.load(userIdLoader: null),
+        onActivate: () => vm.load(),
         child: const _PurchaseReturnBody(),
       ),
     );
@@ -159,7 +159,7 @@ class _PurchaseReturnBody extends StatelessWidget {
     if (state.loading) {
       return ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: const [ListSkeleton(rows: 6)],
+        children: const [ListSkeleton()],
       );
     }
     if (state.error != null) {
@@ -171,7 +171,7 @@ class _PurchaseReturnBody extends StatelessWidget {
             message: AppLocalizations.of(context)!.dbOpenErrorMessage,
             technicalDetails: state.error.toString(),
             retryLabel: AppLocalizations.of(context)!.commonRetry,
-            onRetry: () => vm.load(userIdLoader: null),
+            onRetry: () => vm.load(),
             compact: true,
           ),
         ],

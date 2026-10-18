@@ -38,7 +38,7 @@ class StocktakeSummaryBar extends StatelessWidget {
         top: false,
         child: Container(
           decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: colors.cardBorder, width: 1)),
+            border: Border(top: BorderSide(color: colors.cardBorder)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
           child: Column(
@@ -76,7 +76,6 @@ class StocktakeSummaryBar extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Expanded(
@@ -94,7 +93,6 @@ class StocktakeSummaryBar extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           alignment: AlignmentDirectional.centerStart,
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             textBaseline: TextBaseline.alphabetic,
                             children: [
                               AmountText(

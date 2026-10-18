@@ -50,7 +50,7 @@ pw.Widget profitBrandBand(ProfitPrintDoc doc) {
                 child: pw.Text(
                   contact,
                   style: PrintText.body(
-                    color: const pw.PdfColor.fromInt(0xFFBEE5D8),
+                    color: PrintPalette.highlight,
                     size: 8.5,
                   ),
                   textDirection: pw.TextDirection.rtl,
@@ -66,7 +66,6 @@ pw.Widget profitBrandBand(ProfitPrintDoc doc) {
 /// صف العنوان: «تقرير الأرباح والخسائر» يميناً + رقاقة الفترة يساراً.
 pw.Widget profitTitleRow(ProfitPrintDoc doc) {
   return pw.Row(
-    crossAxisAlignment: pw.CrossAxisAlignment.center,
     children: [
       pw.Expanded(
         child: pw.Align(

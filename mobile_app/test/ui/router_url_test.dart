@@ -48,7 +48,7 @@ void main() {
       expect(router.routerDelegate.currentConfiguration.uri.path, '/more');
 
       router.go('/more/audit-log');
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         '/more/audit-log',
@@ -56,7 +56,7 @@ void main() {
       );
 
       router.go('/more/change-pin');
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         '/more/change-pin',

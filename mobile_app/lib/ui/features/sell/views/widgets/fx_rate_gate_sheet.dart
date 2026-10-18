@@ -22,8 +22,6 @@ Future<bool> showFxRateGateSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) =>
         _FxRateGateSheet(cartVm: cartVm, currencyCode: currencyCode),
   );

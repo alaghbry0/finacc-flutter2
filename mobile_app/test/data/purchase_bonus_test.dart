@@ -58,7 +58,7 @@ void main() {
                 .first['id']
             as int;
     final supplierResult = await suppliers.createSupplier(
-      SupplierDraft(name: 'مورد البونص'),
+      const SupplierDraft(name: 'مورد البونص'),
       userId: userId,
       now: at,
     );
@@ -138,10 +138,10 @@ void main() {
   group('PurchasePricing — البونص سلامة حصراً (مرآة البيع)', () {
     test('نفس البنود ببونص وبلا بونص: كل الإجماليات متطابقة حرفياً', () {
       final without = PurchasePricing.priceCart([
-        PurchaseLine(productId: 1, qty: 10, unitCost: 120),
+        const PurchaseLine(productId: 1, qty: 10, unitCost: 120),
       ]);
       final withBonus = PurchasePricing.priceCart([
-        PurchaseLine(productId: 1, qty: 10, unitCost: 120, freeQty: 2),
+        const PurchaseLine(productId: 1, qty: 10, unitCost: 120, freeQty: 2),
       ]);
       expect(withBonus.totals.subtotal, without.totals.subtotal);
       expect(withBonus.totals.grandTotal, without.totals.grandTotal);
@@ -155,20 +155,30 @@ void main() {
       () {
         expect(
           PurchasePricing.validateCart([
-            PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: -1),
+            const PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: -1),
           ]),
           contains('كمية بونص البند 1 لا يمكن أن تكون سالبة'),
         );
         expect(
           PurchasePricing.validateCart([
-            PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: 0.0005),
+            const PurchaseLine(
+              productId: 1,
+              qty: 1,
+              unitCost: 10,
+              freeQty: 0.0005,
+            ),
           ]),
           contains('لا تقبل دقة أعلى من ثلاث منازل'),
         );
         // السليم يمر (ثالث منزلة كاملة).
         expect(
           PurchasePricing.validateCart([
-            PurchaseLine(productId: 1, qty: 1, unitCost: 10, freeQty: 1.005),
+            const PurchaseLine(
+              productId: 1,
+              qty: 1,
+              unitCost: 10,
+              freeQty: 1.005,
+            ),
           ]),
           isNull,
         );
@@ -240,7 +250,7 @@ void main() {
             unitCost: 120,
             freeQty: 2,
             batchNo: 'BON-2027',
-            expiryDate: DateTime(2027, 6, 1),
+            expiryDate: DateTime(2027, 6),
           ),
         ]),
         userId: userId,

@@ -198,7 +198,7 @@ void main() {
 
           // الحفظ.
           await tester.tap(find.text('حفظ التعديلات'));
-          await pumpQuietly(tester, 8);
+          await pumpQuietly(tester);
           // مهلة حقيقية بعد الحفظ قبل أي فحص/إغلاق — الحفظ عبر FFI حقيقي
           // والإغلاق قبله يفجر database_closed (نمط منتقي العميل الموثق).
           await Future<void>.delayed(const Duration(milliseconds: 300));

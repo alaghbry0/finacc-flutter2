@@ -16,8 +16,6 @@ Future<void> showHomeDateDetails(BuildContext context) {
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
-    // فوق شريط التبويبات (متصفح الفرع) — تنزلق من فوق الشريط السفلي.
-    useRootNavigator: false,
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     builder: (context) => const DateDetailSheet(),
   );

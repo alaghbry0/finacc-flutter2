@@ -37,7 +37,7 @@ class BackupLogCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (state.entries.isEmpty)
-            _LogEmptyState()
+            const _LogEmptyState()
           else
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 380),

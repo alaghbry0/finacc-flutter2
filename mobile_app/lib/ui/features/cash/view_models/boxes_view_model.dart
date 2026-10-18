@@ -48,7 +48,7 @@ class BoxesViewModel extends ChangeNotifier {
   BoxesState get state => _state;
 
   Future<void> load() async {
-    _state = BoxesState(loading: true, boxes: const [], archived: const []);
+    _state = const BoxesState(loading: true, boxes: [], archived: []);
     notifyListeners();
     try {
       final all = await _cash.listBoxes(includeArchived: true);

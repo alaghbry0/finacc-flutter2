@@ -156,7 +156,7 @@ void main() {
     expect(s.productId, isNull);
     expect(s.report, isNull);
     // نطاق الفترة مهيأ رغم غياب الصنف (الشهر افتراضياً).
-    expect(s.from, DateTime(2026, 10, 1));
+    expect(s.from, DateTime(2026, 10));
     expect(s.to, DateTime(2026, 10, 8));
     vm.dispose();
   });
@@ -233,7 +233,7 @@ void main() {
     expect(s.loading, isFalse);
     expect(s.error, isNull);
     expect(s.period, ReportPeriod.month);
-    expect(s.from, DateTime(2026, 10, 1));
+    expect(s.from, DateTime(2026, 10));
     expect(s.to, DateTime(2026, 10, 8));
     expect(s.rows, hasLength(1));
     expect(s.rows!.first.name, 'أرز');
@@ -256,10 +256,10 @@ void main() {
       reference: _now,
     );
     await vm.load();
-    await vm.setCustomRange(DateTime(2026, 10, 1), DateTime(2026, 10, 2));
+    await vm.setCustomRange(DateTime(2026, 10), DateTime(2026, 10, 2));
     final s = vm.state;
     expect(s.period, ReportPeriod.custom);
-    expect(s.from, DateTime(2026, 10, 1));
+    expect(s.from, DateTime(2026, 10));
     expect(s.to, DateTime(2026, 10, 2));
     expect(s.rows, isEmpty);
     expect(s.isEmpty, isTrue);
@@ -341,7 +341,7 @@ void main() {
     await vm.setPeriod(ReportPeriod.year);
     final s = vm.state;
     expect(s.period, ReportPeriod.year);
-    expect(s.from, DateTime(2026, 1, 1));
+    expect(s.from, DateTime(2026));
     expect(s.to, DateTime(2026, 10, 8));
     final ahmed = s.rows!.firstWhere((r) => r.label == 'أحمد');
     expect(ahmed.salesBase, 800, reason: '300 اليوم + 500 يناير');

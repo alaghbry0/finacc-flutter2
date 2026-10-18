@@ -73,7 +73,7 @@ class _QuotationDetailBody extends StatelessWidget {
       body: state.loading
           ? ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
+              children: const [ListSkeleton()],
             )
           : state.error != null
           ? ListView(
@@ -341,7 +341,7 @@ class _ActionsBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(
-          top: BorderSide(color: FinColors.of(context).cardBorder, width: 1),
+          top: BorderSide(color: FinColors.of(context).cardBorder),
         ),
       ),
       child: SafeArea(
@@ -539,7 +539,7 @@ class _ConvertedInvoiceChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        key: Key('quotation_converted_invoice_chip'),
+        key: const Key('quotation_converted_invoice_chip'),
         onTap: () => context.go('/sell/invoices/$invoiceId'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(

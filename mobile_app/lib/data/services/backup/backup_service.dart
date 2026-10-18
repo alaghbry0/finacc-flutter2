@@ -506,7 +506,6 @@ class BackupService {
         BackupListEntry(
           atUtc: at,
           fileName: file.fileName,
-          kind: null,
           fileExists: true,
           statusOk: true,
           sizeBytes: file.sizeBytes,

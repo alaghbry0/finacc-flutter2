@@ -137,7 +137,7 @@ void main() {
 
     final report = await repo.itemMovement(
       productId: rice,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
 
@@ -174,7 +174,7 @@ void main() {
 
     final report = await repo.itemMovement(
       productId: sugar,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(report.rows.map((r) => r.qty).toList(), [-2.0, 6.0, -1.0]);
@@ -224,7 +224,7 @@ void main() {
 
       final mainOnly = await repo.itemMovement(
         productId: oil,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
         warehouseId: warehouseId,
       );
@@ -235,7 +235,7 @@ void main() {
 
       final branchOnly = await repo.itemMovement(
         productId: oil,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
         warehouseId: otherWarehouse,
       );
@@ -246,7 +246,7 @@ void main() {
       // بلا مرشح: كل شيء معاً.
       final all = await repo.itemMovement(
         productId: oil,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(all.openingBalance, 12);
@@ -258,7 +258,7 @@ void main() {
     final ghost = await makeProduct('صنف صامت');
     final report = await repo.itemMovement(
       productId: ghost,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(report.openingBalance, 0);
@@ -271,7 +271,7 @@ void main() {
     expect(
       () => repo.itemMovement(
         productId: 999999,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       ),
       throwsA(
@@ -303,7 +303,7 @@ void main() {
       await move(sugar, 'stocktake_adjust', 3, '2026-11-20T10:00:00Z');
 
       final rows = await repo.stockSummary(
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(rows, hasLength(1));
@@ -329,7 +329,7 @@ void main() {
     await move(b, 'purchase', 4, '2026-11-03T10:00:00Z');
 
     final rows = await repo.stockSummary(
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(rows, hasLength(2), reason: 'الساكن خارج التقرير');
@@ -357,7 +357,7 @@ void main() {
     );
 
     final mainOnly = await repo.stockSummary(
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
       warehouseId: warehouseId,
     );
@@ -366,7 +366,7 @@ void main() {
     expect(mainOnly.first.endBalance, 10, reason: 'حركات المخزن الآخر خارج');
 
     final all = await repo.stockSummary(
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(all.first.qtyIn, 15);
@@ -375,7 +375,7 @@ void main() {
 
   test('stockSummary: فترة بلا حركة — قائمة فارغة', () async {
     final rows = await repo.stockSummary(
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(rows, isEmpty);
@@ -428,7 +428,7 @@ void main() {
 
       final rows = await repo.salesBy(
         dimension: SalesByDimension.customer,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(rows, hasLength(3));
@@ -485,7 +485,7 @@ void main() {
 
     final rows = await repo.salesBy(
       dimension: SalesByDimension.category,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(rows, hasLength(3));
@@ -525,7 +525,7 @@ void main() {
 
       final rows = await repo.salesBy(
         dimension: SalesByDimension.item,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 30),
       );
       expect(rows, hasLength(2));
@@ -556,7 +556,7 @@ void main() {
 
     final rows = await repo.salesBy(
       dimension: SalesByDimension.day,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(rows, hasLength(2));
@@ -609,7 +609,7 @@ void main() {
 
       final rows = await repo.salesBy(
         dimension: SalesByDimension.customer,
-        from: DateTime(2026, 11, 1),
+        from: DateTime(2026, 11),
         to: DateTime(2026, 11, 7),
       );
       final byName = {for (final row in rows) row.label: row};
@@ -682,7 +682,7 @@ void main() {
 
     final rows = await repo.salesBy(
       dimension: SalesByDimension.customer,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(rows, hasLength(1));
@@ -693,7 +693,7 @@ void main() {
   test('salesBy: فترة بلا مبيعات — قائمة فارغة', () async {
     final rows = await repo.salesBy(
       dimension: SalesByDimension.customer,
-      from: DateTime(2026, 11, 1),
+      from: DateTime(2026, 11),
       to: DateTime(2026, 11, 30),
     );
     expect(rows, isEmpty);

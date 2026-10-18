@@ -63,7 +63,6 @@ class AgingSummaryCard extends StatelessWidget {
               const SizedBox(width: 8),
               StatusChip(
                 label: l10n.agingCustomersCount(report.customersCount),
-                tone: ChipTone.neutral,
                 icon: Icons.groups_rounded,
                 dense: true,
               ),

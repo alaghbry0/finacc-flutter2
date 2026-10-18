@@ -131,7 +131,7 @@ class _HubCard extends StatelessWidget {
             badgeColor: null,
             onTap: () => context.go('/inventory/item-form'),
           ),
-          _HubDivider(),
+          const _HubDivider(),
           _HubRow(
             index: 1,
             icon: Icons.inventory_2_rounded,
@@ -142,7 +142,7 @@ class _HubCard extends StatelessWidget {
             badgeColor: null,
             onTap: () => context.go('/inventory/items'),
           ),
-          _HubDivider(),
+          const _HubDivider(),
           _HubRow(
             index: 2,
             icon: Icons.trending_down_rounded,
@@ -153,7 +153,7 @@ class _HubCard extends StatelessWidget {
             badgeColor: FinColors.of(context).warning,
             onTap: () => context.go('/inventory/low-stock'),
           ),
-          _HubDivider(),
+          const _HubDivider(),
           _HubRow(
             index: 3,
             icon: Icons.schedule_rounded,
@@ -164,7 +164,7 @@ class _HubCard extends StatelessWidget {
             badgeColor: FinColors.of(context).negative,
             onTap: () => context.go('/inventory/batches'),
           ),
-          _HubDivider(),
+          const _HubDivider(),
           _HubRow(
             index: 4,
             icon: Icons.checklist_rounded,
@@ -175,7 +175,7 @@ class _HubCard extends StatelessWidget {
             badgeColor: null,
             onTap: () => context.go('/inventory/stocktake'),
           ),
-          _HubDivider(),
+          const _HubDivider(),
           _HubRow(
             index: 5,
             icon: Icons.upload_file_rounded,
@@ -186,7 +186,7 @@ class _HubCard extends StatelessWidget {
             badgeColor: null,
             onTap: () => context.go('/inventory/import'),
           ),
-          _HubDivider(),
+          const _HubDivider(),
           _HubRow(
             index: 6,
             icon: Icons.category_rounded,

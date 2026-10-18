@@ -76,11 +76,7 @@ class VoucherAllocationCard extends StatelessWidget {
                         ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
-                AmountText(
-                  amount: vm.openDuesTotal,
-                  decimals: 2,
-                  showSignMarker: false,
-                ),
+                AmountText(amount: vm.openDuesTotal, showSignMarker: false),
                 const SizedBox(width: 4),
                 Text(
                   vm.voucherCurrencyCode ?? '',
@@ -137,7 +133,6 @@ class VoucherAllocationCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       AmountText(
                         amount: invoice.remaining,
-                        decimals: 2,
                         showSignMarker: false,
                       ),
                     ],
@@ -172,7 +167,6 @@ class VoucherAllocationCard extends StatelessWidget {
                         ),
                         AmountText(
                           amount: entry.amount,
-                          decimals: 2,
                           // DS-18: علامة + غير لونية إلزامية للتخصيصات
                           // (إشارة واردة للفاتورة) — إصلاح جولة 13.
                           sign: FinSign.incoming,
@@ -198,11 +192,7 @@ class VoucherAllocationCard extends StatelessWidget {
                                 ?.copyWith(color: colors.warning),
                           ),
                         ),
-                        AmountText(
-                          amount: unallocated,
-                          decimals: 2,
-                          showSignMarker: false,
-                        ),
+                        AmountText(amount: unallocated, showSignMarker: false),
                       ],
                     ),
                   ),

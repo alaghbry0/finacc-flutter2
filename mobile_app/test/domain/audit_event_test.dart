@@ -53,7 +53,6 @@ void main() {
       id: 3,
       action: 'settings_change',
       entity: 'settings',
-      entityId: null,
       details: 'security.autolock_minutes=15',
       userName: 'أبو نور',
       atUtc: DateTime.utc(2026, 10, 6, 9),

@@ -135,7 +135,6 @@ void main() {
     currencyId: currencyId ?? baseCurrencyId,
     lines: lines,
     paidCash: paidCash,
-    paymentMethod: SalePaymentMethod.cash,
     warehouseId: warehouseId,
     issuedAt: at,
   );
@@ -293,8 +292,8 @@ void main() {
     );
 
     test('خصومات: سطر نسبة + سطر مبلغ + رأس 10% موزعة pro-rata', () async {
-      final a = await makeProduct('أ', cost: 0, price: 100, qty: 10);
-      final b = await makeProduct('ب', cost: 0, price: 100, qty: 10);
+      final a = await makeProduct('أ', price: 100, qty: 10);
+      final b = await makeProduct('ب', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
@@ -310,14 +309,12 @@ void main() {
               productId: b,
               qty: 1,
               unitPrice: 100,
-              lineDiscountType: SaleDiscountType.amount,
               lineDiscountValue: 10,
             ),
           ],
           invoiceDiscountType: SaleDiscountType.percent,
           invoiceDiscountValue: 10,
           paidCash: 243,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -354,7 +351,7 @@ void main() {
   group('أنواع الدفع (FR-02-03) والباقي', () {
     test('مختلط: جزء نقدي 40 من 100 + آجل 60 بعملة الفاتورة', () async {
       final customer = await makeCustomer('محمد');
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           customerId: customer,
@@ -389,13 +386,12 @@ void main() {
 
     test('آجل كامل: لا سند ولا تخصيص، والدين كامل بعملة الفاتورة', () async {
       final customer = await makeCustomer('أحمد');
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           customerId: customer,
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
-          paidCash: 0,
           paymentMethod: SalePaymentMethod.credit,
           warehouseId: warehouseId,
           issuedAt: at,
@@ -412,13 +408,12 @@ void main() {
     });
 
     test('نقدي زائد: الباقي 20 يُعاد ولا يدخل الصندوق ولا الدين', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 120,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -439,13 +434,12 @@ void main() {
     });
 
     test('تعارض التعلان مع المبالغ → رفض بلا أي كتابة', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 40,
-          paymentMethod: SalePaymentMethod.cash, // يجب مختلط.
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -473,7 +467,7 @@ void main() {
         productId: cheese,
         warehouseId: warehouseId,
         batchNumber: 'قريبة',
-        expiryDate: DateTime(2026, 11, 1),
+        expiryDate: DateTime(2026, 11),
         costPrice: 100,
         qty: 10,
         now: at,
@@ -482,7 +476,7 @@ void main() {
         productId: cheese,
         warehouseId: warehouseId,
         batchNumber: 'بعيدة',
-        expiryDate: DateTime(2027, 5, 1),
+        expiryDate: DateTime(2027, 5),
         costPrice: 120,
         qty: 10,
         now: at,
@@ -537,19 +531,12 @@ void main() {
     test('دفعة منتهية تُستبعد من المتاح → الرفض يسمّي الصنف والمتاح', () async {
       // شكل بيانات واقعي: رصيد الصنف المتتبع من دفعاته (لا افتتاحية) —
       // منتهية 8 + صالحة 4 والدفتر 12 يطابقهما. المتاح للبيع = 4 فقط.
-      final drug = await makeProduct(
-        'دواء',
-        cost: 0,
-        price: 10,
-        qty: 0,
-        tracked: true,
-      );
+      final drug = await makeProduct('دواء', price: 10, tracked: true);
       await batches.createBatch(
         productId: drug,
         warehouseId: warehouseId,
         batchNumber: 'منتهية',
         expiryDate: DateTime(2026, 10, 4), // قبل يوم الإصدار بيومين.
-        costPrice: 0,
         qty: 8,
         now: at,
       );
@@ -557,8 +544,7 @@ void main() {
         productId: drug,
         warehouseId: warehouseId,
         batchNumber: 'صالحة',
-        expiryDate: DateTime(2027, 1, 1),
-        costPrice: 0,
+        expiryDate: DateTime(2027),
         qty: 4,
         now: at,
       );
@@ -588,7 +574,6 @@ void main() {
         // يرفض ويرجع كل شيء (الدفعات لم تُمسّ).
         final cheese = await makeProduct(
           'جبن متنافر',
-          cost: 0,
           price: 10,
           qty: 12,
           tracked: true,
@@ -597,8 +582,7 @@ void main() {
           productId: cheese,
           warehouseId: warehouseId,
           batchNumber: 'أ',
-          expiryDate: DateTime(2026, 12, 1),
-          costPrice: 0,
+          expiryDate: DateTime(2026, 12),
           qty: 10,
           now: at,
         );
@@ -606,8 +590,7 @@ void main() {
           productId: cheese,
           warehouseId: warehouseId,
           batchNumber: 'ب',
-          expiryDate: DateTime(2027, 6, 1),
-          costPrice: 0,
+          expiryDate: DateTime(2027, 6),
           qty: 10,
           now: at,
         );
@@ -667,7 +650,7 @@ void main() {
 
   group('منع السالب المخزوني (5.4-5 / AC-20)', () {
     test('بيع أكثر من المتاح → رفض باسم الصنف والكمية ولا أثر جزئي', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 5);
+      final pen = await makeProduct('قلم', price: 10, qty: 5);
       final result = await sales.postSale(
         cashDraft([
           CartLine(productId: pen, qty: 10, unitPrice: 10),
@@ -689,8 +672,8 @@ void main() {
     });
 
     test('فشل سطر متأخر يرجع أسطراً سابقة (معاملة واحدة)', () async {
-      final a = await makeProduct('صنف أ', cost: 0, price: 10, qty: 5);
-      final b = await makeProduct('صنف ب', cost: 0, price: 10, qty: 3);
+      final a = await makeProduct('صنف أ', price: 10, qty: 5);
+      final b = await makeProduct('صنف ب', price: 10, qty: 3);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
@@ -699,7 +682,6 @@ void main() {
             CartLine(productId: b, qty: 5, unitPrice: 10), // لا يكفي.
           ],
           paidCash: 70,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -718,7 +700,7 @@ void main() {
     });
 
     test('أسطر مكررة لنفس الصنف تُجمع في فحص التوفر', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 5);
+      final pen = await makeProduct('قلم', price: 10, qty: 5);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
@@ -727,7 +709,6 @@ void main() {
             CartLine(productId: pen, qty: 3, unitPrice: 10), // 6 > 5.
           ],
           paidCash: 60,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -748,13 +729,12 @@ void main() {
     test('آجل يتجاوز الحد بسلوك block → رفض ولا فاتورة', () async {
       await settings.set('parties.credit_limit_action', 'block');
       final customer = await makeCustomer('سالم', creditLimit: 100);
-      final pen = await makeProduct('قلم', cost: 0, price: 150, qty: 10);
+      final pen = await makeProduct('قلم', price: 150, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           customerId: customer,
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 150)],
-          paidCash: 0,
           paymentMethod: SalePaymentMethod.credit,
           warehouseId: warehouseId,
           issuedAt: at,
@@ -769,13 +749,12 @@ void main() {
 
     test('بلا حد (null) → ينجح آجلاً كاملاً', () async {
       final customer = await makeCustomer('بلا حد');
-      final pen = await makeProduct('قلم', cost: 0, price: 150, qty: 10);
+      final pen = await makeProduct('قلم', price: 150, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           customerId: customer,
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 150)],
-          paidCash: 0,
           paymentMethod: SalePaymentMethod.credit,
           warehouseId: warehouseId,
           issuedAt: at,
@@ -789,13 +768,12 @@ void main() {
     test('حد 0 بسلوك block → أي آجل يُرفض، والنقدي ينجح', () async {
       await settings.set('parties.credit_limit_action', 'block');
       final customer = await makeCustomer('ممنوع آجلاً', creditLimit: 0);
-      final pen = await makeProduct('قلم', cost: 0, price: 50, qty: 10);
+      final pen = await makeProduct('قلم', price: 50, qty: 10);
       final credit = await sales.postSale(
         SaleDraft(
           customerId: customer,
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 50)],
-          paidCash: 0,
           paymentMethod: SalePaymentMethod.credit,
           warehouseId: warehouseId,
           issuedAt: at,
@@ -811,7 +789,6 @@ void main() {
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 50)],
           paidCash: 50,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -824,13 +801,12 @@ void main() {
     test('الرصيد القائم يُحتسب: آجلان متتاليان ضد حد واحد (block)', () async {
       await settings.set('parties.credit_limit_action', 'block');
       final customer = await makeCustomer('متراكم', creditLimit: 100);
-      final pen = await makeProduct('قلم', cost: 0, price: 60, qty: 10);
+      final pen = await makeProduct('قلم', price: 60, qty: 10);
       Future<Result<SalePostedReceipt, String>> creditSale() => sales.postSale(
         SaleDraft(
           customerId: customer,
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 60)],
-          paidCash: 0,
           paymentMethod: SalePaymentMethod.credit,
           warehouseId: warehouseId,
           issuedAt: at,
@@ -844,7 +820,7 @@ void main() {
 
     test('مختلط يُحتسب جزؤه الآجل فقط ضد الحد', () async {
       final customer = await makeCustomer('مختلط', creditLimit: 100);
-      final pen = await makeProduct('قلم', cost: 0, price: 150, qty: 10);
+      final pen = await makeProduct('قلم', price: 150, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           customerId: customer,
@@ -868,13 +844,12 @@ void main() {
         // الإعداد غير مضبوط → الافتراضي warn: المستودع لا يمنع؛ التحذير
         // مسؤولية PaymentSheet (حوار «متابعة على أي حال») — FR-03-05.
         final customer = await makeCustomer('مُتَحَدّي الحد', creditLimit: 100);
-        final pen = await makeProduct('قلم', cost: 0, price: 150, qty: 10);
+        final pen = await makeProduct('قلم', price: 150, qty: 10);
         final result = await sales.postSale(
           SaleDraft(
             customerId: customer,
             currencyId: baseCurrencyId,
             lines: [CartLine(productId: pen, qty: 1, unitPrice: 150)],
-            paidCash: 0,
             paymentMethod: SalePaymentMethod.credit,
             warehouseId: warehouseId,
             issuedAt: at,
@@ -899,13 +874,12 @@ void main() {
 
   group('سياسة سعر الصرف المفقود (FR-08-09 / AC-13)', () {
     test('عملة غير أساس بلا سعر اليوم وبلا fallback → منع الحفظ', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: sarId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 100,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -922,18 +896,17 @@ void main() {
       await settings.set('fx.fallback', 'last_known');
       await rates.setRate(
         currencyId: sarId,
-        date: DateTime(2026, 10, 1),
+        date: DateTime(2026, 10),
         rate: 530,
         userId: userId,
         now: at,
       );
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: sarId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 100,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -953,13 +926,12 @@ void main() {
 
     test('fallback مفعّل بلا أي سعر تاريخي → رفض', () async {
       await settings.set('fx.fallback', 'last_known');
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           currencyId: sarId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 100,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -977,13 +949,12 @@ void main() {
         userId: userId,
         now: at,
       );
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 20);
+      final pen = await makeProduct('قلم', price: 100, qty: 20);
       final sar = await sales.postSale(
         SaleDraft(
           currencyId: sarId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 100,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -998,7 +969,6 @@ void main() {
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 100)],
           paidCash: 100,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1031,7 +1001,7 @@ void main() {
         now: at,
       );
       final customer = await makeCustomer('خالد');
-      final pen = await makeProduct('قلم', cost: 0, price: 100, qty: 10);
+      final pen = await makeProduct('قلم', price: 100, qty: 10);
       final result = await sales.postSale(
         SaleDraft(
           customerId: customer,
@@ -1098,7 +1068,6 @@ void main() {
             CartLine(productId: pen, qty: 2, unitPrice: 25),
           ],
           paidCash: 100,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1119,14 +1088,13 @@ void main() {
 
   group('رفض المدخلات المعيبة', () {
     test('عملة/صنف/عميل غير موجودين + صنف مؤرشف + بلا صندوق افتراضي', () async {
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 10);
+      final pen = await makeProduct('قلم', price: 10, qty: 10);
 
       final badCurrency = await sales.postSale(
         SaleDraft(
           currencyId: 999,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 10)],
           paidCash: 10,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1138,9 +1106,8 @@ void main() {
       final badProduct = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
-          lines: [CartLine(productId: 9999, qty: 1, unitPrice: 10)],
+          lines: [const CartLine(productId: 9999, qty: 1, unitPrice: 10)],
           paidCash: 10,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1154,7 +1121,6 @@ void main() {
           customerId: 999,
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 10)],
-          paidCash: 0,
           paymentMethod: SalePaymentMethod.credit,
           warehouseId: warehouseId,
           issuedAt: at,
@@ -1164,14 +1130,13 @@ void main() {
       );
       expect(badCustomer.errorOrNull, contains('العميل'));
 
-      final archived = await makeProduct('مؤرشف', cost: 0, price: 10, qty: 10);
+      final archived = await makeProduct('مؤرشف', price: 10, qty: 10);
       await items.archiveItem(archived, userId: userId, now: at);
       final archivedSale = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: archived, qty: 1, unitPrice: 10)],
           paidCash: 10,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1186,7 +1151,6 @@ void main() {
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 10)],
           paidCash: 10,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1201,8 +1165,6 @@ void main() {
         SaleDraft(
           currencyId: baseCurrencyId,
           lines: const [],
-          paidCash: 0,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1211,7 +1173,7 @@ void main() {
       );
       expect(empty.errorOrNull, contains('بنداً واحداً'));
 
-      final pen = await makeProduct('قلم', cost: 0, price: 10, qty: 10);
+      final pen = await makeProduct('قلم', price: 10, qty: 10);
       final negative = await sales.postSale(
         SaleDraft(
           currencyId: baseCurrencyId,
@@ -1224,7 +1186,6 @@ void main() {
             ),
           ],
           paidCash: 10,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1252,7 +1213,6 @@ void main() {
             CartLine(productId: book, qty: 1, unitPrice: 40),
           ],
           paidCash: 90,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -1264,7 +1224,6 @@ void main() {
           currencyId: baseCurrencyId,
           lines: [CartLine(productId: pen, qty: 1, unitPrice: 25)],
           paidCash: 25,
-          paymentMethod: SalePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at.add(const Duration(hours: 2)),
         ),
@@ -1298,7 +1257,7 @@ void main() {
       expect(forCustomer.single.total, 90);
 
       final totals = await sales.salesTotals(
-        DateTime(2026, 10, 1),
+        DateTime(2026, 10),
         DateTime(2026, 10, 31),
       );
       expect(totals.invoiceCount, 2);
@@ -1593,7 +1552,6 @@ void main() {
       () async {
         final service = await makeProduct(
           'تركيب صيانة',
-          cost: 0,
           price: 500,
           service: true,
         );
@@ -1629,7 +1587,6 @@ void main() {
             lines: [
               CartLine(productId: pen, qty: 10, unitPrice: 25, freeQty: 5),
             ],
-            paidCash: 0,
             paymentMethod: SalePaymentMethod.credit,
             warehouseId: warehouseId,
             issuedAt: at,

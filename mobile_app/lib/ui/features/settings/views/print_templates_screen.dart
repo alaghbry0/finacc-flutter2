@@ -91,7 +91,7 @@ class _PrintTemplatesBody extends StatelessWidget {
       body: state.loading
           ? ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
+              children: const [ListSkeleton()],
             )
           : state.error != null
           ? ListView(
@@ -107,7 +107,7 @@ class _PrintTemplatesBody extends StatelessWidget {
                 ),
               ],
             )
-          : _PrintTemplatesList(),
+          : const _PrintTemplatesList(),
     );
   }
 }

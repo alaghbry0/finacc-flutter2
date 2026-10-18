@@ -46,24 +46,22 @@ Future<void> _seedItems() async {
   final now = DateTime.utc(2026, 10, 6, 12);
 
   await items.createItem(
-    ItemDraft(
+    const ItemDraft(
       name: 'زيت دوار الشمس 1.8ل',
       costPrice: 2200,
       minStock: 5,
       openingQty: 20,
-      prices: const [],
     ),
     warehouseId: warehouseId,
     userId: userId,
     now: now,
   );
   await items.createItem(
-    ItemDraft(
+    const ItemDraft(
       name: 'سكر ناعم 1كج',
       costPrice: 900,
       minStock: 5,
       openingQty: 2,
-      prices: const [],
     ),
     warehouseId: warehouseId,
     userId: userId,
@@ -194,7 +192,7 @@ void main() {
       // 1) الاسم إلزامي (تحقق متزامن من الواجهة).
       await tester.ensureVisible(find.byKey(const Key('item_form_save_btn')));
       await tester.tap(find.byKey(const Key('item_form_save_btn')));
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(find.text(l10n.itemFormNameRequired), findsOneWidget);
 
       // 2) توليد باركود EAN-13 — 13 رقماً داخل الحقل (متزامن).
@@ -239,13 +237,12 @@ void main() {
       await tester.runAsync(() async {
         await _withReadyApp((items, batches, companies) async {
           final created = await items.createItem(
-            ItemDraft(
+            const ItemDraft(
               name: 'لبن المراعي 1ل',
               costPrice: 700,
               minStock: 4,
               openingQty: 12,
               trackBatches: true,
-              prices: const [],
             ),
             warehouseId: await companies.findDefaultWarehouseId() ?? 1,
             userId: await companies.findAdminUserId() ?? 1,
@@ -256,7 +253,7 @@ void main() {
             productId: itemId,
             warehouseId: await companies.findDefaultWarehouseId() ?? 1,
             batchNumber: 'L232',
-            expiryDate: DateTime.utc(2026, 11, 1),
+            expiryDate: DateTime.utc(2026, 11),
             qty: 12,
             costPrice: 700,
             now: DateTime.utc(2026, 10, 6, 12),

@@ -101,7 +101,7 @@ class QuotationsViewModel extends ChangeNotifier {
     _state = _copyWith(busyQuotationId: id);
     notifyListeners();
     final result = await action();
-    _state = _copyWith(busyQuotationId: null);
+    _state = _copyWith();
     notifyListeners();
     if (result.isOk) {
       await load();
@@ -141,7 +141,6 @@ class QuotationDetailState {
 
   static const QuotationDetailState initial = QuotationDetailState(
     loading: true,
-    converting: false,
   );
 }
 

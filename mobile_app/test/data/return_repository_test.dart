@@ -80,7 +80,7 @@ void main() {
             )).first['id']
             as int;
     final supplierResult = await suppliers.createSupplier(
-      SupplierDraft(name: 'مستوردات النور'),
+      const SupplierDraft(name: 'مستوردات النور'),
       userId: userId,
       now: at,
     );
@@ -247,7 +247,6 @@ void main() {
             lines: [
               ReturnLineInput(invoiceItemId: await firstItemId(saleId), qty: 2),
             ],
-            refundMethod: ReturnRefundMethod.cash,
             refundCash: 300, // 2 × 150.
             issuedAt: at,
           ),
@@ -358,7 +357,6 @@ void main() {
         [CartLine(productId: item, qty: 4, unitPrice: 25)],
         customerId: customer,
         paidCash: 100,
-        method: SalePaymentMethod.cash,
       );
       // سند القبض الأصلي موجود (وقت البيع):
       expect(await count('cash_tx'), 1);
@@ -369,7 +367,6 @@ void main() {
           lines: [
             ReturnLineInput(invoiceItemId: await firstItemId(saleId), qty: 2),
           ],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 50,
           issuedAt: at,
         ),
@@ -475,7 +472,7 @@ void main() {
           qty: 10,
           unitCost: 50,
           batchNo: 'B-1',
-          expiryDate: DateTime(2027, 1, 1),
+          expiryDate: DateTime(2027),
         ),
       ]);
       await postPurchase([
@@ -484,7 +481,7 @@ void main() {
           qty: 5,
           unitCost: 70,
           batchNo: 'B-2',
-          expiryDate: DateTime(2028, 1, 1),
+          expiryDate: DateTime(2028),
         ),
       ]);
       final b1 =
@@ -512,7 +509,6 @@ void main() {
           lines: [
             ReturnLineInput(invoiceItemId: await firstItemId(saleId), qty: 6),
           ],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 600,
           issuedAt: at,
         ),
@@ -549,7 +545,7 @@ void main() {
           qty: 8,
           unitCost: 50,
           batchNo: 'B-1',
-          expiryDate: DateTime(2027, 1, 1),
+          expiryDate: DateTime(2027),
         ),
       ]);
       final saleId = await postSale([
@@ -566,7 +562,6 @@ void main() {
                 qty: qty,
               ),
             ],
-            refundMethod: ReturnRefundMethod.cash,
             refundCash: qty * 100,
             issuedAt: at,
           ),
@@ -587,7 +582,6 @@ void main() {
           lines: [
             ReturnLineInput(invoiceItemId: await firstItemId(saleId), qty: 1),
           ],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 100,
           issuedAt: at,
         ),
@@ -615,7 +609,6 @@ void main() {
             currencyId: baseCurrencyId,
             lines: [CartLine(productId: item, qty: 1, unitPrice: 30)],
             paidCash: 30,
-            paymentMethod: SalePaymentMethod.cash,
             warehouseId: warehouseId,
             issuedAt: at,
           ),
@@ -647,7 +640,6 @@ void main() {
     SaleReturnDraft srn(double qty, {int? invoiceId}) => SaleReturnDraft(
       originalInvoiceId: invoiceId ?? saleId,
       lines: [ReturnLineInput(invoiceItemId: itemId, qty: qty)],
-      refundMethod: ReturnRefundMethod.cash,
       refundCash: qty * 25,
       issuedAt: at,
     );
@@ -718,7 +710,6 @@ void main() {
               qty: 1,
             ),
           ],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 25,
           issuedAt: at,
         ),
@@ -733,7 +724,6 @@ void main() {
         SaleReturnDraft(
           originalInvoiceId: saleId,
           lines: [ReturnLineInput(invoiceItemId: itemId, qty: 1)],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 50, // أكثر من 25.
           issuedAt: at,
         ),
@@ -910,7 +900,6 @@ void main() {
           currencyId: baseCurrencyId,
           lines: [PurchaseLine(productId: item, qty: 10, unitCost: 40)],
           paidCash: 400,
-          paymentMethod: PurchasePaymentMethod.cash,
           warehouseId: warehouseId,
           issuedAt: at,
         ),
@@ -932,7 +921,6 @@ void main() {
           lines: [
             ReturnLineInput(invoiceItemId: await firstItemId(pur), qty: 5),
           ],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 200,
           issuedAt: at,
         ),
@@ -973,7 +961,7 @@ void main() {
           qty: 10,
           unitCost: 50,
           batchNo: 'B-1',
-          expiryDate: DateTime(2027, 1, 1),
+          expiryDate: DateTime(2027),
         ),
       ]);
       final pur2 = await postPurchase([
@@ -982,7 +970,7 @@ void main() {
           qty: 5,
           unitCost: 70,
           batchNo: 'B-2',
-          expiryDate: DateTime(2028, 1, 1),
+          expiryDate: DateTime(2028),
         ),
       ]);
       final b1 =
@@ -1122,7 +1110,7 @@ void main() {
             qty: 10,
             unitCost: 20,
             batchNo: 'B-X',
-            expiryDate: DateTime(2027, 1, 1),
+            expiryDate: DateTime(2027),
           ),
         ]);
         // انحراف مصطنع: الدفعة تقول 10 ودفتر المخزون 3.
@@ -1204,7 +1192,6 @@ void main() {
         SaleReturnDraft(
           originalInvoiceId: saleId,
           lines: [ReturnLineInput(invoiceItemId: itemId, qty: 4)],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 100,
           issuedAt: at,
         ),
@@ -1336,7 +1323,6 @@ void main() {
                 qty: 12,
               ),
             ],
-            refundMethod: ReturnRefundMethod.cash,
             refundCash: 1800,
             issuedAt: at,
           ),
@@ -1358,7 +1344,6 @@ void main() {
                 qty: 10,
               ),
             ],
-            refundMethod: ReturnRefundMethod.cash,
             refundCash: 1500,
             issuedAt: at,
           ),
@@ -1397,7 +1382,6 @@ void main() {
           lines: [
             ReturnLineInput(invoiceItemId: await firstItemId(saleId), qty: 4),
           ],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 320, // 4 × 80.
           issuedAt: at,
         ),

@@ -195,7 +195,7 @@ void main() {
 
   test('عملة الرصيد الافتتاحي غير الموجودة → مرفوض', () async {
     final failure = await repo.createCustomer(
-      CustomerDraft(
+      const CustomerDraft(
         name: 'سالم',
         openingBalance: 100,
         openingBalanceCurrencyId: 999,
@@ -216,7 +216,7 @@ void main() {
       );
       final updated = await repo.updateCustomer(
         id,
-        CustomerDraft(
+        const CustomerDraft(
           name: 'أحمد محمد الحضرمي',
           phone: '712345678',
           whatsapp: '712345678',
@@ -570,7 +570,7 @@ void main() {
       expect(result.entries[1].docNo, startsWith('T-INV-'));
       expect(result.entries[1].refId, isNotNull);
       expect(result.entries[1].date, DateTime.utc(2026, 10, 5));
-      expect(result.entries[0].date, DateTime.utc(2026, 9, 1));
+      expect(result.entries[0].date, DateTime.utc(2026, 9));
     },
   );
 
@@ -613,7 +613,7 @@ void main() {
     final fromMonth = await repo.statement(
       id,
       currencyId: sar,
-      from: DateTime.utc(2026, 10, 1),
+      from: DateTime.utc(2026, 10),
     );
     expect(fromMonth.openingBalance, closeTo(500, 0.0001));
     expect(fromMonth.entries, hasLength(4));

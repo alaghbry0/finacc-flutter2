@@ -77,7 +77,7 @@ Future<Result<ReturnPostedReceipt, String>> postPurchaseReturnFlow(
 
     // (6) المورد للجزء المخصوم من دينه.
     if (refundCredit > moneyEpsilon && orig.row['supplier_id'] == null) {
-      return Err(
+      return const Err(
         'فاتورة الشراء الأصلية بلا مورد مسجَّل — لا حساب يُخصم منه؛ '
         'اختر الاسترداد نقداً إلى الصندوق.',
       );
@@ -98,7 +98,7 @@ Future<Result<ReturnPostedReceipt, String>> postPurchaseReturnFlow(
     if (refundCash > moneyEpsilon) {
       final boxId = await defaultCashboxId(db);
       if (boxId == null) {
-        return Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
+        return const Err('لا يوجد صندوق افتراضي للمنشأة — أنشئ صندوقاً أولاً.');
       }
       cashboxId = boxId;
     }

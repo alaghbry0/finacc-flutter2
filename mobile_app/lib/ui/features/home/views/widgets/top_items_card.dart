@@ -192,11 +192,7 @@ class _TopItemRow extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  AmountText(
-                    amount: stat.revenueBase,
-                    size: AmountSize.row,
-                    showSignMarker: false,
-                  ),
+                  AmountText(amount: stat.revenueBase, showSignMarker: false),
                   if (currencyCode != null && currencyCode!.isNotEmpty)
                     Text(
                       currencyCode!,

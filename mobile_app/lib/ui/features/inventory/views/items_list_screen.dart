@@ -159,7 +159,7 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
           FinSpacing.xl,
           FinSpacing.fabClearance,
         ),
-        children: const [ListSkeleton(rows: 6)],
+        children: const [ListSkeleton()],
       );
     }
     if (state.error != null) {
@@ -421,7 +421,6 @@ class _ItemCard extends StatelessWidget {
                     if (item.trackBatches)
                       StatusChip(
                         label: l10n.itemBatchesBadge,
-                        tone: ChipTone.neutral,
                         icon: Icons.layers_rounded,
                         dense: true,
                       ),

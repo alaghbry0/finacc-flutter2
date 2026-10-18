@@ -21,11 +21,7 @@ void main() {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       // 30 بنداً تُفيض إلى صفحة ثانية بنفس الشريط والتذييل.
-      final doc = invoiceDocForTests(
-        l10n,
-        partyName: 'أحمد محمد الشرعبي',
-        itemCount: 30,
-      );
+      final doc = invoiceDocForTests(l10n, itemCount: 30);
       final pdf = await const InvoicePdfBuilder().build(doc);
       final bytes = await pdf.save();
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');
@@ -38,7 +34,7 @@ void main() {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       for (final name in kPdfProbeNames) {
-        final doc = invoiceDocForTests(l10n, partyName: name, itemCount: 2);
+        final doc = invoiceDocForTests(l10n, partyName: name);
         final pdf = await const InvoicePdfBuilder().build(doc);
         final bytes = await pdf.save();
         expect(String.fromCharCodes(bytes, 0, 4), '%PDF', reason: name);

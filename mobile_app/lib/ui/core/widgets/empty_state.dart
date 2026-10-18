@@ -51,7 +51,7 @@ class EmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerLow,
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.cardBorder, width: 1),
+                border: Border.all(color: colors.cardBorder),
               ),
               child: Icon(
                 icon,

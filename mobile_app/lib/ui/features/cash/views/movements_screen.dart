@@ -224,10 +224,7 @@ class _MovementsBodyState extends State<_MovementsBody> {
         prefixIcon: const Icon(Icons.account_balance_wallet_rounded),
       ),
       items: [
-        DropdownMenuItem<int?>(
-          value: null,
-          child: Text(l10n.cashMovementsAllBoxes),
-        ),
+        DropdownMenuItem<int?>(child: Text(l10n.cashMovementsAllBoxes)),
         for (final box in widget.boxes)
           DropdownMenuItem<int?>(
             value: box.box.id,
@@ -254,10 +251,7 @@ class _MovementsBodyState extends State<_MovementsBody> {
         prefixIcon: const Icon(Icons.filter_alt_rounded),
       ),
       items: [
-        DropdownMenuItem<String?>(
-          value: null,
-          child: Text(l10n.cashMovementsAllTypes),
-        ),
+        DropdownMenuItem<String?>(child: Text(l10n.cashMovementsAllTypes)),
         for (final type in CashTxType.values)
           DropdownMenuItem<String?>(
             value: type.code,

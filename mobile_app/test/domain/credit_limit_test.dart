@@ -12,7 +12,6 @@ void main() {
   group('دلالة قيمة الحد', () {
     test('حد null (بلا حد): لا تنبيه أبداً مهما كبر الآجل', () {
       final d = evaluateCreditLimit(
-        creditLimit: null,
         action: 'block',
         currentBalance: 100000,
         newDue: 50000,

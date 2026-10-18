@@ -95,8 +95,8 @@ class _OnboardingBodyState extends State<_OnboardingBody> {
               toggleObscured: () => setState(() => _obscured = !_obscured),
               onSubmit: () => vm.submit(context.read<AppController>()),
             ),
-            OnboardingStep.creating => OnboardingCreatingStep(
-              key: const ValueKey('creating'),
+            OnboardingStep.creating => const OnboardingCreatingStep(
+              key: ValueKey('creating'),
             ),
             OnboardingStep.done => OnboardingDoneStep(
               key: const ValueKey('done'),

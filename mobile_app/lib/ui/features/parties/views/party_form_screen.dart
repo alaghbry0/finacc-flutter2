@@ -249,7 +249,7 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
         body: state.loading
             ? ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: const [ListSkeleton(rows: 6)],
+                children: const [ListSkeleton()],
               )
             : state.loadError != null
             ? ListView(
@@ -486,7 +486,6 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
                 ),
                 items: [
                   DropdownMenuItem<int>(
-                    value: null,
                     child: Text(l10n.partyFormOpeningCurrencyNone),
                   ),
                   for (final currency in state.currencies)

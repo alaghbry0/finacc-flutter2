@@ -85,14 +85,12 @@ class MonthSalesCard extends StatelessWidget {
       children: [
         SectionHeader(title: l10n.monthSalesTitle),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Flexible(

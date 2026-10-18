@@ -83,7 +83,7 @@ class _ItemDetailBody extends StatelessWidget {
           if (state.loading) {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-              children: const [ListSkeleton(rows: 6)],
+              children: const [ListSkeleton()],
             );
           }
           if (state.notFound) {

@@ -38,7 +38,7 @@ void main() {
       reason: 'المدير يرث اسم المنشأة إن لم يُحدد',
     );
     expect(draft.fiscalYear, 2026);
-    expect(draft.fiscalStart, DateTime(2026, 1, 1));
+    expect(draft.fiscalStart, DateTime(2026));
     expect(draft.fiscalEnd, DateTime(2026, 12, 31));
     // الهاشات ليست النص الخام.
     expect(draft.pinHash, isNot(contains('1234')));

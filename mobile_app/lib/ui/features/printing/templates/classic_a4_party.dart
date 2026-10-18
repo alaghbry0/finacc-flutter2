@@ -23,7 +23,7 @@ pw.Widget classicCustomerLines(InvoicePrintDoc doc) {
       children: [
         pw.Text(
           '${doc.labels.customer}: ${doc.partyName}',
-          style: PrintText.body(color: PrintPalette.ink, size: 10.5),
+          style: PrintText.body(size: 10.5),
           textDirection: pw.TextDirection.rtl,
         ),
         pw.Padding(

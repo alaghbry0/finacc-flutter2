@@ -31,6 +31,14 @@ linter:
     unnecessary_parenthesis: true
     prefer_const_declarations: true
     prefer_final_in_for_each: true
-    # دين المرحلة القادمة (يُفعَّل لاحقاً بعد مسح مواقع كثيرة):
-    # prefer_const_constructors (73 موضعاً) و avoid_redundant_argument_values
-    # (522) — تجاوزتا سقف الجولة (>20) فأُجِّلتا لجولة تنظيف قادمة.
+    # ── R19-D5 القاعدتان المؤجلتان (دين R18-D5: 73 و522 موضعاً) فُعِّلتا وأُصلح كل مواضعهما ──
+    prefer_const_constructors: true
+    avoid_redundant_argument_values: true
+    # ── R19-D5 تشديد إضافي (قِيس صفرَ مواضع) ──
+    prefer_const_literals_to_create_immutables: true
+    # دين مؤجل (سياسة R18-D5: >20 موضعاً): prefer_single_quotes ‏(46 موضعاً —
+    # رأيُ تنسيقٍ خارج flutter_lints لا قاعدة صحة، فلا تُفعَّل ما لم تُتبنَّ قراراً).
+    # مرشحان قِيسا واستُبعدا: unnecessary_import وunused_field ليسا اسمَي قاعدتين
+    # معرفتين في إصدار SDK هذا (التغطية المكافئة عبر تشخيصات المحلل المدمجة)؛
+    # وavoid_unnecessary_containers/unnecessary_this/unnecessary_string_interpolations
+    # تأتي أصلاً مع flutter_lints/recommended وصفر مواضع.

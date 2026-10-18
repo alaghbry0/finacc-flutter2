@@ -91,7 +91,6 @@ class _BarcodePreviewState extends State<BarcodePreview> {
                     width: 140,
                     height: 140,
                     drawText: false,
-                    color: Colors.black,
                   )
                 : BarcodeWidget(
                     key: Key('barcode_preview_${isEan ? 'ean13' : 'code128'}'),
@@ -100,7 +99,6 @@ class _BarcodePreviewState extends State<BarcodePreview> {
                     width: 220,
                     height: 76,
                     drawText: false,
-                    color: Colors.black,
                   ),
           ),
         ),

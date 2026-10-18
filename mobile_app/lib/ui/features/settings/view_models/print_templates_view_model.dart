@@ -74,17 +74,13 @@ class PrintTemplatesViewModel extends ChangeNotifier {
 
   /// تحميل الصفوف والإعدادات النشطة في جولة واحدة.
   Future<void> load() async {
-    _state = _state.copyWith(loading: true, error: null);
+    _state = _state.copyWith(loading: true);
     notifyListeners();
     try {
       final rows = await _print.allFor(docType);
       if (rows.isEmpty) {
         // قاعدة بلا بذر (حالة نادرة): البسيط الافتراضي حياً على الشاشة.
-        _state = PrintTemplatesState(
-          loading: false,
-          activeCode: kPrintTemplateDefaultCode,
-          settings: const InvoiceTemplateSettings(),
-        );
+        _state = const PrintTemplatesState(loading: false);
       } else {
         final active = rows.where((r) => r.isDefault).firstOrNull;
         _state = PrintTemplatesState(
@@ -121,7 +117,7 @@ class PrintTemplatesViewModel extends ChangeNotifier {
   /// استعادة إعدادات البذر للقوالب الثلاثة + البسيط نشطاً.
   Future<void> resetToDefault() async {
     try {
-      await _print.resetToDefault(docType: docType);
+      await _print.resetToDefault();
     } catch (error) {
       // فشل الاستعادة يُعرض للمستخدم عبر writeError.
       _state = _state.copyWith(writeError: 'WRITE_FAILED');

@@ -79,7 +79,7 @@ void main() {
     expect(s.loading, isFalse);
     expect(s.error, isNull);
     expect(s.period, ReportPeriod.month);
-    expect(s.from, DateTime(2026, 10, 1));
+    expect(s.from, DateTime(2026, 10));
     expect(s.to, DateTime(2026, 10, 8));
     expect(s.report, isNotNull);
     expect(s.report!.sales, 1000);
@@ -119,7 +119,7 @@ void main() {
     await vm.setPeriod(ReportPeriod.quarter);
     final s = vm.state;
     expect(s.period, ReportPeriod.quarter);
-    expect(s.from, DateTime(2026, 10, 1));
+    expect(s.from, DateTime(2026, 10));
     expect(s.report!.sales, 1000);
     vm.dispose();
   });
@@ -130,7 +130,7 @@ void main() {
     await vm.setPeriod(ReportPeriod.year);
     final s = vm.state;
     expect(s.period, ReportPeriod.year);
-    expect(s.from, DateTime(2026, 1, 1));
+    expect(s.from, DateTime(2026));
     expect(s.to, DateTime(2026, 10, 8));
     expect(s.report!.sales, 1500);
     vm.dispose();
@@ -147,7 +147,7 @@ void main() {
     expect(s.report!.sales, 500, reason: 'فاتورة 15-01 داخل المدى');
 
     // مدى بلا أي حركة → الحالة الفارغة.
-    await vm.setCustomRange(DateTime(2026, 3, 1), DateTime(2026, 3, 31));
+    await vm.setCustomRange(DateTime(2026, 3), DateTime(2026, 3, 31));
     expect(vm.state.isEmpty, isTrue);
     expect(vm.state.report!.hasAnyActivity, isFalse);
     vm.dispose();
@@ -175,7 +175,7 @@ void main() {
     await vm.refresh();
     final s = vm.state;
     expect(s.period, ReportPeriod.year);
-    expect(s.from, DateTime(2026, 1, 1));
+    expect(s.from, DateTime(2026));
     expect(s.report, isNotNull);
     expect(s.report!.sales, 1500);
     expect(s.loading, isFalse);

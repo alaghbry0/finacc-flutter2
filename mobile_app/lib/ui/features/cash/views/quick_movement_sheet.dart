@@ -3,7 +3,7 @@
 /// واحد يبدّل حقوله حسب النوع (فئة إلزامية للمصروف حصراً + صندوق هدف
 /// للأنواع ذات الساقين) + بوابات أسعار اليوم للعملات غير الأساس
 /// (FR-08-09) + تحذير بصري عند رصيد متوقع سالب (FR-04-09 — تحذير بلا
-/// منع). تُفتح فوق شريط التبويبات (useRootNavigator: false حصراً).
+/// منع). تُفتح فوق شريط التبويبات (useRootNavigator على افتراضه false حصراً).
 library;
 
 import 'dart:async';
@@ -46,8 +46,6 @@ Future<bool> showQuickMovementSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    // فوق شريط التبويبات (متصفح الفرع) — لا من أسفل الشاشة خلفه.
-    useRootNavigator: false,
     builder: (_) => ChangeNotifierProvider<QuickMovementViewModel>.value(
       value: vm,
       child: _QuickMovementSheet(onPosted: () => posted = true),
@@ -316,7 +314,7 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
             decoration: InputDecoration(
               labelText: l10n.cashQmDateLabel,
               prefixIcon: const Icon(Icons.event_rounded),
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
             child: Text(
               cashFormatDate(vm.txDate),
@@ -413,7 +411,6 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   AmountText(amount: receipt.amount, size: AmountSize.large),
@@ -459,7 +456,6 @@ class _QuickMovementSheetState extends State<_QuickMovementSheet> {
                       ),
                       AmountText(
                         amount: receipt.targetAmount!,
-                        decimals: 2,
                         showSignMarker: false,
                       ),
                       if (targetCode != null && targetCode.isNotEmpty) ...[
@@ -537,7 +533,6 @@ class _MovementPreview extends StatelessWidget {
                 ),
                 AmountText(
                   amount: projected!.abs(),
-                  decimals: 2,
                   // DS-18: علامة غير لونية إلزامية — رصيد متوقع سالب يظهر
                   // «−2,500.00» لا «2,500.00» بحمراء فقط (إصلاح جولة 13).
                   sign: projected! < 0 ? FinSign.outgoing : FinSign.neutral,

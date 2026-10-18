@@ -33,7 +33,6 @@ void main() {
       templateId: kInvoiceTemplateClassicA4,
       tableHeadArgb: 0xFF9DC3E6,
       borderArgb: 0xFF37474F,
-      accentRedArgb: 0xFFC62828,
       showDiscountColumn: false,
       showUnitColumn: true,
       showBarcode: true,

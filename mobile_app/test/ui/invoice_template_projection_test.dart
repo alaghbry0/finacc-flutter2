@@ -34,17 +34,11 @@ void main() {
   ) async {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
-      final doc = invoiceDocForTests(l10n, itemCount: 2);
-      final withDiscount = await build(
-        doc,
-        const InvoiceTemplateSettings(templateId: kInvoiceTemplateSimpleA4),
-      );
+      final doc = invoiceDocForTests(l10n);
+      final withDiscount = await build(doc, const InvoiceTemplateSettings());
       final withoutDiscount = await build(
         doc,
-        const InvoiceTemplateSettings(
-          templateId: kInvoiceTemplateSimpleA4,
-          showDiscountColumn: false,
-        ),
+        const InvoiceTemplateSettings(showDiscountColumn: false),
       );
       final withCount = pdfTextOpCount(withDiscount);
       final withoutCount = pdfTextOpCount(withoutDiscount);
@@ -64,21 +58,14 @@ void main() {
       // الوحدة متوفرة بالمسقط + تسمية العمود معربة.
       final doc = invoiceDocForTests(
         l10n,
-        itemCount: 2,
         unitLabel: 'علبة',
         templateLabels: templateLabelsForTests(l10n),
       );
       final withUnit = await build(
         doc,
-        const InvoiceTemplateSettings(
-          templateId: kInvoiceTemplateSimpleA4,
-          showUnitColumn: true,
-        ),
+        const InvoiceTemplateSettings(showUnitColumn: true),
       );
-      final withoutUnit = await build(
-        doc,
-        const InvoiceTemplateSettings(templateId: kInvoiceTemplateSimpleA4),
-      );
+      final withoutUnit = await build(doc, const InvoiceTemplateSettings());
       expect(
         pdfTextOpCount(withUnit),
         greaterThan(pdfTextOpCount(withoutUnit)),
@@ -94,7 +81,6 @@ void main() {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       final doc = invoiceDocForTests(
         l10n,
-        itemCount: 2,
         templateLabels: templateLabelsForTests(l10n),
       );
       final withDiscount = await build(
@@ -126,7 +112,6 @@ void main() {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
       final doc = invoiceDocForTests(
         l10n,
-        itemCount: 2,
         unitLabel: 'علبة',
         templateLabels: templateLabelsForTests(l10n),
       );

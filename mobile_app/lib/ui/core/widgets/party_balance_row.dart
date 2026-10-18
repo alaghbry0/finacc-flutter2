@@ -113,11 +113,7 @@ class PartyBalanceRow extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      AmountText(
-                        amount: balance.abs(),
-                        size: AmountSize.row,
-                        decimals: 2,
-                      ),
+                      AmountText(amount: balance.abs()),
                       const SizedBox(width: 4),
                       Text(
                         currencyCode,

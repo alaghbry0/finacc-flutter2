@@ -70,7 +70,7 @@ void main() {
             )).first['id']
             as int;
     final supplierResult = await suppliers.createSupplier(
-      SupplierDraft(name: 'مستوردات النور'),
+      const SupplierDraft(name: 'مستوردات النور'),
       userId: userId,
       now: at,
     );
@@ -162,7 +162,7 @@ void main() {
     test(
       'كل الجداول مكتوبة صحيحة: invoice/invoice_item/stock/cash/audit',
       () async {
-        final pen = await makeProduct('قلم', cost: 0, price: 25);
+        final pen = await makeProduct('قلم', price: 25);
         final result = await purchases.postPurchase(
           draft(
             [PurchaseLine(productId: pen, qty: 4, unitCost: 25)],
@@ -289,7 +289,7 @@ void main() {
       // فشل (صنف غير موجود) — لا استهلاك رقم.
       final failed = await purchases.postPurchase(
         draft(
-          [PurchaseLine(productId: 999999, qty: 1, unitCost: 5)],
+          [const PurchaseLine(productId: 999999, qty: 1, unitCost: 5)],
           paidCash: 5,
           method: PurchasePaymentMethod.cash,
         ),
@@ -314,7 +314,7 @@ void main() {
 
   group('WAC — مثال SRS النصي (5.4-3)', () {
     test('شراء 10 @100 بخصم رأس 10% → cost_price = 90 (لا 100)', () async {
-      final item = await makeProduct('حليب', cost: 0);
+      final item = await makeProduct('حليب');
       final result = await purchases.postPurchase(
         draft(
           [PurchaseLine(productId: item, qty: 10, unitCost: 100)],
@@ -339,7 +339,7 @@ void main() {
     });
 
     test('خلط لاحق: قديم 10×90 + جديد 5×120 → WAC = 100', () async {
-      final item = await makeProduct('حليب', cost: 0);
+      final item = await makeProduct('حليب');
       await purchases.postPurchase(
         draft(
           [PurchaseLine(productId: item, qty: 10, unitCost: 100)],
@@ -463,11 +463,9 @@ void main() {
     test('تعارض تعلان الدفع مع الأرقام → رفض', () async {
       final pen = await makeProduct('قلم');
       final result = await purchases.postPurchase(
-        draft(
-          [PurchaseLine(productId: pen, qty: 1, unitCost: 100)],
-          paidCash: 0,
-          method: PurchasePaymentMethod.cash,
-        ),
+        draft([
+          PurchaseLine(productId: pen, qty: 1, unitCost: 100),
+        ], method: PurchasePaymentMethod.cash),
         userId: userId,
         now: at,
       );
@@ -487,7 +485,7 @@ void main() {
             qty: 10,
             unitCost: 50,
             batchNo: 'B-2027-01',
-            expiryDate: DateTime(2027, 6, 1),
+            expiryDate: DateTime(2027, 6),
           ),
         ]),
         userId: userId,
@@ -526,7 +524,7 @@ void main() {
             qty: 10,
             unitCost: 50,
             batchNo: 'B-1',
-            expiryDate: DateTime(2027, 1, 1),
+            expiryDate: DateTime(2027),
           ),
         ]),
         userId: userId,
@@ -539,7 +537,7 @@ void main() {
             qty: 5,
             unitCost: 70,
             batchNo: 'B-2',
-            expiryDate: DateTime(2028, 1, 1),
+            expiryDate: DateTime(2028),
           ),
         ]),
         userId: userId,
@@ -588,7 +586,7 @@ void main() {
             qty: 1,
             unitCost: 10,
             batchNo: 'B-X',
-            expiryDate: DateTime(2027, 1, 1),
+            expiryDate: DateTime(2027),
           ),
         ]),
         userId: userId,
@@ -623,7 +621,7 @@ void main() {
       await settings.set('fx.fallback', 'last_known');
       await rates.setRate(
         currencyId: sarId,
-        date: DateTime(2026, 10, 1),
+        date: DateTime(2026, 10),
         rate: 530,
         userId: userId,
         now: at,
@@ -724,7 +722,7 @@ void main() {
 
     test('صنف غير موجود / مورد غير موجود → رفض نظيف', () async {
       final missing = await purchases.postPurchase(
-        draft([PurchaseLine(productId: 999999, qty: 1, unitCost: 5)]),
+        draft([const PurchaseLine(productId: 999999, qty: 1, unitCost: 5)]),
         userId: userId,
         now: at,
       );

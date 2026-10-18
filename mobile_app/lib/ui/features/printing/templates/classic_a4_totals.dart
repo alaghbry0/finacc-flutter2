@@ -93,7 +93,7 @@ pw.Widget classicNotesBox(
         pw.Expanded(
           child: pw.Text(
             (doc.notesPrinted ?? '').trim(),
-            style: PrintText.body(size: 9.5),
+            style: PrintText.body(),
             textDirection: pw.TextDirection.rtl,
           ),
         ),
@@ -176,12 +176,9 @@ pw.Widget classicTotalsTable(
                 child: pw.Text(
                   value,
                   style: style == ClassicTotalRowStyle.red
-                      ? PrintText.tabularHead(color: red, size: 11)
+                      ? PrintText.tabularHead(color: red)
                       : style == ClassicTotalRowStyle.cream
-                      ? PrintText.tabularHead(
-                          color: PrintPalette.brandDeep,
-                          size: 11,
-                        )
+                      ? PrintText.tabularHead(color: PrintPalette.brandDeep)
                       : PrintText.tabular(
                           color: PrintPalette.brandDeep,
                           size: 10,
@@ -200,7 +197,7 @@ pw.Widget classicTotalsTable(
                     ? PrintText.head(color: red, size: 10.5)
                     : style == ClassicTotalRowStyle.cream
                     ? PrintText.head(color: PrintPalette.brandDeep, size: 10.5)
-                    : PrintText.body(color: PrintPalette.inkSoft, size: 9.5),
+                    : PrintText.body(color: PrintPalette.inkSoft),
                 textDirection: pw.TextDirection.rtl,
               ),
             ),

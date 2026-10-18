@@ -301,7 +301,6 @@ void main() {
       final sale = await sales.postSale(
         saleDraft(
           [CartLine(productId: pen, qty: 10, unitPrice: 10)],
-          paidCash: 0,
           customerId: customer,
           method: SalePaymentMethod.credit,
         ),
@@ -457,7 +456,6 @@ void main() {
         SaleReturnDraft(
           originalInvoiceId: invoiceId,
           lines: [ReturnLineInput(invoiceItemId: itemRow['id'] as int, qty: 1)],
-          refundMethod: ReturnRefundMethod.cash,
           refundCash: 5,
           issuedAt: at,
         ),
@@ -652,7 +650,6 @@ void main() {
       final purchase = await purchases.postPurchase(
         purchaseDraft(
           [PurchaseLine(productId: item, qty: 4, unitCost: 25)],
-          paidCash: 0,
           supplierId: supplier,
           method: PurchasePaymentMethod.credit,
         ),

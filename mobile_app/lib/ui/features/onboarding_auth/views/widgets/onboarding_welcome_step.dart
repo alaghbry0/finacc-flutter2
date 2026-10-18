@@ -33,7 +33,7 @@ class OnboardingWelcomeStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 36, 24, 24),
       children: [
-        const BrandMark(size: 96, showWordmark: true),
+        const BrandMark(showWordmark: true),
         const SizedBox(height: 26),
         Text(
           l10n.onboardWelcomeTitle,

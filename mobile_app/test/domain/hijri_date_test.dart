@@ -37,7 +37,7 @@ void main() {
 
     test('دورة ذهاب وإياب: ميلادي ← هجري ← ميلادي بنفس اليوم', () {
       for (final g in [
-        DateTime(2026, 1, 1),
+        DateTime(2026),
         DateTime(2026, 6, 15),
         DateTime(2026, 12, 31),
         DateTime(2024, 2, 29), // يوم كبيس

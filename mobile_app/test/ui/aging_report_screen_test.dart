@@ -55,7 +55,7 @@ void main() {
       await pumpQuietly(tester, 6);
 
       router.go('/reports');
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       // الشريحة 10: الجذر صار مركز التقارير (بدل التحويل القديم).
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
@@ -68,7 +68,7 @@ void main() {
 
       // الضغط على البطاقة يفتح التقرير نفسه (هيكله العظمي أثناء التحميل).
       await tester.tap(find.text('أعمار الديون'));
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(
         router.routerDelegate.currentConfiguration.uri.path,
         '/reports/aging',
@@ -223,7 +223,7 @@ void main() {
       );
       expect(tester.widget<AnimatedRotation>(chevron).turns, 0.0);
       await tester.tap(find.text('عميل التعمير'));
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(tester.widget<AnimatedRotation>(chevron).turns, 0.5);
       expect(find.text('AG-SMOKE-1'), findsOneWidget);
       expect(find.text('AG-SMOKE-2'), findsOneWidget);
@@ -238,7 +238,7 @@ void main() {
           matching: find.byTooltip('إرسال تذكير واتساب'),
         ),
       );
-      await pumpQuietly(tester, 8);
+      await pumpQuietly(tester);
       expect(
         find.textContaining('لا يوجد رقم واتساب أو هاتف'),
         findsOneWidget,

@@ -108,7 +108,6 @@ class OnboardingDoneStep extends StatelessWidget {
                   ),
                   StatusChip(
                     label: result.currencyName,
-                    tone: ChipTone.neutral,
                     icon: Icons.payments_rounded,
                   ),
                 ],

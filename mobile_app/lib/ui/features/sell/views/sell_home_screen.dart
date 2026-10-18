@@ -149,7 +149,6 @@ class _TodayStatsRow extends StatelessWidget {
             value: stats?.sales ?? 0,
             icon: Icons.trending_up_rounded,
             sign: FinSign.incoming,
-            decimals: 2,
           ),
         ),
         const SizedBox(width: 12),
@@ -161,7 +160,6 @@ class _TodayStatsRow extends StatelessWidget {
             sign: stats != null && stats.netCash < 0
                 ? FinSign.outgoing
                 : FinSign.neutral,
-            decimals: 2,
           ),
         ),
       ],

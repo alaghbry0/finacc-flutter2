@@ -141,14 +141,12 @@ class _NetCashHeroCard extends StatelessWidget {
           if (base != null) ...[
             const SizedBox(height: 14),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Expanded(
                   child: AmountText(
                     amount: base.amount,
                     size: AmountSize.display,
-                    decimals: 2,
                     sign: base.amount < 0 ? FinSign.outgoing : FinSign.neutral,
                   ),
                 ),
@@ -191,8 +189,6 @@ class _NetCashHeroCard extends StatelessWidget {
                   Expanded(
                     child: AmountText(
                       amount: line.amount,
-                      size: AmountSize.row,
-                      decimals: 2,
                       sign: line.amount < 0
                           ? FinSign.outgoing
                           : FinSign.neutral,

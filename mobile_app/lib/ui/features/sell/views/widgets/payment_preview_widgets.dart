@@ -39,7 +39,6 @@ class PaymentTotalHeader extends StatelessWidget {
         const SizedBox(height: 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           textBaseline: TextBaseline.alphabetic,
           children: [
             AmountText(
