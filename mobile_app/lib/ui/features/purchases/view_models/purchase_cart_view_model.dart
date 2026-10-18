@@ -16,6 +16,10 @@
 ///   دفعة لا يظهر متاحاً للبيع) — مع تاريخ الصلاحية (عمود expiry NOT NULL).
 /// - فشل `postPurchase` **لا يفقد الفاتورة** — رسالة الرفض العربية تُعرض
 ///   كما هي (السلة محفوظة).
+///
+/// الأنواع النقية والنسخ في `purchase_cart_state.dart` والحسابات النقية في
+/// `purchase_cart_helpers.dart` (R19-D3c — وصفة sell_cart_view_model من
+/// R19-D3a)؛ هذا الملف يصدّر الحالة فبقيت استيرادات المستدعين كما هي.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -28,187 +32,10 @@ import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/item.dart';
 import '../../../../domain/models/purchase.dart';
-import '../../../../domain/services/purchase_pricing.dart';
+import 'purchase_cart_helpers.dart';
+import 'purchase_cart_state.dart';
 
-/// علامة «أبقِ القيمة الحالية» للحقول القابلة للتصفير في `_stateWith`.
-const Object _keep = Object();
-
-/// مورد فاتورة الشراء — إلزامي (لا مورد مجهول في الشراء).
-class CartSupplier {
-  const CartSupplier({required this.id, required this.name, this.phone});
-
-  final int id;
-  final String name;
-  final String? phone;
-}
-
-/// سطر شراء حي — صورة الصنف لحظة إضافته + حقوله القابلة للتحرير،
-/// وحقول الدفعة الواردة (رقم الدفعة + الصلاحية) للأصناف المتتبعة،
-/// والكمية المجانية/بونص من المورد (R16-a).
-class PurchaseCartUiLine {
-  const PurchaseCartUiLine({
-    required this.productId,
-    required this.name,
-    required this.qty,
-    required this.unitCost,
-    required this.discountType,
-    required this.discountValue,
-    required this.currentStock,
-    required this.isService,
-    required this.trackBatches,
-    this.freeQty = 0,
-    this.batchNo = '',
-    this.expiryDate,
-  });
-
-  final int productId;
-  final String name;
-
-  /// الكمية المدفوعة للمورد (> 0 دائماً — القيم غير الصالحة ترفض).
-  final double qty;
-
-  /// الكمية المجانية/بونص من المورد (≥ 0 — R16-a): الحقل دائم التوفر
-  /// بمحرر السطر؛ لا تدخل أي تسعير — المستلم الكلي (qty + freeQty)
-  /// يُحسب مخزونياً وقت الترحيل (البونص يخفّض WAC).
-  final double freeQty;
-
-  /// تكلفة الوحدة بعملة الفاتورة كما في فاتورة المورد (≥ 0).
-  final double unitCost;
-
-  final PurchaseDiscountType discountType;
-  final double discountValue;
-
-  /// الرصيد الحالي بالمخزن (معلوماتي — الوارد يُضاف فوقه، لا سقف للشراء).
-  final double? currentStock;
-
-  final bool isService;
-
-  /// يتتبع الدفعات؟ → رقم الدفعة إلزامي قبل الترحيل.
-  final bool trackBatches;
-
-  /// رقم الدفعة الواردة (فارغ = لم يُدخل بعد).
-  final String batchNo;
-
-  /// صلاحية الدفعة الواردة (إلزامية مع رقم الدفعة).
-  final DateTime? expiryDate;
-
-  PurchaseCartUiLine copyWith({
-    double? qty,
-    double? freeQty,
-    double? unitCost,
-    PurchaseDiscountType? discountType,
-    double? discountValue,
-    String? batchNo,
-    DateTime? expiryDate,
-  }) => PurchaseCartUiLine(
-    productId: productId,
-    name: name,
-    qty: qty ?? this.qty,
-    freeQty: freeQty ?? this.freeQty,
-    unitCost: unitCost ?? this.unitCost,
-    discountType: discountType ?? this.discountType,
-    discountValue: discountValue ?? this.discountValue,
-    currentStock: currentStock,
-    isService: isService,
-    trackBatches: trackBatches,
-    batchNo: batchNo ?? this.batchNo,
-    expiryDate: expiryDate ?? this.expiryDate,
-  );
-
-  PurchaseLine toPurchaseLine() => PurchaseLine(
-    productId: productId,
-    qty: qty,
-    unitCost: unitCost,
-    lineDiscountType: discountType,
-    lineDiscountValue: discountValue,
-    freeQty: freeQty,
-    batchNo: batchNo.trim().isEmpty ? null : batchNo.trim(),
-    expiryDate: batchNo.trim().isEmpty ? null : expiryDate,
-  );
-}
-
-/// حالة فاتورة الشراء الحية الكاملة.
-class PurchaseCartState {
-  const PurchaseCartState({
-    required this.loading,
-    this.error,
-    required this.currencies,
-    this.baseCurrency,
-    this.currencyId,
-    this.todayRate,
-    required this.rateKnown,
-    this.supplier,
-    this.warehouseId,
-    required this.lines,
-    required this.invoiceDiscountType,
-    required this.invoiceDiscountValue,
-    required this.posting,
-    this.postError,
-    this.notice,
-    this.nextInvoiceNo,
-    this.fxGateRequired = false,
-    this.lastReceipt,
-  });
-
-  final bool loading;
-  final Object? error;
-
-  /// العملات النشطة (الأساس أولاً).
-  final List<Currency> currencies;
-  final Currency? baseCurrency;
-
-  /// عملة الفاتورة المحددة (الأساس افتراضياً).
-  final int? currencyId;
-
-  /// سعر اليوم للعملة المحددة (null للأساس أو عند الغياب).
-  final double? todayRate;
-
-  /// هل سعر اليوم معروف للعملة المحددة؟ (الأساس = true دائماً).
-  final bool rateKnown;
-
-  final CartSupplier? supplier;
-  final int? warehouseId;
-
-  final List<PurchaseCartUiLine> lines;
-
-  final PurchaseDiscountType invoiceDiscountType;
-  final double invoiceDiscountValue;
-
-  /// ترحيل جارٍ الآن (قفل الأزرار).
-  final bool posting;
-
-  /// رسالة رفض آخر ترحيل (تُعرض بوضوح — الفاتورة لا تُفقد).
-  final String? postError;
-
-  /// إشعار عابر — يُمسح بعد العرض.
-  final String? notice;
-
-  /// رقم PUR القادم (معاينة — الترقيم الحقيقي ذرّي داخل المعاملة).
-  final String? nextInvoiceNo;
-
-  /// طلب فتح نافذة إدخال سعر اليوم (FR-08-09).
-  final bool fxGateRequired;
-
-  /// إيصال آخر فاتورة شراء مُرحَّلة (نجاح — «شراء جديد» يفرّغ الفاتورة).
-  final PurchasePostedReceipt? lastReceipt;
-
-  Currency? get selectedCurrency {
-    for (final currency in currencies) {
-      if (currency.id == currencyId) return currency;
-    }
-    return null;
-  }
-
-  static const PurchaseCartState initial = PurchaseCartState(
-    loading: true,
-    currencies: <Currency>[],
-    rateKnown: true,
-    lines: <PurchaseCartUiLine>[],
-    invoiceDiscountType: PurchaseDiscountType.amount,
-    invoiceDiscountValue: 0,
-    posting: false,
-  );
-}
+export 'purchase_cart_state.dart';
 
 /// نموذج فاتورة الشراء الحية — يعيش الجلسة عبر [PurchaseCartSession].
 class PurchaseCartViewModel extends ChangeNotifier {
@@ -297,44 +124,14 @@ class PurchaseCartViewModel extends ChangeNotifier {
   // التسعير الحي (نقي — بلا قاعدة)
   // ───────────────────────────────────────────────────────────────────
 
-  List<PurchaseLine> get purchaseLines => [
-    for (final line in _state.lines) line.toPurchaseLine(),
-  ];
+  List<PurchaseLine> get purchaseLines => purchaseCartLines(_state);
 
   /// الفاتورة المُسعَّرة الآن — null عند الفراغ أو عدم قابلية التسعير.
-  PricedPurchaseCart? get pricedCart {
-    if (_state.lines.isEmpty) return null;
-    try {
-      return PurchasePricing.priceCart(
-        purchaseLines,
-        invoiceDiscountType: _state.invoiceDiscountType,
-        invoiceDiscountValue: _state.invoiceDiscountValue,
-      );
-    } on StateError {
-      return null;
-    }
-  }
+  PricedPurchaseCart? get pricedCart => purchaseCartPricedCart(_state);
 
   /// خطأ التحقق الحالي (كميات/تكاليف/خصومات/صافٍ > 0/دفعات واردة) —
   /// null عند السلامة.
-  String? get cartError {
-    if (_state.lines.isEmpty) return null;
-    final failure = PurchasePricing.validateCart(
-      purchaseLines,
-      invoiceDiscountType: _state.invoiceDiscountType,
-      invoiceDiscountValue: _state.invoiceDiscountValue,
-    );
-    if (failure != null) return failure;
-    // قرار المحرك 4: الواجهة تُلزم رقم الدفعة للأصناف المتتبعة (رصيد
-    // المتتبع بلا دفعة لا يظهر متاحاً للبيع).
-    for (final line in _state.lines) {
-      if (!line.isService && line.trackBatches && line.batchNo.trim().isEmpty) {
-        return 'الصنف «${line.name}» يتتبع الدفعات — أدخل رقم الدفعة '
-            'وتاريخ صلاحيتها في سطره قبل الترحيل.';
-      }
-    }
-    return null;
-  }
+  String? get cartError => purchaseCartError(_state);
 
   /// الصافي الحالي (للعرض في زر الترحيل) — 0 عند الفراغ.
   double get grandTotal => pricedCart?.totals.grandTotal ?? 0;
@@ -345,7 +142,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
 
   /// اختيار مورد (إلزامي — لا شراء بلا مورد).
   void setSupplier({required int id, required String name, String? phone}) {
-    _state = _stateWith(
+    _state = purchaseCartStateWith(
+      _state,
       supplier: CartSupplier(id: id, name: name, phone: phone),
       postError: null,
     );
@@ -364,7 +162,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
       rate = await _fx.rateFor(currencyId, _clock());
       rateKnown = rate != null && rate > 0;
     }
-    _state = _stateWith(
+    _state = purchaseCartStateWith(
+      _state,
       currencyId: currencyId,
       todayRate: rate,
       rateKnown: rateKnown,
@@ -397,7 +196,7 @@ class PurchaseCartViewModel extends ChangeNotifier {
   /// استهلاك طلب فتح بوابة FX (بعد فتح النافذة).
   void clearFxGate() {
     if (!_state.fxGateRequired) return;
-    _state = _stateWith(fxGateRequired: false);
+    _state = purchaseCartStateWith(_state, fxGateRequired: false);
     notifyListeners();
   }
 
@@ -406,7 +205,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
     if (currencyId == null) return;
     final currency = _currencyById(currencyId);
     if (currency == null || currency.isBase) {
-      _state = _stateWith(
+      _state = purchaseCartStateWith(
+        _state,
         todayRate: null,
         rateKnown: true,
         fxGateRequired: false,
@@ -416,7 +216,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
     }
     final rate = await _fx.rateFor(currencyId, _clock());
     final known = rate != null && rate > 0;
-    _state = _stateWith(
+    _state = purchaseCartStateWith(
+      _state,
       todayRate: rate,
       rateKnown: known,
       fxGateRequired: known ? false : _state.fxGateRequired,
@@ -453,7 +254,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
       _updateLine(existing, qty: _state.lines[existing].qty + 1);
       return;
     }
-    _state = _stateWith(
+    _state = purchaseCartStateWith(
+      _state,
       lines: [
         ..._state.lines,
         PurchaseCartUiLine(
@@ -528,7 +330,7 @@ class PurchaseCartViewModel extends ChangeNotifier {
       // حذف الرقم يصفّر الصلاحية المرافقة (لا دفعة بلا رقم).
       expiryDate: batchNo.trim().isEmpty ? null : lines[index].expiryDate,
     );
-    _state = _stateWith(lines: lines, postError: null);
+    _state = purchaseCartStateWith(_state, lines: lines, postError: null);
     notifyListeners();
   }
 
@@ -542,7 +344,7 @@ class PurchaseCartViewModel extends ChangeNotifier {
   void removeLine(int index) {
     if (index < 0 || index >= _state.lines.length) return;
     final lines = [..._state.lines]..removeAt(index);
-    _state = _stateWith(lines: lines);
+    _state = purchaseCartStateWith(_state, lines: lines);
     notifyListeners();
   }
 
@@ -556,7 +358,11 @@ class PurchaseCartViewModel extends ChangeNotifier {
       _notice('نسبة خصم الفاتورة لا يمكن أن تتجاوز 100%.');
       return;
     }
-    _state = _stateWith(invoiceDiscountType: type, invoiceDiscountValue: value);
+    _state = purchaseCartStateWith(
+      _state,
+      invoiceDiscountType: type,
+      invoiceDiscountValue: value,
+    );
     notifyListeners();
   }
 
@@ -568,25 +374,12 @@ class PurchaseCartViewModel extends ChangeNotifier {
   PurchaseDraft? buildDraft({
     required double paidCash,
     required PurchasePaymentMethod method,
-  }) {
-    final currencyId = _state.currencyId;
-    final warehouseId = _state.warehouseId;
-    final supplier = _state.supplier;
-    if (currencyId == null || warehouseId == null || supplier == null) {
-      return null;
-    }
-    return PurchaseDraft(
-      supplierId: supplier.id,
-      currencyId: currencyId,
-      lines: purchaseLines,
-      invoiceDiscountType: _state.invoiceDiscountType,
-      invoiceDiscountValue: _state.invoiceDiscountValue,
-      paidCash: paidCash,
-      paymentMethod: method,
-      warehouseId: warehouseId,
-      issuedAt: _clock(),
-    );
-  }
+  }) => buildPurchaseDraftFromCart(
+    _state,
+    paidCash: paidCash,
+    method: method,
+    now: _clock(),
+  );
 
   /// **ترحيل فاتورة الشراء** — نجاح: تُفرَّغ الفاتورة ويُحفظ الإيصال؛ فشل:
   /// تُعرض رسالة الرفض العربية **والفاتورة لا تُفقد**.
@@ -601,19 +394,19 @@ class PurchaseCartViewModel extends ChangeNotifier {
     }
     final failure = _prePostFailure(paidCash, method);
     if (failure != null) {
-      _state = _stateWith(postError: failure);
+      _state = purchaseCartStateWith(_state, postError: failure);
       notifyListeners();
       return Err<PurchasePostedReceipt, String>(failure);
     }
     final draft = buildDraft(paidCash: paidCash, method: method);
     if (draft == null) {
       const message = 'اختر المورد أولاً — لا شراء بلا مورد.';
-      _state = _stateWith(postError: message);
+      _state = purchaseCartStateWith(_state, postError: message);
       notifyListeners();
       return const Err<PurchasePostedReceipt, String>(message);
     }
 
-    _state = _stateWith(posting: true, postError: null);
+    _state = purchaseCartStateWith(_state, posting: true, postError: null);
     notifyListeners();
     final result = await _purchases.postPurchase(
       draft,
@@ -622,7 +415,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
     );
     if (result.isOk) {
       final receipt = result.valueOrNull!;
-      _state = _stateWith(
+      _state = purchaseCartStateWith(
+        _state,
         posting: false,
         lines: const <PurchaseCartUiLine>[],
         invoiceDiscountType: PurchaseDiscountType.amount,
@@ -634,34 +428,26 @@ class PurchaseCartViewModel extends ChangeNotifier {
       );
       notifyListeners();
     } else {
-      _state = _stateWith(posting: false, postError: result.errorOrNull!);
+      _state = purchaseCartStateWith(
+        _state,
+        posting: false,
+        postError: result.errorOrNull!,
+      );
       notifyListeners();
     }
     return result;
   }
 
-  /// فحوص ما قبل الترحيل — null عند السلامة.
+  /// فحوص ما قبل الترحيل (بترتيب رسائل واضح للمستخدم) — null عند السلامة.
+  /// (FR-08-09: عند غياب سعر اليوم تُرفع بوابة FX وتُخطر الواجهة قبل
+  /// إعادة رسالة الرفض — نفس ترتيب الإخطار الأصلي حرفياً.)
   String? _prePostFailure(double paidCash, PurchasePaymentMethod method) {
-    if (_state.lines.isEmpty) {
-      return 'أضف بنداً واحداً على الأقل إلى فاتورة الشراء قبل الترحيل.';
-    }
-    final cartFailure = cartError;
-    if (cartFailure != null) return cartFailure;
-    final supplier = _state.supplier;
-    if (supplier == null) {
-      return 'اختر المورد أولاً — لا شراء بلا مورد.';
-    }
-    final currency = _state.selectedCurrency;
-    if (currency == null) return 'اختر عملة الفاتورة أولاً.';
-    if (!currency.isBase && !_state.rateKnown) {
-      // FR-08-09: منع الحفظ + طلب فتح بوابة إدخال سعر اليوم.
-      _state = _stateWith(fxGateRequired: true);
+    final check = purchaseCartPrePostCheck(_state, paidCash, method);
+    if (check.fxGateRequired) {
+      _state = purchaseCartStateWith(_state, fxGateRequired: true);
       notifyListeners();
-      return 'لا يوجد سعر صرف لعملة ${currency.code} بتاريخ اليوم — '
-          'أدخل سعر اليوم أولاً ثم أكمل الترحيل.';
     }
-    final total = grandTotal;
-    return PurchasePricing.validatePayment(total, paidCash, method);
+    return check.failure;
   }
 
   // ───────────────────────────────────────────────────────────────────
@@ -670,7 +456,8 @@ class PurchaseCartViewModel extends ChangeNotifier {
 
   /// «شراء جديد» — تفريغ الفاتورة (يبقى المورد/العملة/المخزن للراحة).
   void startNewInvoice() {
-    _state = _stateWith(
+    _state = purchaseCartStateWith(
+      _state,
       lines: const <PurchaseCartUiLine>[],
       invoiceDiscountType: PurchaseDiscountType.amount,
       invoiceDiscountValue: 0,
@@ -686,18 +473,18 @@ class PurchaseCartViewModel extends ChangeNotifier {
 
   void clearPostError() {
     if (_state.postError == null) return;
-    _state = _stateWith(postError: null);
+    _state = purchaseCartStateWith(_state, postError: null);
     notifyListeners();
   }
 
   void clearNotice() {
     if (_state.notice == null) return;
-    _state = _stateWith(notice: null);
+    _state = purchaseCartStateWith(_state, notice: null);
     notifyListeners();
   }
 
   void _notice(String message) {
-    _state = _stateWith(notice: message);
+    _state = purchaseCartStateWith(_state, notice: message);
     notifyListeners();
   }
 
@@ -722,7 +509,12 @@ class PurchaseCartViewModel extends ChangeNotifier {
       discountValue: discountValue,
       expiryDate: expiryDate,
     );
-    _state = _stateWith(lines: lines, postError: null, notice: null);
+    _state = purchaseCartStateWith(
+      _state,
+      lines: lines,
+      postError: null,
+      notice: null,
+    );
     notifyListeners();
   }
 
@@ -743,56 +535,4 @@ class PurchaseCartViewModel extends ChangeNotifier {
       return null;
     }
   }
-
-  /// نسخة حالة محدَّثة — للحقول القابلة للتصفير (supplier/postError/notice/
-  /// todayRate/lastReceipt): حذف الوسيطة أو تمرير null يصفّرها، وتمرير
-  /// `_keep` يبقيها. بقية الحقول: حذف الوسيطة يبقيها.
-  PurchaseCartState _stateWith({
-    bool? loading,
-    List<Currency>? currencies,
-    Object? baseCurrency = _keep,
-    int? currencyId,
-    Object? todayRate = _keep,
-    bool? rateKnown,
-    Object? supplier = _keep,
-    int? warehouseId,
-    List<PurchaseCartUiLine>? lines,
-    PurchaseDiscountType? invoiceDiscountType,
-    double? invoiceDiscountValue,
-    bool? posting,
-    Object? postError = _keep,
-    Object? notice = _keep,
-    String? nextInvoiceNo,
-    bool? fxGateRequired,
-    Object? lastReceipt = _keep,
-  }) => PurchaseCartState(
-    loading: loading ?? _state.loading,
-    error: _state.error,
-    currencies: currencies ?? _state.currencies,
-    baseCurrency: identical(baseCurrency, _keep)
-        ? _state.baseCurrency
-        : baseCurrency as Currency?,
-    currencyId: currencyId ?? _state.currencyId,
-    todayRate: identical(todayRate, _keep)
-        ? _state.todayRate
-        : todayRate as double?,
-    rateKnown: rateKnown ?? _state.rateKnown,
-    supplier: identical(supplier, _keep)
-        ? _state.supplier
-        : supplier as CartSupplier?,
-    warehouseId: warehouseId ?? _state.warehouseId,
-    lines: lines ?? _state.lines,
-    invoiceDiscountType: invoiceDiscountType ?? _state.invoiceDiscountType,
-    invoiceDiscountValue: invoiceDiscountValue ?? _state.invoiceDiscountValue,
-    posting: posting ?? _state.posting,
-    postError: identical(postError, _keep)
-        ? _state.postError
-        : postError as String?,
-    notice: identical(notice, _keep) ? _state.notice : notice as String?,
-    nextInvoiceNo: nextInvoiceNo ?? _state.nextInvoiceNo,
-    fxGateRequired: fxGateRequired ?? _state.fxGateRequired,
-    lastReceipt: identical(lastReceipt, _keep)
-        ? _state.lastReceipt
-        : lastReceipt as PurchasePostedReceipt?,
-  );
 }
