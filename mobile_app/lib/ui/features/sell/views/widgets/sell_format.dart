@@ -1,15 +1,15 @@
 /// مساعدات تنسيق مشتركة لواجهات البيع — تواريخ/أوقات/كميات بأرقام
 /// جدولية + تسوية الدفع + تحليل أرقام حقول نوافذ التحرير.
+///
+/// R20-D1: `sellFormatDate` و`sellQtyText` (صيغ ثابتة الأرقام الغربية)
+/// انتقلا إلى البيت المحايد `ui/core/widgets/fin_format_helpers.dart`
+/// لأن بيت الطباعة الموحد يحتاجهما ولا يستورد ميزة — ويُصدَّران من
+/// هنا فلم يتغير مستورد تاريخي واحد.
 library;
 
 import '../../../../../domain/services/sale_pricing.dart';
-import '../../../../core/widgets/amount_text.dart';
 
-/// ينسّق تاريخاً للعرض `يوم/شهر/سنة` بأرقام جدولية بسيطة.
-String sellFormatDate(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/'
-    '${date.month.toString().padLeft(2, '0')}/'
-    '${date.year}';
+export '../../../../core/widgets/fin_format_helpers.dart';
 
 /// ينسّق وقتاً 12 ساعة مع ص/م.
 String sellFormatTime(DateTime date) {
@@ -22,10 +22,6 @@ String sellFormatTime(DateTime date) {
   return '${hour.toString().padLeft(2, '0')}:'
       '${date.minute.toString().padLeft(2, '0')} $period';
 }
-
-/// نص كمية معروض بأرقام جدولية (المتاح: N).
-String sellQtyText(double qty) =>
-    AmountText.format(qty, qty == qty.truncateToDouble() ? 0 : 3);
 
 /// فاصل قيمة تسوية الدفع (للعرض المتكرر في PaymentSheet).
 ({double netPaid, double changeDue, double remainingCredit}) settlePreview(

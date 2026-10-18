@@ -173,6 +173,24 @@ class SupplierRepository {
   Future<bool> hasMovements(int id) =>
       partyHasMovements(_db, PartySide.supplier, id);
 
+  // ── قراءة السجل الكامل ───────────────────────────────────────────
+
+  /// سجل المورد الكامل بمعرّفه — أو `null` إن لم يوجد.
+  ///
+  /// يقرأ كل الأعمدة (العنوان، الملاحظات…) لا الأرصدة وحدها — كان
+  /// استعلامه جسر `party_lookup` بواجهة الطبقات قبل أن ينتقل هنا
+  /// (R20-D1).
+  Future<Supplier?> findById(int id) async {
+    final rows = await _db.query(
+      'supplier',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return Supplier.fromRow(rows.first);
+  }
+
   // ── الأرصدة (FR-03-03) ───────────────────────────────────────────
 
   /// قائمة الموردين مع أرصدتهم — سطر لكل (مورد × عملة)؛ المورد بلا أي

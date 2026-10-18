@@ -47,7 +47,10 @@ class CustomerDetailScreen extends StatelessWidget {
       vm = PartyDetailViewModel(
         gate: CustomerRepoGate(app.customers!),
         companyRepo: app.companies!,
-        partyLookup: PartyLookup(app.database!.db),
+        partyLookup: PartyLookup.fromRepositories(
+          app.customers!,
+          app.suppliers!,
+        ),
         partyKind: PartyKind.customer,
         id: customerId ?? -1,
       );
@@ -84,7 +87,10 @@ class SupplierDetailScreen extends StatelessWidget {
       vm = PartyDetailViewModel(
         gate: SupplierRepoGate(app.suppliers!),
         companyRepo: app.companies!,
-        partyLookup: PartyLookup(app.database!.db),
+        partyLookup: PartyLookup.fromRepositories(
+          app.customers!,
+          app.suppliers!,
+        ),
         partyKind: PartyKind.supplier,
         id: supplierId ?? -1,
       );

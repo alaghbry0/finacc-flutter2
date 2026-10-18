@@ -45,7 +45,10 @@ class CustomerFormScreen extends StatelessWidget {
         supplierRepo: app.suppliers!,
         companyRepo: app.companies!,
         fxRepo: app.fxRates!,
-        partyLookup: PartyLookup(app.database!.db),
+        partyLookup: PartyLookup.fromRepositories(
+          app.customers!,
+          app.suppliers!,
+        ),
         partyKind: PartyKind.customer,
         editPartyId: editId,
       );
@@ -80,7 +83,10 @@ class SupplierFormScreen extends StatelessWidget {
         supplierRepo: app.suppliers!,
         companyRepo: app.companies!,
         fxRepo: app.fxRates!,
-        partyLookup: PartyLookup(app.database!.db),
+        partyLookup: PartyLookup.fromRepositories(
+          app.customers!,
+          app.suppliers!,
+        ),
         partyKind: PartyKind.supplier,
         editPartyId: editId,
       );

@@ -182,6 +182,24 @@ class CustomerRepository {
   Future<bool> hasMovements(int id) =>
       partyHasMovements(_db, PartySide.customer, id);
 
+  // ── قراءة السجل الكامل ───────────────────────────────────────────
+
+  /// سجل العميل الكامل بمعرّفه — أو `null` إن لم يوجد.
+  ///
+  /// يقرأ كل الأعمدة (العنوان، حد الائتمان، الملاحظات…) لا الأرصدة
+  /// وحدها — كان استعلامه جسر `party_lookup` بواجهة الطبقات قبل أن
+  /// ينتقل сюда (R20-D1).
+  Future<Customer?> findById(int id) async {
+    final rows = await _db.query(
+      'customer',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return Customer.fromRow(rows.first);
+  }
+
   // ── الأرصدة (FR-03-02) ───────────────────────────────────────────
 
   /// قائمة العملاء مع أرصدتهم — سطر لكل (عميل × عملة)؛ العميل بلا أي

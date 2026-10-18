@@ -1,10 +1,14 @@
 /// متحكم الجلسة — دورة حياة التطبيق: تهيئة → تأسيس/قفل → جاهز.
 ///
-/// يملك محرك القاعدة والمستودعات (تُنشأ بعد نجاح الفتح) وحالة القفل
-/// التلقائي بعد الخمول (FR-12-05 — `security.autolock_minutes`).
+/// يملك محرك القاعدة ومستودعات الجلسة (تُنشأ بعد نجاح الفتح) وحالة
+/// القفل التلقائي بعد الخمول (FR-12-05 — `security.autolock_minutes`).
+///
+/// R20-D1 (فرصتا فصل R19-D1 الأولى والرابعة): المستودعات الستة عشر
+/// صارت حاوية واحدة متماسكة ([AppRepositories]) — بناء في `_adopt`
+/// وتصفير في المسح بعملية واحدة؛ ومراقب الخمول (المؤقّت وآخر نشاط
+/// والغياب ومدة القفل) وحدة مستقلة ([AutoLockWatcher]) يملكها هذا
+/// المتحكم. الواجهة العامة لم تتغير حرفاً واحداً (فاصل خالص).
 library;
-
-import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -30,6 +34,8 @@ import '../../../data/repositories/user_repository.dart';
 import '../../../data/services/backup/backup_service.dart';
 import '../../../data/services/backup/backup_store.dart';
 import '../../../data/services/backup/backup_store_factory.dart';
+import 'app_repositories.dart';
+import 'auto_lock_watcher.dart';
 
 /// أطوار التطبيق المرئية.
 enum AppPhase {
@@ -74,6 +80,11 @@ class WipeBlockedByBackupFailure extends WipeOutcome {
 class AppController extends ChangeNotifier {
   AppController({AppDatabase? forTesting, BackupFileStore? backupStoreOverride})
     : _testBackupStore = backupStoreOverride {
+    // المراقب يستلم حالة الجاهزية وفعل القفل من المتحكم نفسه.
+    _autolock = AutoLockWatcher(
+      isSessionReady: () => _phase == AppPhase.ready,
+      onLock: lock,
+    );
     if (forTesting != null) {
       _adopt(forTesting);
     }
@@ -85,29 +96,17 @@ class AppController extends ChangeNotifier {
   AppPhase _phase = AppPhase.initializing;
   String? _errorDetails;
   AppDatabase? _db;
-  CompanyRepository? _companyRepo;
-  UserRepository? _userRepo;
-  SettingsRepository? _settingsRepo;
-  DashboardRepository? _dashboardRepo;
-  AuditRepository? _auditRepo;
-  ItemRepository? _itemRepo;
-  BatchRepository? _batchRepo;
-  CustomerRepository? _customerRepo;
-  SupplierRepository? _supplierRepo;
-  ExchangeRateRepository? _fxRepo;
-  SaleRepository? _saleRepo;
-  QuotationRepository? _quotationRepo;
-  PurchaseRepository? _purchaseRepo;
-  ReturnRepository? _returnRepo;
-  CashRepository? _cashRepo;
-  PrintTemplateRepository? _printTemplateRepo;
+
+  /// مستودعات الجلسة الستة عشر — حاوية واحدة (R20-D1): تُبنى في
+  /// `_adopt` وتُصفَّر في المسح، وكل getters أدناه تفوّض إليها.
+  AppRepositories? _repos;
+
+  /// مراقب القفل التلقائي — مؤقّت الخمول وآخر نشاط وغياب التطبيق
+  /// (R20-D1): وحدة مستقلة يستضيفها هذا المتحكم.
+  late final AutoLockWatcher _autolock;
+
   BackupService? _backupSvc;
   Company? _company;
-
-  DateTime _lastActivity = DateTime.now();
-  DateTime? _hiddenAt;
-  Timer? _idleTicker;
-  int _autolockMinutes = 5;
 
   /// وضع الثيم المحفوظ (`system`/`light`/`dark`) — يُقرأ عند التهيئة
   /// ويُكتب فور التبديل من شاشة الإعدادات (حالة نظامية في settings).
@@ -131,49 +130,49 @@ class AppController extends ChangeNotifier {
   /// محرك القاعدة (بعد نجاح التهيئة).
   AppDatabase? get database => _db;
 
-  CompanyRepository? get companies => _companyRepo;
+  CompanyRepository? get companies => _repos?.companies;
 
-  UserRepository? get users => _userRepo;
+  UserRepository? get users => _repos?.users;
 
-  SettingsRepository? get settings => _settingsRepo;
+  SettingsRepository? get settings => _repos?.settings;
 
-  DashboardRepository? get dashboard => _dashboardRepo;
+  DashboardRepository? get dashboard => _repos?.dashboard;
 
   /// مستودع سجل التدقيق (للإضافة فقط — عرض حصري).
-  AuditRepository? get audit => _auditRepo;
+  AuditRepository? get audit => _repos?.audit;
 
   /// مستودع الأصناف (المرحلة 2 — FR-01).
-  ItemRepository? get items => _itemRepo;
+  ItemRepository? get items => _repos?.items;
 
   /// مستودع الدفعات وتواريخ الصلاحية (FEFO — FR-01-10).
-  BatchRepository? get batches => _batchRepo;
+  BatchRepository? get batches => _repos?.batches;
 
   /// مستودع العملاء (المرحلة 3 — FR-03).
-  CustomerRepository? get customers => _customerRepo;
+  CustomerRepository? get customers => _repos?.customers;
 
   /// مستودع الموردين (المرحلة 3 — FR-03-03).
-  SupplierRepository? get suppliers => _supplierRepo;
+  SupplierRepository? get suppliers => _repos?.suppliers;
 
   /// مستودع أسعار الصرف اليومية (FR-08-03).
-  ExchangeRateRepository? get fxRates => _fxRepo;
+  ExchangeRateRepository? get fxRates => _repos?.fxRates;
 
   /// مستودع ترحيل فواتير البيع (المرحلة 4 — FR-02).
-  SaleRepository? get sales => _saleRepo;
+  SaleRepository? get sales => _repos?.sales;
 
   /// مستودع عروض الأسعار وتحويلها (المرحلة 4 — FR-02).
-  QuotationRepository? get quotations => _quotationRepo;
+  QuotationRepository? get quotations => _repos?.quotations;
 
   /// مستودع المشتريات (المرحلة 5 — FR-02-08: PUR + WAC + الدفعات الواردة).
-  PurchaseRepository? get purchases => _purchaseRepo;
+  PurchaseRepository? get purchases => _repos?.purchases;
 
   /// مستودع المرتجعات المرتبطة (المرحلة 5 — FR-02-07/08: SRN وPRN).
-  ReturnRepository? get returns => _returnRepo;
+  ReturnRepository? get returns => _repos?.returns;
 
   /// مستودع النقدية والصناديق (المرحلة 6 — FR-04).
-  CashRepository? get cash => _cashRepo;
+  CashRepository? get cash => _repos?.cash;
 
   /// مستودع قوالب الطباعة (موجة UX-3) — القالب النشط لفواتير البيع.
-  PrintTemplateRepository? get printTemplates => _printTemplateRepo;
+  PrintTemplateRepository? get printTemplates => _repos?.printTemplates;
 
   /// محرك النسخ الاحتياطي والاستعادة (الشريحة 8 — FR-11) — يُنشأ مع
   /// كل قاعدة مفتوحة (جاهز بعد bootstrap) ويتجدد تلقائياً بعد أي استعادة.
@@ -202,7 +201,7 @@ class AppController extends ChangeNotifier {
   bool get highContrast => _highContrast;
 
   /// مدة القفل التلقائي الحالية بالدقائق.
-  int get autolockMinutes => _autolockMinutes;
+  int get autolockMinutes => _autolock.autolockMinutes;
 
   // ── استعادة الموقع بعد فتح القفل (P0-1b) ──
 
@@ -256,22 +255,7 @@ class AppController extends ChangeNotifier {
   /// اعتماد قاعدة مفتوحة (وضع الاختبار أو إعادة التهيئة بعد المسح).
   void _adopt(AppDatabase db) {
     _db = db;
-    _companyRepo = CompanyRepository(db.db);
-    _userRepo = UserRepository(db.db);
-    _settingsRepo = SettingsRepository(db.db);
-    _dashboardRepo = DashboardRepository(db.db);
-    _auditRepo = AuditRepository(db.db);
-    _itemRepo = ItemRepository(db.db);
-    _batchRepo = BatchRepository(db.db);
-    _customerRepo = CustomerRepository(db.db);
-    _supplierRepo = SupplierRepository(db.db);
-    _fxRepo = ExchangeRateRepository(db.db);
-    _saleRepo = SaleRepository(db.db);
-    _quotationRepo = QuotationRepository(db.db);
-    _purchaseRepo = PurchaseRepository(db.db);
-    _returnRepo = ReturnRepository(db.db);
-    _cashRepo = CashRepository(db.db);
-    _printTemplateRepo = PrintTemplateRepository(db.db);
+    _repos = AppRepositories(db);
     // محرك النسخ يُبنى لاحقاً (يحتاج حل مسار المنصة غير المتزامن).
     _backupSvc = null;
   }
@@ -279,13 +263,13 @@ class AppController extends ChangeNotifier {
   /// يبني محرك النسخ فوق القاعدة الحالية (مخزن الاختبار إن وُجد).
   Future<void> _initBackupEngine() async {
     final db = _db;
-    final settings = _settingsRepo;
-    if (db == null || settings == null) return;
+    final repos = _repos;
+    if (db == null || repos == null) return;
     try {
       final store = _testBackupStore ?? await _defaultBackupStore();
       _backupSvc = BackupService(
         database: db,
-        settings: settings,
+        settings: repos.settings,
         store: store,
       );
     } catch (_) {
@@ -307,15 +291,16 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _decidePhase() async {
-    final company = await _companyRepo!.findCompany();
+    final repos = _repos!;
+    final company = await repos.companies.findCompany();
     _company = company;
-    _autolockMinutes = await _settingsRepo!.autolockMinutes();
-    _themeMode = await _settingsRepo!.themeMode();
-    _numerals = await _settingsRepo!.numerals();
-    _fontScale = await _settingsRepo!.fontScale();
-    _highContrast = await _settingsRepo!.highContrast();
+    _autolock.setAutolockMinutes(await repos.settings.autolockMinutes());
+    _themeMode = await repos.settings.themeMode();
+    _numerals = await repos.settings.numerals();
+    _fontScale = await repos.settings.fontScale();
+    _highContrast = await repos.settings.highContrast();
     // بذر فئة «رواتب» idempotent (FR-04-05) — قبل أي واجهة.
-    await _cashRepo!.ensureSeeded();
+    await repos.cash.ensureSeeded();
     // محرك النسخ الاحتياطي (الشريحة 8) — بعد نجاح كل ما سبق.
     await _initBackupEngine();
     // جلسة جديدة = مقفلة دائماً (PIN عند كل فتح — FR-12-01).
@@ -330,11 +315,12 @@ class AppController extends ChangeNotifier {
 
   /// يُستدعى بعد إتمام Onboarding — تحديث المنشأة والدخول للجلسة.
   Future<void> completeOnboarding() async {
-    _company = await _companyRepo!.findCompany();
-    _autolockMinutes = await _settingsRepo!.autolockMinutes();
-    _numerals = await _settingsRepo!.numerals();
-    _fontScale = await _settingsRepo!.fontScale();
-    _highContrast = await _settingsRepo!.highContrast();
+    final repos = _repos!;
+    _company = await repos.companies.findCompany();
+    _autolock.setAutolockMinutes(await repos.settings.autolockMinutes());
+    _numerals = await repos.settings.numerals();
+    _fontScale = await repos.settings.fontScale();
+    _highContrast = await repos.settings.highContrast();
     _enterSession();
   }
 
@@ -343,8 +329,8 @@ class AppController extends ChangeNotifier {
 
   void _enterSession() {
     _phase = AppPhase.ready;
-    _lastActivity = DateTime.now();
-    _startIdleWatch();
+    _autolock.touch();
+    _autolock.startWatch();
     notifyListeners();
   }
 
@@ -352,8 +338,7 @@ class AppController extends ChangeNotifier {
   void lock() {
     if (_phase != AppPhase.ready) return;
     _phase = AppPhase.locked;
-    _idleTicker?.cancel();
-    _idleTicker = null;
+    _autolock.stopWatch();
     notifyListeners();
   }
 
@@ -365,7 +350,7 @@ class AppController extends ChangeNotifier {
     _themeMode = mode;
     notifyListeners();
     try {
-      await _settingsRepo?.setThemeMode(mode);
+      await _repos?.settings.setThemeMode(mode);
     } catch (_) {
       // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
     }
@@ -381,7 +366,7 @@ class AppController extends ChangeNotifier {
     _numerals = mode;
     notifyListeners();
     try {
-      await _settingsRepo?.setNumerals(mode);
+      await _repos?.settings.setNumerals(mode);
     } catch (_) {
       // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
     }
@@ -397,7 +382,7 @@ class AppController extends ChangeNotifier {
     _fontScale = mode;
     notifyListeners();
     try {
-      await _settingsRepo?.setFontScale(mode);
+      await _repos?.settings.setFontScale(mode);
     } catch (_) {
       // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
     }
@@ -412,7 +397,7 @@ class AppController extends ChangeNotifier {
     _highContrast = on;
     notifyListeners();
     try {
-      await _settingsRepo?.setHighContrast(on);
+      await _repos?.settings.setHighContrast(on);
     } catch (_) {
       // فشل الحفظ لا يكسر الجلسة — القيمة تُقرأ مجدداً عند الإقلاع.
     }
@@ -439,8 +424,7 @@ class AppController extends ChangeNotifier {
     final result = await svc.restoreFromBytes(bytes, sourceName: sourceName);
     switch (result) {
       case final RestoreSuccess success:
-        _idleTicker?.cancel();
-        _idleTicker = null;
+        _autolock.stopWatch();
         _adopt(success.newDatabase);
         await _decidePhase();
         return result;
@@ -459,16 +443,16 @@ class AppController extends ChangeNotifier {
   /// يثبّت مدة القفل التلقائي (1–60 دقيقة) — تُطبَّق فوراً على مراقب
   /// الخمول الجاري دون قفل الجلسة، مع قيد تدقيق للتغيير الأمني.
   Future<void> setAutolockMinutes(int minutes) async {
-    if (minutes == _autolockMinutes) return;
+    if (minutes == _autolock.autolockMinutes) return;
     if (minutes < 1 || minutes > 60) {
       throw ArgumentError('مدة القفل التلقائي خارج النطاق 1–60: $minutes');
     }
-    _autolockMinutes = minutes;
+    _autolock.setAutolockMinutes(minutes);
     notifyListeners();
     try {
-      await _settingsRepo?.setAutolockMinutes(minutes);
+      await _repos?.settings.setAutolockMinutes(minutes);
       // قيد تدقيق للتغييرات الأمنية (FR-12-04 — أحداث موسّعة).
-      await _userRepo?.audit(
+      await _repos?.users.audit(
         'settings_change',
         entity: 'settings',
         details: 'security.autolock_minutes=$minutes',
@@ -480,44 +464,18 @@ class AppController extends ChangeNotifier {
 
   // ── القفل التلقائي بعد الخمول (FR-12-05) ──
 
-  /// لمس أي عنصر — تجديد النشاط.
-  void touch() {
-    _lastActivity = DateTime.now();
-  }
+  /// لمس أي عنصر — تجديد النشاط (يفوّض للمراقب).
+  void touch() => _autolock.touch();
 
   /// لحظة آخر نشاط (اختبارات — مراقبة الخمول).
   @visibleForTesting
-  DateTime get lastActivityForTest => _lastActivity;
+  DateTime get lastActivityForTest => _autolock.lastActivity;
 
-  void _startIdleWatch() {
-    _idleTicker?.cancel();
-    _idleTicker = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (_phase != AppPhase.ready) return;
-      final idleFor = DateTime.now().difference(_lastActivity);
-      if (idleFor.inMinutes >= _autolockMinutes) {
-        lock();
-      }
-    });
-  }
+  /// التطبيق صار خلفياً — يبدأ عدّ الخمول (يفوّض للمراقب).
+  void appHidden() => _autolock.appHidden();
 
-  /// التطبيق صار خلفياً — يبدأ عدّ الخمول.
-  void appHidden() {
-    _hiddenAt ??= DateTime.now();
-  }
-
-  /// عاد التطبيق للأمام — قفل إن تجاوز الغياب الحد.
-  void appResumed() {
-    final hiddenAt = _hiddenAt;
-    _hiddenAt = null;
-    if (hiddenAt == null) return;
-    if (_phase != AppPhase.ready) return;
-    final away = DateTime.now().difference(hiddenAt);
-    if (away.inMinutes >= _autolockMinutes) {
-      lock();
-    } else {
-      touch();
-    }
-  }
+  /// عاد التطبيق للأمام — قفل إن تجاوز الغياب الحد (يفوّض للمراقب).
+  void appResumed() => _autolock.appResumed();
 
   /// مسح كامل — **نسخة أمان إجبارية أولاً** (درس التراجع الحالي أصلاً:
   /// مسح بلا نسخة أخيرة = ضياع نهائي)، ثم إغلاق ومحو القاعدة ثم إعادة
@@ -546,26 +504,10 @@ class AppController extends ChangeNotifier {
     final db = _db;
     final dbFactory = platformDatabaseFactory;
     final path = await resolveDatabasePath();
-    _idleTicker?.cancel();
-    _idleTicker = null;
+    _autolock.stopWatch();
     _company = null;
     _lockedFromPath = null;
-    _companyRepo = null;
-    _userRepo = null;
-    _settingsRepo = null;
-    _dashboardRepo = null;
-    _auditRepo = null;
-    _itemRepo = null;
-    _batchRepo = null;
-    _customerRepo = null;
-    _supplierRepo = null;
-    _fxRepo = null;
-    _saleRepo = null;
-    _quotationRepo = null;
-    _purchaseRepo = null;
-    _returnRepo = null;
-    _cashRepo = null;
-    _printTemplateRepo = null;
+    _repos = null;
     _backupSvc = null;
     _db = null;
     if (db != null) {
@@ -578,7 +520,7 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _idleTicker?.cancel();
+    _autolock.stopWatch();
     super.dispose();
   }
 }

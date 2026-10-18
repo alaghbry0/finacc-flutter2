@@ -25,8 +25,8 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../printing/templates/invoice_template_engine.dart';
+import '../../printing/views/invoice_template_preview.dart';
 import '../../../../data/models/invoice_template_settings.dart';
-import '../../sell/views/widgets/invoice_pdf_preview.dart';
 import '../view_models/print_templates_view_model.dart';
 
 /// لوحات الألوان المرجعية للمنتقي — تشكيلة تكفي هوية المتاجر اليمنية
