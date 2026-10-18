@@ -2,6 +2,11 @@
 /// الاسم إلزامي، حد الائتمان بدلالته الثلاثية الصارمة (فارغ = بلا حد،
 /// صفر = منع الآجل، رقم = الحد)، ورصيد افتتاحي بعملته وسعر يومه
 /// وتاريخه، والافتتاحي مقفل في التعديل متى كانت للطرف حركات.
+///
+/// (R20-D3c: الأنواع النقية في `party_form_state.dart` والحسابات النقية
+/// في `party_form_helpers.dart` — تُصدَّر الأولى من هنا فبقيت استيرادات
+/// المستدعين كما هي؛ هذا الملف: سطح التنسيق — الإخطار والمستودعات
+/// والساعة.)
 library;
 
 import 'package:flutter/foundation.dart';
@@ -10,139 +15,15 @@ import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/customer_repository.dart';
 import '../../../../data/repositories/exchange_rate_repository.dart';
 import '../../../../data/repositories/supplier_repository.dart';
-import '../../../../domain/core/numbers.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/party.dart';
+import 'party_form_helpers.dart';
+import 'party_form_state.dart';
 import 'party_kind.dart';
 import 'party_lookup.dart';
 
-/// أخطاء التحقق القابلة للترجمة (تُعرض فوق زر الحفظ).
-enum PartyFormError {
-  /// الاسم فارغ.
-  nameRequired,
-
-  /// حد الائتمان ليس رقماً صالحاً (فارغ/صفر/موجب فقط).
-  creditLimitInvalid,
-
-  /// الرصيد الافتتاحي ليس رقماً موجباً.
-  openingInvalid,
-
-  /// رصيد افتتاحي غير صفري بلا عملة.
-  openingCurrencyRequired,
-
-  /// لا سعر صرف للعملة المحددة (FR-08-09 — يمنع الحفظ).
-  noRate,
-
-  /// لا مستخدم مدير (تعذر قيد التدقيق).
-  noUser,
-}
-
-/// حالة نموذج الطرف — قيم الحقول كنصوص كما يكتبها المستخدم.
-class PartyFormState {
-  const PartyFormState({
-    required this.loading,
-    required this.kind,
-    required this.editMode,
-    required this.currencies,
-    this.loadError,
-    this.baseCurrency,
-    this.userId,
-    this.name = '',
-    this.phone = '',
-    this.whatsapp = '',
-    this.address = '',
-    this.area = '',
-    this.creditLimitText = '',
-    this.openingText = '',
-    this.openingCurrencyId,
-    required this.openingDate,
-    this.notes = '',
-    this.openingLocked = false,
-    this.saving = false,
-    this.saved = false,
-    this.validationError,
-    this.repoError,
-  });
-
-  final bool loading;
-
-  /// نوع الطرف — يحدد الحقول الزائدة (واتساب/حي/حد ائتمان للعملاء).
-  final PartyKind kind;
-
-  /// وضع التعديل.
-  final bool editMode;
-
-  /// العملات النشطة — الأساسية أولاً.
-  final List<Currency> currencies;
-
-  final Object? loadError;
-
-  final Currency? baseCurrency;
-  final int? userId;
-
-  // ── الحقول النصية ──
-  final String name;
-  final String phone;
-  final String whatsapp;
-  final String address;
-  final String area;
-
-  /// حد الائتمان كنص: فارغ = بلا حد، «0» = منع الآجل، رقم = الحد.
-  final String creditLimitText;
-
-  /// الرصيد الافتتاحي كنص.
-  final String openingText;
-
-  /// عملة الرصيد الافتتاحي (null = بلا — ممنوع مع رصيد غير صفري).
-  final int? openingCurrencyId;
-
-  /// تاريخ الرصيد الافتتاحي (اليوم افتراضياً).
-  final DateTime openingDate;
-
-  final String notes;
-
-  /// الافتتاحي مقفل (تعديل لطرف له حركات) — للقراءة فقط في العرض.
-  final bool openingLocked;
-
-  final bool saving;
-  final bool saved;
-  final PartyFormError? validationError;
-
-  /// خطأ المستودع (عربي جاهز — SnackBar).
-  final String? repoError;
-
-  /// حد الائتمان المفسر بدلالته الثلاثية — أو null عند نص غير صالح.
-  double? get parsedCreditLimit {
-    final text = creditLimitText.trim();
-    if (text.isEmpty) return null; // بلا حد.
-    return double.tryParse(text);
-  }
-
-  /// الرصيد الافتتاحي المفسر — أو null عند نص غير صالح.
-  double? get parsedOpening {
-    final text = openingText.trim();
-    if (text.isEmpty) return 0;
-    return double.tryParse(text);
-  }
-
-  /// العملة الافتتاحية المحددة ككيان (null عند عدم الاختيار).
-  Currency? get selectedOpeningCurrency {
-    for (final currency in currencies) {
-      if (currency.id == openingCurrencyId) return currency;
-    }
-    return null;
-  }
-
-  static PartyFormState initial(PartyKind kind, DateTime today) =>
-      PartyFormState(
-        loading: true,
-        kind: kind,
-        editMode: false,
-        currencies: const <Currency>[],
-        openingDate: today,
-      );
-}
+export 'party_form_state.dart';
 
 class PartyFormViewModel extends ChangeNotifier {
   PartyFormViewModel({
@@ -232,28 +113,16 @@ class PartyFormViewModel extends ChangeNotifier {
           _origOpening = customer.openingBalance;
           _origOpeningCurrencyId = customer.openingBalanceCurrencyId;
           _origOpeningRate = customer.openingBalanceRate;
-          _origOpeningDate = _tryParse(customer.openingBalanceDate);
+          _origOpeningDate = partyFormTryParseYmd(customer.openingBalanceDate);
           _origImagePath = customer.imagePath;
-          _state = PartyFormState(
-            loading: false,
+          _state = partyFormStateFromCustomer(
             kind: _kind,
-            editMode: true,
             currencies: currencies,
             baseCurrency: baseCurrency,
             userId: userId,
-            name: customer.name,
-            phone: customer.phone ?? '',
-            whatsapp: customer.whatsapp ?? '',
-            address: customer.address ?? '',
-            area: customer.area ?? '',
-            creditLimitText: customer.creditLimit == null
-                ? ''
-                : numToText(customer.creditLimit!),
-            openingText: numToText(customer.openingBalance),
-            openingCurrencyId:
-                customer.openingBalanceCurrencyId ?? baseCurrency?.id,
-            openingDate: _origOpeningDate ?? today,
-            notes: customer.notes ?? '',
+            customer: customer,
+            today: today,
+            origOpeningDate: _origOpeningDate,
             openingLocked: hasMovements,
           );
           notifyListeners();
@@ -269,22 +138,15 @@ class PartyFormViewModel extends ChangeNotifier {
           _origOpening = supplier.openingBalance;
           _origOpeningCurrencyId = supplier.openingBalanceCurrencyId;
           _origOpeningRate = supplier.openingBalanceRate;
-          _origOpeningDate = _tryParse(supplier.openingBalanceDate);
-          _state = PartyFormState(
-            loading: false,
+          _origOpeningDate = partyFormTryParseYmd(supplier.openingBalanceDate);
+          _state = partyFormStateFromSupplier(
             kind: _kind,
-            editMode: true,
             currencies: currencies,
             baseCurrency: baseCurrency,
             userId: userId,
-            name: supplier.name,
-            phone: supplier.phone ?? '',
-            address: supplier.address ?? '',
-            openingText: numToText(supplier.openingBalance),
-            openingCurrencyId:
-                supplier.openingBalanceCurrencyId ?? baseCurrency?.id,
-            openingDate: _origOpeningDate ?? today,
-            notes: supplier.notes ?? '',
+            supplier: supplier,
+            today: today,
+            origOpeningDate: _origOpeningDate,
             openingLocked: hasMovements,
           );
           notifyListeners();
@@ -429,18 +291,14 @@ class PartyFormViewModel extends ChangeNotifier {
 
     final Result<Object, String> result;
     if (_kind == PartyKind.customer) {
-      final draft = CustomerDraft(
+      final draft = buildCustomerDraftFromPartyForm(
+        _state,
         name: name,
-        phone: _clean(_state.phone),
-        whatsapp: _clean(_state.whatsapp),
-        address: _clean(_state.address),
-        area: _clean(_state.area),
         creditLimit: creditLimit,
         openingBalance: effectiveOpening,
-        openingBalanceCurrencyId: effectiveCurrency,
-        openingBalanceRate: effectiveRate,
-        openingBalanceDate: effectiveDate,
-        notes: _clean(_state.notes),
+        openingCurrencyId: effectiveCurrency,
+        openingRate: effectiveRate,
+        openingDate: effectiveDate,
         imagePath: _origImagePath,
       );
       result = _state.editMode
@@ -452,15 +310,13 @@ class PartyFormViewModel extends ChangeNotifier {
             )
           : await _customers.createCustomer(draft, userId: userId, now: _today);
     } else {
-      final draft = SupplierDraft(
+      final draft = buildSupplierDraftFromPartyForm(
+        _state,
         name: name,
-        phone: _clean(_state.phone),
-        address: _clean(_state.address),
         openingBalance: effectiveOpening,
-        openingBalanceCurrencyId: effectiveCurrency,
-        openingBalanceRate: effectiveRate,
-        openingBalanceDate: effectiveDate,
-        notes: _clean(_state.notes),
+        openingCurrencyId: effectiveCurrency,
+        openingRate: effectiveRate,
+        openingDate: effectiveDate,
       );
       result = _state.editMode
           ? await _suppliers.updateSupplier(
@@ -515,48 +371,26 @@ class PartyFormViewModel extends ChangeNotifier {
     String? repoError,
     bool clearRepoError = false,
   }) {
-    _state = PartyFormState(
-      loading: _state.loading,
-      kind: _state.kind,
-      editMode: _state.editMode,
-      currencies: _state.currencies,
-      loadError: _state.loadError,
-      baseCurrency: _state.baseCurrency,
-      userId: _state.userId,
-      name: name ?? _state.name,
-      phone: phone ?? _state.phone,
-      whatsapp: whatsapp ?? _state.whatsapp,
-      address: address ?? _state.address,
-      area: area ?? _state.area,
-      creditLimitText: creditLimitText ?? _state.creditLimitText,
-      openingText: openingText ?? _state.openingText,
-      openingCurrencyId: clearOpeningCurrency
-          ? null
-          : (openingCurrencyId ?? _state.openingCurrencyId),
-      openingDate: openingDate ?? _state.openingDate,
-      notes: notes ?? _state.notes,
-      openingLocked: _state.openingLocked,
-      saving: saving ?? _state.saving,
-      saved: saved ?? _state.saved,
-      validationError: clearValidationError
-          ? null
-          : (validationError ?? _state.validationError),
-      repoError: clearRepoError ? null : (repoError ?? _state.repoError),
+    _state = partyFormStateWith(
+      _state,
+      name: name,
+      phone: phone,
+      whatsapp: whatsapp,
+      address: address,
+      area: area,
+      creditLimitText: creditLimitText,
+      openingText: openingText,
+      openingCurrencyId: openingCurrencyId,
+      clearOpeningCurrency: clearOpeningCurrency,
+      openingDate: openingDate,
+      notes: notes,
+      saving: saving,
+      saved: saved,
+      validationError: validationError,
+      clearValidationError: clearValidationError,
+      repoError: repoError,
+      clearRepoError: clearRepoError,
     );
     notifyListeners();
-  }
-
-  /// نص فارغ (فراغات فقط) → `null`.
-  static String? _clean(String? value) {
-    if (value == null) return null;
-    final trimmed = value.trim();
-    return trimmed.isEmpty ? null : trimmed;
-  }
-
-  static DateTime? _tryParse(String? ymd) {
-    if (ymd == null || ymd.isEmpty) return null;
-    final parsed = DateTime.tryParse(ymd);
-    if (parsed == null) return null;
-    return DateTime(parsed.year, parsed.month, parsed.day);
   }
 }

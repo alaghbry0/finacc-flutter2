@@ -8,15 +8,21 @@
 ///   قبل اختيار الصنف (حالة «اختر صنفاً»).
 /// - `StockSummaryViewModel`: فترة فقط.
 /// - `SalesByViewModel`: فترة + بعد التجميع (عميل/فئة/صنف/يوم).
+///
+/// (R20-D3c: الحالات النقية الثلاث في `movement_reports_state.dart` —
+/// تُصدَّر من هنا فبقيت استيرادات المستدعين كما هي؛ هذا الملف: سطح
+/// التنسيق — الإخطار والمستودعات والساعة. وسُدِّد دين R20-D2 بتوحيد
+/// تطبيع حدود المدى المخصص `_dayOf` بدل ثلاث نسخ متطابقة داخل الملف.)
 library;
-
-import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/movement_reports_repository.dart';
 import '../views/widgets/period_preset_bar.dart';
+import 'movement_reports_state.dart';
+
+export 'movement_reports_state.dart';
 
 /// مخبوء عملة الأساس (رمز + منازل) — مشترك للنماذج الثلاثة. يُحل مرة
 /// واحدة؛ الفشل لا يُسقط التقرير (عرض بمنازل 2 وبلا رمز).
@@ -47,51 +53,14 @@ class _BaseCurrencyCache {
   }
 }
 
+/// بداية اليوم المحلي (تطبيع حدود منتقي التاريخ للمدى المخصص) —
+/// النسخة الواحدة الموحَّدة للنماذج الثلاثة (دين R20-D2: كانت ثلاث
+/// نسخ متطابقة داخل هذا الملف؛ نفس ترتيب الاستدعاء محفوظ).
+DateTime _dayOf(DateTime date) => DateTime(date.year, date.month, date.day);
+
 // ─────────────────────────────────────────────────────────────────────
 // FR-09-03 — حركة صنف
 // ─────────────────────────────────────────────────────────────────────
-
-/// حالة شاشة حركة صنف.
-class ItemMovementState {
-  const ItemMovementState({
-    required this.loading,
-    this.error,
-    this.productId,
-    this.period = ReportPeriod.month,
-    this.from,
-    this.to,
-    this.report,
-    this.currencyCode = '',
-    this.decimals = 2,
-  });
-
-  final bool loading;
-  final Object? error;
-
-  /// الصنف المحدد (null = لم يُختر بعد — بطاقة الاختيار البطلة).
-  final int? productId;
-
-  final ReportPeriod period;
-  final DateTime? from;
-  final DateTime? to;
-
-  /// التقرير المحمّل (قديم قد يبقى أثناء التحديث).
-  final ItemMovementReport? report;
-
-  final String currencyCode;
-  final int decimals;
-
-  /// لا صنف محدد — الواجهة تعرض بطاقة الاختيار (ليست حالة فراغ).
-  bool get needsProduct => !loading && error == null && productId == null;
-
-  /// صنف محدد بلا أي حركة في الفترة (احتفالية — رأس البطاقة يبقى).
-  bool get isEmpty =>
-      !loading &&
-      error == null &&
-      productId != null &&
-      report != null &&
-      report!.rows.isEmpty;
-}
 
 /// نموذج عرض حركة صنف — التحميل مشروط بوجود الصنف.
 class ItemMovementViewModel extends ChangeNotifier {
@@ -165,8 +134,8 @@ class ItemMovementViewModel extends ChangeNotifier {
   Future<void> setCustomRange(DateTime from, DateTime to) async {
     await _apply(
       period: ReportPeriod.custom,
-      from: DateTime(from.year, from.month, from.day),
-      to: DateTime(to.year, to.month, to.day),
+      from: _dayOf(from),
+      to: _dayOf(to),
       keepReport: false,
     );
   }
@@ -251,45 +220,6 @@ class ItemMovementViewModel extends ChangeNotifier {
 // FR-09-04 — ملخص حركة المخزون
 // ─────────────────────────────────────────────────────────────────────
 
-/// حالة شاشة ملخص حركة المخزون.
-class StockSummaryState {
-  const StockSummaryState({
-    required this.loading,
-    this.error,
-    this.period = ReportPeriod.month,
-    this.from,
-    this.to,
-    this.rows,
-    this.currencyCode = '',
-    this.decimals = 2,
-  });
-
-  final bool loading;
-  final Object? error;
-  final ReportPeriod period;
-  final DateTime? from;
-  final DateTime? to;
-
-  /// صفوف الملخص (قديمة قد تبقى أثناء التحديث) — null قبل أول تحميل.
-  final List<StockSummaryRow>? rows;
-
-  final String currencyCode;
-  final int decimals;
-
-  /// لا حركة إطلاقاً في الفترة (الحالة الفارغة الاحتفالية).
-  bool get isEmpty =>
-      !loading && error == null && rows != null && rows!.isEmpty;
-
-  /// إجمالي قيمة المخزون المتحرك بالتكلفة (رأس الشاشة).
-  double get totalValueAtCost {
-    var sum = 0.0;
-    for (final row in rows ?? const <StockSummaryRow>[]) {
-      sum += row.valueAtCost;
-    }
-    return sum;
-  }
-}
-
 /// نموذج عرض ملخص حركة المخزون — V1 مخزن واحد (بلا مرشح مخزن).
 class StockSummaryViewModel extends ChangeNotifier {
   StockSummaryViewModel({
@@ -332,8 +262,8 @@ class StockSummaryViewModel extends ChangeNotifier {
   Future<void> setCustomRange(DateTime from, DateTime to) async {
     await _apply(
       period: ReportPeriod.custom,
-      from: DateTime(from.year, from.month, from.day),
-      to: DateTime(to.year, to.month, to.day),
+      from: _dayOf(from),
+      to: _dayOf(to),
       keepReport: false,
     );
   }
@@ -408,50 +338,6 @@ class StockSummaryViewModel extends ChangeNotifier {
 // FR-09-06 — المبيعات حسب
 // ─────────────────────────────────────────────────────────────────────
 
-/// حالة شاشة المبيعات حسب.
-class SalesByState {
-  const SalesByState({
-    required this.loading,
-    this.error,
-    this.dimension = SalesByDimension.customer,
-    this.period = ReportPeriod.month,
-    this.from,
-    this.to,
-    this.rows,
-    this.currencyCode = '',
-    this.decimals = 2,
-  });
-
-  final bool loading;
-  final Object? error;
-
-  /// بعد التجميع الحالي.
-  final SalesByDimension dimension;
-
-  final ReportPeriod period;
-  final DateTime? from;
-  final DateTime? to;
-
-  /// صفوف التجميع (قديمة قد تبقى أثناء التحديث).
-  final List<SalesByRow>? rows;
-
-  final String currencyCode;
-  final int decimals;
-
-  /// إجمالي مبيعات الفترة بالأساس (رأس الشاشة) — مجموع الصفوف.
-  double get totalSalesBase {
-    var sum = 0.0;
-    for (final row in rows ?? const <SalesByRow>[]) {
-      sum += row.salesBase;
-    }
-    return sum;
-  }
-
-  /// لا مبيعات في الفترة (الحالة الفارغة الاحتفالية).
-  bool get isEmpty =>
-      !loading && error == null && rows != null && rows!.isEmpty;
-}
-
 /// نموذج عرض المبيعات حسب — فترة + بعد تجميع قابل للتبديل.
 class SalesByViewModel extends ChangeNotifier {
   SalesByViewModel({
@@ -513,8 +399,8 @@ class SalesByViewModel extends ChangeNotifier {
     await _apply(
       dimension: _state.dimension,
       period: ReportPeriod.custom,
-      from: DateTime(from.year, from.month, from.day),
-      to: DateTime(to.year, to.month, to.day),
+      from: _dayOf(from),
+      to: _dayOf(to),
       keepReport: false,
     );
   }
