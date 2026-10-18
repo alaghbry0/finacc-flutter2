@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/item_repository.dart';
+import '../../../../domain/core/numbers.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/item.dart';
@@ -179,7 +180,7 @@ class ItemFormViewModel extends ChangeNotifier {
         final prices = <int, String>{
           for (final line in detail?.prices ?? const <ItemPriceLine>[])
             if (line.priceLevel == 'retail')
-              line.currencyId: _numToText(line.price),
+              line.currencyId: numToText(line.price),
         };
         _state = ItemFormState(
           loading: false,
@@ -195,8 +196,8 @@ class ItemFormViewModel extends ChangeNotifier {
           barcode: item.barcode ?? '',
           categoryId: item.categoryId,
           unitId: item.unitId,
-          costText: _numToText(item.costPrice),
-          minStockText: _numToText(item.minStock),
+          costText: numToText(item.costPrice),
+          minStockText: numToText(item.minStock),
           notes: item.notes ?? '',
           isService: item.isService,
           trackBatches: item.trackBatches,
@@ -446,13 +447,5 @@ class ItemFormViewModel extends ChangeNotifier {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return 0;
     return double.tryParse(trimmed);
-  }
-
-  /// نص عرض للرقم (بلا كسور زائدة) — لتعبئة الحقول مسبقاً.
-  static String _numToText(double value) {
-    if (value == value.truncateToDouble() && value.abs() < 1e15) {
-      return value.truncate().toString();
-    }
-    return value.toString();
   }
 }

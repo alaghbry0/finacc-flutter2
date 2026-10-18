@@ -138,7 +138,7 @@ class ExchangeRatesViewModel extends ChangeNotifier {
       );
       _state = ExchangeRatesState(
         loading: false,
-        baseCurrency: _baseOf(currencies),
+        baseCurrency: Currency.baseOf(currencies),
         entries: [
           for (var i = 0; i < nonBase.length; i++)
             FxCurrencyEntry(
@@ -262,13 +262,6 @@ class ExchangeRatesViewModel extends ChangeNotifier {
         : (savedCurrencyId ?? _state.savedCurrencyId),
     repoError: clearRepoError ? null : (repoError ?? _state.repoError),
   );
-
-  static Currency? _baseOf(List<Currency> currencies) {
-    for (final currency in currencies) {
-      if (currency.isBase) return currency;
-    }
-    return null;
-  }
 
   /// يوم عمل كامل بلا وقت.
   static DateTime _dayOf(DateTime value) =>

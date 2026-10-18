@@ -142,7 +142,7 @@ class PartiesHomeViewModel extends ChangeNotifier {
         payableTotals: _totalsByCurrency(payables, byCode),
         receivableParties: _distinctParties(receivables),
         payableParties: _distinctParties(payables),
-        baseCurrency: _baseOf(currencies),
+        baseCurrency: Currency.baseOf(currencies),
         nonBaseCurrencyCount: currencies.where((c) => !c.isBase).length,
         ratesEnteredToday: todayRates.length,
       );
@@ -189,11 +189,4 @@ class PartiesHomeViewModel extends ChangeNotifier {
   /// يوم عمل كامل بلا وقت.
   static DateTime _dayOf(DateTime value) =>
       DateTime(value.year, value.month, value.day);
-
-  static Currency? _baseOf(List<Currency> currencies) {
-    for (final currency in currencies) {
-      if (currency.isBase) return currency;
-    }
-    return null;
-  }
 }

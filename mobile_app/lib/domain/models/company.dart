@@ -138,4 +138,13 @@ class Currency {
     isBase: (row['is_base'] as int? ?? 0) == 1,
     decimals: row['decimals'] as int? ?? 2,
   );
+
+  /// العملة الأساسية ضمن [currencies] — null إن غابت. R20-D2: توحيد
+  /// أربع نسخ متطابقة حرفياً كانت خاصة بنماذج عرض الأطراف.
+  static Currency? baseOf(List<Currency> currencies) {
+    for (final currency in currencies) {
+      if (currency.isBase) return currency;
+    }
+    return null;
+  }
 }

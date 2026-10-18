@@ -10,6 +10,7 @@ import '../../../../data/repositories/company_repository.dart';
 import '../../../../data/repositories/customer_repository.dart';
 import '../../../../data/repositories/exchange_rate_repository.dart';
 import '../../../../data/repositories/supplier_repository.dart';
+import '../../../../domain/core/numbers.dart';
 import '../../../../domain/core/result.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/party.dart';
@@ -247,8 +248,8 @@ class PartyFormViewModel extends ChangeNotifier {
             area: customer.area ?? '',
             creditLimitText: customer.creditLimit == null
                 ? ''
-                : _numToText(customer.creditLimit!),
-            openingText: _numToText(customer.openingBalance),
+                : numToText(customer.creditLimit!),
+            openingText: numToText(customer.openingBalance),
             openingCurrencyId:
                 customer.openingBalanceCurrencyId ?? baseCurrency?.id,
             openingDate: _origOpeningDate ?? today,
@@ -279,7 +280,7 @@ class PartyFormViewModel extends ChangeNotifier {
             name: supplier.name,
             phone: supplier.phone ?? '',
             address: supplier.address ?? '',
-            openingText: _numToText(supplier.openingBalance),
+            openingText: numToText(supplier.openingBalance),
             openingCurrencyId:
                 supplier.openingBalanceCurrencyId ?? baseCurrency?.id,
             openingDate: _origOpeningDate ?? today,
@@ -550,14 +551,6 @@ class PartyFormViewModel extends ChangeNotifier {
     if (value == null) return null;
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
-  }
-
-  /// نص عرض للرقم (بلا كسور زائدة) — لتعبئة الحقول مسبقاً.
-  static String _numToText(double value) {
-    if (value == value.truncateToDouble() && value.abs() < 1e15) {
-      return value.truncate().toString();
-    }
-    return value.toString();
   }
 
   static DateTime? _tryParse(String? ymd) {

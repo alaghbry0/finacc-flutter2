@@ -181,7 +181,7 @@ class PartyDetailViewModel extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      final baseCurrency = _baseOf(currencies);
+      final baseCurrency = Currency.baseOf(currencies);
       final balances = allRows
           .where((row) => row.partyId == _partyId)
           .toList(growable: false);
@@ -334,13 +334,6 @@ class PartyDetailViewModel extends ChangeNotifier {
         to: to,
         loadingStatement: _state.loadingStatement,
       );
-
-  static Currency? _baseOf(List<Currency> currencies) {
-    for (final currency in currencies) {
-      if (currency.isBase) return currency;
-    }
-    return null;
-  }
 
   static DateTime? _parseYmd(String? ymd) {
     if (ymd == null || ymd.isEmpty) return null;

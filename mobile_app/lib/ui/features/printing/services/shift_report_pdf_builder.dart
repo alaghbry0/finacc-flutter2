@@ -26,12 +26,6 @@ import '../docs/shift_print_doc.dart';
 class ShiftReportPdfBuilder {
   const ShiftReportPdfBuilder();
 
-  /// الفرق زيادة (موجب) — أخضر `FinColors.positive` الفاتح للورق.
-  static const pw.PdfColor _surplus = pw.PdfColor.fromInt(0xFF0E7A4E);
-
-  /// الفرق عجز (سالب) — أحمر `FinColors.negative` الفاتح للورق.
-  static const pw.PdfColor _deficit = pw.PdfColor.fromInt(0xFFB3261E);
-
   /// البناء الكامل — A4 عمودي؛ تقرير الوردية صفحة واحدة دائماً
   /// (بنود المعادلة محدودة عددياً).
   Future<pw.Document> build(ShiftPrintDoc doc) async {
@@ -287,10 +281,12 @@ class ShiftReportPdfBuilder {
   pw.Widget _settlementCard(ShiftPrintDoc doc) {
     final labels = doc.labels;
     final diff = doc.difference;
+    // زوج الفائض/العجز الموحّد بPrintPalette منذ R20-D2 (كان خاصاً هنا
+    // بقيمتين مطابقتين حرفياً لزوج تقرير الأرباح — صفر تغيير مرسوم).
     final diffColor = diff > 0.005
-        ? _surplus
+        ? PrintPalette.surplus
         : diff < -0.005
-        ? _deficit
+        ? PrintPalette.deficit
         : PrintPalette.brandDeep;
     final diffWord = diff > 0.005
         ? labels.surplus

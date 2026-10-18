@@ -12,10 +12,17 @@ import '../core/print_palette.dart';
 import 'profit_report_pdf_doc.dart';
 
 /// إسهام موجب — أخضر `FinColors.positive` الفاتح للورق.
-const pw.PdfColor kProfitSurplus = pw.PdfColor.fromInt(0xFF0E7A4E);
+///
+/// الاسم العام التاريخي (تستورده أقسام الجدول) — منذ R20-D2 غلافٌ ثابت
+/// لـ[PrintPalette.surplus] البيت الموحّد لألوان الطباعة (قيمة ARGB
+/// نفسها حرفياً — صفر تغيير بالمستند المرسوم).
+const pw.PdfColor kProfitSurplus = PrintPalette.surplus;
 
 /// إسهام سالب — أحمر `FinColors.negative` الفاتح للورق.
-const pw.PdfColor kProfitDeficit = pw.PdfColor.fromInt(0xFFB3261E);
+///
+/// الاسم العام التاريخي — منذ R20-D2 غلافٌ ثابت لـ[PrintPalette.deficit]
+/// (قيمة ARGB نفسها حرفياً).
+const pw.PdfColor kProfitDeficit = PrintPalette.deficit;
 
 pw.PdfColor profitToneColor(double value) => value > 0.005
     ? kProfitSurplus

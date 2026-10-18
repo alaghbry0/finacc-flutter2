@@ -218,7 +218,7 @@ class PartyListViewModel extends ChangeNotifier {
         filter: effectiveFilter,
         rows: rows,
         currencies: currencies,
-        baseCurrency: _baseOf(currencies),
+        baseCurrency: Currency.baseOf(currencies),
       );
     } catch (error) {
       _state = PartyListState(
@@ -233,13 +233,6 @@ class PartyListViewModel extends ChangeNotifier {
       );
     }
     notifyListeners();
-  }
-
-  static Currency? _baseOf(List<Currency> currencies) {
-    for (final currency in currencies) {
-      if (currency.isBase) return currency;
-    }
-    return null;
   }
 
   @override

@@ -43,6 +43,17 @@ abstract final class PrintPalette {
   /// الفاتح onWarningContainer).
   static const pw.PdfColor inkOnGold = pw.PdfColor.fromInt(0xFF332405);
 
+  /// قيمة موجبة (فائض/زيادة/إسهام موجب) — أخضر `FinColors.positive`
+  /// الفاتح للورق. البيت الموحّد للزوج منذ R20-D2 (كان مكرراً حرفياً
+  /// باسمَي `kProfitSurplus` بمساعدات تقرير الأرباح و`_surplus` الخاص
+  /// ببنّاء الوردية — قيمة ARGB لم تُمس).
+  static const pw.PdfColor surplus = pw.PdfColor.fromInt(0xFF0E7A4E);
+
+  /// قيمة سالبة (عجز/إسهام سالب) — أحمر `FinColors.negative` الفاتح
+  /// للورق. قرين [surplus] — البيت الموحّد منذ R20-D2 (كان مكرراً
+  /// باسمَي `kProfitDeficit` و`_deficit` — قيمة ARGB لم تُمس).
+  static const pw.PdfColor deficit = pw.PdfColor.fromInt(0xFFB3261E);
+
   /// خلفية الورق (أبيض نقي لجودة الرستر).
   static const pw.PdfColor paper = pw.PdfColor.fromInt(0xFFFFFFFF);
 }

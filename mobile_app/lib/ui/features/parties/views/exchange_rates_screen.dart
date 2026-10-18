@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/core/numbers.dart';
 import '../../../../domain/models/exchange_rate.dart';
 import '../../../../domain/services/hijri_date.dart';
 import '../../../../domain/services/numerals.dart';
@@ -100,7 +101,7 @@ class _ExchangeRatesBodyState extends State<_ExchangeRatesBody> {
         ..addAll({
           for (final entry in state.entries)
             entry.currency.id: TextEditingController(
-              text: entry.todayRate == null ? '' : _numToText(entry.todayRate!),
+              text: entry.todayRate == null ? '' : numToText(entry.todayRate!),
             ),
         });
     } else if (_controllersReady && state.savedCurrencyId != null) {
@@ -109,7 +110,7 @@ class _ExchangeRatesBodyState extends State<_ExchangeRatesBody> {
       final entry = _entryOf(savedId);
       final controller = _rateControllers[savedId];
       if (entry?.todayRate != null && controller != null) {
-        final canonical = _numToText(entry!.todayRate!);
+        final canonical = numToText(entry!.todayRate!);
         if (controller.text.trim() != canonical) {
           controller.text = canonical;
         }
@@ -125,13 +126,6 @@ class _ExchangeRatesBodyState extends State<_ExchangeRatesBody> {
       if (entry.currency.id == currencyId) return entry;
     }
     return null;
-  }
-
-  static String _numToText(double value) {
-    if (value == value.truncateToDouble() && value.abs() < 1e15) {
-      return value.truncate().toString();
-    }
-    return value.toString();
   }
 
   @override
