@@ -3,6 +3,8 @@
 /// نقداً والباقي للعميل بوضوح + رفض الآجل لعميل نقدي مجهول (بإيقاف
 /// زرّي آجل/مختلط لا برفض بعد الضغط) + تأكيد الترحيل + إيصال نجاح
 /// بأزرار طباعة/مشاركة فورية (P0-2 — `invoicing.print_on_save`).
+/// الرسوم (الرأس/المعاينة/النموذج/الإيصال/حوار الائتمان) بملفاتها
+/// المركزّة بجوارها (R19-D3b) — هذا الملف: آلة الحالة والتحقق والترحيل.
 ///
 /// **17-c / FR-03-05**: بوابة حد الائتمان عند التأكيد — [creditGate]
 /// (اختياري) يُستدعى قبل الترحيل بالجزء الآجل حصراً؛ عند التجاوز:
@@ -12,24 +14,17 @@ library;
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../../domain/core/result.dart';
 import '../../../../../domain/models/sale.dart';
 import '../../../../../domain/services/credit_limit.dart';
 import '../../../../../domain/services/sale_pricing.dart';
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/amount_text.dart';
-import '../../../../core/widgets/fin_sheet_drag_handle.dart';
-import '../../../../core/widgets/fin_card.dart';
-import '../../../../core/widgets/fin_error_card.dart';
 import '../../view_models/print_on_save.dart';
-import 'sell_widgets.dart';
-
-/// أنماط الدفع في النافذة.
-enum _PayMode { fullCash, fullCredit, mixed }
+import 'payment_credit_limit_dialog.dart';
+import 'payment_pay_form.dart';
+import 'payment_receipt_view.dart';
+import 'sell_format.dart';
 
 /// يفتح PaymentSheet — يعيد `true` عند نجاح الترحيل.
 ///
@@ -130,7 +125,7 @@ class _PaymentSheet extends StatefulWidget {
 }
 
 class _PaymentSheetState extends State<_PaymentSheet> {
-  _PayMode _mode = _PayMode.fullCash;
+  PaymentMode _mode = PaymentMode.fullCash;
   late final TextEditingController _cashController;
   bool _posting = false;
   String? _error;
@@ -153,13 +148,13 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     // آجل/مختلط بلا عميل يسقطان إلى نقدي (P2-3 — النقدي المجهول يسدد
     // كاملاً حصراً فلا معنى لافتتاح معطّل).
     _mode = switch (widget.initialPayMode) {
-      'credit' when widget.customerName != null => _PayMode.fullCredit,
-      'mixed' when widget.customerName != null => _PayMode.mixed,
-      _ => _PayMode.fullCash,
+      'credit' when widget.customerName != null => PaymentMode.fullCredit,
+      'mixed' when widget.customerName != null => PaymentMode.mixed,
+      _ => PaymentMode.fullCash,
     };
     // نقدي كامل يُملأ بالصافي؛ آجل/مختلط يبدآن من صفر (P2-2).
     _cashController = TextEditingController(
-      text: _mode == _PayMode.fullCash ? _fmt(widget.grandTotal) : '0',
+      text: _mode == PaymentMode.fullCash ? _fmt(widget.grandTotal) : '0',
     );
   }
 
@@ -175,10 +170,10 @@ class _PaymentSheetState extends State<_PaymentSheet> {
 
   double? get _paidCash {
     switch (_mode) {
-      case _PayMode.fullCredit:
+      case PaymentMode.fullCredit:
         return 0;
-      case _PayMode.fullCash:
-      case _PayMode.mixed:
+      case PaymentMode.fullCash:
+      case PaymentMode.mixed:
         final raw = _cashController.text.trim().replaceAll(',', '.');
         if (raw.isEmpty) return null;
         return double.tryParse(raw);
@@ -194,7 +189,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       return null;
     }
     switch (_mode) {
-      case _PayMode.fullCash:
+      case PaymentMode.fullCash:
         if (paid + moneyEpsilon < widget.grandTotal) {
           setState(
             () => _error = l10n.sellPayCashShort(
@@ -203,12 +198,12 @@ class _PaymentSheetState extends State<_PaymentSheet> {
           );
           return null;
         }
-      case _PayMode.fullCredit:
+      case PaymentMode.fullCredit:
         if (!_hasCustomer) {
           setState(() => _error = l10n.sellPayCreditNeedsCustomer);
           return null;
         }
-      case _PayMode.mixed:
+      case PaymentMode.mixed:
         if (!_hasCustomer) {
           setState(() => _error = l10n.sellPayCreditNeedsCustomer);
           return null;
@@ -302,7 +297,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     return await showDialog<bool>(
           context: context,
           barrierDismissible: !decision.blocked,
-          builder: (dialogContext) => _CreditLimitDialog(
+          builder: (dialogContext) => PaymentCreditLimitDialog(
             decision: decision,
             gate: gateData,
             decimals: widget.decimals,
@@ -330,509 +325,55 @@ class _PaymentSheetState extends State<_PaymentSheet> {
     );
   }
 
-  // ── نموذج الدفع ────────────────────────────────────────────────────
+  // ── نموذج الدفع / إيصال النجاح (عرضٌ بملفات مركزّة — المنطق هنا) ────
 
   Widget _buildPayForm(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = FinColors.of(context);
     final paid = _paidCash ?? 0;
     final settlement = settlePreview(widget.grandTotal, paid);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const FinSheetDragHandle(),
-        const SizedBox(height: 12),
-        _TotalHeader(
-          grandTotal: widget.grandTotal,
-          decimals: widget.decimals,
-          currencyCode: widget.currencyCode,
-          customerName: widget.customerName,
-        ),
-        const SizedBox(height: 18),
-        SegmentedButton<_PayMode>(
-          segments: [
-            ButtonSegment(
-              value: _PayMode.fullCash,
-              label: Text(l10n.sellPayMethodCash),
-              icon: const Icon(Icons.payments_rounded),
-            ),
-            // P2-3: آجل/مختلط معطّلان بلا عميل (النقدي المجهول يسدد
-            // كاملاً حصراً) — التحذير القائم يبقى معروضاً تحتهما.
-            ButtonSegment(
-              value: _PayMode.fullCredit,
-              label: Text(l10n.sellPayMethodCredit),
-              icon: const Icon(Icons.schedule_rounded),
-              enabled: _hasCustomer,
-            ),
-            ButtonSegment(
-              value: _PayMode.mixed,
-              label: Text(l10n.sellPayMethodMixed),
-              icon: const Icon(Icons.call_split_rounded),
-              enabled: _hasCustomer,
-            ),
-          ],
-          selected: {_mode},
-          onSelectionChanged: (selection) {
-            setState(() {
-              _mode = selection.first;
-              _error = null;
-              if (_mode == _PayMode.fullCash) {
-                _cashController.text = _fmt(widget.grandTotal);
-              } else if (_mode == _PayMode.mixed) {
-                // P2-2: المختلط يبدأ من صفر لا من «نصف الصافي» الاعتباطي —
-                // الكاشير يدخل المدفوع نقداً بنفسه والمعاينة الحية تتحدث معه.
-                _cashController.text = '0';
-              }
-            });
-          },
-        ),
-        const SizedBox(height: 8),
-        if (!_hasCustomer)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: colors.warning,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    l10n.sellPayAnonymousCashOnly,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: colors.warning,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (_mode != _PayMode.fullCredit) ...[
-          const SizedBox(height: 10),
-          TextField(
-            controller: _cashController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
-            ],
-            enabled: !_posting,
-            onChanged: (_) {
-              if (_error != null) setState(() => _error = null);
-            },
-            // أرقام جدولية أثناء الكتابة (الخط المرافق — UX-2b): الحقل
-            // يتقلص/يتمدد مع كل خانة بأرقام متساوية العرض فلا يقفز النص.
-            style: FinText.withTabularDigits(
-              Theme.of(context).textTheme.bodyLarge!,
-            ),
-            decoration: InputDecoration(
-              labelText: l10n.sellPayCashFieldLabel,
-              suffixText: widget.currencyCode ?? '',
-              helperText: _mode == _PayMode.fullCash
-                  ? l10n.sellPayCashFieldHelper
-                  : null,
-            ),
-          ),
-        ],
-        const SizedBox(height: 14),
-        _SettlementPreview(
-          grandTotal: widget.grandTotal,
-          decimals: widget.decimals,
-          netPaid: _mode == _PayMode.fullCredit ? 0 : settlement.netPaid,
-          changeDue: _mode == _PayMode.fullCredit ? 0 : settlement.changeDue,
-          remainingCredit: _mode == _PayMode.fullCredit
-              ? widget.grandTotal
-              : settlement.remainingCredit,
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: 14),
-          FinErrorCard(message: _error!),
-        ],
-        const SizedBox(height: 18),
-        FilledButton(
-          onPressed: _posting ? null : _confirm,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(56),
-            textStyle: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          child: _posting
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.4),
-                )
-              : Text(l10n.sellPayConfirm),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: _posting ? null : () => Navigator.of(context).pop(false),
-          child: Text(l10n.commonCancel),
-        ),
-      ],
+    return PaymentPayForm(
+      mode: _mode,
+      hasCustomer: _hasCustomer,
+      cashController: _cashController,
+      grandTotal: widget.grandTotal,
+      decimals: widget.decimals,
+      currencyCode: widget.currencyCode,
+      customerName: widget.customerName,
+      netPaid: _mode == PaymentMode.fullCredit ? 0 : settlement.netPaid,
+      changeDue: _mode == PaymentMode.fullCredit ? 0 : settlement.changeDue,
+      remainingCredit: _mode == PaymentMode.fullCredit
+          ? widget.grandTotal
+          : settlement.remainingCredit,
+      error: _error,
+      posting: _posting,
+      onModeChanged: (mode) {
+        setState(() {
+          _mode = mode;
+          _error = null;
+          if (_mode == PaymentMode.fullCash) {
+            _cashController.text = _fmt(widget.grandTotal);
+          } else if (_mode == PaymentMode.mixed) {
+            // P2-2: المختلط يبدأ من صفر لا من «نصف الصافي» الاعتباطي —
+            // الكاشير يدخل المدفوع نقداً بنفسه والمعاينة الحية تتحدث معه.
+            _cashController.text = '0';
+          }
+        });
+      },
+      onCashChanged: () {
+        if (_error != null) setState(() => _error = null);
+      },
+      onConfirm: _confirm,
     );
   }
 
   // ── إيصال النجاح ───────────────────────────────────────────────────
 
   Widget _buildReceipt(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const FinSheetDragHandle(),
-        const SizedBox(height: 8),
-        PostedReceiptCard(
-          receipt: _receipt!,
-          currencyCode: widget.currencyCode,
-          // P0-2: زرا الطباعة/المشاركة داخل البطاقة (وضعا ask/always).
-          onPrint: _printAvailable ? _openPreview : null,
-          onShare: _printAvailable ? _openPreview : null,
-        ),
-        const SizedBox(height: 18),
-        // P2-1: الزران متمايزان — الأساسي «طباعة + فاتورة جديدة» عند
-        // توافر الطباعة (يفتح المعاينة ثم يغلق)، وإلا «فاتورة جديدة» فقط؛
-        // والثانوي «إغلاق» (ينهي بلا طباعة).
-        FilledButton.icon(
-          key: const Key('sell_receipt_primary_action'),
-          onPressed: () async {
-            if (_printAvailable) await _openPreview();
-            if (!context.mounted) return;
-            Navigator.of(context).pop(true);
-          },
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
-          icon: Icon(_printAvailable ? Icons.print_rounded : Icons.post_add),
-          label: Text(
-            _printAvailable
-                ? l10n.sellFixPrintAndNewInvoice
-                : l10n.sellReceiptNewInvoice,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          key: const Key('sell_receipt_close_action'),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(l10n.sellFixClose),
-        ),
-      ],
-    );
-  }
-}
-
-/// حوار حد الائتمان (FR-03-05 / 17-c): الحد + الرصيد الحالي + الرصيد
-/// المتوقع بعد الفاتورة. warn → «متابعة على أي حال / إلغاء»؛
-/// block → «رجوع» حصراً (لا متابعة، والنقر خارجه لا يمرر).
-class _CreditLimitDialog extends StatelessWidget {
-  const _CreditLimitDialog({
-    required this.decision,
-    required this.gate,
-    required this.decimals,
-    required this.currencyCode,
-    required this.customerName,
-  });
-
-  final CreditLimitDecision decision;
-  final CreditLimitGate gate;
-  final int decimals;
-  final String? currencyCode;
-  final String? customerName;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    final d = decimals == 0 ? 0 : 2;
-
-    return AlertDialog(
-      icon: Icon(
-        Icons.gpp_maybe_rounded,
-        color: decision.blocked ? colors.negative : colors.warning,
-        size: 32,
-      ),
-      title: Text(l10n.creditLimitTitle),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            decision.blocked
-                ? l10n.creditLimitBlocked
-                : l10n.creditLimitExceeded,
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          if (customerName != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              // اسم العميل + رمز عملة الفاتورة (سياق المبالغ المعروضة).
-              currencyCode != null && currencyCode!.isNotEmpty
-                  ? '$customerName • ${currencyCode!}'
-                  : customerName!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          _LimitRow(
-            label: l10n.creditLimitLimitLabel,
-            value: gate.creditLimit ?? 0,
-            decimals: d,
-            color: colors.gold,
-            emphasized: true,
-          ),
-          _LimitRow(
-            label: l10n.creditLimitCurrentLabel,
-            value: gate.currentBalance,
-            decimals: d,
-            color: scheme.onSurfaceVariant,
-          ),
-          _LimitRow(
-            label: l10n.creditLimitResultingLabel,
-            value: decision.resultingBalance,
-            decimals: d,
-            color: decision.blocked ? colors.negative : colors.warning,
-            emphasized: true,
-          ),
-        ],
-      ),
-      actions: [
-        if (!decision.blocked) ...[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.creditLimitCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.creditLimitContinue),
-          ),
-        ] else
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.creditLimitBack),
-          ),
-      ],
-    );
-  }
-}
-
-/// سطر مبلغ داخل حوار الائتمان — تسمية + مبلغ بأرقام جدولية.
-class _LimitRow extends StatelessWidget {
-  const _LimitRow({
-    required this.label,
-    required this.value,
-    required this.decimals,
-    required this.color,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final double value;
-  final int decimals;
-  final Color color;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: emphasized ? FontWeight.w800 : FontWeight.w400,
-              ),
-            ),
-          ),
-          // مبلغ ملوّن بأرقام جدولية (LTR داخل السياق العربي) — الخط
-          // المرافق NotoSansArabic بأرقام متساوية العرض فلا يرتجّ صف
-          // الحوار عند تحديث القيم (UX-2b / DS-18n).
-          Text(
-            AmountText.formatFor(context, value, decimals),
-            style: FinText.withTabularDigits(
-              Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color: color,
-                // w600 غير متوفر في Almarai (300/400/700/800 حصراً) —
-                // التصحيح إلى w700 المتاح (UX-2b).
-                fontWeight: emphasized ? FontWeight.w800 : FontWeight.w700,
-                fontFeatures: FinText.tabularNums,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// رأس النافذة — الصافي كبير + رمز العملة + العميل.
-class _TotalHeader extends StatelessWidget {
-  const _TotalHeader({
-    required this.grandTotal,
-    required this.decimals,
-    required this.currencyCode,
-    required this.customerName,
-  });
-
-  final double grandTotal;
-  final int decimals;
-  final String? currencyCode;
-  final String? customerName;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    return Column(
-      children: [
-        Text(
-          l10n.sellPayNetTotalLabel,
-          style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(color: scheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 2),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            AmountText(
-              amount: grandTotal,
-              size: AmountSize.display,
-              decimals: decimals == 0 ? 0 : 2,
-            ),
-            if (currencyCode != null && currencyCode!.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Text(
-                currencyCode!,
-                style: Theme.of(context).textTheme.titleMedium
-                    ?.copyWith(color: colors.gold, fontWeight: FontWeight.w800),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          customerName ?? l10n.sellPayWalkInCustomer,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(fontWeight: FontWeight.w700),
-        ),
-      ],
-    );
-  }
-}
-
-/// معاينة التسوية الحية — المدفوع نقداً / الباقي للعميل / المتبقي آجلاً.
-class _SettlementPreview extends StatelessWidget {
-  const _SettlementPreview({
-    required this.grandTotal,
-    required this.decimals,
-    required this.netPaid,
-    required this.changeDue,
-    required this.remainingCredit,
-  });
-
-  final double grandTotal;
-  final int decimals;
-  final double netPaid;
-  final double changeDue;
-  final double remainingCredit;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = FinColors.of(context);
-    final d = decimals == 0 ? 0 : 2;
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        children: [
-          _PreviewRow(
-            label: l10n.sellPayNetPaid,
-            value: netPaid,
-            decimals: d,
-            color: colors.positive,
-          ),
-          if (changeDue > 0)
-            _PreviewRow(
-              label: l10n.sellReceiptChangeDue,
-              value: changeDue,
-              decimals: d,
-              color: colors.warning,
-              bold: true,
-            ),
-          if (remainingCredit > 0)
-            _PreviewRow(
-              label: l10n.sellReceiptRemainingCredit,
-              value: remainingCredit,
-              decimals: d,
-              color: colors.warning,
-            ),
-          if (changeDue <= 0 && remainingCredit <= 0)
-            _PreviewRow(
-              label: l10n.sellPaySettledFully,
-              value: null,
-              decimals: d,
-              color: colors.positive,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PreviewRow extends StatelessWidget {
-  const _PreviewRow({
-    required this.label,
-    required this.value,
-    required this.decimals,
-    required this.color,
-    this.bold = false,
-  });
-
-  final String label;
-  final double? value;
-  final int decimals;
-  final Color color;
-  final bool bold;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: bold ? FontWeight.w800 : FontWeight.w400,
-              ),
-            ),
-          ),
-          if (value != null)
-            AmountText(
-              amount: value!,
-              decimals: decimals,
-              showSignMarker: false,
-            )
-          else
-            Icon(Icons.check_circle_rounded, size: 20, color: color),
-        ],
-      ),
+    return PaymentReceiptView(
+      receipt: _receipt!,
+      currencyCode: widget.currencyCode,
+      printAvailable: _printAvailable,
+      onOpenPreview: _openPreview,
     );
   }
 }

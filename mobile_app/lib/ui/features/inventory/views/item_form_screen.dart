@@ -1,7 +1,8 @@
 /// شاشة نموذج الصنف (إضافة/تعديل — دليل 02/02): اسم إلزامي، باركود مع
 /// توليد EAN-13 ومعاينة (FR-01-02)، فئة ووحدة بإضافة فورية، أسعار بكل
 /// العملات النشطة، صنف خدمي بلا مخزون (FR-01-16)، وكمية افتتاحية في
-/// الإنشاء فقط.
+/// الإنشاء فقط. الحقول والأقسام والحوارات بملفاتها المركزّة بجوارها
+/// (R19-D3b) — هذا الملف: إدارة الحالة وحماية المغادرة والحفظ.
 library;
 
 import 'dart:async';
@@ -14,15 +15,14 @@ import '../../../../domain/models/company.dart';
 import '../../../../domain/models/item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/info_note.dart';
 import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../view_models/item_form_view_model.dart';
-import 'widgets/inventory_widgets.dart';
+import 'widgets/item_form_fields.dart';
+import 'widgets/item_form_sections.dart';
 
 class ItemFormScreen extends StatelessWidget {
   const ItemFormScreen({super.key, this.viewModel, this.editItem, this.editId});
@@ -275,26 +275,26 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                       ),
                       const SizedBox(height: 14),
                     ],
-                    _nameField(l10n),
+                    ItemNameField(controller: _name, vm: vm),
                     const SizedBox(height: 14),
-                    _barcodeSection(l10n, state),
+                    ItemBarcodeSection(controller: _barcode, vm: vm),
                     const SizedBox(height: 14),
-                    _categoryRow(l10n, state),
+                    ItemCategoryRow(vm: vm),
                     const SizedBox(height: 14),
-                    _unitRow(l10n, state),
+                    ItemUnitRow(vm: vm),
                     const SizedBox(height: 14),
-                    _costField(l10n),
+                    ItemCostField(controller: _cost, vm: vm),
                     const SizedBox(height: 14),
-                    _serviceSwitch(l10n, state),
+                    ItemServiceSwitch(vm: vm),
                     if (!state.isService) ...[
                       const SizedBox(height: 14),
-                      _minStockField(l10n),
+                      ItemMinStockField(controller: _minStock, vm: vm),
                       if (!state.editMode) ...[
                         const SizedBox(height: 14),
-                        _openingQtyField(l10n),
+                        ItemOpeningQtyField(controller: _openingQty, vm: vm),
                       ],
                       const SizedBox(height: 14),
-                      _trackBatchesSwitch(l10n, state),
+                      ItemTrackBatchesSwitch(vm: vm),
                     ],
                     const SizedBox(height: 18),
                     FinSectionTitle(
@@ -305,12 +305,12 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                     for (final currency in state.currencies)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 14),
-                        child: _priceField(l10n, currency),
+                        child: _priceField(vm, currency),
                       ),
-                    _notesField(l10n),
+                    ItemNotesField(controller: _notes, vm: vm),
                     if (state.validationError != null) ...[
                       const SizedBox(height: 14),
-                      _ValidationErrorBanner(
+                      ItemFormValidationErrorBanner(
                         key: _validationBannerKey,
                         message: _validationMessage(
                           l10n,
@@ -319,7 +319,10 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    _saveButton(l10n, state),
+                    ItemSaveButton(
+                      saving: state.saving,
+                      onPressed: _onSavePressed,
+                    ),
                   ],
                 ),
               ),
@@ -327,342 +330,11 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // الحقول
-  // ─────────────────────────────────────────────────────────────────────
-
-  Widget _nameField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('item_form_name_field'),
-      controller: _name,
-      onChanged: _vm.setName,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.itemFormNameLabel,
-        hintText: l10n.itemFormNameHint,
-        prefixIcon: const Icon(Icons.inventory_2_rounded),
-      ),
-      validator: (value) =>
-          (value ?? '').trim().isEmpty ? l10n.itemFormNameRequired : null,
-    );
-  }
-
-  Widget _barcodeSection(AppLocalizations l10n, ItemFormState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: TextFormField(
-                key: const Key('item_form_barcode_field'),
-                controller: _barcode,
-                onChanged: _vm.setBarcode,
-                keyboardType: TextInputType.text,
-                // الباركود LTR دائماً (§6.2 — أرقام/لاتيني).
-                decoration: InputDecoration(
-                  labelText: l10n.itemFormBarcodeLabel,
-                  hintText: l10n.itemFormBarcodeHint,
-                  prefixIcon: const Icon(Icons.qr_code_2_rounded),
-                ),
-              ),
-            ),
-            // التوليد في الإنشاء فقط — التعديل لا يولّد من جديد.
-            if (!state.editMode) ...[
-              const SizedBox(width: 10),
-              FilledButton.tonalIcon(
-                key: const Key('item_form_generate_btn'),
-                onPressed: _vm.generateBarcode,
-                icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                label: Text(
-                  state.barcode.isEmpty
-                      ? l10n.itemFormBarcodeGenerate
-                      : l10n.itemFormBarcodeRegenerate,
-                ),
-                style: FilledButton.styleFrom(minimumSize: const Size(0, 52)),
-              ),
-            ],
-          ],
-        ),
-        if (state.barcode.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          FinCard(
-            padding: const EdgeInsets.all(14),
-            child: BarcodePreview(code: state.barcode, name: state.name),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _categoryRow(AppLocalizations l10n, ItemFormState state) {
-    return Row(
-      children: [
-        Expanded(
-          child: DropdownButtonFormField<int?>(
-            key: Key('item_form_category_${state.categoryId}'),
-            initialValue: state.categoryId,
-            onChanged: _vm.setCategory,
-            decoration: InputDecoration(
-              labelText: l10n.itemFormCategoryLabel,
-              prefixIcon: const Icon(Icons.category_rounded),
-            ),
-            items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: Text(l10n.itemFormCategoryNone),
-              ),
-              for (final category in state.categories)
-                DropdownMenuItem<int?>(
-                  value: category.id,
-                  child: Text(category.name),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        IconButton.outlined(
-          tooltip: l10n.itemFormCategoryAdd,
-          icon: const Icon(Icons.add_rounded),
-          onPressed: () => unawaited(_openAddCategoryDialog(context, l10n)),
-          style: IconButton.styleFrom(minimumSize: const Size(52, 52)),
-        ),
-      ],
-    );
-  }
-
-  Widget _unitRow(AppLocalizations l10n, ItemFormState state) {
-    return Row(
-      children: [
-        Expanded(
-          child: DropdownButtonFormField<int?>(
-            key: Key('item_form_unit_${state.unitId}'),
-            initialValue: state.unitId,
-            onChanged: _vm.setUnit,
-            decoration: InputDecoration(
-              labelText: l10n.itemFormUnitLabel,
-              prefixIcon: const Icon(Icons.straighten_rounded),
-            ),
-            items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: Text(l10n.itemFormUnitNone),
-              ),
-              for (final unit in state.units)
-                DropdownMenuItem<int?>(value: unit.id, child: Text(unit.name)),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        IconButton.outlined(
-          tooltip: l10n.itemFormUnitAdd,
-          icon: const Icon(Icons.add_rounded),
-          onPressed: () => unawaited(_openAddUnitDialog(context, l10n)),
-          style: IconButton.styleFrom(minimumSize: const Size(52, 52)),
-        ),
-      ],
-    );
-  }
-
-  Widget _costField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('item_form_cost_field'),
-      controller: _cost,
-      onChanged: _vm.setCostText,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.itemFormCostLabel,
-        prefixIcon: const Icon(Icons.payments_rounded),
-      ),
-      validator: (value) {
-        final text = (value ?? '').trim();
-        final parsed = double.tryParse(text);
-        if (text.isEmpty || parsed == null || parsed < 0) {
-          return l10n.itemFormCostInvalid;
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _minStockField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('item_form_min_stock_field'),
-      controller: _minStock,
-      onChanged: _vm.setMinStockText,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.itemFormMinStockLabel,
-        hintText: l10n.itemFormMinStockHint,
-        prefixIcon: const Icon(Icons.low_priority_rounded),
-      ),
-      validator: (value) {
-        final text = (value ?? '').trim();
-        if (text.isEmpty) return null;
-        final parsed = double.tryParse(text);
-        if (parsed == null || parsed < 0) return l10n.itemFormMinStockInvalid;
-        return null;
-      },
-    );
-  }
-
-  Widget _openingQtyField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('item_form_opening_qty_field'),
-      controller: _openingQty,
-      onChanged: _vm.setOpeningQtyText,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.itemFormOpeningQtyLabel,
-        hintText: l10n.itemFormOpeningQtyHint,
-        prefixIcon: const Icon(Icons.inventory_rounded),
-      ),
-      validator: (value) {
-        final text = (value ?? '').trim();
-        if (text.isEmpty) return null;
-        final parsed = double.tryParse(text);
-        if (parsed == null || parsed < 0) {
-          return l10n.itemFormOpeningQtyInvalid;
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _serviceSwitch(AppLocalizations l10n, ItemFormState state) {
-    return FinCard(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Material(
-        // ListTile فوق بطاقة مزيّنة — يلزمه Material خاص كي لا تُبتلع
-        // خلفيته وموج الحبر داخل DecoratedBox البطاقة.
-        color: Colors.transparent,
-        child: SwitchListTile(
-          key: const Key('item_form_service_switch'),
-          value: state.isService,
-          onChanged: _vm.setIsService,
-          title: Text(
-            l10n.itemFormServiceLabel,
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(
-            l10n.itemFormServiceDesc,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          secondary: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.tertiary
-                  .withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.miscellaneous_services_rounded,
-              color: Theme.of(context).colorScheme.tertiary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _trackBatchesSwitch(AppLocalizations l10n, ItemFormState state) {
-    final colors = FinColors.of(context);
-    return FinCard(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Material(
-        // نفس علاج المفتاح الأول — Material شفاف فوق بطاقة مزيّنة.
-        color: Colors.transparent,
-        child: SwitchListTile(
-          key: const Key('item_form_batches_switch'),
-          value: state.trackBatches,
-          onChanged: _vm.setTrackBatches,
-          title: Text(
-            l10n.itemFormTrackBatchesLabel,
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(
-            l10n.itemFormTrackBatchesDesc,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          secondary: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: colors.warning.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.layers_rounded, color: colors.warning),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _priceField(AppLocalizations l10n, Currency currency) {
+  /// حقل سعر عملة واحدة — المتحكم يملكه الأب (خريطة المتحكمات).
+  Widget _priceField(ItemFormViewModel vm, Currency currency) {
     final controller = _priceControllers[currency.id];
     if (controller == null) return const SizedBox.shrink();
-    return TextFormField(
-      key: Key('item_form_price_field_${currency.code}'),
-      controller: controller,
-      onChanged: (value) => _vm.setPriceText(currency.id, value),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.itemFormPriceLabel(currency.name),
-        prefixIcon: const Icon(Icons.sell_outlined),
-        suffixText: currency.code,
-      ),
-      validator: (value) {
-        final text = (value ?? '').trim();
-        if (text.isEmpty) return null;
-        final parsed = double.tryParse(text);
-        if (parsed == null || parsed < 0) return l10n.itemFormPriceInvalid;
-        return null;
-      },
-    );
-  }
-
-  Widget _notesField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('item_form_notes_field'),
-      controller: _notes,
-      onChanged: _vm.setNotes,
-      maxLines: 3,
-      decoration: InputDecoration(
-        labelText: l10n.itemFormNotesLabel,
-        hintText: l10n.itemFormNotesHint,
-        prefixIcon: const Icon(Icons.notes_rounded),
-      ),
-    );
-  }
-
-  Widget _saveButton(AppLocalizations l10n, ItemFormState state) {
-    return FilledButton(
-      key: const Key('item_form_save_btn'),
-      onPressed: state.saving ? null : _onSavePressed,
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-      child: state.saving
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 10),
-                Text(l10n.itemFormSaving),
-              ],
-            )
-          : Text(l10n.itemFormSave),
-    );
+    return ItemPriceField(controller: controller, vm: vm, currency: currency);
   }
 
   String _validationMessage(AppLocalizations l10n, ItemFormError error) =>
@@ -675,173 +347,4 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
         ItemFormError.noWarehouse => l10n.genericErrorTitle,
         ItemFormError.noUser => l10n.genericErrorTitle,
       };
-
-  // ─────────────────────────────────────────────────────────────────────
-  // حوارات الإضافة الفورية
-  // ─────────────────────────────────────────────────────────────────────
-
-  Future<void> _openAddCategoryDialog(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) async {
-    final controller = TextEditingController();
-    var errorText = '';
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text(l10n.categoryNameLabel),
-          // R16-b — جسم الحوار قابل للتمرير (scrollable): لا ينفيض ولا
-          // تحتجب حقوله خلف لوحة المفاتيح على الشاشات القصيرة.
-          scrollable: true,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: l10n.categoryNameLabel,
-                  errorText: errorText.isEmpty ? null : errorText,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final name = controller.text.trim();
-                if (name.isEmpty) {
-                  setDialogState(() => errorText = l10n.categoryNameLabel);
-                  return;
-                }
-                final error = await _vm.addCategory(name);
-                if (!dialogContext.mounted) return;
-                if (error != null) {
-                  setDialogState(() => errorText = error);
-                  return;
-                }
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(l10n.commonAdd),
-            ),
-          ],
-        ),
-      ),
-    );
-    controller.dispose();
-  }
-
-  Future<void> _openAddUnitDialog(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) async {
-    final nameController = TextEditingController();
-    final factorController = TextEditingController(text: '1');
-    var errorText = '';
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text(l10n.unitNameLabel),
-          // R16-b — نفس علاج حوار الفئة: جسم قابل للتمرير.
-          scrollable: true,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                decoration: InputDecoration(labelText: l10n.unitNameLabel),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: factorController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: InputDecoration(
-                  labelText: l10n.unitFactorLabel,
-                  hintText: l10n.unitFactorHint,
-                  errorText: errorText.isEmpty ? null : errorText,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final name = nameController.text.trim();
-                final factor = double.tryParse(factorController.text.trim());
-                if (name.isEmpty) {
-                  setDialogState(() => errorText = l10n.unitNameLabel);
-                  return;
-                }
-                if (factor == null || factor <= 0) {
-                  setDialogState(() => errorText = l10n.unitFactorInvalid);
-                  return;
-                }
-                final error = await _vm.addUnit(name, factor: factor);
-                if (!dialogContext.mounted) return;
-                if (error != null) {
-                  setDialogState(() => errorText = error);
-                  return;
-                }
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(l10n.commonAdd),
-            ),
-          ],
-        ),
-      ),
-    );
-    nameController.dispose();
-    factorController.dispose();
-  }
-}
-
-/// لافتة خطأ التحقق فوق زر الحفظ.
-class _ValidationErrorBanner extends StatelessWidget {
-  const _ValidationErrorBanner({super.key, required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = FinColors.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.negativeContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: colors.onNegativeContainer,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colors.onNegativeContainer,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
