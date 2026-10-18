@@ -2,6 +2,8 @@
 /// تعديله» (دليل 06/02 و05/01): الاسم إلزامي، حد الائتمان بدلالاته
 /// الثلاث مع شرح دقيق، ورصيد افتتاحي بعملته وتاريخه (مقفل عند وجود
 /// حركات)، وحفظ عبر المستودع مع تحقق فوري وأخطاء مترجمة.
+/// الحقول وقسم الافتتاحي بملفاتها المركزّة بجوارها (R20-D3b) — هذا
+/// الملف: آلة الحالة (المتحكمات + لقطة التغييرات + حرّاس التحميل).
 library;
 
 import 'dart:async';
@@ -11,17 +13,17 @@ import 'package:provider/provider.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/info_note.dart';
 import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../view_models/party_form_view_model.dart';
 import '../view_models/party_kind.dart';
 import '../view_models/party_lookup.dart';
-import 'widgets/parties_widgets.dart';
+import 'widgets/party_form_fields.dart';
+import 'widgets/party_form_opening_section.dart';
+import 'widgets/parties_widgets.dart' show partyFormatDate;
 
 /// شاشة نموذج العميل (إضافة/تعديل — دليل 06/02).
 class CustomerFormScreen extends StatelessWidget {
@@ -284,20 +286,24 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
                       ),
                       const SizedBox(height: 14),
                     ],
-                    _nameField(l10n),
+                    PartyFormNameField(controller: _name, vm: vm),
                     const SizedBox(height: 14),
-                    _phoneField(l10n),
+                    PartyFormPhoneField(controller: _phone, vm: vm),
                     if (isCustomer) ...[
                       const SizedBox(height: 14),
-                      _whatsappField(l10n),
+                      PartyFormWhatsappField(controller: _whatsapp, vm: vm),
                     ],
                     const SizedBox(height: 14),
-                    _addressField(l10n),
+                    PartyFormAddressField(controller: _address, vm: vm),
                     if (isCustomer) ...[
                       const SizedBox(height: 14),
-                      _areaField(l10n),
+                      PartyFormAreaField(controller: _area, vm: vm),
                       const SizedBox(height: 14),
-                      _creditLimitField(l10n, state),
+                      PartyFormCreditLimitField(
+                        controller: _creditLimit,
+                        vm: vm,
+                        state: state,
+                      ),
                     ],
                     const SizedBox(height: 18),
                     FinSectionTitle(
@@ -305,12 +311,18 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
                       title: l10n.partyFormOpeningSection,
                     ),
                     const SizedBox(height: 8),
-                    _openingSection(l10n, state),
+                    PartyFormOpeningSection(
+                      vm: vm,
+                      state: state,
+                      openingController: _opening,
+                      openingDateController: _openingDate,
+                      onPickOpeningDate: () => unawaited(_pickOpeningDate()),
+                    ),
                     const SizedBox(height: 18),
-                    _notesField(l10n),
+                    PartyFormNotesField(controller: _notes, vm: vm),
                     if (state.validationError != null) ...[
                       const SizedBox(height: 14),
-                      _ValidationErrorBanner(
+                      PartyFormValidationErrorBanner(
                         message: _validationMessage(
                           l10n,
                           state.validationError!,
@@ -318,7 +330,10 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    _saveButton(l10n, state),
+                    PartyFormSaveButton(
+                      saving: state.saving,
+                      onPressed: _onSavePressed,
+                    ),
                   ],
                 ),
               ),
@@ -337,191 +352,6 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
         : l10n.partyFormAddSupplierTitle;
   }
 
-  // ─────────────────────────────────────────────────────────────────────
-  // الحقول
-  // ─────────────────────────────────────────────────────────────────────
-
-  Widget _nameField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('party_form_name_field'),
-      controller: _name,
-      onChanged: _storedVm.setName,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormNameLabel,
-        hintText: l10n.partyFormNameHint,
-        prefixIcon: const Icon(Icons.badge_rounded),
-      ),
-      validator: (value) =>
-          (value ?? '').trim().isEmpty ? l10n.partyFormNameRequired : null,
-    );
-  }
-
-  Widget _phoneField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('party_form_phone_field'),
-      controller: _phone,
-      onChanged: _storedVm.setPhone,
-      keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormPhoneLabel,
-        prefixIcon: const Icon(Icons.call_rounded),
-      ),
-    );
-  }
-
-  Widget _whatsappField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('party_form_whatsapp_field'),
-      controller: _whatsapp,
-      onChanged: _storedVm.setWhatsapp,
-      keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormWhatsappLabel,
-        hintText: l10n.partyFormWhatsappHint,
-        prefixIcon: const Icon(Icons.chat_rounded),
-      ),
-    );
-  }
-
-  Widget _addressField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('party_form_address_field'),
-      controller: _address,
-      onChanged: _storedVm.setAddress,
-      textInputAction: TextInputAction.next,
-      minLines: 1,
-      maxLines: 3,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormAddressLabel,
-        prefixIcon: const Icon(Icons.location_on_rounded),
-      ),
-    );
-  }
-
-  Widget _areaField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('party_form_area_field'),
-      controller: _area,
-      onChanged: _storedVm.setArea,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormAreaLabel,
-        prefixIcon: const Icon(Icons.map_rounded),
-      ),
-    );
-  }
-
-  /// حد الائتمان — دلالة القيمة الصارمة مشروحة تحت الحقل حرفياً.
-  Widget _creditLimitField(AppLocalizations l10n, PartyFormState state) {
-    return TextFormField(
-      key: const Key('party_form_credit_field'),
-      controller: _creditLimit,
-      enabled: true,
-      onChanged: _storedVm.setCreditLimitText,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormCreditLimitLabel,
-        hintText: l10n.partyFormCreditLimitHint,
-        prefixIcon: const Icon(Icons.speed_rounded),
-        helperText: l10n.partyFormCreditLimitHelp,
-        helperMaxLines: 3,
-        suffixIcon: CreditLimitChip(creditLimit: state.parsedCreditLimit),
-      ),
-      validator: (value) {
-        final text = (value ?? '').trim();
-        if (text.isEmpty) return null;
-        final parsed = double.tryParse(text);
-        if (parsed == null || parsed < 0) {
-          return l10n.partyFormCreditLimitInvalid;
-        }
-        return null;
-      },
-    );
-  }
-
-  /// قسم الرصيد الافتتاحي — مبلغ + عملة + تاريخ (مقفل عند وجود حركات).
-  Widget _openingSection(AppLocalizations l10n, PartyFormState state) {
-    final locked = state.openingLocked;
-    return FinCard(
-      padding: const EdgeInsets.all(14),
-      child: IgnorePointer(
-        ignoring: locked,
-        child: Opacity(
-          opacity: locked ? 0.55 : 1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                key: const Key('party_form_opening_field'),
-                controller: _opening,
-                enabled: !locked,
-                onChanged: _storedVm.setOpeningText,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                textInputAction: TextInputAction.next,
-                decoration: InputDecoration(
-                  labelText: l10n.partyFormOpeningAmountLabel,
-                  hintText: l10n.partyFormOpeningAmountHint,
-                  prefixIcon: const Icon(Icons.savings_rounded),
-                ),
-                validator: (value) {
-                  final text = (value ?? '').trim();
-                  if (text.isEmpty) return null;
-                  final parsed = double.tryParse(text);
-                  if (parsed == null || parsed < 0) {
-                    return l10n.partyFormOpeningAmountInvalid;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 14),
-              DropdownButtonFormField<int>(
-                key: Key(
-                  'party_form_opening_currency_${state.openingCurrencyId}',
-                ),
-                initialValue: state.openingCurrencyId,
-                onChanged: _storedVm.setOpeningCurrency,
-                decoration: InputDecoration(
-                  labelText: l10n.partyFormOpeningCurrencyLabel,
-                  prefixIcon: const Icon(Icons.currency_exchange_rounded),
-                ),
-                items: [
-                  DropdownMenuItem<int>(
-                    child: Text(l10n.partyFormOpeningCurrencyNone),
-                  ),
-                  for (final currency in state.currencies)
-                    DropdownMenuItem<int>(
-                      value: currency.id,
-                      child: Text('${currency.name} (${currency.code})'),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                key: const Key('party_form_opening_date_field'),
-                readOnly: true,
-                controller: _openingDate,
-                onTap: locked ? null : () => unawaited(_pickOpeningDate()),
-                decoration: InputDecoration(
-                  labelText: l10n.partyFormOpeningDateLabel,
-                  prefixIcon: const Icon(Icons.event_rounded),
-                  suffixIcon: locked
-                      ? const Icon(Icons.lock_rounded)
-                      : const Icon(Icons.edit_calendar_rounded),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _pickOpeningDate() async {
     final state = _storedVm.state;
     final picked = await showDatePicker(
@@ -536,37 +366,6 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
     }
   }
 
-  Widget _notesField(AppLocalizations l10n) {
-    return TextFormField(
-      key: const Key('party_form_notes_field'),
-      controller: _notes,
-      onChanged: _storedVm.setNotes,
-      minLines: 2,
-      maxLines: 5,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormNotesLabel,
-        hintText: l10n.partyFormNotesHint,
-        prefixIcon: const Icon(Icons.sticky_note_2_rounded),
-      ),
-    );
-  }
-
-  Widget _saveButton(AppLocalizations l10n, PartyFormState state) {
-    return FilledButton.icon(
-      key: const Key('party_form_save_btn'),
-      onPressed: state.saving ? null : _onSavePressed,
-      icon: state.saving
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.save_rounded),
-      label: Text(state.saving ? l10n.fxSavingLabel : l10n.partyFormSaveLabel),
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-    );
-  }
-
   static String _validationMessage(
     AppLocalizations l10n,
     PartyFormError error,
@@ -579,43 +378,4 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
     PartyFormError.noRate => l10n.partyFormNoRateError,
     PartyFormError.noUser => l10n.partyFormNoUserError,
   };
-}
-
-/// لافتة خطأ التحقق فوق زر الحفظ.
-class _ValidationErrorBanner extends StatelessWidget {
-  const _ValidationErrorBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = FinColors.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.negativeContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: colors.onNegativeContainer,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colors.onNegativeContainer,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

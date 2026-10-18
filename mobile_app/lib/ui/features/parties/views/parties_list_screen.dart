@@ -2,6 +2,8 @@
 /// و05/08): بحث فوري مؤجَّل، رقائق تصفية (الكل/بأرصدة/بدون أرصدة/
 /// مؤرشفون)، سطر لكل (طرف × عملة) برصيد ملوّن بعلامة غير لونية،
 /// وسحب للأرشفة مع تأكيد للطرف بلا حركات فقط (FR-03-09).
+/// شريط التصفية وسطر الطرف بملفاتيهما المركزّة بجوارها (R20-D3b) —
+/// هذا الملف: الحرّاس (تحميل ← خطأ ← لا نتائج ← القائمة) والأرشفة.
 library;
 
 import 'dart:async';
@@ -13,18 +15,16 @@ import 'package:provider/provider.dart';
 import '../../../../domain/models/party.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_return.dart';
-import '../../../core/widgets/status_chip.dart';
 import '../view_models/party_kind.dart';
 import '../view_models/party_list_view_model.dart';
 import '../view_models/party_repo_gate.dart';
-import 'widgets/parties_widgets.dart';
+import 'widgets/parties_filter_bar.dart';
+import 'widgets/parties_list_row.dart';
 
 /// شاشة «جميع العملاء» (دليل 06/04).
 class CustomersListScreen extends StatelessWidget {
@@ -177,7 +177,10 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
           const SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-            child: _FilterBar(selected: state.filter, onSelect: vm.setFilter),
+            child: PartiesFilterBar(
+              selected: state.filter,
+              onSelect: vm.setFilter,
+            ),
           ),
           const SizedBox(height: 10),
           Expanded(child: _buildContent(context, vm)),
@@ -259,7 +262,7 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
         for (final row in state.rows)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _PartyRow(
+            child: PartiesListRow(
               row: row,
               kind: state.kind,
               showArchivedBadge: state.filter == PartyListFilter.archived,
@@ -308,229 +311,5 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
       SnackBar(content: Text(l10n.partiesArchiveHasMovements(row.name))),
     );
     return false;
-  }
-}
-
-/// شريط رقائق التصفية الأربع.
-class _FilterBar extends StatelessWidget {
-  const _FilterBar({required this.selected, required this.onSelect});
-
-  final PartyListFilter selected;
-  final ValueChanged<PartyListFilter> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      height: 38,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
-        children: [
-          _FilterChip(
-            key: const Key('parties_filter_all'),
-            label: l10n.partiesFilterAll,
-            selected: selected == PartyListFilter.all,
-            onTap: () => onSelect(PartyListFilter.all),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            key: const Key('parties_filter_with_balance'),
-            label: l10n.partiesFilterWithBalance,
-            selected: selected == PartyListFilter.withBalance,
-            onTap: () => onSelect(PartyListFilter.withBalance),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            key: const Key('parties_filter_zero_balance'),
-            label: l10n.partiesFilterZeroBalance,
-            selected: selected == PartyListFilter.zeroBalance,
-            onTap: () => onSelect(PartyListFilter.zeroBalance),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            key: const Key('parties_filter_archived'),
-            label: l10n.partiesFilterArchived,
-            selected: selected == PartyListFilter.archived,
-            onTap: () => onSelect(PartyListFilter.archived),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// رقاقة تصفية واحدة — حركة اختيار متحركة.
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final effective = scheme.primary;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      child: Material(
-        color: selected
-            ? effective.withValues(alpha: 0.14)
-            : scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: selected
-              ? BorderSide(color: effective.withValues(alpha: 0.55), width: 1.4)
-              : BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: selected ? effective : scheme.onSurface,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// سطر طرف واحد — سحب للأرشفة (بلا حركات فقط) + بطاقة بالنوع والرصيد.
-class _PartyRow extends StatelessWidget {
-  const _PartyRow({
-    required this.row,
-    required this.kind,
-    required this.showArchivedBadge,
-    required this.decimals,
-    required this.onArchive,
-  });
-
-  final PartyBalance row;
-
-  /// نوع الطرف — للأيقونة ومسار التفاصيل.
-  final PartyKind kind;
-
-  /// إظهار شارة «مؤرشف» (في تصفية المؤرشفين).
-  final bool showArchivedBadge;
-
-  final int decimals;
-
-  /// يؤكد وينفّذ الأرشفة — يعيد true إذا أُزيل السطر.
-  final Future<bool> Function() onArchive;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final colors = FinColors.of(context);
-    return Dismissible(
-      key: ValueKey('party_row_${row.partyId}_${row.currencyCode}'),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: colors.negativeContainer,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.archive_rounded, color: colors.onNegativeContainer),
-            const SizedBox(width: 8),
-            Text(
-              l10n.partiesSwipeArchiveLabel,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: colors.onNegativeContainer,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-      confirmDismiss: (_) => onArchive(),
-      onDismissed: (_) {},
-      child: FinCard(
-        onTap: () => context.go(
-          kind == PartyKind.customer
-              ? '/parties/customers/${row.partyId}'
-              : '/parties/suppliers/${row.partyId}',
-        ),
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PartyAvatar(kind: kind, name: row.name),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          row.name,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (showArchivedBadge) ...[
-                        const SizedBox(width: 6),
-                        StatusChip(
-                          label: l10n.partiesArchivedBadge,
-                          icon: Icons.archive_rounded,
-                          dense: true,
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  if ((row.phone ?? '').isNotEmpty)
-                    PartyPhoneText(row.phone!)
-                  else
-                    Text(
-                      l10n.partiesNoPhone,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                  const SizedBox(height: 8),
-                  CurrencyCodePill(code: row.currencyCode),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                PartyBalanceText(balance: row.balance, decimals: decimals),
-                const SizedBox(height: 2),
-                Text(
-                  l10n.partiesBalanceLabel,
-                  style: Theme.of(context).textTheme.labelSmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

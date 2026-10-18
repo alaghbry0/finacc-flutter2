@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../view_models/returns_view_model.dart';
-import 'return_refund_sheet.dart';
+import 'posted_return_receipt_card.dart';
 
 /// طور الإنجاز الاحتياطي (إن أُغلق الإيصال داخل النافذة) — إيصال كبير
 /// وزر «مرتجع جديد».

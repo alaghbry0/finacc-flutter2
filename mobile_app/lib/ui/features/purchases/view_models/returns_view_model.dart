@@ -9,6 +9,11 @@
 /// - **مرتجع البيع عن فاتورة نقدي مجهول**: رد نقدي حصراً (لا حساب يُخصم
 ///   منه — قرار المحرك 6 بالبيع).
 /// - **المبلغ النقدي ≤ قيمة المرتجع** (لا رد زائد).
+///
+/// (R20-D3b: الأنواع النقية في `returns_state.dart` والحسابات النقية في
+/// `returns_helpers.dart` — تُصدَّر الأولى من هنا فبقيت استيرادات
+/// المستدعين كما هي؛ هذا الملف: سطح التنسيق — الإخطار والمستودعات
+/// والساعة.)
 library;
 
 import 'package:flutter/foundation.dart';
@@ -17,135 +22,10 @@ import '../../../../data/repositories/purchase_repository.dart';
 import '../../../../data/repositories/return_repository.dart';
 import '../../../../data/repositories/sale_repository.dart';
 import '../../../../domain/core/result.dart';
-import '../../../../domain/services/purchase_pricing.dart';
+import 'returns_helpers.dart';
+import 'returns_state.dart';
 
-/// ملخص فاتورة أصلية موحَّد (بيع أو شراء) لواجهة اختيار المرتجع.
-class ReturnableInvoice {
-  const ReturnableInvoice({
-    required this.id,
-    required this.invoiceNo,
-    required this.issuedAt,
-    required this.partyName,
-    required this.hasParty,
-    required this.total,
-    required this.currencyCode,
-  });
-
-  final int id;
-  final String invoiceNo;
-  final DateTime issuedAt;
-
-  /// اسم العميل/المورد (أو «عميل نقدي» عند الغياب).
-  final String? partyName;
-
-  /// هل للفاتورة الأصلية طرف مسجَّل؟ (بيعة نقدي مجهولة = false → رد نقدي
-  /// حصراً في SRN).
-  final bool hasParty;
-
-  final double total;
-  final String? currencyCode;
-}
-
-/// سطر مرتجع في الواجهة — `ReturnableLine` + الكمية المختارة.
-class ReturnUiLine {
-  const ReturnUiLine({required this.line, this.selectedQty = 0});
-
-  final ReturnableLine line;
-  final double selectedQty;
-
-  /// قيمة رد هذا السطر (تقدير العرض — المحرك يحسبSnapshot الدقيق).
-  double get lineRefund => roundMoney(selectedQty * line.unitPriceEffective);
-
-  bool get hasSelection => selectedQty > 0;
-}
-
-/// أطوار تدفق المرتجع.
-enum ReturnPhase { pickingInvoice, pickingLines, done }
-
-/// الواجهة الموحَّدة لتدفق المرتجع (بيع أو شراء) — تخدمها أقسام الواجهة
-/// المشتركة في الشاشتين دون تكرار.
-abstract interface class ReturnFlowVm {
-  /// الحالة الحالية للتدفق.
-  ReturnFlowState get state;
-
-  /// تصفية قائمة الفواتير الأصلية.
-  void setFilter(String query);
-
-  /// اختيار فاتورة أصلية وتحميل بنودها القابلة للإرجاع.
-  Future<void> selectInvoice(int invoiceId);
-
-  /// العودة لقائمة الفواتير.
-  void backToInvoices();
-
-  /// تعديل كمية إرجاع بند بالفهرس.
-  void setQty(int index, double qty);
-
-  /// «مرتجع جديد» — إعادة تحميل القائمة بعد نجاح.
-  Future<void> startNewReturn();
-}
-
-/// الحالة المشتركة لتدفق المرتجع (بيع أو شراء).
-class ReturnFlowState {
-  const ReturnFlowState({
-    required this.phase,
-    required this.loading,
-    required this.invoices,
-    required this.filterQuery,
-    this.selected,
-    required this.lines,
-    this.linesLoading = false,
-    this.linesError,
-    required this.posting,
-    this.postError,
-    this.receipt,
-    this.error,
-  });
-
-  final ReturnPhase phase;
-  final bool loading;
-
-  /// قائمة الفواتير الأصلية المكتملة (طور الاختيار).
-  final List<ReturnableInvoice> invoices;
-  final String filterQuery;
-
-  /// الفاتورة الأصلية المختارة.
-  final ReturnableInvoice? selected;
-
-  /// بنودها القابلة للإرجاع مع الكميات المختارة.
-  final List<ReturnUiLine> lines;
-  final bool linesLoading;
-  final Object? linesError;
-
-  final bool posting;
-  final String? postError;
-
-  /// إيصال آخر مرتجع مُرحَّل.
-  final ReturnPostedReceipt? receipt;
-
-  final Object? error;
-
-  /// قيمة المرتجع الحالية (Σ الكميات المختارة × صافي وحدتها).
-  double get refundTotal =>
-      roundMoney(lines.fold(0.0, (sum, l) => sum + l.lineRefund));
-
-  /// هل اختيرت كميات للإرجاع؟
-  bool get hasSelection => lines.any((l) => l.hasSelection);
-
-  /// البنود المختارة فقط.
-  List<ReturnUiLine> get selectedLines => [
-    for (final l in lines)
-      if (l.hasSelection) l,
-  ];
-
-  static const ReturnFlowState initial = ReturnFlowState(
-    phase: ReturnPhase.pickingInvoice,
-    loading: true,
-    invoices: <ReturnableInvoice>[],
-    filterQuery: '',
-    lines: <ReturnUiLine>[],
-    posting: false,
-  );
-}
+export 'returns_state.dart';
 
 /// نموذج مرتجع البيع (SRN) — من فاتورة بيع مكتملة.
 class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
@@ -222,7 +102,7 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   @override
   void setFilter(String query) {
     if (query == _state.filterQuery) return;
-    _state = _copy(filterQuery: query);
+    _state = returnFlowStateWith(_state, filterQuery: query);
     notifyListeners();
   }
 
@@ -231,7 +111,8 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   Future<void> selectInvoice(int invoiceId) async {
     final invoice = _state.invoices.where((i) => i.id == invoiceId).firstOrNull;
     if (invoice == null) return;
-    _state = _copy(
+    _state = returnFlowStateWith(
+      _state,
       phase: ReturnPhase.pickingLines,
       selected: invoice,
       lines: const <ReturnUiLine>[],
@@ -242,12 +123,17 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
     notifyListeners();
     try {
       final lines = await _returns.saleReturnableLines(invoiceId);
-      _state = _copy(
+      _state = returnFlowStateWith(
+        _state,
         lines: [for (final line in lines) ReturnUiLine(line: line)],
         linesLoading: false,
       );
     } catch (error) {
-      _state = _copy(linesLoading: false, linesError: error);
+      _state = returnFlowStateWith(
+        _state,
+        linesLoading: false,
+        linesError: error,
+      );
     }
     notifyListeners();
   }
@@ -256,7 +142,8 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   @override
   void backToInvoices() {
     if (_state.phase != ReturnPhase.pickingLines) return;
-    _state = _copy(
+    _state = returnFlowStateWith(
+      _state,
       phase: ReturnPhase.pickingInvoice,
       clearSelected: true,
       lines: const <ReturnUiLine>[],
@@ -279,7 +166,7 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
       line: lines[index].line,
       selectedQty: qty == 0 ? 0 : qty,
     );
-    _state = _copy(lines: lines, postError: null);
+    _state = returnFlowStateWith(_state, lines: lines, postError: null);
     notifyListeners();
   }
 
@@ -289,57 +176,38 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
     required double refundCash,
     required ReturnRefundMethod method,
   }) async {
-    if (_state.posting) {
-      return const Err<ReturnPostedReceipt, String>(
-        'ترحيل جارٍ بالفعل — لحظات ويكتمل.',
-      );
+    final rejection = saleReturnPrePostCheck(_state, method);
+    if (rejection != null) {
+      return Err<ReturnPostedReceipt, String>(rejection);
     }
-    final selected = _state.selected;
-    if (selected == null) {
-      return const Err<ReturnPostedReceipt, String>(
-        'اختر الفاتورة الأصلية أولاً.',
-      );
-    }
-    final chosen = _state.selectedLines;
-    if (chosen.isEmpty) {
-      return const Err<ReturnPostedReceipt, String>(
-        'اختر كمية إرجاع لبند واحد على الأقل.',
-      );
-    }
-    // فاتورة نقدي مجهولة: لا حساب عميل يُخصم منه → رد نقدي حصراً.
-    if (!selected.hasParty && method != ReturnRefundMethod.cash) {
-      return const Err<ReturnPostedReceipt, String>(
-        'الفاتورة الأصلية بلا عميل مسجَّل (بيع نقدي مجهول) — لا حساب '
-        'يُخصم منه؛ اختر الرد النقدي من الصندوق.',
-      );
-    }
-    _state = _copy(posting: true, postError: null);
+    _state = returnFlowStateWith(_state, posting: true, postError: null);
     notifyListeners();
+    final selected = _state.selected!;
+    final chosen = _state.selectedLines;
     final result = await _returns.postSaleReturn(
-      SaleReturnDraft(
-        originalInvoiceId: selected.id,
-        lines: [
-          for (final l in chosen)
-            ReturnLineInput(
-              invoiceItemId: l.line.invoiceItemId,
-              qty: l.selectedQty,
-            ),
-        ],
+      buildSaleReturnDraft(
+        selected: selected,
+        chosen: chosen,
         refundCash: refundCash,
-        refundMethod: method,
-        issuedAt: DateTime.now(),
+        method: method,
+        now: DateTime.now(),
       ),
       userId: _userId ?? 1,
     );
     if (result.isOk) {
-      _state = _copy(
+      _state = returnFlowStateWith(
+        _state,
         phase: ReturnPhase.done,
         posting: false,
         receipt: result.valueOrNull,
         postError: null,
       );
     } else {
-      _state = _copy(posting: false, postError: result.errorOrNull);
+      _state = returnFlowStateWith(
+        _state,
+        posting: false,
+        postError: result.errorOrNull,
+      );
     }
     notifyListeners();
     return result;
@@ -348,7 +216,8 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   /// «مرتجع جديد» — عودة لقائمة الفواتير بإعادة تحميل (المتاح تغيّر).
   @override
   Future<void> startNewReturn() async {
-    _state = _copy(
+    _state = returnFlowStateWith(
+      _state,
       phase: ReturnPhase.pickingInvoice,
       lines: const <ReturnUiLine>[],
       receipt: null,
@@ -357,42 +226,6 @@ class SaleReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
     notifyListeners();
     await load();
   }
-
-  /// علامة «أبقِ القيمة الحالية» للحقول القابلة للتصفير في `_copy`.
-  static const Object _keep = Object();
-
-  ReturnFlowState _copy({
-    ReturnPhase? phase,
-    bool? loading,
-    List<ReturnableInvoice>? invoices,
-    String? filterQuery,
-    ReturnableInvoice? selected,
-    bool clearSelected = false,
-    List<ReturnUiLine>? lines,
-    bool? linesLoading,
-    Object? linesError = _keep,
-    bool? posting,
-    Object? postError = _keep,
-    Object? receipt = _keep,
-    Object? error = _keep,
-  }) => ReturnFlowState(
-    phase: phase ?? _state.phase,
-    loading: loading ?? _state.loading,
-    invoices: invoices ?? _state.invoices,
-    filterQuery: filterQuery ?? _state.filterQuery,
-    selected: clearSelected ? null : (selected ?? _state.selected),
-    lines: lines ?? _state.lines,
-    linesLoading: linesLoading ?? _state.linesLoading,
-    linesError: identical(linesError, _keep) ? _state.linesError : linesError,
-    posting: posting ?? _state.posting,
-    postError: identical(postError, _keep)
-        ? _state.postError
-        : postError as String?,
-    receipt: identical(receipt, _keep)
-        ? _state.receipt
-        : receipt as ReturnPostedReceipt?,
-    error: identical(error, _keep) ? _state.error : error,
-  );
 }
 
 /// نموذج مرتجع الشراء (PRN) — من فاتورة شراء مكتملة.
@@ -468,7 +301,7 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   @override
   void setFilter(String query) {
     if (query == _state.filterQuery) return;
-    _state = _copy(filterQuery: query);
+    _state = returnFlowStateWith(_state, filterQuery: query);
     notifyListeners();
   }
 
@@ -476,7 +309,8 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   Future<void> selectInvoice(int invoiceId) async {
     final invoice = _state.invoices.where((i) => i.id == invoiceId).firstOrNull;
     if (invoice == null) return;
-    _state = _copy(
+    _state = returnFlowStateWith(
+      _state,
       phase: ReturnPhase.pickingLines,
       selected: invoice,
       lines: const <ReturnUiLine>[],
@@ -487,12 +321,17 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
     notifyListeners();
     try {
       final lines = await _returns.purchaseReturnableLines(invoiceId);
-      _state = _copy(
+      _state = returnFlowStateWith(
+        _state,
         lines: [for (final line in lines) ReturnUiLine(line: line)],
         linesLoading: false,
       );
     } catch (error) {
-      _state = _copy(linesLoading: false, linesError: error);
+      _state = returnFlowStateWith(
+        _state,
+        linesLoading: false,
+        linesError: error,
+      );
     }
     notifyListeners();
   }
@@ -500,7 +339,8 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
   @override
   void backToInvoices() {
     if (_state.phase != ReturnPhase.pickingLines) return;
-    _state = _copy(
+    _state = returnFlowStateWith(
+      _state,
       phase: ReturnPhase.pickingInvoice,
       clearSelected: true,
       lines: const <ReturnUiLine>[],
@@ -522,7 +362,7 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
       line: lines[index].line,
       selectedQty: qty == 0 ? 0 : qty,
     );
-    _state = _copy(lines: lines, postError: null);
+    _state = returnFlowStateWith(_state, lines: lines, postError: null);
     notifyListeners();
   }
 
@@ -532,50 +372,38 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
     required double refundCash,
     required ReturnRefundMethod method,
   }) async {
-    if (_state.posting) {
-      return const Err<ReturnPostedReceipt, String>(
-        'ترحيل جارٍ بالفعل — لحظات ويكتمل.',
-      );
+    final rejection = purchaseReturnPrePostCheck(_state);
+    if (rejection != null) {
+      return Err<ReturnPostedReceipt, String>(rejection);
     }
-    final selected = _state.selected;
-    if (selected == null) {
-      return const Err<ReturnPostedReceipt, String>(
-        'اختر فاتورة الشراء الأصلية أولاً.',
-      );
-    }
-    final chosen = _state.selectedLines;
-    if (chosen.isEmpty) {
-      return const Err<ReturnPostedReceipt, String>(
-        'اختر كمية إرجاع لبند واحد على الأقل.',
-      );
-    }
-    _state = _copy(posting: true, postError: null);
+    _state = returnFlowStateWith(_state, posting: true, postError: null);
     notifyListeners();
+    final selected = _state.selected!;
+    final chosen = _state.selectedLines;
     final result = await _returns.postPurchaseReturn(
-      PurchaseReturnDraft(
-        originalInvoiceId: selected.id,
-        lines: [
-          for (final l in chosen)
-            ReturnLineInput(
-              invoiceItemId: l.line.invoiceItemId,
-              qty: l.selectedQty,
-            ),
-        ],
+      buildPurchaseReturnDraft(
+        selected: selected,
+        chosen: chosen,
         refundCash: refundCash,
-        refundMethod: method,
-        issuedAt: DateTime.now(),
+        method: method,
+        now: DateTime.now(),
       ),
       userId: _userId ?? 1,
     );
     if (result.isOk) {
-      _state = _copy(
+      _state = returnFlowStateWith(
+        _state,
         phase: ReturnPhase.done,
         posting: false,
         receipt: result.valueOrNull,
         postError: null,
       );
     } else {
-      _state = _copy(posting: false, postError: result.errorOrNull);
+      _state = returnFlowStateWith(
+        _state,
+        posting: false,
+        postError: result.errorOrNull,
+      );
     }
     notifyListeners();
     return result;
@@ -583,7 +411,8 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
 
   @override
   Future<void> startNewReturn() async {
-    _state = _copy(
+    _state = returnFlowStateWith(
+      _state,
       phase: ReturnPhase.pickingInvoice,
       clearSelected: true,
       lines: const <ReturnUiLine>[],
@@ -593,40 +422,4 @@ class PurchaseReturnViewModel extends ChangeNotifier implements ReturnFlowVm {
     notifyListeners();
     await load();
   }
-
-  /// علامة «أبقِ القيمة الحالية» للحقول القابلة للتصفير في `_copy`.
-  static const Object _keep = Object();
-
-  ReturnFlowState _copy({
-    ReturnPhase? phase,
-    bool? loading,
-    List<ReturnableInvoice>? invoices,
-    String? filterQuery,
-    ReturnableInvoice? selected,
-    bool clearSelected = false,
-    List<ReturnUiLine>? lines,
-    bool? linesLoading,
-    Object? linesError = _keep,
-    bool? posting,
-    Object? postError = _keep,
-    Object? receipt = _keep,
-    Object? error = _keep,
-  }) => ReturnFlowState(
-    phase: phase ?? _state.phase,
-    loading: loading ?? _state.loading,
-    invoices: invoices ?? _state.invoices,
-    filterQuery: filterQuery ?? _state.filterQuery,
-    selected: clearSelected ? null : (selected ?? _state.selected),
-    lines: lines ?? _state.lines,
-    linesLoading: linesLoading ?? _state.linesLoading,
-    linesError: identical(linesError, _keep) ? _state.linesError : linesError,
-    posting: posting ?? _state.posting,
-    postError: identical(postError, _keep)
-        ? _state.postError
-        : postError as String?,
-    receipt: identical(receipt, _keep)
-        ? _state.receipt
-        : receipt as ReturnPostedReceipt?,
-    error: identical(error, _keep) ? _state.error : error,
-  );
 }
