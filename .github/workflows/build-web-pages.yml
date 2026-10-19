@@ -52,9 +52,9 @@ jobs:
       - name: Deploy to gh-pages (orphan force-push)
         run: |
           cd build/web
+          git init -b gh-pages .
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git init -b gh-pages .
           git add -A
           git commit -m "web build: ${GITHUB_REF_NAME}"
           git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
