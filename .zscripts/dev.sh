@@ -97,7 +97,7 @@ wait_for_service() {
 
         echo "Waiting for $service_name to be ready on $host:$port..."
 
-        while [ "$attempt" -le "$max_attempts" ]; then
+        while [ "$attempt" -le "$max_attempts" ]; do
                 if curl -s --connect-timeout 2 --max-time 5 "http://$host:$port" >/dev/null 2>&1; then
                         echo "$service_name is ready!"
                         return 0
