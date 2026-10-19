@@ -2,10 +2,11 @@
 # =============================================================================
 # Build & deploy the Flutter web preview.
 # -----------------------------------------------------------------------------
-# The sandbox exposes exactly one public port (the Next.js app on :3000), so
-# the Flutter app is compiled to a static web bundle and served from the main
-# app's public/ folder. The user sees it at /mobile_app/index.html and inside
-# the phone-frame preview embedded in the dashboard (/).
+# The sandbox exposes exactly one public port — static-preview owns :3000 behind
+# the Caddy gateway. The Flutter app is compiled to a static web bundle and the
+# user sees it AT THE GATEWAY ROOT (/) — R22. Previously it lived at
+# /mobile_app/index.html inside the R21 phone-frame panel (old links redirect
+# 301 to the new root).
 #
 # Usage:
 #   bash scripts/build-flutter-web.sh          # release build
@@ -47,11 +48,11 @@ ARABIC_FLAG="--dart-define=use_arabic=true"
 echo "[build-flutter-web] building mobile_app for web ($BUILD_MODE)..."
 cd "$APP_DIR"
 # shellcheck disable=SC2086
-flutter build web "--${BUILD_MODE}" --base-href /mobile_app/ $D2JS_FLAG $ARABIC_FLAG
+flutter build web "--${BUILD_MODE}" --base-href / $D2JS_FLAG $ARABIC_FLAG
 
 echo "[build-flutter-web] deploying to $PUBLIC_DIR..."
 rm -rf "$PUBLIC_DIR"
 mkdir -p "$PUBLIC_DIR"
 cp -r build/web/* "$PUBLIC_DIR/"
 
-echo "[build-flutter-web] done — preview: http://127.0.0.1:3000/mobile_app/index.html"
+echo "[build-flutter-web] done — preview: http://127.0.0.1:3000/ (app at the gateway root — refresh the page)"

@@ -7,13 +7,17 @@
 > **R21 (2026-10-19)**: أُخرج مشروع لوحة Next.js بالكامل. المعاينة الآن خادم bun
 > ثابت في `mini-services/static-preview/` (صفر تبعيات، صفر خطوة بناء، ‎~56MB ذاكرة)
 > يملك المنفذ 3000 خلف بوابة Caddy — ولا يوجد أي `bun run dev` أو Prisma بعد اليوم.
+>
+> **R22 (2026-10-19)**: التطبيق يُقدَّم الآن **في جذر البوابة `/` مباشرة** —
+> أُحيلت لوحة إطار الهاتف للتقاعد وروابط `/mobile_app/*` القديمة تُوجَّه 301
+> إلى الجذر. الكاش صار يتحقق من mtime فتظهر إعادة البناء فوراً بلا إعادة تشغيل.
 
 هذا المستودع يحمل **ثلاثة مكونات متكاملة**:
 
 | المكوّن | المسار | الوظيفة |
 |---|---|---|
 | **تطبيق FinAcc (Flutter)** | `mobile_app/` | محاسبة نقاط بيع عربية RTL — عقده الموثق في `mobile_app/AGENTS.md` |
-| **خادم المعاينة الثابت** | `mini-services/static-preview/` | خادم bun واحد (~200 سطر، بلا تبعيات): لوحة إطار الهاتف على `/` والتطبيق على `/mobile_app/` — يستيقظ مع الحاوية (auto-boot) ويملك المنفذ 3000 خلف بوابة Caddy |
+| **خادم المعاينة الثابت** | `mini-services/static-preview/` | خادم bun واحد (~200 سطر، بلا تبعيات): **التطبيق مباشرة على `/`** (R22) وروابط `/mobile_app/*` القديمة توجَّه 301 — يستيقظ مع الحاوية (auto-boot) ويملك المنفذ 3000 خلف بوابة Caddy |
 | **عدة البناء والتحقق** | `scripts/`, `mini-services/flutter-env/`, `docs/`, `.agents/`, `worklog.md` | بوابة البناء + لمس CDP + OCR + VLM + حارس بيئة Flutter (يعيد بناء المعاينة تلقائياً إن فقدت) + SRS ودليل الشاشات + سجل الجولات |
 
 ## خطوات الإعداد اليدوية — هذا فقط ما تنفذه بيدك
@@ -33,9 +37,14 @@ rm -rf /home/z/my-project/src /home/z/my-project/prisma /home/z/my-project/db \
        /home/z/my-project/components.json /home/z/my-project/postcss.config.mjs \
        /home/z/my-project/eslint.config.mjs /home/z/my-project/tailwind.config.ts
 
-# 2) مزامنة المستودع فوق مساحة العمل (لا تكتب فوق .git)
-rsync -a --exclude '.git' /tmp/finacc/ /home/z/my-project/
+# 2) مزامنة المستودع فوق مساحة العمل (لا تكتب فوق .git ولا .gitignore الجذر —
+#    تجاهل مجلدات المنصة يُدمج يدوياً في 2b، ومخرجات البناء تُستبعد)
+rsync -a --exclude '.git' --exclude '.gitignore' --exclude 'node_modules' \
+       --exclude 'public/mobile_app' /tmp/finacc/ /home/z/my-project/
 cd /home/z/my-project && git remote set-url origin https://<TOKEN>@github.com/alaghbry0/finacc-flutter2.git
+
+# 2b) في .gitignore الجذر أضف (إن لم تكن موجودة) مجلدات المنصة:
+#     /upload/  /download/  /repo-review/  /verify-public-mobile/
 ```
 
 انتهى الإعداد. **كل ما عداهم يحدث تلقائياً عند أول إقلاع** — لا تنفّذ شيئاً من القسم التالي.
@@ -43,7 +52,7 @@ cd /home/z/my-project && git remote set-url origin https://<TOKEN>@github.com/al
 ## ماذا يحدث تلقائياً عند الإقلاع (للمعرفة فقط — لا تفعل شيئاً)
 
 - **`mini-services/flutter-env/keeper.sh`** (auto-boot): تنزيل Flutter SDK 3.47.6 + العدة + JDK + Android SDK + NDK stub، ثم — جديد في R21 — **إعادة بناء معاينة الويب تلقائياً إذا كانت مفقودة** (مخرجات `public/mobile_app/` غير متتبعة في git فتُمحى مع كل إقلاع). أول إقلاع بعد استنساخ جديد يستغرق دقائق؛ تابع السجل في `.zscripts/mini-service-flutter-env.log`.
-- **`mini-services/static-preview/`** (auto-boot): خادم bun على المنفذ 3000 فوراً — يعرض لوحة «المعاينة غير مبنية بعد» حتى يكتمل بناء الحارس، ثم التطبيق حياً.
+- **`mini-services/static-preview/`** (auto-boot): خادم bun على المنفذ 3000 فوراً — يعرض بطاقة «المعاينة غير مبنية بعد» حتى يكتمل بناء الحارس، ثم التطبيق حياً **في جذر البوابة `/`**.
 - **`bun install` في الجذر**: تبعية واحدة فقط (`z-ai-web-dev-sdk` لأداة `scripts/vlm-check.ts`).
 - استعادة `skills/` من `docs/skills/` (خطوة 0 في الحارس).
 
@@ -54,7 +63,7 @@ cd mobile_app && dart analyze && flutter test    # البوابتان 1 و2 (AGE
 cd .. && bash scripts/build-flutter-web.sh       # البوابة 3: بناء المعاينة ثم حدِّث الصفحة
 ```
 
-- المعاينة عبر البوابة: `http://localhost:81/` (لوحة الهاتف) أو `http://localhost:81/mobile_app/index.html` (التطبيق مباشرة) — **وليس المنفذ 3000 مباشرة**.
+- المعاينة عبر البوابة: `http://localhost:81/` — **التطبيق نفسه في جذر البوابة مباشرة** (وليس المنفذ 3000 مباشرة)؛ روابط `/mobile_app/*` القديمة توجَّه 301 تلقائياً.
 - الخادم الثابت يعمل دائماً (auto-boot) — لا تُشغّل أي خادم يدوياً. إن مات بمنتصف الجلسة: `cd mini-services/static-preview && bun server.ts &`
 - بعد تعديل الخادم نفسه (`server.ts`): `pkill -f static-preview` ثم أعد تشغيله بالأمر أعلاه.
 
@@ -69,7 +78,8 @@ source mini-services/flutter-env/env.sh
 cd mobile_app && flutter run -d web-server --web-port 3000 --dart-define=use_arabic=true
 ```
 
-- التطبيق يُقدَّم عند جذر البوابة (`/`) خلال هذه الجلسة، ويتطلب إعادة التشغيل عند كل
+- التطبيق يُقدَّم عند جذر البوابة (`/`) خلال هذه الجلسة (مطابق لسلوك الخادم الثابت
+  منذ R22 — كلاهما عند الجذر)، ويتطلب إعادة التشغيل عند كل
   تعديل (`flutter run` من جديد) — أسرع من dart2js الكامل بمرتين إلى ثلاث.
 - **قيود**: يموت مع نهاية جلسة الأداة (الحاصد)؛ ذاكرته أعلى بكثير (VM دارت)؛ سلوك
   debug قد يختلف عن release. **غير مُتحقق حياً بعد عبر البوابة** — جرّبه أول مرة
@@ -78,13 +88,13 @@ cd mobile_app && flutter run -d web-server --web-port 3000 --dart-define=use_ara
 
 ## التحقق الحي (البوابة النهائية للحقيقة — AGENTS.md §4-7)
 
-- **وصفة النقر الموثوقة** داخل iframe التطبيق (Flutter يبتلع الأحدات التركيبية):
-  `agent-browser eval "(() => { const doc = document.querySelector('iframe').contentDocument; const b = [...doc.querySelectorAll('[role=button]')].find(b => (b.textContent||'').includes('النص')); if (b) { b.click(); return 'clicked'; } return 'not found'; })()"`
+- **وصفة النقر الموثوقة** في صفحة التطبيق مباشرة (R22: بلا iframe بعد — Flutter يبتلع الأحداث التركيبية):
+  `agent-browser eval "(() => { const b = [...document.querySelectorAll('[role=button]')].find(b => (b.textContent||'').includes('النص')); if (b) { b.click(); return 'clicked'; } return 'not found'; })()"`
 - **وصفة إدخال النص الموثوقة**: انقر موضع الحقل بأوامر الفأرة التدريجية (move → down → up)
   ثم `press Control+a` ثم `keyboard type` — الإدخال العادي يتكرر/يُلحق.
 - أدوات مساندة: `scripts/vlm-check.ts` (سؤال VLM عن لقطة)، `scripts/ocr-boxes.py` (OCR عربي/إنجليزي)،
   `scripts/cdp-touch.py` (لمس CDP) — كلها تعمل مع الخادم الثابت كما كانت مع Next.js
-  لأنها تستهدف الصفحة لا الغلاف.
+  لأنها تستهدف صفحة التطبيق مباشرة (R22: بلا واصل iframe أصلاً).
 - فحص حالة سريع: `curl -s localhost:3000/api/status` → `{version, buildPresent}`.
 
 ## قواعد الحفظ (ملزمة — محدثة R21)

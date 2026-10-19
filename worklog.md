@@ -2047,3 +2047,25 @@ Work Log:
 Stage Summary:
 - المستودع هبط من ‎104MB إلى أقل من الثلث بعد filter-repo؛ حلقة التطوير لم تتغير للوكيل (بوابات + build-flutter-web.sh + refresh)؛ المعاينة صارت دائمة عبر auto-boot بلا Next.js وبلا node_modules؛ APK ومخرجات البناء لا يعودان لتضخيم التاريخ أبداً.
 - الوصفات الحية (cdp-touch/agent-browser/OCR/VLM) لم تُمس وتعمل كما هي — تستهدف الصفحة لا الغلاف.
+
+---
+Task ID: R22
+Agent: Z.ai (الوكيل الرئيسي — طلب المالك: تشغيل تطبيق Flutter بالمتصفح مباشرة والأساس الكامل)
+Task: تثبيت المشروع في جذر الـsandbox (استبدال Next.js نهائياً) + بيئة Flutter حقيقية كاملة + التطبيق مباشرة في جذر البوابة / + التحقق الحي الذهبي + الإصدارات
+
+Work Log:
+- **تنفيذ خطوات SETUP.md فعلياً في sandbox الجلسة**: أُوقف «الخادم الشبح» (عملية bun كانت تُقدَّم من شجرة verify-clone المحذوفة — buildPresent:false) وحُرر المنفذ 3000 وحُذفت بقايا verify-public-mobile، ثم rsync للمستودع فوق جذر `/home/z/my-project` (بلا .git/.gitignore/node_modules/مخرجات البناء) + إضافة remote origin بأمر استبدال يحفظ التوكن خارج المخرجات + ‎.gitignore جذر مدمج (قواعد المستودع + مجلدات المنصة: upload/download/repo-review).
+- **R22 الجوهري — التطبيق في جذر البوابة**: server.ts أُعيدت كتابته: `/` = تطبيق Flutter مباشرة (بلا لوحة ولا iframe) · توجيه 301 من /mobile_app(/…) للتوافق القديم · SPA fallback للمسارات بلا امتداد · **كاش mtime/size** (إعادة البناء تظهر فوراً بلا إعادة تشغيل الخادم — علة كامنة في نسخة R21 أُصلحت) · بطاقة «غير مبنية بعد» محفوظة كحالة انتظار الحارس. build-flutter-web.sh: ‎`--base-href /` بدل ‎`/mobile_app/`.
+- **Flutter SDK 3.47.6 حياً**: نُزّل منفصلاً بنمط double-fork اليتيم (1.47GB) — **اكتشاف موثق**: فك tar في overlayfs هذه البيئة يُرجع exit 2 بأخطاء «Directory renamed before its status could be extracted» وهي **ميتاداتا مجلدات فقط** والـSDK يعمل كاملاً بعدها (متحقق: version/doctor/build/test/browser)؛ لكن `&&` في keeper كانت ستمنع حذف الأرشيف (1.5GB مع كل إقلاع) — أُصلح keeper ليتحمّل exit 2 ويحذف الأرشيف دائماً.
+- **البناء من المصدر**: pub get (مقفول على pubspec.lock) ثم `flutter build web --release --base-href / --dart2js-optimization O2 --no-wasm-dry-run --dart-define=use_arabic=true` → ‎48MB في public/mobile_app مع base href="/" متحقق في index.html.
+- **الخادم الجديد حي وباقٍ**: أُطلق بنمط double-fork اليتيم → **PPID=1** (خارج شجرة الحاصد) — بقاء متحقق عبر أوامر منفصلة متكررة · البوابة :81 تقدّم التطبيق نفسه (lang=ar/dir=rtl) · main.dart.js كاملاً 6.25MB عبر البوابة (200) · ‎/api/status = buildPresent:true, appAtRoot:true.
+- **التحقق الحي — الرحلة الذهبية كاملة من الصفر فوق IndexedDB جديد ومن جذر البوابة مباشرة**: الترحيب ← متابعة ← المنشأة: YER بالنقر + اسم «متجر النور للتجارة» **بإدخال نص حي بمزامنة Flutter** (وصفة mouse move→down→up ثم keyboard type) ← PIN 1425 بلوحة الأرقام (نقر **آخر** عقدة مطابقة — درس R19) ← التأكيد قُبِل (ولم يُقبل من قبلها بدخول مغلوط — تحقق التطبيق يعمل) ← عبارة المرور بحقلين («سر النور 2026») ← **«تم التأسيس بنجاح»** (الصندوق/المخزن الرئيسيان + الريال اليمني) ← «ابدأ الاستخدام» ← **الداشبورد `/#/home`**: التحية بالاسم + التاريخ الهجري/الميلادي + بلاطات KPI + التبويبات الخمسة — **صفر أخطاء صفحة طوال الجلسة كلها** (5 لقطات في download/).
+- **بوابات الجودة الثلاث**: `flutter analyze` = صفر · `flutter test` = **+792 All tests passed!** (8:10 د) · البناء والتحقق الحي أعلاه.
+- **الأساس الكامل (keeper.sh اكتمل حياً)**: sysroot (clang++/cmake/ninja — ‏224MB) + Android SDK (platform-36 + build-tools 36.0.0 + platform-tools + cmdline-tools — ‏472MB) + Temurin JDK 21 (javac) + binutils-multiarch + علامة NDK stub + غلافا llvm-strip/objcopy → **flutter doctor: «No issues found!»** بكل السلاسل (Flutter/Android/Chrome/Linux toolchain/أجهزة).
+- **إصلاحات جانبية**: ‎.gitignore أُضيفت قواعد ‎`/mobile_app/{build,.dart_tool}/` المفقودة (كانت ستلوث أي إيداع بعد بناء محلي — علة حقيقية) · cdp-touch.py: PAGE_MATCH صار متغيرَ بيئة (CDP_PAGE_MATCH) وافتراضه «:81» لأن التطبيق في الجذر الآن · SETUP.md وmobile_app/AGENTS.md حُدّثا (وصفات بلا iframe، روابط الجذر، ملاحظات R22، خطوة 2b لتجاهلات المنصة).
+- **الإصدارات (مهارة إدارة الإصدارات — أعراف V{n}/v{n} التسلسلية)**: إيداع R22 هذا + دفع origin/main — وفي جذر الـsandbox: **V1 + الوسم v1**.
+
+Stage Summary:
+- **FinAcc الآن هو مشروع جذر الـsandbox بحق (بدل Next.js نهائياً)**: التطبيق يُفتح من جذر البوابة `:81/` مباشرة قابلاً للنقر والاستخدام الطبيعي — والبيئة كاملة (SDK + Android + JDK + sysroot) تعاد بناؤها ذاتياً عند كل إقلاع عبر ‎.zscripts/dev.sh → mini-services → keeper.
+- **حلقة التطوير الجديدة**: عدّل في mobile_app → `bash scripts/build-flutter-web.sh` → حدِّث الصفحة (كاش mtime يلتقط البناء الجديد فوراً بلا إعادة تشغيل الخادم).
+- **درس البيئة الأهم**: tar exit-2 في overlayfs تجميلي — لا يُعتبر فشل تثبيت SDK؛ والحكم دائماً بالتحقق العملي (flutter --version / doctor / build).

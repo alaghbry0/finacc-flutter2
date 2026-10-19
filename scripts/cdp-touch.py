@@ -15,7 +15,9 @@ import websockets
 
 import os
 CDP_HTTP = f"http://127.0.0.1:{os.environ.get('CDP_PORT', '44977')}"
-PAGE_MATCH = 'mobile_app'
+# R22: التطبيق يُقدَّم في جذر البوابة (وليس /mobile_app بعد الآن) — المطابقة
+# الافتراضية صارت البوابة نفسها؛ تجاوزها بـ CDP_PAGE_MATCH عند الحاجة.
+PAGE_MATCH = os.environ.get('CDP_PAGE_MATCH', ':81')
 
 _id = 0
 

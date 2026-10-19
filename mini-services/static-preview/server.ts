@@ -1,19 +1,24 @@
 /**
- * static-preview/server.ts — خادم المعاينة الثابت (R21).
+ * static-preview/server.ts — خادم المعاينة الثابت (R21 → R22: التطبيق في الجذر).
  * =============================================================================
  * بديل لوحة Next.js بالكامل: خادم bun واحد بلا تبعيات وبلا خطوة بناء.
  *
- *   /                 → لوحة إطار الهاتف (HTML خالص — يقرأ إصدار التطبيق من pubspec)
- *   /mobile_app/*     → مخرجات بناء Flutter Web من public/mobile_app
+ *   /                 → تطبيق Flutter Web مباشرة في جذر البوابة (R22 — كان لوحة
+ *                        إطار الهاتف في R21) — مخرجات public/mobile_app بلا بادئة
+ *   /mobile_app(/…)   → توجيه 301 إلى / (توافق روابط R21 القديمة)
  *   /api/status       → {version, buildPresent} — فحص صحة/حالة للوكيل
+ *   /logo.svg, /robots.txt → من جذر public/
  *
- * - يعمل كخدمة auto-boot عبر .zscripts/dev.sh → mini-services (يمتلك المنفذ 3000
- *   خلف بوابة Caddy :81).
  * - مخرجات public/mobile_app غير متتبعة في git (تُمحى مع كل إقلاع) — يعيد
- *   flutter-env/keeper.sh بناءها تلقائياً؛ حتى اكتمال البناء تُقدَّم لوحة
+ *   flutter-env/keeper.sh بناءها تلقائياً؛ حتى اكتمال البناء تُقدَّم بطاقة
  *   «المعاينة غير مبنية بعد» بدل الـ404.
- * - ووضع التطوير السريع (الخيار ب — flutter run -d web-server): أوقف هذه
- *   الخدمة أولاً (pkill -f static-preview) لأن كليهما يملك المنفذ 3000.
+ * - الكاش في الذاكرة يتحقق من mtime/size لكل ملف قبل تقديمه — إعادة البناء
+ *   في منتصف الجلسة تظهر فوراً بعد تحديث الصفحة بلا إعادة تشغيل الخادم (R22).
+ * - مسارات بلا امتداد تُسقط على index.html (SPA fallback) للروابط العميقة.
+ * - يعمل كخدمة auto-boot عبر .zscripts/dev.sh → mini-services (يمتلك المنفذ
+ *   3000 خلف بوابة Caddy :81) — ووضع التطوير السريع (flutter run -d
+ *   web-server): أوقف هذه الخدمة أولاً (pkill -f static-preview) لأن كليهما
+ *   يملك المنفذ 3000.
  * =============================================================================
  */
 const fs = require("fs");
@@ -21,8 +26,10 @@ const pathMod = require("path");
 
 const PROJECT_ROOT = pathMod.resolve(import.meta.dir, "..", "..");
 const PUBLIC_DIR = pathMod.join(PROJECT_ROOT, "public");
-const APP_INDEX = pathMod.join(PUBLIC_DIR, "mobile_app", "index.html");
+const APP_DIR = pathMod.join(PUBLIC_DIR, "mobile_app");
+const APP_INDEX = pathMod.join(APP_DIR, "index.html");
 const PUBSPEC = pathMod.join(PROJECT_ROOT, "mobile_app", "pubspec.yaml");
+const LEGACY_PREFIX = "/mobile_app";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -37,6 +44,8 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
   ".ttf": "font/ttf",
   ".otf": "font/otf",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
   ".css": "text/css; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
   ".frag": "text/plain; charset=utf-8",
@@ -57,28 +66,28 @@ function buildExists(): boolean {
   return fs.existsSync(APP_INDEX);
 }
 
-/** قراءة الملفات مع تخزين مؤقت في الذاكرة (~48MB كحد أقصى — أبخس من Next.js). */
-const fileCache = new Map<string, Buffer>();
+/**
+ * كاش الذاكرة مع تحقق mtime/size لكل ملف (R22): إعادة بناء في منتصف الجلسة
+ * تُقدَّم فوراً بعد تحديث الصفحة — لا حاجة لإعادة تشغيل الخادم بعد كل بناء.
+ */
+const fileCache = new Map<string, { mtime: number; size: number; buf: Buffer }>();
 function readCached(full: string): Buffer {
-  let buf = fileCache.get(full);
-  if (!buf) {
-    buf = fs.readFileSync(full);
-    fileCache.set(full, buf);
-  }
+  const st = fs.statSync(full);
+  const hit = fileCache.get(full);
+  if (hit && hit.mtime === st.mtimeMs && hit.size === st.size) return hit.buf;
+  const buf = fs.readFileSync(full);
+  fileCache.set(full, { mtime: st.mtimeMs, size: st.size, buf });
   return buf;
 }
 
 /* ================================================================== */
-/* لوحة المعاينة                                                       */
+/* بطاقة «المعاينة غير مبنية بعد» (حتى يكتمل بناء الحارس)                */
 /* ================================================================== */
 
 const REPO_URL = "https://github.com/alaghbry0/finacc-flutter2";
 const APK_URL = `${REPO_URL}/releases/latest/download/app-release.apk`;
 
-function pageChrome(bodyInner: string, buildPresent: boolean): string {
-  const buildChip = buildPresent
-    ? `<span class="chip ok">المعاينة مبنية ✓</span>`
-    : `<span class="chip warn">المعاينة غير مبنية بعد</span>`;
+function notBuiltPage(): string {
   return `<!doctype html>
 <html dir="rtl" lang="ar">
 <head>
@@ -100,27 +109,8 @@ function pageChrome(bodyInner: string, buildPresent: boolean): string {
   header h1 { font-size: 24px; color: #C9A96A; font-weight: 800; }
   header p.sub { font-size: 13px; color: #7d938a; margin-top: 8px; line-height: 1.7; }
   .chips { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
-  .chip {
-    display: inline-block; padding: 4px 14px; border-radius: 999px;
-    font-size: 12px; border: 1px solid #23423a; color: #9db8ad;
-  }
-  .chip.ok { border-color: #00695C; color: #35b8a0; }
+  .chip { display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 12px; border: 1px solid #23423a; color: #9db8ad; }
   .chip.warn { border-color: #C9A96A; color: #C9A96A; }
-  .phone {
-    width: 390px; max-width: 96vw; height: 780px; max-height: 76vh;
-    border: 10px solid #1a2c26; border-radius: 44px;
-    overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.55);
-    background: #000;
-  }
-  .phone iframe { width: 100%; height: 100%; border: 0; }
-  nav.links { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-  nav.links a {
-    color: #C9A96A; text-decoration: none; font-size: 14px;
-    border: 1px solid #2a463c; border-radius: 10px; padding: 8px 16px;
-    transition: background .15s;
-  }
-  nav.links a:hover { background: #12211c; }
-  footer { font-size: 12px; color: #56706a; text-align: center; max-width: 620px; line-height: 1.8; }
   .card {
     width: 560px; max-width: 94vw; background: #0F1D19; border: 1px solid #23423a;
     border-radius: 16px; padding: 26px; line-height: 2;
@@ -131,7 +121,14 @@ function pageChrome(bodyInner: string, buildPresent: boolean): string {
     border: 1px solid #23423a; border-radius: 6px; padding: 2px 10px;
     font-size: 13px; color: #35b8a0;
   }
-  @media (max-width: 480px) { .phone { height: 80vh; border-width: 8px; } }
+  nav.links { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  nav.links a {
+    color: #C9A96A; text-decoration: none; font-size: 14px;
+    border: 1px solid #2a463c; border-radius: 10px; padding: 8px 16px;
+    transition: background .15s;
+  }
+  nav.links a:hover { background: #12211c; }
+  footer { font-size: 12px; color: #56706a; text-align: center; max-width: 620px; line-height: 1.8; }
 </style>
 </head>
 <body>
@@ -140,16 +137,22 @@ function pageChrome(bodyInner: string, buildPresent: boolean): string {
       <img src="/logo.svg" alt="FinAcc">
       <h1>FinAcc — المُحاسِب الشخصي</h1>
     </div>
-    <p class="sub">نظام محاسبة ومخزون عربي RTL أوفلاين-أولاً — معاينة حية لـ Flutter Web
-    تُخدَّم بخادم bun ثابت واحد (بلا Next.js، بلا node_modules، بلا خطوة بناء).</p>
+    <p class="sub">نظام محاسبة ومخزون عربي RTL أوفلاين-أولاً — تطبيق Flutter Web
+    يُقدَّم في جذر البوابة مباشرة (R22) بخادم bun ثابت واحد بلا Next.js.</p>
     <div class="chips">
       <span class="chip">الإصدار ${appVersion()}</span>
-      ${buildChip}
+      <span class="chip warn">المعاينة غير مبنية بعد</span>
     </div>
   </header>
-  ${bodyInner}
+  <div class="card">
+    <h2>المعاينة غير مبنية بعد في هذه الجلسة</h2>
+    مخرجات بناء الويب (<code>public/mobile_app/</code>) غير متتبعة في git — تُمحى مع كل
+    إعادة تشغيل ويعيد حارس البيئة بناءها تلقائياً عند الإقلاع. لبنائها فوراً يدوياً:
+    <br><code>bash scripts/build-flutter-web.sh</code>
+    <br>ثم حدِّث هذه الصفحة. (أول إقلاع بعد استنساخ جديد يستغرق دقائق —
+    تابع السجل في <code>.zscripts/mini-service-flutter-env.log</code>)
+  </div>
   <nav class="links">
-    <a href="/mobile_app/index.html">فتح التطبيق بملء الشاشة ↗</a>
     <a href="${APK_URL}" rel="noopener">تنزيل آخر APK (GitHub Releases)</a>
     <a href="${REPO_URL}" rel="noopener">المستودع</a>
   </nav>
@@ -160,21 +163,6 @@ function pageChrome(bodyInner: string, buildPresent: boolean): string {
 </html>`;
 }
 
-function panelBody(): string {
-  return `<div class="phone"><iframe src="/mobile_app/index.html" allow="fullscreen"></iframe></div>`;
-}
-
-function notBuiltBody(): string {
-  return `<div class="card">
-    <h2>المعاينة غير مبنية بعد في هذه الجلسة</h2>
-    مخرجات بناء الويب (<code>public/mobile_app/</code>) غير متتبعة في git — تُمحى مع كل
-    إعادة تشغيل ويعيد حارس البيئة بناءها تلقائياً عند الإقلاع. لبنائها فوراً يدوياً:
-    <br><code>bash scripts/build-flutter-web.sh</code>
-    <br>ثم حدِّث هذه الصفحة. (أول إقلاع بعد استنساخ جديد يستغرق دقائق —
-    تابع السجل في <code>.zscripts/mini-service-flutter-env.log</code>)
-  </div>`;
-}
-
 /* ================================================================== */
 /* الخدمة                                                              */
 /* ================================================================== */
@@ -182,58 +170,84 @@ function notBuiltBody(): string {
 const html = (body: string) =>
   new Response(body, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
 
+function serveFile(full: string): Response {
+  const ext = full.slice(full.lastIndexOf("."));
+  // no-cache لما يتغير مع كل بناء (الاسم ثابت والملفات غير مُلبَّدة): html
+  // وسكربت الخدمة وversion.json — والبقية تُخزَّن ساعة.
+  const noCache = ext === ".html" || full.endsWith("flutter_service_worker.js") || full.endsWith("version.json");
+  return new Response(readCached(full), {
+    headers: {
+      "content-type": MIME[ext] ?? "application/octet-stream",
+      "cache-control": noCache ? "no-cache" : "public, max-age=3600",
+    },
+  });
+}
+
+/** حل مسار آمن داخل قاعدة معينة (يمنع path traversal) ويعيد null إن لم يكن ملفاً. */
+function safeFile(base: string, rel: string): string | null {
+  const full = pathMod.join(base, rel);
+  if (!full.startsWith(base + pathMod.sep)) return null;
+  try {
+    if (!fs.statSync(full).isFile()) return null;
+  } catch {
+    return null;
+  }
+  return full;
+}
+
 Bun.serve({
   port: 3000,
   fetch: (req) => {
     const url = new URL(req.url);
     let p = decodeURIComponent(url.pathname);
 
-    if (p === "/") {
-      const present = buildExists();
-      return html(pageChrome(present ? panelBody() : notBuiltBody(), present));
-    }
-
     if (p === "/api/status") {
       return Response.json(
-        { app: "finacc-static-preview", version: appVersion(), buildPresent: buildExists() },
+        { app: "finacc-static-preview", version: appVersion(), buildPresent: buildExists(), appAtRoot: true },
         { headers: { "cache-control": "no-cache" } },
       );
     }
 
-    // /mobile_app (بلا شرطة) → توجيه للجذر الفرعي
-    if (p === "/mobile_app") {
-      return new Response(null, { status: 301, headers: { location: "/mobile_app/" } });
+    // توافق روابط R21 القديمة: /mobile_app(/…) → /(…)
+    if (p === LEGACY_PREFIX) {
+      return new Response(null, { status: 301, headers: { location: "/" } });
     }
-
-    if (p.endsWith("/")) p += "index.html";
-
-    // امنع الخروج خارج الجذر (path traversal)
-    const full = pathMod.join(PUBLIC_DIR, p);
-    if (
-      !full.startsWith(PUBLIC_DIR + pathMod.sep) ||
-      !fs.existsSync(full) ||
-      !fs.statSync(full).isFile()
-    ) {
-      return new Response("404 — غير موجود", {
-        status: 404,
-        headers: { "content-type": "text/plain; charset=utf-8" },
+    if (p.startsWith(LEGACY_PREFIX + "/")) {
+      const rest = p.slice(LEGACY_PREFIX.length + 1);
+      return new Response(null, {
+        status: 301,
+        headers: { location: rest === "" || rest === "index.html" ? "/" : `/${rest}` },
       });
     }
 
-    const ext = full.slice(full.lastIndexOf("."));
-    // no-cache لما يتغير مع كل بناء (الاسم ثابت والملفات غير مُلبدة): html
-    // وسكربت الخدمة وversion.json — والبقية تُخزَّن ساعة.
-    const noCache = ext === ".html" || p.endsWith("flutter_service_worker.js") || p.endsWith("version.json");
-    return new Response(readCached(full), {
-      headers: {
-        "content-type": MIME[ext] ?? "application/octet-stream",
-        "cache-control": noCache ? "no-cache" : "public, max-age=3600",
-      },
+    // ملفات جذر public (الشعار وrobots)
+    if (p === "/logo.svg" || p === "/robots.txt") {
+      const full = safeFile(PUBLIC_DIR, p);
+      if (full) return serveFile(full);
+    }
+
+    // الجذر: التطبيق مباشرة (R22)، أو بطاقة «غير مبنية» بانتظار الحارس
+    if (p === "/") {
+      if (buildExists()) return serveFile(APP_INDEX);
+      return html(notBuiltPage());
+    }
+    if (p.endsWith("/")) p += "index.html";
+
+    // ملفات التطبيق (main.dart.js / assets / canvaskit / wasm / خطوط ...)
+    const appFile = safeFile(APP_DIR, p);
+    if (appFile) return serveFile(appFile);
+
+    // مسار بلا امتداد = مسار SPA → index.html (للروابط العميقة المستقبلية)
+    if (buildExists() && pathMod.extname(p) === "") return serveFile(APP_INDEX);
+
+    return new Response("404 — غير موجود", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
     });
   },
 });
 
 console.log(
-  `[static-preview] :3000 — اللوحة / · التطبيق /mobile_app/ · الإصدار ${appVersion()} · ` +
+  `[static-preview] :3000 — التطبيق في الجذر / (R22) · الإصدار ${appVersion()} · ` +
     (buildExists() ? "البناء موجود" : "البناء غير موجود (بانتظار keeper)"),
 );
