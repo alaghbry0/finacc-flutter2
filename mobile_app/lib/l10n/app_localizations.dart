@@ -8448,6 +8448,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused.'**
   String get invoiceVoidedNote;
+
+  /// No description provided for @homeTabSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Invoices'**
+  String get homeTabSales;
+
+  /// No description provided for @homeTabQuotations.
+  ///
+  /// In en, this message translates to:
+  /// **'Quotations'**
+  String get homeTabQuotations;
+
+  /// No description provided for @homeTabPurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases'**
+  String get homeTabPurchases;
+
+  /// No description provided for @homeTabReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get homeTabReceipts;
+
+  /// No description provided for @homeTabPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get homeTabPayments;
+
+  /// No description provided for @homeTabReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get homeTabReports;
+
+  /// No description provided for @homeFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get homeFilterAll;
+
+  /// No description provided for @homeFilterPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get homeFilterPaid;
+
+  /// No description provided for @homeFilterPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial'**
+  String get homeFilterPartial;
+
+  /// No description provided for @homeFilterUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get homeFilterUnpaid;
+
+  /// No description provided for @homeTimeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All Time'**
+  String get homeTimeAll;
+
+  /// No description provided for @homeTimeYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get homeTimeYear;
+
+  /// No description provided for @homeTimeQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get homeTimeQuarter;
+
+  /// No description provided for @homeTimeMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get homeTimeMonth;
+
+  /// No description provided for @homeTimeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get homeTimeWeek;
+
+  /// No description provided for @homeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by document no. or party name…'**
+  String get homeSearchHint;
+
+  /// No description provided for @homeSortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get homeSortTitle;
+
+  /// No description provided for @homeSortDateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get homeSortDateDesc;
+
+  /// No description provided for @homeSortDateAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get homeSortDateAsc;
+
+  /// No description provided for @homeSortTotalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (highest)'**
+  String get homeSortTotalDesc;
+
+  /// No description provided for @homeSortBalanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance (highest)'**
+  String get homeSortBalanceDesc;
+
+  /// No description provided for @homeSortPartyAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Party (A–Z)'**
+  String get homeSortPartyAsc;
+
+  /// No description provided for @homeMonthSalesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Month Sales'**
+  String get homeMonthSalesLabel;
+
+  /// No description provided for @homeMonthInvoicesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no invoices} one{one invoice} other{{count} invoices}}'**
+  String homeMonthInvoicesLabel(num count);
+
+  /// No description provided for @homeMonthFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Month data unavailable'**
+  String get homeMonthFallback;
+
+  /// No description provided for @homeFabNewInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'New Invoice'**
+  String get homeFabNewInvoice;
+
+  /// No description provided for @homeBellNoAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'No new notifications'**
+  String get homeBellNoAlerts;
+
+  /// No description provided for @homeRefreshDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Data refreshed'**
+  String get homeRefreshDone;
+
+  /// No description provided for @homeSyncLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get homeSyncLabel;
+
+  /// No description provided for @homeBellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts'**
+  String get homeBellLabel;
+
+  /// No description provided for @homeSettingsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get homeSettingsLabel;
+
+  /// No description provided for @homeMenuLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get homeMenuLabel;
+
+  /// No description provided for @homeEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get homeEmptyTitle;
+
+  /// No description provided for @homeEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first invoice with the button below, or widen the filters.'**
+  String get homeEmptyBody;
+
+  /// No description provided for @homeNoResultsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results'**
+  String get homeNoResultsTitle;
+
+  /// No description provided for @homeNoResultsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing the search or filters.'**
+  String get homeNoResultsBody;
+
+  /// No description provided for @homeRowDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get homeRowDueLabel;
+
+  /// No description provided for @homeRowCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no transactions} one{one transaction} other{{count} transactions}}'**
+  String homeRowCountLabel(num count);
+
+  /// No description provided for @homeDrawerQuickSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Access'**
+  String get homeDrawerQuickSection;
+
+  /// No description provided for @homeDrawerModulesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Modules'**
+  String get homeDrawerModulesSection;
+
+  /// No description provided for @homeDrawerNewQuotation.
+  ///
+  /// In en, this message translates to:
+  /// **'New Quotation'**
+  String get homeDrawerNewQuotation;
+
+  /// No description provided for @homeDrawerNewCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'New Customer'**
+  String get homeDrawerNewCustomer;
+
+  /// No description provided for @homeDrawerNewSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'New Supplier'**
+  String get homeDrawerNewSupplier;
+
+  /// No description provided for @homeDrawerDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get homeDrawerDashboard;
+
+  /// No description provided for @homeDrawerReportsSubAging.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Aging'**
+  String get homeDrawerReportsSubAging;
+
+  /// No description provided for @homeDrawerVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String homeDrawerVersion(Object version);
+
+  /// No description provided for @homeQuotationBadgeDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get homeQuotationBadgeDraft;
+
+  /// No description provided for @homeQuotationBadgeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get homeQuotationBadgeSent;
+
+  /// No description provided for @homeQuotationBadgeConverted.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted'**
+  String get homeQuotationBadgeConverted;
+
+  /// No description provided for @homeQuotationBadgeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get homeQuotationBadgeExpired;
+
+  /// No description provided for @homeQuotationBadgeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get homeQuotationBadgeRejected;
+
+  /// No description provided for @homeVoucherFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash movement'**
+  String get homeVoucherFallback;
 }
 
 class _AppLocalizationsDelegate

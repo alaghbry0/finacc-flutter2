@@ -80,3 +80,6 @@ __pycache__/
 /repo-review/
 # بقايا جلسات تحقق سابقة إن ظهرت
 /verify-public-mobile/
+
+# ملف تعريف كروم الرأسي لجلسات التحقق الحي
+/.chrome-v3/

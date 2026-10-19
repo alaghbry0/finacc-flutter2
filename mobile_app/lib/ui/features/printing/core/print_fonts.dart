@@ -1,9 +1,12 @@
-/// خطوط الطباعة (الشريحة 7) — تحميل أوجه Almarai + الخط المرافق
+/// خطوط الطباعة (الشريحة 7) — تحميل أوجه Cairo + الخط المرافق
 /// NotoSansArabic (أرقام جدولية — UX-2b) مرة واحدة لكل عزل.
 ///
-/// الخطوط من أصول التطبيق المحلية (`assets/fonts/almarai/` و
+/// الخطوط من أصول التطبيق المحلية (`assets/fonts/cairo/` و
 /// `assets/fonts/noto/`) — الطباعة أوفلاين حصراً: لا يجوز أبداً جلب خط
 /// من الشبكة هنا (قاعدة SRS §0.3).
+///
+/// V3: انتقلت الطباعة إلى Cairo (هوية Simple Invoice Manager — نفس
+/// خط الشاشة) فصار المستند المطبوع امتداداً حرفياً لمعاينة التطبيق.
 library;
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -19,7 +22,7 @@ class PrintFonts {
   static pw.Font? _tabular;
   static pw.Font? _tabularBold;
 
-  /// Almarai Regular (نص الجسم والأرقام).
+  /// Cairo Regular (نص الجسم والأرقام).
   static pw.Font get regular {
     final font = _regular;
     if (font == null) {
@@ -30,7 +33,7 @@ class PrintFonts {
     return font;
   }
 
-  /// Almarai Bold (العناوين والإجماليات ورقم السند).
+  /// Cairo Bold (العناوين والإجماليات ورقم السند).
   static pw.Font get bold {
     final font = _bold;
     if (font == null) {
@@ -41,7 +44,7 @@ class PrintFonts {
     return font;
   }
 
-  /// Almarai ExtraBold (عناوين المستندات الكبيرة — إصلاح UX-audit:
+  /// Cairo ExtraBold (عناوين المستندات الكبيرة — إصلاح UX-audit:
   /// الوجه مصرَّح به في pubspec وموجود في الأصول لكنه كان غير مستغل).
   static pw.Font get extraBold {
     final font = _extraBold;
@@ -89,13 +92,13 @@ class PrintFonts {
   static Future<void> load() async {
     if (loaded) return;
     final regular = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/almarai/Almarai-Regular.ttf'),
+      await rootBundle.load('assets/fonts/cairo/Cairo-Regular.ttf'),
     );
     final bold = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/almarai/Almarai-Bold.ttf'),
+      await rootBundle.load('assets/fonts/cairo/Cairo-Bold.ttf'),
     );
     final extraBold = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/almarai/Almarai-ExtraBold.ttf'),
+      await rootBundle.load('assets/fonts/cairo/Cairo-ExtraBold.ttf'),
     );
     final tabular = pw.Font.ttf(
       await rootBundle.load('assets/fonts/noto/NotoSansArabic-Regular.ttf'),

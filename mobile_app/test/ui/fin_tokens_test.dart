@@ -1,6 +1,7 @@
 /// اختبارات موجة UX-2b (التلميع البصري): توكنات التصميم + الخط المرافق
 /// للأرقام الجدولية (NotoSansArabic بعائلة أساسية مع fallback إلى
-/// Almarai) + عدّاد الفواتير بأرقام النظام + تضمين الخط الجدولي في PDF
+/// Cairo منذ V3 — هوية Simple Invoice Manager؛ كانت Almarai قبلها)
+/// + عدّاد الفواتير بأرقام النظام + تضمين الخط الجدولي في PDF
 /// المطبوع (اسم BaseFont يظهر في بايتات المستند).
 library;
 
@@ -47,14 +48,14 @@ void main() {
   });
 
   group('FinText — الخط المرافق للأرقام الجدولية (DS-18n)', () {
-    test('أنماط المبالغ تتصدّرها NotoSansArabic مع fallback إلى Almarai', () {
+    test('أنماط المبالغ تتصدّرها NotoSansArabic مع fallback إلى Cairo', () {
       for (final style in [
         FinText.amountDisplay(const Color(0xFF000000)),
         FinText.amountLarge(const Color(0xFF000000)),
         FinText.amountRow(const Color(0xFF000000)),
       ]) {
         expect(style.fontFamily, 'NotoSansArabic');
-        expect(style.fontFamilyFallback, <String>['Almarai']);
+        expect(style.fontFamilyFallback, <String>['Cairo']);
         expect(style.fontFeatures, FinText.tabularNums);
       }
     });
@@ -67,15 +68,15 @@ void main() {
       );
       final out = FinText.withTabularDigits(base);
       expect(out.fontFamily, 'NotoSansArabic');
-      expect(out.fontFamilyFallback, <String>['Almarai']);
+      expect(out.fontFamilyFallback, <String>['Cairo']);
       expect(out.fontWeight, FontWeight.w700);
       expect(out.fontSize, 16);
       expect(out.color, const Color(0xFF123456));
     });
 
-    test('هوية النصوص تبقى Almarai (بلا fallback)', () {
+    test('هوية النصوص تبقى Cairo (بلا fallback)', () {
       final body = FinText.amountLabel(const Color(0xFF000000));
-      expect(body.fontFamily, 'Almarai');
+      expect(body.fontFamily, 'Cairo');
       expect(body.fontFamilyFallback, isNull);
     });
   });
@@ -132,7 +133,7 @@ void main() {
   });
 
   group('الطباعة — الخط الجدولي المرافق في PDF (UX-2b)', () {
-    testWidgets('فاتورة مطبوعة تضمّن NotoSansArabic إلى جوار Almarai', (
+    testWidgets('فاتورة مطبوعة تضمّن NotoSansArabic إلى جوار Cairo', (
       tester,
     ) async {
       await tester.runAsync(() async {
@@ -142,12 +143,12 @@ void main() {
         final bytes = await pdf.save();
         expect(String.fromCharCodes(bytes, 0, 4), '%PDF');
         // أرقام جدولية على الورق: الخط المرافق مضمّن فعلاً في المستند،
-        // وهوية Almarai حاضرة للنصوص العربية (لا استبدال للهوية).
+        // وهوية Cairo حاضرة للنصوص العربية (لا استبدال للهوية).
         final latin = String.fromCharCodes(
           bytes.map((b) => b < 128 ? b : 0x20),
         );
         expect(latin.contains('NotoSansArabic'), isTrue);
-        expect(latin.contains('Almarai'), isTrue);
+        expect(latin.contains('Cairo'), isTrue);
       });
     }, timeout: const Timeout(Duration(minutes: 2)));
   });

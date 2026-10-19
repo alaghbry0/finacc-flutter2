@@ -4862,4 +4862,181 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get invoiceVoidedNote =>
       'Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused.';
+
+  @override
+  String get homeTabSales => 'Sales Invoices';
+
+  @override
+  String get homeTabQuotations => 'Quotations';
+
+  @override
+  String get homeTabPurchases => 'Purchases';
+
+  @override
+  String get homeTabReceipts => 'Receipts';
+
+  @override
+  String get homeTabPayments => 'Payments';
+
+  @override
+  String get homeTabReports => 'Reports';
+
+  @override
+  String get homeFilterAll => 'All';
+
+  @override
+  String get homeFilterPaid => 'Paid';
+
+  @override
+  String get homeFilterPartial => 'Partial';
+
+  @override
+  String get homeFilterUnpaid => 'Unpaid';
+
+  @override
+  String get homeTimeAll => 'All Time';
+
+  @override
+  String get homeTimeYear => 'Yearly';
+
+  @override
+  String get homeTimeQuarter => 'Quarterly';
+
+  @override
+  String get homeTimeMonth => 'Monthly';
+
+  @override
+  String get homeTimeWeek => 'Weekly';
+
+  @override
+  String get homeSearchHint => 'Search by document no. or party name…';
+
+  @override
+  String get homeSortTitle => 'Sort';
+
+  @override
+  String get homeSortDateDesc => 'Newest first';
+
+  @override
+  String get homeSortDateAsc => 'Oldest first';
+
+  @override
+  String get homeSortTotalDesc => 'Amount (highest)';
+
+  @override
+  String get homeSortBalanceDesc => 'Balance (highest)';
+
+  @override
+  String get homeSortPartyAsc => 'Party (A–Z)';
+
+  @override
+  String get homeMonthSalesLabel => 'Month Sales';
+
+  @override
+  String homeMonthInvoicesLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invoices',
+      one: 'one invoice',
+      zero: 'no invoices',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeMonthFallback => 'Month data unavailable';
+
+  @override
+  String get homeFabNewInvoice => 'New Invoice';
+
+  @override
+  String get homeBellNoAlerts => 'No new notifications';
+
+  @override
+  String get homeRefreshDone => 'Data refreshed';
+
+  @override
+  String get homeSyncLabel => 'Sync';
+
+  @override
+  String get homeBellLabel => 'Alerts';
+
+  @override
+  String get homeSettingsLabel => 'Settings';
+
+  @override
+  String get homeMenuLabel => 'Menu';
+
+  @override
+  String get homeEmptyTitle => 'No transactions yet';
+
+  @override
+  String get homeEmptyBody =>
+      'Create your first invoice with the button below, or widen the filters.';
+
+  @override
+  String get homeNoResultsTitle => 'No matching results';
+
+  @override
+  String get homeNoResultsBody => 'Try changing the search or filters.';
+
+  @override
+  String get homeRowDueLabel => 'Due';
+
+  @override
+  String homeRowCountLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transactions',
+      one: 'one transaction',
+      zero: 'no transactions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeDrawerQuickSection => 'Quick Access';
+
+  @override
+  String get homeDrawerModulesSection => 'Modules';
+
+  @override
+  String get homeDrawerNewQuotation => 'New Quotation';
+
+  @override
+  String get homeDrawerNewCustomer => 'New Customer';
+
+  @override
+  String get homeDrawerNewSupplier => 'New Supplier';
+
+  @override
+  String get homeDrawerDashboard => 'Dashboard';
+
+  @override
+  String get homeDrawerReportsSubAging => 'Debt Aging';
+
+  @override
+  String homeDrawerVersion(Object version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get homeQuotationBadgeDraft => 'Draft';
+
+  @override
+  String get homeQuotationBadgeSent => 'Sent';
+
+  @override
+  String get homeQuotationBadgeConverted => 'Converted';
+
+  @override
+  String get homeQuotationBadgeExpired => 'Expired';
+
+  @override
+  String get homeQuotationBadgeRejected => 'Rejected';
+
+  @override
+  String get homeVoucherFallback => 'Cash movement';
 }

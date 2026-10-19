@@ -19,6 +19,7 @@ import '../../features/cash/views/categories_screen.dart';
 import '../../features/cash/views/movements_screen.dart';
 import '../../features/cash/views/shift_screen.dart';
 import '../../features/cash/views/voucher_screen.dart';
+import '../../features/home/views/dashboard_screen.dart';
 import '../../features/home/views/home_screen.dart';
 import '../../features/inventory/views/batches_screen.dart';
 import '../../features/inventory/views/categories_units_screen.dart';
@@ -320,6 +321,13 @@ GoRouter buildAppRouter(AppController controller) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const HomeScreen(),
+                routes: [
+                  // لوحة التحكم الإحصائية (V3: كانت الرئيسية — الآن من الدرج).
+                  GoRoute(
+                    path: 'dashboard',
+                    builder: (context, state) => const DashboardScreen(),
+                  ),
+                ],
               ),
             ],
           ),

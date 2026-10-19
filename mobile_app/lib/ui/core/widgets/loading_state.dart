@@ -101,6 +101,11 @@ class StatTilesSkeleton extends StatelessWidget {
 }
 
 /// هيكل عظمي لقائمة صفوف (ListRow ≥ 64dp — DS-22).
+///
+/// V3: ملفوف بعرض قابل للتمرير معطَّل — إن وُضع داخل صندوق محدود
+/// الارتفاع (Expanded في مركز المعاملات مثلاً) تُقصّ الزيادة بهدوء
+/// بدل خطأ RenderFlex overflow (الهيكل عابر أصلاً — لا قيمة لما
+/// تحت الطية).
 class ListSkeleton extends StatelessWidget {
   const ListSkeleton({super.key, this.rows = 6});
 
@@ -109,21 +114,24 @@ class ListSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = FinColors.of(context);
-    return Column(
-      children: List.generate(rows, (_) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: SkeletonPulse(
-            child: Container(
-              height: 64,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: colors.skeletonHighlight,
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        children: List.generate(rows, (_) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: SkeletonPulse(
+              child: Container(
+                height: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: colors.skeletonHighlight,
+                ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }

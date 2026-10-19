@@ -20,13 +20,16 @@ void main() {
   ) async {
     await tester.runAsync(() async {
       final l10n = await AppLocalizations.delegate.load(const Locale('ar'));
-      // 30 بنداً تُفيض إلى صفحة ثانية بنفس الشريط والتذييل.
+      // 30 بنداً تُفيض لصفحات تالية بنفس الشريط والتذييل.
+      // V3 (خط Cairo): مقاييسه العمودية أطول من Almarai فصار صفّ
+      // البند بارتفاعين تقريباً — 30 بنداً = 3 صفحات (كانت 2 مع
+      // Almarai). جوهر الاختبار محفوظ: التدفق عبر MultiPage يعمل.
       final doc = invoiceDocForTests(l10n, itemCount: 30);
       final pdf = await const InvoicePdfBuilder().build(doc);
       final bytes = await pdf.save();
       expect(String.fromCharCodes(bytes, 0, 4), '%PDF');
       expect(bytes.length, greaterThan(15 * 1024));
-      expect(pdfPageCount(bytes), 2, reason: 'تدفق MultiPage لصفحة ثانية');
+      expect(pdfPageCount(bytes), 3, reason: 'تدفق MultiPage لصفحات تالية');
     });
   }, timeout: const Timeout(Duration(minutes: 2)));
 

@@ -1164,7 +1164,6 @@
       }
     }
   },
-
   "monthSalesTitle": "This month's sales",
   "monthChangeUp": "Up {pct}% vs last month",
   "monthChangeDown": "Down {pct}% vs last month",
@@ -1205,8 +1204,7 @@
         "type": "String"
       }
     }
-  }
-,
+  },
   "stocktakeTitle": "Physical stocktake",
   "stocktakeHeroTitle": "Count & reconcile stock",
   "stocktakeHeroSubtitle": "Compare book stock with your physical count; differences are valued at the snapshot cost at posting time, and balances lock to the counted quantities.",
@@ -1389,8 +1387,7 @@
   "sellFixNewCustomerNameLabel": "Customer name",
   "sellFixNewCustomerPhoneLabel": "Phone (optional)",
   "sellFixNewCustomerNameRequired": "Customer name is required.",
-  "sellFixNewCustomerSave": "Add & select"
-,
+  "sellFixNewCustomerSave": "Add & select",
   "appFixUnsavedTitle": "Unsaved changes",
   "appFixUnsavedBody": "You have unsaved changes — leaving now will discard them. Leave without saving?",
   "appFixUnsavedLeave": "Leave",
@@ -1433,7 +1430,13 @@
   "settings2CompanyInvalidTaxRate": "Tax rate must be a number between 0 and 100.",
   "settings2CompanySaveFailed": "Could not save company profile — try again.",
   "settings2CompanyCurrencyNote": "Base currency: {code} — fixed at setup, not editable here.",
-  "@settings2CompanyCurrencyNote": {"placeholders": {"code": {"type": "String"}}},
+  "@settings2CompanyCurrencyNote": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "settings2SalePrefsTitle": "Sales preferences",
   "settings2SalePrefsSubtitle": "Default payment method, discounts and guard policies",
   "settings2SalePrefsNote": "Every change applies instantly and is saved to your local database.",
@@ -1464,9 +1467,21 @@
   "settings2HighContrastDesc": "Pure surfaces, maximum-contrast text and stronger borders",
   "settings2HighContrastNote": "Designed for low vision — replaces soft tints with extreme edges.",
   "settings2BelowCostWarning": "Warning: {names} sells below cost after discounts — review the price.",
-  "@settings2BelowCostWarning": {"placeholders": {"names": {"type": "String"}}},
+  "@settings2BelowCostWarning": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "settings2AboutVersion": "Version {version}",
-  "@settings2AboutVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@settings2AboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "settings2AboutPhase": "Pre-v1.0.0 — Wave 2",
   "visFixItemsAddFab": "Register item",
   "tmplSectionTitle": "Printing & invoices",
@@ -1542,5 +1557,57 @@
   "invoiceVoidReasonLabel": "Reason (optional)",
   "invoiceVoidConfirmAction": "Void now",
   "invoiceVoidedSnackBar": "Invoice {no} voided — full counter movements recorded.",
-  "invoiceVoidedNote": "Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused."
+  "invoiceVoidedNote": "Voided invoice — its stock, cash and balance movements were fully reversed; the number is never reused.",
+  "homeTabSales": "Sales Invoices",
+  "homeTabQuotations": "Quotations",
+  "homeTabPurchases": "Purchases",
+  "homeTabReceipts": "Receipts",
+  "homeTabPayments": "Payments",
+  "homeTabReports": "Reports",
+  "homeFilterAll": "All",
+  "homeFilterPaid": "Paid",
+  "homeFilterPartial": "Partial",
+  "homeFilterUnpaid": "Unpaid",
+  "homeTimeAll": "All Time",
+  "homeTimeYear": "Yearly",
+  "homeTimeQuarter": "Quarterly",
+  "homeTimeMonth": "Monthly",
+  "homeTimeWeek": "Weekly",
+  "homeSearchHint": "Search by document no. or party name…",
+  "homeSortTitle": "Sort",
+  "homeSortDateDesc": "Newest first",
+  "homeSortDateAsc": "Oldest first",
+  "homeSortTotalDesc": "Amount (highest)",
+  "homeSortBalanceDesc": "Balance (highest)",
+  "homeSortPartyAsc": "Party (A–Z)",
+  "homeMonthSalesLabel": "Month Sales",
+  "homeMonthInvoicesLabel": "{count, plural, =0{no invoices} one{one invoice} other{{count} invoices}}",
+  "homeMonthFallback": "Month data unavailable",
+  "homeFabNewInvoice": "New Invoice",
+  "homeBellNoAlerts": "No new notifications",
+  "homeRefreshDone": "Data refreshed",
+  "homeSyncLabel": "Sync",
+  "homeBellLabel": "Alerts",
+  "homeSettingsLabel": "Settings",
+  "homeMenuLabel": "Menu",
+  "homeEmptyTitle": "No transactions yet",
+  "homeEmptyBody": "Create your first invoice with the button below, or widen the filters.",
+  "homeNoResultsTitle": "No matching results",
+  "homeNoResultsBody": "Try changing the search or filters.",
+  "homeRowDueLabel": "Due",
+  "homeRowCountLabel": "{count, plural, =0{no transactions} one{one transaction} other{{count} transactions}}",
+  "homeDrawerQuickSection": "Quick Access",
+  "homeDrawerModulesSection": "Modules",
+  "homeDrawerNewQuotation": "New Quotation",
+  "homeDrawerNewCustomer": "New Customer",
+  "homeDrawerNewSupplier": "New Supplier",
+  "homeDrawerDashboard": "Dashboard",
+  "homeDrawerReportsSubAging": "Debt Aging",
+  "homeDrawerVersion": "Version {version}",
+  "homeQuotationBadgeDraft": "Draft",
+  "homeQuotationBadgeSent": "Sent",
+  "homeQuotationBadgeConverted": "Converted",
+  "homeQuotationBadgeExpired": "Expired",
+  "homeQuotationBadgeRejected": "Rejected",
+  "homeVoucherFallback": "Cash movement"
 }

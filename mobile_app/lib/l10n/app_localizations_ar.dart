@@ -4885,4 +4885,187 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get invoiceVoidedNote =>
       'فاتورة ملغاة — حركات مخزونها وصندوقها وأرصدتها عُكست بالكامل، ورقمها لا يُعاد استخدامه.';
+
+  @override
+  String get homeTabSales => 'فواتير البيع';
+
+  @override
+  String get homeTabQuotations => 'عروض الأسعار';
+
+  @override
+  String get homeTabPurchases => 'فواتير الشراء';
+
+  @override
+  String get homeTabReceipts => 'سندات القبض';
+
+  @override
+  String get homeTabPayments => 'سندات الصرف';
+
+  @override
+  String get homeTabReports => 'التقارير';
+
+  @override
+  String get homeFilterAll => 'جميع';
+
+  @override
+  String get homeFilterPaid => 'مدفوع';
+
+  @override
+  String get homeFilterPartial => 'مدفوع جزئياً';
+
+  @override
+  String get homeFilterUnpaid => 'غير مدفوع';
+
+  @override
+  String get homeTimeAll => 'كل الوقت';
+
+  @override
+  String get homeTimeYear => 'سنوي';
+
+  @override
+  String get homeTimeQuarter => 'ربعي';
+
+  @override
+  String get homeTimeMonth => 'شهرياً';
+
+  @override
+  String get homeTimeWeek => 'أسبوعي';
+
+  @override
+  String get homeSearchHint => 'ابحث برقم المستند أو اسم الطرف…';
+
+  @override
+  String get homeSortTitle => 'فرز';
+
+  @override
+  String get homeSortDateDesc => 'الأحدث أولاً';
+
+  @override
+  String get homeSortDateAsc => 'الأقدم أولاً';
+
+  @override
+  String get homeSortTotalDesc => 'المبلغ (الأكبر)';
+
+  @override
+  String get homeSortBalanceDesc => 'الرصيد (الأكبر)';
+
+  @override
+  String get homeSortPartyAsc => 'الطرف (أبجدياً)';
+
+  @override
+  String get homeMonthSalesLabel => 'مبيعات الشهر';
+
+  @override
+  String homeMonthInvoicesLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاتورة',
+      many: '$count فاتورة',
+      few: '$count فواتير',
+      two: 'فاتورتان',
+      one: 'فاتورة واحدة',
+      zero: 'لا فواتير',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeMonthFallback => 'بيانات الشهر غير متاحة';
+
+  @override
+  String get homeFabNewInvoice => 'إنشاء فاتورة';
+
+  @override
+  String get homeBellNoAlerts => 'لا توجد تنبيهات جديدة';
+
+  @override
+  String get homeRefreshDone => 'تم تحديث البيانات';
+
+  @override
+  String get homeSyncLabel => 'مزامنة';
+
+  @override
+  String get homeBellLabel => 'تنبيه';
+
+  @override
+  String get homeSettingsLabel => 'إعدادات';
+
+  @override
+  String get homeMenuLabel => 'القائمة';
+
+  @override
+  String get homeEmptyTitle => 'لا معاملات بعد';
+
+  @override
+  String get homeEmptyBody =>
+      'ابدأ بإنشاء أول فاتورة من الزر بالأسفل، أو غيّر المرشحات لتوسيع النطاق.';
+
+  @override
+  String get homeNoResultsTitle => 'لا نتائج مطابقة';
+
+  @override
+  String get homeNoResultsBody => 'جرّب تعديل البحث أو المرشحات.';
+
+  @override
+  String get homeRowDueLabel => 'المستحق';
+
+  @override
+  String homeRowCountLabel(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count معاملة',
+      many: '$count معاملة',
+      few: '$count معاملات',
+      two: 'معاملتان',
+      one: 'معاملة واحدة',
+      zero: 'لا معاملات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeDrawerQuickSection => 'وصول سريع';
+
+  @override
+  String get homeDrawerModulesSection => 'الوحدات';
+
+  @override
+  String get homeDrawerNewQuotation => 'عرض سعر جديد';
+
+  @override
+  String get homeDrawerNewCustomer => 'عميل جديد';
+
+  @override
+  String get homeDrawerNewSupplier => 'مورد جديد';
+
+  @override
+  String get homeDrawerDashboard => 'لوحة التحكم';
+
+  @override
+  String get homeDrawerReportsSubAging => 'أعمار الديون';
+
+  @override
+  String homeDrawerVersion(Object version) {
+    return 'الإصدار $version';
+  }
+
+  @override
+  String get homeQuotationBadgeDraft => 'مسودة';
+
+  @override
+  String get homeQuotationBadgeSent => 'مرسل';
+
+  @override
+  String get homeQuotationBadgeConverted => 'محوّل';
+
+  @override
+  String get homeQuotationBadgeExpired => 'منتهي';
+
+  @override
+  String get homeQuotationBadgeRejected => 'مرفوض';
+
+  @override
+  String get homeVoucherFallback => 'حركة نقدية';
 }

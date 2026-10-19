@@ -73,7 +73,8 @@ void main() {
       await tester.pumpWidget(FinAccApp(controller: controller));
       var context = await appContext(tester);
       var theme = Theme.of(context);
-      expect(theme.scaffoldBackgroundColor, const Color(0xFFF4F8F6));
+      // V3 (SIM): السطح الفاتح بمسحة زرقاء-رمادية خفيفة بدل الخضراء.
+      expect(theme.scaffoldBackgroundColor, const Color(0xFFF6F8FA));
       expect(theme.colorScheme.onSurface, isNot(const Color(0xFF000000)));
 
       // التبديل فوري: أسطح صافية وحبر خالص وحدود مؤكدة.

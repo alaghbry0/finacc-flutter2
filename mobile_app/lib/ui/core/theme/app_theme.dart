@@ -1,4 +1,5 @@
-/// ثيم FinAcc — Material 3 من البذرة المالية `0xFF00695C` (SRS §0.3).
+/// ثيم FinAcc — Material 3 من البذرة الزرقاء `0xFF1976D2` (V3 — هوية
+/// Simple Invoice Manager، كانت `0xFF00695C` Deep Teal قبلها).
 ///
 /// - وضعان فاتح/داكن يتبعان نظام التشغيل (FR-13-05).
 /// - زوايا ملزمة: بطاقات 16dp وأزرار 12dp (§0.3).
@@ -16,8 +17,8 @@ import 'app_typography.dart';
 class FinTheme {
   const FinTheme._();
 
-  /// البذرة اللونية الرسمية المعتمدة في SRS v1.5.
-  static const Color seed = Color(0xFF00695C);
+  /// البذرة اللونية الرسمية (V3 — Simple Invoice Manager Blue).
+  static const Color seed = Color(0xFF1976D2);
 
   /// الثيم الفاتح.
   ///
@@ -33,31 +34,31 @@ class FinTheme {
   static ThemeData _build(Brightness brightness, {bool highContrast = false}) {
     var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness)
         .copyWith(
-          // أسطح فاخرة: ورقة بلمسة نعناعية في الفاتح، وأخضر عميق في الداكن.
+          // أسطح بلمسة زرقاء باردة في الفاتح، وليل أزرق عميق في الداكن.
           surface: brightness == Brightness.light
               ? const Color(0xFFFFFFFF)
-              : const Color(0xFF101C18),
+              : const Color(0xFF10161B),
           surfaceContainerLowest: brightness == Brightness.light
               ? const Color(0xFFFFFFFF)
-              : const Color(0xFF0C1512),
+              : const Color(0xFF0C1114),
           surfaceContainerLow: brightness == Brightness.light
-              ? const Color(0xFFEFF5F2)
-              : const Color(0xFF142220),
+              ? const Color(0xFFF0F4F8)
+              : const Color(0xFF141C23),
           surfaceContainer: brightness == Brightness.light
-              ? const Color(0xFFE9F0EC)
-              : const Color(0xFF182622),
+              ? const Color(0xFFEAEFF5)
+              : const Color(0xFF18212A),
           surfaceContainerHigh: brightness == Brightness.light
-              ? const Color(0xFFE2EBE6)
-              : const Color(0xFF1D2C27),
+              ? const Color(0xFFE3EAF1)
+              : const Color(0xFF1D2732),
           surfaceContainerHighest: brightness == Brightness.light
-              ? const Color(0xFFDCE6E0)
-              : const Color(0xFF213129),
+              ? const Color(0xFFDDE5EE)
+              : const Color(0xFF222E3A),
           surfaceDim: brightness == Brightness.light
-              ? const Color(0xFFD7E2DC)
-              : const Color(0xFF0A1310),
+              ? const Color(0xFFD8E1EA)
+              : const Color(0xFF0A0F13),
           surfaceBright: brightness == Brightness.light
-              ? const Color(0xFFFBFDFC)
-              : const Color(0xFF3A4A44),
+              ? const Color(0xFFFBFCFE)
+              : const Color(0xFF3A4A56),
           // الخلفية العامة.
         );
 
@@ -96,8 +97,8 @@ class FinTheme {
       scaffoldBackgroundColor: highContrast
           ? (isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF))
           : isDark
-          ? const Color(0xFF0A1310)
-          : const Color(0xFFF4F8F6),
+          ? const Color(0xFF0C1216)
+          : const Color(0xFFF6F8FA),
       fontFamily: FinText.fontFamily,
       textTheme: text,
       splashFactory: InkSparkle.splashFactory,
@@ -184,8 +185,8 @@ class FinTheme {
         fillColor: highContrast
             ? scheme.surface
             : isDark
-            ? const Color(0xFF142220)
-            : const Color(0xFFEFF5F2),
+            ? const Color(0xFF141C23)
+            : const Color(0xFFEFF4F9),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
@@ -229,8 +230,8 @@ class FinTheme {
       // شرائح الحالة (StatusChip — DS-26): دائماً بنص لا لون فقط.
       chipTheme: ChipThemeData(
         backgroundColor: isDark
-            ? const Color(0xFF1D2C27)
-            : const Color(0xFFE9F0EC),
+            ? const Color(0xFF1D2732)
+            : const Color(0xFFEAEFF5),
         selectedColor: scheme.primaryContainer,
         labelStyle: text.labelMedium,
         side: BorderSide.none,
@@ -255,8 +256,8 @@ class FinTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: isDark
-            ? const Color(0xFF1D2C27)
-            : const Color(0xFF172521),
+            ? const Color(0xFF1D2732)
+            : const Color(0xFF1D2A35),
         contentTextStyle: text.bodyMedium?.copyWith(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

@@ -1,5 +1,6 @@
 /// لوحة ألوان الطباعة (الشريحة 7) — تكييف صديق للطابعة بهوية التطبيق:
-/// بذرة `0xFF00695C` (Deep Teal) + لمسة ذهبية + حبر أخضر داكن على ورق
+/// بذرة `0xFF1976D2` (أزرق Simple Invoice Manager منذ V3 — كانت
+/// `0xFF00695C` Deep Teal) + لمسة ذهبية + حبر أزرق داكن على ورق
 /// أبيض نقي. القيم من صلب `FinColors` الفاتح حيثما أمكن حتى يبدو
 /// المستند المطبوع امتداداً بصرياً للشاشة نفسها.
 library;
@@ -11,43 +12,44 @@ import 'print_fonts.dart';
 
 /// نظام ألوان PDF — ثابت، بلا أي I/O.
 abstract final class PrintPalette {
-  /// البذرة الرسمية للتطبيق (SRS §0.3) — تُطبع داكنة كفاية للورق.
-  static const pw.PdfColor brand = pw.PdfColor.fromInt(0xFF00695C);
+  /// البذرة الرسمية للتطبيق (V3) — تُطبع داكنة كفاية للورق
+  /// (أزرق 800 فوق بذرة 700 للشاشة — الطباعة تحتدي تبايناً أعلى).
+  static const pw.PdfColor brand = pw.PdfColor.fromInt(0xFF1565C0);
 
-  /// حبر شريط الترويسة العميق (امتداد داكن للبذرة).
-  static const pw.PdfColor brandDeep = pw.PdfColor.fromInt(0xFF032F29);
+  /// حبر شريط الترويسة العميق (امتداد داكن للبذرة — ليل أزرق).
+  static const pw.PdfColor brandDeep = pw.PdfColor.fromInt(0xFF0D2B45);
 
   /// اللمسة الذهبية (شريط رقم السند/التأكيدات) — ذهب `FinColors` الفاتح.
   static const pw.PdfColor gold = pw.PdfColor.fromInt(0xFFA87A2C);
 
   /// حبر جسم النص.
-  static const pw.PdfColor ink = pw.PdfColor.fromInt(0xFF1A2420);
+  static const pw.PdfColor ink = pw.PdfColor.fromInt(0xFF1B242E);
 
   /// حبر ثانوي (سطور البيانات والتذييل).
-  static const pw.PdfColor inkSoft = pw.PdfColor.fromInt(0xFF5B6B65);
+  static const pw.PdfColor inkSoft = pw.PdfColor.fromInt(0xFF5A6B7C);
 
   /// خط فاصل/حدود خفيف.
-  static const pw.PdfColor rule = pw.PdfColor.fromInt(0xFFDCE7E1);
+  static const pw.PdfColor rule = pw.PdfColor.fromInt(0xFFDCE3EC);
 
   /// تعبئة شريط رأس الجدول.
-  static const pw.PdfColor tableHead = pw.PdfColor.fromInt(0xFFDFEBE7);
+  static const pw.PdfColor tableHead = pw.PdfColor.fromInt(0xFFDEE7F2);
 
   /// تعبئة صف Zebra الفردية.
-  static const pw.PdfColor zebra = pw.PdfColor.fromInt(0xFFF2F7F4);
+  static const pw.PdfColor zebra = pw.PdfColor.fromInt(0xFFF2F6FB);
 
-  /// حبر بيانات الاتصال الفاتح فوق شريط الترويسة الداكن (نعناعي فاتح
+  /// حبر بيانات الاتصال الفاتح فوق شريط الترويسة الداكن (سماوي فاتح
   /// من عائلة البذرة — كان خاماً بخمسة بُناة قبل R19-D5).
-  static const pw.PdfColor highlight = pw.PdfColor.fromInt(0xFFBEE5D8);
+  static const pw.PdfColor highlight = pw.PdfColor.fromInt(0xFFBAD6F2);
 
   /// حبر داكن فوق الشرائط/الرقاقات الذهبية (السند — من `FinColors`
   /// الفاتح onWarningContainer).
-  static const pw.PdfColor inkOnGold = pw.PdfColor.fromInt(0xFF332405);
+  static const pw.PdfColor inkOnGold = pw.PdfColor.fromInt(0xFF4A2B00);
 
   /// قيمة موجبة (فائض/زيادة/إسهام موجب) — أخضر `FinColors.positive`
-  /// الفاتح للورق. البيت الموحّد للزوج منذ R20-D2 (كان مكرراً حرفياً
-  /// باسمَي `kProfitSurplus` بمساعدات تقرير الأرباح و`_surplus` الخاص
-  /// ببنّاء الوردية — قيمة ARGB لم تُمس).
-  static const pw.PdfColor surplus = pw.PdfColor.fromInt(0xFF0E7A4E);
+  /// الفاتح للورق (لوحة V3). البيت الموحّد للزوج منذ R20-D2 (كان مكرراً
+  /// حرفياً باسمَي `kProfitSurplus` بمساعدات تقرير الأرباح و`_surplus`
+  /// الخاص ببنّاء الوردية — قيمة ARGB لم تُمس).
+  static const pw.PdfColor surplus = pw.PdfColor.fromInt(0xFF2E7D32);
 
   /// قيمة سالبة (عجز/إسهام سالب) — أحمر `FinColors.negative` الفاتح
   /// للورق. قرين [surplus] — البيت الموحّد منذ R20-D2 (كان مكرراً

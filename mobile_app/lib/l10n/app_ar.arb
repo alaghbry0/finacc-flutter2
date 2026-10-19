@@ -1092,7 +1092,6 @@
   "agingStaleWarning": "تعذّر التحديث — المعروض آخر تقرير ناجح.",
   "agingReminderCompanyFallback": "مؤسستنا",
   "agingReminderMessage": "مرحباً {name}، نودّ تذكيركم بوجود مبلغ مستحق على حسابكم لدى {company} بمجموع {total}. شكراً لتفهمكم.",
-
   "monthSalesTitle": "مبيعات الشهر",
   "monthChangeUp": "ارتفاع {pct}٪ عن الشهر السابق",
   "monthChangeDown": "انخفاض {pct}٪ عن الشهر السابق",
@@ -1112,8 +1111,7 @@
   "creditLimitResultingLabel": "الرصيد بعد الفاتورة",
   "creditLimitContinue": "متابعة على أي حال",
   "creditLimitCancel": "إلغاء",
-  "creditLimitBack": "رجوع"
-,
+  "creditLimitBack": "رجوع",
   "stocktakeTitle": "الجرد الفعلي",
   "stocktakeHeroTitle": "جرد المخزن ومطابقة الأرصدة",
   "stocktakeHeroSubtitle": "قارن الرصيد الدفتري بما عددته فعلاً؛ تُقيَّم الفروقات بتكلفة لقطة وقت الجرد، وبعد الاعتماد تُقفل الأرصدة على المقيس.",
@@ -1272,8 +1270,7 @@
   "sellFixNewCustomerNameLabel": "اسم العميل",
   "sellFixNewCustomerPhoneLabel": "الهاتف (اختياري)",
   "sellFixNewCustomerNameRequired": "اسم العميل مطلوب.",
-  "sellFixNewCustomerSave": "إضافة وتحديد"
-,
+  "sellFixNewCustomerSave": "إضافة وتحديد",
   "appFixUnsavedTitle": "تغييرات غير محفوظة",
   "appFixUnsavedBody": "هناك تغييرات لم تُحفظ بعد — المغادرة الآن تضيعها. هل تريد المغادرة دون حفظ؟",
   "appFixUnsavedLeave": "مغادرة",
@@ -1316,7 +1313,13 @@
   "settings2CompanyInvalidTaxRate": "نسبة الضريبة يجب أن تكون رقماً بين 0 و100.",
   "settings2CompanySaveFailed": "تعذّر حفظ بيانات المنشأة — أعد المحاولة.",
   "settings2CompanyCurrencyNote": "العملة الأساسية: {code} — تُثبَّت من التأسيس ولا تُغيَّر هنا.",
-  "@settings2CompanyCurrencyNote": {"placeholders": {"code": {"type": "String"}}},
+  "@settings2CompanyCurrencyNote": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "settings2SalePrefsTitle": "تفضيلات البيع",
   "settings2SalePrefsSubtitle": "طريقة الدفع الافتراضية والخصومات وسياسات الحرس",
   "settings2SalePrefsNote": "كل تغيير يُطبَّق فوراً ويُحفَظ في قاعدتك المحلية.",
@@ -1347,9 +1350,21 @@
   "settings2HighContrastDesc": "أسطح صافية ونصوص بأقصى تباين وحدود أوضح",
   "settings2HighContrastNote": "مخصص لضعاف البصر — يغلّف الألوان الناعمة بحدود قصوى.",
   "settings2BelowCostWarning": "تحذير: {names} يُباع تحت التكلفة بعد الخصومات — راجع السعر.",
-  "@settings2BelowCostWarning": {"placeholders": {"names": {"type": "String"}}},
+  "@settings2BelowCostWarning": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "settings2AboutVersion": "الإصدار {version}",
-  "@settings2AboutVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@settings2AboutVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "settings2AboutPhase": "ما قبل v1.0.0 — الموجة 2",
   "visFixItemsAddFab": "تسجيل صنف",
   "tmplSectionTitle": "الطباعة والفواتير",
@@ -1425,5 +1440,57 @@
   "invoiceVoidReasonLabel": "سبب الإبطال (اختياري)",
   "invoiceVoidConfirmAction": "إبطال نهائي",
   "invoiceVoidedSnackBar": "أُبطلت الفاتورة {no} وسُجِّلت الحركات المعاكسة كاملة.",
-  "invoiceVoidedNote": "فاتورة ملغاة — حركات مخزونها وصندوقها وأرصدتها عُكست بالكامل، ورقمها لا يُعاد استخدامه."
+  "invoiceVoidedNote": "فاتورة ملغاة — حركات مخزونها وصندوقها وأرصدتها عُكست بالكامل، ورقمها لا يُعاد استخدامه.",
+  "homeTabSales": "فواتير البيع",
+  "homeTabQuotations": "عروض الأسعار",
+  "homeTabPurchases": "فواتير الشراء",
+  "homeTabReceipts": "سندات القبض",
+  "homeTabPayments": "سندات الصرف",
+  "homeTabReports": "التقارير",
+  "homeFilterAll": "جميع",
+  "homeFilterPaid": "مدفوع",
+  "homeFilterPartial": "مدفوع جزئياً",
+  "homeFilterUnpaid": "غير مدفوع",
+  "homeTimeAll": "كل الوقت",
+  "homeTimeYear": "سنوي",
+  "homeTimeQuarter": "ربعي",
+  "homeTimeMonth": "شهرياً",
+  "homeTimeWeek": "أسبوعي",
+  "homeSearchHint": "ابحث برقم المستند أو اسم الطرف…",
+  "homeSortTitle": "فرز",
+  "homeSortDateDesc": "الأحدث أولاً",
+  "homeSortDateAsc": "الأقدم أولاً",
+  "homeSortTotalDesc": "المبلغ (الأكبر)",
+  "homeSortBalanceDesc": "الرصيد (الأكبر)",
+  "homeSortPartyAsc": "الطرف (أبجدياً)",
+  "homeMonthSalesLabel": "مبيعات الشهر",
+  "homeMonthInvoicesLabel": "{count, plural, =0{لا فواتير} one{فاتورة واحدة} two{فاتورتان} few{{count} فواتير} many{{count} فاتورة} other{{count} فاتورة}}",
+  "homeMonthFallback": "بيانات الشهر غير متاحة",
+  "homeFabNewInvoice": "إنشاء فاتورة",
+  "homeBellNoAlerts": "لا توجد تنبيهات جديدة",
+  "homeRefreshDone": "تم تحديث البيانات",
+  "homeSyncLabel": "مزامنة",
+  "homeBellLabel": "تنبيه",
+  "homeSettingsLabel": "إعدادات",
+  "homeMenuLabel": "القائمة",
+  "homeEmptyTitle": "لا معاملات بعد",
+  "homeEmptyBody": "ابدأ بإنشاء أول فاتورة من الزر بالأسفل، أو غيّر المرشحات لتوسيع النطاق.",
+  "homeNoResultsTitle": "لا نتائج مطابقة",
+  "homeNoResultsBody": "جرّب تعديل البحث أو المرشحات.",
+  "homeRowDueLabel": "المستحق",
+  "homeRowCountLabel": "{count, plural, =0{لا معاملات} one{معاملة واحدة} two{معاملتان} few{{count} معاملات} many{{count} معاملة} other{{count} معاملة}}",
+  "homeDrawerQuickSection": "وصول سريع",
+  "homeDrawerModulesSection": "الوحدات",
+  "homeDrawerNewQuotation": "عرض سعر جديد",
+  "homeDrawerNewCustomer": "عميل جديد",
+  "homeDrawerNewSupplier": "مورد جديد",
+  "homeDrawerDashboard": "لوحة التحكم",
+  "homeDrawerReportsSubAging": "أعمار الديون",
+  "homeDrawerVersion": "الإصدار {version}",
+  "homeQuotationBadgeDraft": "مسودة",
+  "homeQuotationBadgeSent": "مرسل",
+  "homeQuotationBadgeConverted": "محوّل",
+  "homeQuotationBadgeExpired": "منتهي",
+  "homeQuotationBadgeRejected": "مرفوض",
+  "homeVoucherFallback": "حركة نقدية"
 }

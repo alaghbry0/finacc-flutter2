@@ -120,6 +120,7 @@ InvoicePrintDoc invoiceDocForTests(
   String? payStatusLabel,
   String? taxNumber,
   String? notesPrinted,
+  String? desc,
 }) {
   return InvoicePrintDoc(
     header: probeHeader(),
@@ -132,7 +133,12 @@ InvoicePrintDoc invoiceDocForTests(
     items: [
       for (var i = 1; i <= itemCount; i++)
         InvoicePrintLine(
-          desc: 'شامبو كلير 400 مل — زيت Head & Shoulders 250مل رقم $i',
+          // الوصف الافتراضي طويل مختلط (عربي/لاتيني) لاختبارات BiDi —
+          // واختبارات الإسقاط تمرر [desc] قصيراً كي لا يلفّ النص فيغير
+          // عدد مواضع TJ بما يلوث المقارنة.
+          desc:
+              desc ??
+              'شامبو كلير 400 مل — زيت Head & Shoulders 250مل رقم $i',
           qtyLabel: '3',
           freeQtyLabel: freeQtyLabel,
           priceLabel: '1,500',

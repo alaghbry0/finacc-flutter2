@@ -87,7 +87,8 @@ void main() {
     });
   }
 
-  // خلفية سطح البطاقة: أبيض للفاتح، ودرجة scaffoldAccent للداكن.
+  // خلفية سطح البطاقة: أبيض للفاتح، ودرجة scaffoldAccent للداكن
+  // (V3: تُقرأ من التوكن نفسه بدل قيمة مكررة تتقادم مع كل إعادة تلوين).
   checkPairs('فاتح', FinColors.light, Colors.white);
-  checkPairs('داكن', FinColors.dark, const Color(0xFF0F211C));
+  checkPairs('داكن', FinColors.dark, FinColors.dark.scaffoldAccent);
 }

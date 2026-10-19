@@ -1,11 +1,13 @@
-/// منظومة الخطوط — Almarai (المراعي) SRS §0.3 + DS-18n (أرقام جدولية).
+/// منظومة الخطوط — Cairo (V3 — هوية Simple Invoice Manager) + DS-18n
+/// (أرقام جدولية).
 ///
-/// - خط موحد بجميع الأوزان الأربعة مضمناً محلياً (`assets/fonts/almarai/`).
-/// - **الأرقام الجدولية إلزامية لكل مبلغ** (DS-18n): أرقام Almarai
+/// - خط موحد بأوزانه الستة (300–800) مضمناً محلياً
+///   (`assets/fonts/cairo/`) — نفس خط النموذج الأولي المرفق من المالك.
+/// - **الأرقام الجدولية إلزامية لكل مبلغ** (DS-18n): أرقام Cairo
 ///   تناسبية وبلا feature `tnum` (تدقيق UX-audit-visual)، لذا تستعمل
 ///   أنماط المبالغ الخط المرافق **NotoSansArabic** (أرقام جدولية
 ///   افتراضياً بنظامَي الأرقام 0-9 و٠-٩) بعائلة أساسية مع سلسلة fallback
-///   مرتّبة تنتهي بـ Almarai — هوية النصوص العربية تبقى Almarai حصراً.
+///   مرتّبة تنتهي بـ Cairo — هوية النصوص العربية تبقى Cairo حصراً.
 /// - الحد الأدنى المطلق 12px (جمهور يشمل كبار السن — §6.2).
 library;
 
@@ -15,8 +17,9 @@ import 'package:flutter/material.dart';
 class FinText {
   const FinText._();
 
-  /// اسم عائلة الخط الرسمي (مضمن في pubspec).
-  static const String fontFamily = 'Almarai';
+  /// اسم عائلة الخط الرسمي (مضمن في pubspec) — Cairo منذ V3 (كان
+  /// Almarai قبلها؛ العائلة القديمة تبقى مضمنة كاحتياط مؤقت).
+  static const String fontFamily = 'Cairo';
 
   /// عائلة الخط المرافق للأرقام الجدولية — UX-2b (DS-18n).
   ///
@@ -26,17 +29,17 @@ class FinText {
   static const String tabularFontFamily = 'NotoSansArabic';
 
   /// سلسلة fallback المرتبة لأنماط المبالغ: الرقم يُرسم من العائلة
-  /// الجدولية، وكل غليف ينقصها يسقط إلى Almarai فيبقى الطابع موحداً.
+  /// الجدولية، وكل غليف ينقصها يسقط إلى Cairo فيبقى الطابع موحداً.
   ///
-  /// الترتيب حاسم: لو تصدّر Almarai القائمة لما تغيّر شيء أبداً — محرك
-  /// Flutter يختار أول عائلة تغطي الغليف، وأرقام Almarai موجودة (لكن
+  /// الترتيب حاسم: لو تصدّر Cairo القائمة لما تغيّر شيء أبداً — محرك
+  /// Flutter يختار أول عائلة تغطي الغليف، وأرقام Cairo موجودة (لكن
   /// تناسبية)؛ لذا يجب أن تتصدّر العائلة الجدولية هنا.
   static const List<String> amountFontFallback = <String>[fontFamily];
 
   /// يحوّل أي نمط إلى نمط أرقام جدولية (للمبالغ الحية خارج AmountText).
   ///
   /// يُطبّق على الأنماط المنسوخة من الثيم — الأرقام تُرسم من
-  /// [tabularFontFamily] وكل ما ينقصها يسقط إلى Almarai.
+  /// [tabularFontFamily] وكل ما ينقصها يسقط إلى Cairo.
   static TextStyle withTabularDigits(TextStyle style) => style.copyWith(
     fontFamily: tabularFontFamily,
     fontFamilyFallback: amountFontFallback,
@@ -44,7 +47,7 @@ class FinText {
 
   /// خاصية الأرقام الجدولية (tabular-nums) — DS-18n.
   ///
-  /// تُبقى للتوافق مع الأنماط التي تصدّرها Almarai: لا feature `tnum`
+  /// تُبقى للتوافق مع الأنماط التي تصدّرها Cairo: لا feature `tnum`
   /// فيها فلا أثر (سلوك اليوم)، بينما مع [tabularFontFamily] تؤكد
   /// الجدولية (TNUM متوفر في Noto Sans Arabic).
   static const List<FontFeature> tabularNums = <FontFeature>[
@@ -94,7 +97,7 @@ class FinText {
     color: color,
   );
 
-  /// يبني TextTheme كاملاً فوق Almarai (Material 3).
+  /// يبني TextTheme كاملاً فوق Cairo (Material 3).
   static TextTheme build(ColorScheme scheme) {
     const base = TextStyle(fontFamily: fontFamily);
     return TextTheme(
