@@ -1,0 +1,10 @@
+{
+  "name": "static-preview",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static preview server (bun, zero deps): panel page on / and the Flutter web build on /mobile_app/ — owns port 3000 behind the Caddy gateway. Replaces the old Next.js delivery panel (R21).",
+  "scripts": {
+    "dev": "bun server.ts",
+    "start": "bun server.ts"
+  }
+}

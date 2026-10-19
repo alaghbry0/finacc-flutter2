@@ -189,6 +189,26 @@ export ANDROID_HOME="$ANDROID_SDK"
 "$FLUTTER_BIN" config --android-sdk "$ANDROID_SDK" >/dev/null 2>&1
 "$FLUTTER_BIN" --disable-analytics >/dev/null 2>&1 || true
 
+# --- 5b. Rebuild the web preview if missing (R21) -----------------------------
+# Build outputs under public/mobile_app/ are NOT tracked in git anymore (they
+# are wiped at every container reboot — outside repo.tar). Rebuild them once
+# here at boot instead of committing ~48MB of binaries per build round.
+# static-preview (started in parallel) serves a "not built yet" panel until
+# this finishes. Log: .zscripts/mini-service-flutter-env.log
+PREVIEW_INDEX="$KEEPER_DIR/../../public/mobile_app/index.html"
+if [ ! -f "$PREVIEW_INDEX" ]; then
+  say "web preview missing — rebuilding (fresh boot or wiped)..."
+  if ( cd "$KEEPER_DIR/../.." \
+       && ( cd mobile_app && "$FLUTTER_BIN" pub get ) \
+       && bash scripts/build-flutter-web.sh ); then
+    say "web preview rebuilt — /mobile_app/index.html is live."
+  else
+    say "ERROR: web preview rebuild failed — run scripts/build-flutter-web.sh manually."
+  fi
+else
+  say "web preview present."
+fi
+
 say "environment ready — flutter doctor summary:"
 "$FLUTTER_BIN" doctor 2>&1 | sed 's/^/    /'
 say "keeper finished."

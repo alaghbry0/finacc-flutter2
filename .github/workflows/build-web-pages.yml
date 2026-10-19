@@ -1,0 +1,61 @@
+# معاينة ويب عامة على GitHub Pages — تُبنى مع كل tag v* (وتعبيداً يدوياً).
+# الغرض: رابط HTTPS دائم يجربه المالك على هاتفه الحقيقي دون ارتباط بعمر
+# الـsandbox (والتطبيق PWA أصلاً — manifest.json يُقدَّم من نفس البناء).
+#
+# الفرق عن بناء الـsandbox (scripts/build-flutter-web.sh): base-href هنا
+# هو /finacc-flutter2/ (اسم المستودع) بدل /mobile_app/.
+#
+# النشر: بناء orphan قسري لفرع gh-pages (بلا تراكم تاريخ — استبدال كامل
+# مع كل تشغيل فلا ينمو المستودع).
+name: Build Web Preview (GitHub Pages)
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pages:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile_app
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze gate
+        run: flutter analyze
+
+      # نفس أعلام بناء الـsandbox: O2 (O4 يقتل dart2js بOOM على 4GB) +
+      # --no-wasm-dry-run + use_arabic (تشكيل الحروف العربية داخل PDF).
+      - name: Build web (base-href /finacc-flutter2/)
+        run: >
+          flutter build web --release
+          --base-href /finacc-flutter2/
+          --dart2js-optimization O2
+          --no-wasm-dry-run
+          --dart-define=use_arabic=true
+
+      - name: Deploy to gh-pages (orphan force-push)
+        run: |
+          cd build/web
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git init -b gh-pages .
+          git add -A
+          git commit -m "web build: ${GITHUB_REF_NAME}"
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git push -f origin gh-pages

@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ── عدة الجذر (تبعية واحدة: z-ai-web-dev-sdk لأداة scripts/vlm-check.ts) ──
 node_modules
 /.pnp
 .pnp.*
@@ -13,29 +13,21 @@ node_modules
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
 # misc
 .DS_Store
 *.pem
 
 # debug
+.pnpm-debug.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 
 # vercel
 .vercel
-
 
 # typescript
 *.tsbuildinfo
@@ -46,14 +38,29 @@ local-*
 *.log
 dev.log
 dev.out.log
+prompt
+
 # ملاحظة: كان النمط السابق `test` (اسم مجرد) يتجاهل أي مجلد اسمه test في
 # كامل المستودع — بما فيه mobile_app/test/ — ففُقدت 77 اختباراً كاملة عند
 # استعادة المستودع. استُبدل بمسار جذر الموقع فقط.
 /dist/test
-prompt
 
 server.log
+
+# ── مخرجات بناء لا تُودَع في git (R21 — قرار المالك) ──
+# مخرجات بناء Flutter Web: تُمحى مع كل إقلاع (خارج repo.tar) ويعيد بناءها
+# flutter-env/keeper.sh تلقائياً — أو يدوياً بسكربت scripts/build-flutter-web.sh
+/public/mobile_app/
+# حزم APK: مكانها GitHub Releases (يرفقها CI مع كل tag v*)
+/public/downloads/
+# مهارات الوكيل: تُمحى عند الإقلاع ويعيد keeper.sh استعادتها من docs/skills/
+/skills/
+# قاعدة بيانات محلية — لا سيرفر قاعدة في المشروع بعد إخراج Next.js/Prisma
+/db/
 
 # مخلفات التشغيل (R18-D1): نتائج أدوات الوكيل وذاكرة بايثون — أي مكان
 tool-results/
 __pycache__/
+
+# pid عابرة من الإقلاع
+.zscripts/dev.pid
