@@ -71,3 +71,12 @@ __pycache__/
 /mobile_app/build/
 /mobile_app/.flutter-plugins
 /mobile_app/.flutter-plugins-dependencies
+
+# ── إضافات جذر الـsandbox (R22): مجلدات منصة/جلسة خارج شجرة المشروع ──
+# ملفات المستخدم المؤقتة والنسخ الاحتياطية الكبيرة — تبقى على القرص لا في git
+/upload/
+/download/
+# مستودع العمل الكنسي (استنساخ finacc-flutter2 الذي تُزامن منه الجذر)
+/repo-review/
+# بقايا جلسات تحقق سابقة إن ظهرت
+/verify-public-mobile/
