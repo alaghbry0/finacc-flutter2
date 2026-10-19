@@ -167,20 +167,60 @@ function notBuiltPage(): string {
 /* الخدمة                                                              */
 /* ================================================================== */
 
+/**
+ * استراتيجية الكاش (R25 — إصلاح «البوابة تعرض الإصدار القديم»):
+ *
+ * المشكلة كانت: ملفات الدخول بأسماء ثابتة تختلف محتوياتها مع كل بناء
+ * (main.dart.js / flutter_bootstrap.js / flutter.js / manifests …) كانت
+ * تُقدَّم بـ `max-age=3600` فيحتفظ متصفح المستخدم بالنسخة القديمة حتى
+ * ساعة كاملة بعد كل إيداع جديد — فيرى «الإصدار القديم» رغم أن الخادم
+ * يقدّم الجديد. (لا علاقة للـ Service Worker بالعلة: SW فلاتر 3.47
+ * الحديث kill-pill يسجّل نفسه ثم يحذفه ويعيد تحميل الصفحات — لا يخزّن
+ * شيئاً.)
+ *
+ * الحل: كل ملف اسمه ثابت ومحتواه متغير مع البناء = `no-cache` (إعادة
+ * تحقق دائمة) + **ETag** مشتق من mtime+size مع دعم If-None-Match → 304.
+ * هكذا التحديث يظهر فور أول إعادة تحميل، وإعادة التحقق شبه مجانية
+ * (304 بلا جسم) عندما لم يتغير شيء. الملفات الضخمة المستقرة فعلاً
+ * (canvaskit/الخطوط/pdfjs/الأيقونات) تبقى بـ max-age=3600.
+ */
+const NO_CACHE_BASENAMES = new Set([
+  "flutter_bootstrap.js",
+  "flutter.js",
+  "main.dart.js",
+  "manifest.json",
+  "flutter_service_worker.js",
+  "version.json",
+  "sqflite_sw.js",
+  "assetmanifest.bin",
+  "assetmanifest.bin.json",
+  "fontmanifest.json",
+]);
+
 const html = (body: string) =>
   new Response(body, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
 
-function serveFile(full: string): Response {
+function serveFile(full: string, req?: Request): Response {
   const ext = full.slice(full.lastIndexOf("."));
-  // no-cache لما يتغير مع كل بناء (الاسم ثابت والملفات غير مُلبَّدة): html
-  // وسكربت الخدمة وversion.json — والبقية تُخزَّن ساعة.
-  const noCache = ext === ".html" || full.endsWith("flutter_service_worker.js") || full.endsWith("version.json");
-  return new Response(readCached(full), {
-    headers: {
-      "content-type": MIME[ext] ?? "application/octet-stream",
-      "cache-control": noCache ? "no-cache" : "public, max-age=3600",
-    },
-  });
+  const base = pathMod.basename(full).toLowerCase();
+  // no-cache لكل ما يتغير مع كل بناء رغم ثبات اسمه؛ والبقية تُخزّن ساعة.
+  const noCache =
+    ext === ".html" ||
+    NO_CACHE_BASENAMES.has(base) ||
+    full.endsWith("flutter_service_worker.js") ||
+    full.endsWith("version.json");
+  const st = fs.statSync(full);
+  const etag = `"${st.mtimeMs.toString(36)}-${st.size.toString(36)}"`;
+  const headers: Record<string, string> = {
+    "content-type": MIME[ext] ?? "application/octet-stream",
+    "cache-control": noCache ? "no-cache" : "public, max-age=3600",
+    etag,
+  };
+  // إعادة تحقق رخيصة: المتصفح أرسل If-None-Match مطابقاً → 304 بلا جسم.
+  if (req && req.headers.get("if-none-match") === etag) {
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(readCached(full), { headers });
 }
 
 /** حل مسار آمن داخل قاعدة معينة (يمنع path traversal) ويعيد null إن لم يكن ملفاً. */
@@ -223,22 +263,22 @@ Bun.serve({
     // ملفات جذر public (الشعار وrobots)
     if (p === "/logo.svg" || p === "/robots.txt") {
       const full = safeFile(PUBLIC_DIR, p);
-      if (full) return serveFile(full);
+      if (full) return serveFile(full, req);
     }
 
     // الجذر: التطبيق مباشرة (R22)، أو بطاقة «غير مبنية» بانتظار الحارس
     if (p === "/") {
-      if (buildExists()) return serveFile(APP_INDEX);
+      if (buildExists()) return serveFile(APP_INDEX, req);
       return html(notBuiltPage());
     }
     if (p.endsWith("/")) p += "index.html";
 
     // ملفات التطبيق (main.dart.js / assets / canvaskit / wasm / خطوط ...)
     const appFile = safeFile(APP_DIR, p);
-    if (appFile) return serveFile(appFile);
+    if (appFile) return serveFile(appFile, req);
 
     // مسار بلا امتداد = مسار SPA → index.html (للروابط العميقة المستقبلية)
-    if (buildExists() && pathMod.extname(p) === "") return serveFile(APP_INDEX);
+    if (buildExists() && pathMod.extname(p) === "") return serveFile(APP_INDEX, req);
 
     return new Response("404 — غير موجود", {
       status: 404,

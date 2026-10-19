@@ -1492,5 +1492,11 @@
   "homeQuotationBadgeConverted": "محوّل",
   "homeQuotationBadgeExpired": "منتهي",
   "homeQuotationBadgeRejected": "مرفوض",
-  "homeVoucherFallback": "حركة نقدية"
+  "homeVoucherFallback": "حركة نقدية",
+  "simInvoiceTodayBadge": "اليوم",
+  "simItemsTotalTitle": "إجمالي عناصر",
+  "simDiscountsTitle": "الخصومات",
+  "simTotalBarLabel": "مجموع",
+  "simActionSave": "حفظ",
+  "simMoreActionsTitle": "أكثر"
 }

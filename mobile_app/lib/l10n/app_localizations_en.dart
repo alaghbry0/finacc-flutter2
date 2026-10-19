@@ -5039,4 +5039,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeVoucherFallback => 'Cash movement';
+
+  @override
+  String get simInvoiceTodayBadge => 'Today';
+
+  @override
+  String get simItemsTotalTitle => 'Items total';
+
+  @override
+  String get simDiscountsTitle => 'Discounts';
+
+  @override
+  String get simTotalBarLabel => 'Total';
+
+  @override
+  String get simActionSave => 'Save';
+
+  @override
+  String get simMoreActionsTitle => 'More';
 }

@@ -5068,4 +5068,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeVoucherFallback => 'حركة نقدية';
+
+  @override
+  String get simInvoiceTodayBadge => 'اليوم';
+
+  @override
+  String get simItemsTotalTitle => 'إجمالي عناصر';
+
+  @override
+  String get simDiscountsTitle => 'الخصومات';
+
+  @override
+  String get simTotalBarLabel => 'مجموع';
+
+  @override
+  String get simActionSave => 'حفظ';
+
+  @override
+  String get simMoreActionsTitle => 'أكثر';
 }

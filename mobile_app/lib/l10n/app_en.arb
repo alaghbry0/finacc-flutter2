@@ -1609,5 +1609,11 @@
   "homeQuotationBadgeConverted": "Converted",
   "homeQuotationBadgeExpired": "Expired",
   "homeQuotationBadgeRejected": "Rejected",
-  "homeVoucherFallback": "Cash movement"
+  "homeVoucherFallback": "Cash movement",
+  "simInvoiceTodayBadge": "Today",
+  "simItemsTotalTitle": "Items total",
+  "simDiscountsTitle": "Discounts",
+  "simTotalBarLabel": "Total",
+  "simActionSave": "Save",
+  "simMoreActionsTitle": "More"
 }

@@ -8760,6 +8760,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash movement'**
   String get homeVoucherFallback;
+
+  /// No description provided for @simInvoiceTodayBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get simInvoiceTodayBadge;
+
+  /// No description provided for @simItemsTotalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Items total'**
+  String get simItemsTotalTitle;
+
+  /// No description provided for @simDiscountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discounts'**
+  String get simDiscountsTitle;
+
+  /// No description provided for @simTotalBarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get simTotalBarLabel;
+
+  /// No description provided for @simActionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get simActionSave;
+
+  /// No description provided for @simMoreActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get simMoreActionsTitle;
 }
 
 class _AppLocalizationsDelegate

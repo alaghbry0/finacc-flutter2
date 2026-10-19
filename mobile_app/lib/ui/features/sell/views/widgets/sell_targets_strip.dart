@@ -1,18 +1,19 @@
-/// شريط أهداف الكاشير القابل للطي (عميل + عملة + تاريخ) — §6.5.
+/// قسم العميل بنمط SIM (V4) — أكورديون أبيض (أيقونة شخص + اسم العميل +
+/// رمز العملة + شيفرون) يتوسع لأزرار الاختيار: عميل/نقدي + صف عملات
+/// الفاتورة. يحل محل شريط الأهداف المسطح القديم مع حفاظ حرفي على
+/// الأفعال الثلاثة (اختيار عميل، عميل نقدي، تغيير عملة) — §6.5.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/fin_card.dart';
-import '../../../../core/widgets/status_chip.dart';
 import '../../view_models/sell_cart_view_model.dart';
 import 'sell_widgets.dart';
+import 'sim_invoice_widgets.dart';
 
-class SellTargetsStrip extends StatelessWidget {
-  const SellTargetsStrip({
+class SellClientSection extends StatelessWidget {
+  const SellClientSection({
     super.key,
     required this.expanded,
     required this.onToggle,
@@ -32,120 +33,76 @@ class SellTargetsStrip extends StatelessWidget {
     final vm = context.watch<SellCartViewModel>();
     final state = vm.state;
     final l10n = AppLocalizations.of(context)!;
-    final scheme = Theme.of(context).colorScheme;
-    final now = DateTime.now();
+    final currency = state.selectedCurrency;
 
     final customerLabel = state.customer?.name ?? l10n.sellCashCustomer;
-    final currency = state.selectedCurrency;
-    return FinCard(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
+    return Column(
+      children: [
+        SimAccordionHeader(
+          icon: Icons.person_outline_rounded,
+          title: customerLabel,
+          expanded: expanded,
+          onToggle: onToggle,
+          trailingAmount: currency?.code,
+        ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 240),
+          crossFadeState: expanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          firstChild: const SizedBox(width: double.infinity),
+          secondChild: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.person_pin_circle_rounded,
-                  color: scheme.primary,
-                  size: 22,
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onPickCustomer,
+                        icon: const Icon(Icons.search_rounded, size: 18),
+                        label: Text(l10n.sellPickCustomer),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(46),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onPickCash,
+                        icon: const Icon(Icons.person_off_outlined, size: 18),
+                        label: Text(l10n.sellCashCustomer),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(46),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    customerLabel,
-                    style: Theme.of(context).textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w800),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                StatusChip(
-                  label: currency?.code ?? '—',
-                  tone: ChipTone.brand,
-                  dense: true,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  sellFormatDate(now),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontFeatures: FinText.tabularNums,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                AnimatedRotation(
-                  turns: expanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 220),
-                  child: Icon(
-                    Icons.expand_more_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                const SizedBox(height: 12),
+                CurrencyPickerRow(
+                  currencies: [
+                    for (final c in state.currencies)
+                      CurrencyOption(
+                        id: c.id,
+                        code: c.code,
+                        isBase: c.isBase,
+                        rateKnown: c.isBase || c.id == state.currencyId
+                            ? state.rateKnown
+                            : true,
+                      ),
+                  ],
+                  selectedId: state.currencyId,
+                  todayRate: state.todayRate,
+                  onSelect: onPickCurrency,
                 ),
               ],
             ),
           ),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 240),
-            crossFadeState: expanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(width: double.infinity),
-            secondChild: Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: onPickCustomer,
-                          icon: const Icon(Icons.search_rounded, size: 18),
-                          label: Text(l10n.sellPickCustomer),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: onPickCash,
-                          icon: const Icon(Icons.person_off_outlined, size: 18),
-                          label: Text(l10n.sellCashCustomer),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  CurrencyPickerRow(
-                    currencies: [
-                      for (final c in state.currencies)
-                        CurrencyOption(
-                          id: c.id,
-                          code: c.code,
-                          isBase: c.isBase,
-                          rateKnown: c.isBase || c.id == state.currencyId
-                              ? state.rateKnown
-                              : true,
-                        ),
-                    ],
-                    selectedId: state.currencyId,
-                    todayRate: state.todayRate,
-                    onSelect: onPickCurrency,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
