@@ -38,6 +38,8 @@ import '../../features/parties/views/parties_list_screen.dart';
 import '../../features/parties/views/party_balances_screen.dart';
 import '../../features/parties/views/party_detail_screen.dart';
 import '../../features/parties/views/party_form_screen.dart';
+import '../../features/parties/views/sim_clients_screen.dart';
+import '../../features/parties/view_models/party_kind.dart';
 import '../../features/purchases/views/purchase_screen.dart';
 import '../../features/purchases/views/purchases_home_screen.dart';
 import '../../features/purchases/views/purchases_list_screen.dart';
@@ -160,10 +162,20 @@ GoRouter buildAppRouter(AppController controller) {
       GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
       // وحدة الأطراف (المرحلة 3) — مسارات علوية بخارج الهيكل (شاشة كاملة
       // بزر رجوع)؛ التنقل بينها بـ go() يبني المكدس فيظهر زر الرجوع تلقائياً.
+      // V5: الجذر صار شاشة العملاء SIM (هدف الدرج «عميل / المورد» بالتبويبات)
+      // والمحور القديم انتقل إلى /parties/hub (من قائمة المزيد بالشاشة الجديدة).
       GoRoute(
         path: '/parties',
-        builder: (context, state) => const PartiesHomeScreen(),
+        builder: (context, state) => SimClientsScreen(
+          initialKind: state.uri.queryParameters['kind'] == 'supplier'
+              ? PartyKind.supplier
+              : PartyKind.customer,
+        ),
         routes: [
+          GoRoute(
+            path: 'hub',
+            builder: (context, state) => const PartiesHomeScreen(),
+          ),
           GoRoute(
             path: 'customers',
             builder: (context, state) => const CustomersListScreen(),

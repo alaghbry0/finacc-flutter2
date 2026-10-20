@@ -55,4 +55,42 @@ rm -rf "$PUBLIC_DIR"
 mkdir -p "$PUBLIC_DIR"
 cp -r build/web/* "$PUBLIC_DIR/"
 
+# -----------------------------------------------------------------------------
+# V5 — بصمة محتوى للخط المُقتطع (إصلاح جذري لعلّة «الأيقونات الجديدة لا
+# تُرسم بعد البناء»): `MaterialIcons-Regular.otf` اسم ثابت لكن tree-shaking
+# يجعل محتواه يتبدل مع كل بناء — فبقي المتصفح على خط قديم من كاش الساعة
+# (المساحة تُحجز بالتخطيط والglyph لا يُرسم). الحل المعماري الصحيح — كما
+# تفعل كل الحزم الحديثة: إعادة تسمية الملف ببصمة md5 وتحديث FontManifest
+# فتصبح URL فريدة لكل بناء (كاش دائم صحيح بلا ساعة تقادم). الخطوط الثابتة
+# (cairo/noto/almarai) محتواها مستقر فتبقى بأسمائها.
+# -----------------------------------------------------------------------------
+FINGERPRINT_FONT() {
+  local font_dir="$PUBLIC_DIR/assets/fonts"
+  local manifest="$PUBLIC_DIR/assets/FontManifest.json"
+  [ -f "$font_dir/MaterialIcons-Regular.otf" ] || return 0
+  local hash new_rel manifest_rel
+  hash="$(md5sum "$font_dir/MaterialIcons-Regular.otf" | cut -c1-10)"
+  # مسار الملف المنشور (نسبي لجذر البناء) — والمحرك يبني URL الطلب
+  # بصيغة base + 'assets/' + <قيمة البيان>، فقيمة البيان يجب أن تكون
+  # بلا بادئة 'assets/' (الأصل الذي يولّده فلاتر: 'fonts/…' فقط — لو
+  # كُتبت بالبادئة صار الطلب assets/assets/… بـ404 وتتعطل كل الأيقونات).
+  new_rel="assets/fonts/MaterialIcons-Regular.$hash.otf"
+  manifest_rel="fonts/MaterialIcons-Regular.$hash.otf"
+  mv "$font_dir/MaterialIcons-Regular.otf" "$PUBLIC_DIR/$new_rel"
+  python3 - "$manifest" "$manifest_rel" << 'PYF'
+import json, sys
+manifest_path, manifest_rel = sys.argv[1], sys.argv[2]
+with open(manifest_path, encoding="utf-8") as f:
+    data = json.load(f)
+for family in data:
+    for font in family.get("fonts", []):
+        if font.get("asset", "").endswith("MaterialIcons-Regular.otf"):
+            font["asset"] = manifest_rel
+with open(manifest_path, "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False)
+PYF
+  echo "[build-flutter-web] fingerprinted icons font → $new_rel (manifest: $manifest_rel)"
+}
+FINGERPRINT_FONT
+
 echo "[build-flutter-web] done — preview: http://127.0.0.1:3000/ (app at the gateway root — refresh the page)"

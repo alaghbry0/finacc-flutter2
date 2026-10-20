@@ -182,7 +182,14 @@ function notBuiltPage(): string {
  * تحقق دائمة) + **ETag** مشتق من mtime+size مع دعم If-None-Match → 304.
  * هكذا التحديث يظهر فور أول إعادة تحميل، وإعادة التحقق شبه مجانية
  * (304 بلا جسم) عندما لم يتغير شيء. الملفات الضخمة المستقرة فعلاً
- * (canvaskit/الخطوط/pdfjs/الأيقونات) تبقى بـ max-age=3600.
+ * (canvaskit/pdfjs وخطوط Cairo/Noto الثابتة محتواها) تبقى max-age=3600.
+ *
+ * V5 — توسعة القرار للخطوط المُقتطعة: `MaterialIcons-Regular.otf` اسمه
+ * ثابت لكن tree-shaking يجعل محتواه يتغير مع كل بناء (أيقونات الشاشة
+ * الجديدة تُضاف) — فبقي متصفح المستخدم على الخط القديم بلا الأيقونات
+ * الجديدة (تُحجز مساحتها بالتخطيط ولا تُرسم — اكتُشف بتحليل البكسل
+ * الحي في جولة V5). القاعدة المعممة: كل خط يُقتطع مع البناء no-cache؛
+ * خطوط المحتوى الثابت (cairo/noto/almarai) تبقى max-age.
  */
 const NO_CACHE_BASENAMES = new Set([
   "flutter_bootstrap.js",
@@ -195,6 +202,8 @@ const NO_CACHE_BASENAMES = new Set([
   "assetmanifest.bin",
   "assetmanifest.bin.json",
   "fontmanifest.json",
+  // الخط المُقتطع — محتواه يتبع أيقونات كل بناء.
+  "materialicons-regular.otf",
 ]);
 
 const html = (body: string) =>

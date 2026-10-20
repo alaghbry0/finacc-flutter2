@@ -66,8 +66,8 @@ class HomeDrawer extends StatelessWidget {
                 ),
                 _DrawerGridItem(
                   key: const Key('drawer_parties'),
-                  icon: Icons.groups_rounded,
-                  label: l10n.partiesTabTitle,
+                  icon: Icons.contacts_rounded,
+                  label: l10n.simClientsTitle,
                   onTap: () => _go(context, '/parties'),
                 ),
                 _DrawerGridItem(

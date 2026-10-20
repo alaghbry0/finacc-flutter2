@@ -2,8 +2,8 @@
 /// و05/08): بحث فوري مؤجَّل، رقائق تصفية (الكل/بأرصدة/بدون أرصدة/
 /// مؤرشفون)، سطر لكل (طرف × عملة) برصيد ملوّن بعلامة غير لونية،
 /// وسحب للأرشفة مع تأكيد للطرف بلا حركات فقط (FR-03-09).
-/// شريط التصفية وسطر الطرف بملفاتيهما المركزّة بجوارها (R20-D3b) —
-/// هذا الملف: الحرّاس (تحميل ← خطأ ← لا نتائج ← القائمة) والأرشفة.
+/// V5: الترويسة والبانر والصفوف بنمط Simple Invoice Manager — يتسق مع
+/// شاشة التبويبات الجديدة عند العودة من نموذج الإضافة.
 library;
 
 import 'dart:async';
@@ -20,11 +20,12 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_return.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/party_kind.dart';
 import '../view_models/party_list_view_model.dart';
 import '../view_models/party_repo_gate.dart';
 import 'widgets/parties_filter_bar.dart';
-import 'widgets/parties_list_row.dart';
+import 'widgets/sim_client_row.dart';
 
 /// شاشة «جميع العملاء» (دليل 06/04).
 class CustomersListScreen extends StatelessWidget {
@@ -122,69 +123,68 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(
-              isCustomer
+            SimSubHeader(
+              title: isCustomer
                   ? l10n.partiesListCustomersTitle
                   : l10n.partiesListSuppliersTitle,
+              onBack: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/parties');
+                }
+              },
+              actions: [
+                SimSubHeaderAction(
+                  icon: Icons.add_rounded,
+                  tooltip: l10n.partiesListAddTooltip,
+                  onPressed: () => context.go(formRoute),
+                ),
+              ],
             ),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
+            // العدّاد تحت العنوان — ميزة القائمة الأصلية.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+              child: FinSearchField(
+                controller: _searchController,
+                onChanged: vm.onQueryChanged,
+                fieldKey: const Key('parties_search_field'),
+                hint: l10n.partiesListSearchHint,
+                onCleared: () {
+                  _searchController.clear();
+                  unawaited(vm.setQuery(''));
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: PartiesFilterBar(
+                selected: state.filter,
+                onSelect: vm.setFilter,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Expanded(child: _buildContent(context, vm)),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: l10n.partiesListAddTooltip,
-            icon: const Icon(Icons.add_rounded),
-            onPressed: () => context.go(formRoute),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('parties_list_fab'),
-        onPressed: () => context.go(formRoute),
-        icon: const Icon(Icons.person_add_rounded),
-        label: Text(
-          isCustomer
-              ? l10n.partiesListAddCustomersAction
-              : l10n.partiesListAddSuppliersAction,
-        ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: FinSearchField(
-              controller: _searchController,
-              onChanged: vm.onQueryChanged,
-              fieldKey: const Key('parties_search_field'),
-              hint: l10n.partiesListSearchHint,
-              onCleared: () {
-                _searchController.clear();
-                unawaited(vm.setQuery(''));
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-            child: PartiesFilterBar(
-              selected: state.filter,
-              onSelect: vm.setFilter,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(child: _buildContent(context, vm)),
-        ],
       ),
     );
   }
@@ -257,18 +257,15 @@ class _PartiesListBodyState extends State<_PartiesListBody> {
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+      padding: const EdgeInsets.only(bottom: 32),
       children: [
         for (final row in state.rows)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: PartiesListRow(
-              row: row,
-              kind: state.kind,
-              showArchivedBadge: state.filter == PartyListFilter.archived,
-              decimals: state.decimalsFor(row.currencyCode),
-              onArchive: () => _confirmArchive(context, vm, row),
-            ),
+          SimClientRow(
+            row: row,
+            kind: state.kind,
+            showArchivedBadge: state.filter == PartyListFilter.archived,
+            decimals: state.decimalsFor(row.currencyCode),
+            onArchive: () => _confirmArchive(context, vm, row),
           ),
       ],
     );

@@ -227,7 +227,7 @@ class DashboardBody extends StatelessWidget {
                     icon: Icons.diversity_3_rounded,
                     label: l10n.partiesTabTitle,
                     color: scheme.primary,
-                    onTap: () => context.go('/parties'),
+                    onTap: () => context.go('/parties/hub'),
                   ),
                 ),
                 const SizedBox(width: 8),

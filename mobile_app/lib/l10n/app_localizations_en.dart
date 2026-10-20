@@ -5057,4 +5057,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simMoreActionsTitle => 'More';
+
+  @override
+  String get simClientsTitle => 'Client / Supplier';
+
+  @override
+  String get simClientsTutorial => 'How to add a client or supplier';
+
+  @override
+  String get simClientsTabClient => 'Client';
+
+  @override
+  String get simClientsTabSupplier => 'Supplier';
+
+  @override
+  String get simAddClientAction => 'Add new client';
+
+  @override
+  String get simAddSupplierAction => 'Add new supplier';
+
+  @override
+  String get simClientsHelpSteps =>
+      '1. Tap the \"Add new client\" / \"Add new supplier\" button above.\n2. Enter the name (required), phone, and opening balance with its currency.\n3. Save — the party appears in the list instantly; tap it to open its ledger.';
+
+  @override
+  String get simProductsTitle => 'Products list';
+
+  @override
+  String get simProductsTutorial => 'How to add a product or service';
+
+  @override
+  String get simProductsHelpSteps =>
+      '1. Tap the \"Register item\" button below.\n2. Enter the name (required), barcode, category, and price.\n3. Service items carry no stock — toggle the option to hide the quantity field.';
+
+  @override
+  String get simStockOn => 'In stock';
+
+  @override
+  String get simStockOut => 'Out of stock';
+
+  @override
+  String get simPartyHubLink => 'Parties summary & rates';
+
+  @override
+  String get simInventoryHubLink => 'Inventory center';
+
+  @override
+  String get simBatchesLink => 'Stock batches';
+
+  @override
+  String get simExportTooltip => 'Export CSV';
+
+  @override
+  String simExportCopiedToast(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# rows',
+      one: '# row',
+      zero: 'no rows',
+    );
+    return 'Copied $_temp0 as CSV — paste into Excel';
+  }
+
+  @override
+  String get simAddProductFab => 'Add product';
 }

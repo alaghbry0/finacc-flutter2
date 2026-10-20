@@ -34,6 +34,22 @@ class FinTheme {
   static ThemeData _build(Brightness brightness, {bool highContrast = false}) {
     var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness)
         .copyWith(
+          // V5 — الأزرق الأصلي الدقيق للهوية: fromSeed يولّد primary باهتاً
+          // (#4B6C99 فاتح) بينما Simple Invoice Manager يستخدم #1976D2
+          // حرفياً (اكتُشف بتحليل البكسل الحي). الداكن أفتح للقراءة على
+          // الأسطح الليلية. الحاويات بمقياس SIM (primaryBg #E3F2FD).
+          primary: brightness == Brightness.light
+              ? const Color(0xFF1976D2)
+              : const Color(0xFF90CAF9),
+          onPrimary: brightness == Brightness.light
+              ? const Color(0xFFFFFFFF)
+              : const Color(0xFF00284D),
+          primaryContainer: brightness == Brightness.light
+              ? const Color(0xFFE3F2FD)
+              : const Color(0xFF1D3A5F),
+          onPrimaryContainer: brightness == Brightness.light
+              ? const Color(0xFF0D47A1)
+              : const Color(0xFFD6E7FF),
           // أسطح بلمسة زرقاء باردة في الفاتح، وليل أزرق عميق في الداكن.
           surface: brightness == Brightness.light
               ? const Color(0xFFFFFFFF)

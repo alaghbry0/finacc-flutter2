@@ -8796,6 +8796,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More'**
   String get simMoreActionsTitle;
+
+  /// No description provided for @simClientsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Client / Supplier'**
+  String get simClientsTitle;
+
+  /// No description provided for @simClientsTutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'How to add a client or supplier'**
+  String get simClientsTutorial;
+
+  /// No description provided for @simClientsTabClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Client'**
+  String get simClientsTabClient;
+
+  /// No description provided for @simClientsTabSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier'**
+  String get simClientsTabSupplier;
+
+  /// No description provided for @simAddClientAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new client'**
+  String get simAddClientAction;
+
+  /// No description provided for @simAddSupplierAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new supplier'**
+  String get simAddSupplierAction;
+
+  /// No description provided for @simClientsHelpSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Tap the \"Add new client\" / \"Add new supplier\" button above.\n2. Enter the name (required), phone, and opening balance with its currency.\n3. Save — the party appears in the list instantly; tap it to open its ledger.'**
+  String get simClientsHelpSteps;
+
+  /// No description provided for @simProductsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products list'**
+  String get simProductsTitle;
+
+  /// No description provided for @simProductsTutorial.
+  ///
+  /// In en, this message translates to:
+  /// **'How to add a product or service'**
+  String get simProductsTutorial;
+
+  /// No description provided for @simProductsHelpSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Tap the \"Register item\" button below.\n2. Enter the name (required), barcode, category, and price.\n3. Service items carry no stock — toggle the option to hide the quantity field.'**
+  String get simProductsHelpSteps;
+
+  /// No description provided for @simStockOn.
+  ///
+  /// In en, this message translates to:
+  /// **'In stock'**
+  String get simStockOn;
+
+  /// No description provided for @simStockOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of stock'**
+  String get simStockOut;
+
+  /// No description provided for @simPartyHubLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Parties summary & rates'**
+  String get simPartyHubLink;
+
+  /// No description provided for @simInventoryHubLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory center'**
+  String get simInventoryHubLink;
+
+  /// No description provided for @simBatchesLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock batches'**
+  String get simBatchesLink;
+
+  /// No description provided for @simExportTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get simExportTooltip;
+
+  /// No description provided for @simExportCopiedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count, plural, =0{no rows} one{# row} other{# rows}} as CSV — paste into Excel'**
+  String simExportCopiedToast(num count);
+
+  /// No description provided for @simAddProductFab.
+  ///
+  /// In en, this message translates to:
+  /// **'Add product'**
+  String get simAddProductFab;
 }
 
 class _AppLocalizationsDelegate

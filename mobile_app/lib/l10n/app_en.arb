@@ -1616,4 +1616,24 @@
   "simTotalBarLabel": "Total",
   "simActionSave": "Save",
   "simMoreActionsTitle": "More"
+,
+  "simClientsTitle": "Client / Supplier",
+  "simClientsTutorial": "How to add a client or supplier",
+  "simClientsTabClient": "Client",
+  "simClientsTabSupplier": "Supplier",
+  "simAddClientAction": "Add new client",
+  "simAddSupplierAction": "Add new supplier",
+  "simClientsHelpSteps": "1. Tap the \"Add new client\" / \"Add new supplier\" button above.\n2. Enter the name (required), phone, and opening balance with its currency.\n3. Save — the party appears in the list instantly; tap it to open its ledger.",
+  "simProductsTitle": "Products list",
+  "simProductsTutorial": "How to add a product or service",
+  "simProductsHelpSteps": "1. Tap the \"Register item\" button below.\n2. Enter the name (required), barcode, category, and price.\n3. Service items carry no stock — toggle the option to hide the quantity field.",
+  "simStockOn": "In stock",
+  "simStockOut": "Out of stock",
+  "simPartyHubLink": "Parties summary & rates",
+  "simInventoryHubLink": "Inventory center",
+  "simBatchesLink": "Stock batches",
+  "simExportTooltip": "Export CSV",
+  "simExportCopiedToast": "Copied {count, plural, =0{no rows} one{# row} other{# rows}} as CSV — paste into Excel"
+,
+  "simAddProductFab": "Add product"
 }

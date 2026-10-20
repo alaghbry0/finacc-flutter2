@@ -1,8 +1,8 @@
-/// شاشة «الأصناف المتوفرة» (دليل 02/03): بحث فوري مؤجَّل + تصفية بالفئات
-/// + بطاقات أصناف (باركود أحادي، كمية ملونة عند قرب النفاد، سعر القاعدة،
-/// شارة خدمي/دفعات) + ترقيم «المزيد» (صفحة 50).
-/// شريط الفئات وبطاقة الصنف وزر «المزيد» بملفاتها المركزّة بجوارها
-/// (R20-D3b) — هذا الملف: الحرّاس (تحميل ← خطأ ← لا نتائج ← القائمة).
+/// شاشة «قائمة المنتجات» — نمط Simple Invoice Manager (V5): استنساخ
+/// `screen-products` من النموذج الأولي: ترويسة فرعية (رجوع + بحث مضمّن +
+/// قائمة المزيد) + بانر تعليمي + شريط الفئات (ميزتنا — يبقى) + صفوف
+/// منتجات SIM (شارة الجرد + الكمية + السعر) + كبسولة «تسجيل صنف».
+/// البحث الفوري المؤجَّل والترقيم «المزيد» (صفحة 50) كما كانا.
 library;
 
 import 'dart:async';
@@ -19,10 +19,11 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_search_field.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_active.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/item_list_view_model.dart';
 import 'widgets/items_category_filter_bar.dart';
-import 'widgets/items_list_card.dart';
 import 'widgets/items_load_more_button.dart';
+import 'widgets/sim_product_row.dart';
 
 class ItemsListScreen extends StatelessWidget {
   const ItemsListScreen({super.key, this.viewModel});
@@ -63,11 +64,89 @@ class _ItemsListBody extends StatefulWidget {
 
 class _ItemsListBodyState extends State<_ItemsListBody> {
   final TextEditingController _searchController = TextEditingController();
+  bool _searchVisible = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    final vm = context.read<ItemListViewModel>();
+    setState(() => _searchVisible = !_searchVisible);
+    if (!_searchVisible) {
+      _searchController.clear();
+      unawaited(vm.setQuery(''));
+    }
+  }
+
+  void _showMoreSheet() {
+    final l10n = AppLocalizations.of(context)!;
+    void go(String location) {
+      Navigator.of(context).pop();
+      context.go(location);
+    }
+
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (sheetContext) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    l10n.simMoreActionsTitle,
+                    style: Theme.of(sheetContext).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              SimSheetTile(
+                icon: Icons.warehouse_rounded,
+                label: l10n.simInventoryHubLink,
+                onTap: () => go('/inventory'),
+              ),
+              SimSheetTile(
+                icon: Icons.warning_amber_rounded,
+                label: l10n.lowStockTitle,
+                onTap: () => go('/inventory/low-stock'),
+              ),
+              SimSheetTile(
+                icon: Icons.layers_rounded,
+                label: l10n.simBatchesLink,
+                onTap: () => go('/inventory/batches'),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showHelpDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.simProductsTutorial),
+          content: Text(l10n.simProductsHelpSteps),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.commonDone),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -76,68 +155,79 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
 
-    // عنوان فرعي بالعدد الكلي (دقيق، أو «{pageSize}+» عند وجود صفحات).
-    final total = state.exactTotal;
-    final subtitle = total != null
-        ? l10n.itemsListSubtitleCount(total)
-        : l10n.itemsListSubtitleApprox(itemsPageSize);
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      floatingActionButton: SimFabPill(
+        buttonKey: const Key('items_list_fab'),
+        label: l10n.simAddProductFab,
+        onTap: () => context.go('/inventory/item-form'),
+      ),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(l10n.itemsListTitle),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
+            SimSubHeader(
+              titleKey: const Key('sim_products_title'),
+              title: l10n.simProductsTitle,
+              onBack: () {
+                // من المحور: يعود إليه؛ من الدرج مباشرة: للمركز الرئيسي.
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
+              actions: [
+                SimSubHeaderAction(
+                  icon: Icons.search_rounded,
+                  tooltip: l10n.itemsListSearchHint,
+                  active: _searchVisible,
+                  onPressed: _toggleSearch,
+                ),
+                SimSubHeaderAction(
+                  icon: Icons.more_vert_rounded,
+                  tooltip: l10n.simMoreActionsTitle,
+                  onPressed: _showMoreSheet,
+                ),
+              ],
             ),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              sizeCurve: Curves.easeOutCubic,
+              crossFadeState: _searchVisible
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+                child: FinSearchField(
+                  controller: _searchController,
+                  onChanged: vm.onQueryChanged,
+                  fieldKey: const Key('items_search_field'),
+                  hint: l10n.itemsListSearchHint,
+                  onCleared: () {
+                    _searchController.clear();
+                    unawaited(vm.setQuery(''));
+                  },
+                ),
+              ),
+              secondChild: const SizedBox(width: double.infinity),
+            ),
+            SimTutorialBanner(
+              text: l10n.simProductsTutorial,
+              onTap: _showHelpDialog,
+            ),
+            if (!state.loading && state.categories.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                child: ItemsCategoryFilterBar(
+                  categories: state.categories,
+                  selected: state.categoryId,
+                  onSelect: vm.setCategory,
+                ),
+              ),
+            Expanded(child: _buildContent(context, vm)),
           ],
         ),
-        // A7/R17-b (تدقيق R16): حُذفت أيقونة إضافة AppBar — FAB.extended
-        // الموحد + Empty هما نمط الإنشاء (ثلاثة أزرار بنفس الوظيفة كانت
-        // تكراراً محلياً بشاشة واحدة).
-      ),
-      // نمط الإنشاء الموحد للقوائم التشغيلية (UX-2b): FAB.extended
-      // كنمط قائمة الأطراف — زر إنشاء بارز دائم أسفل الشاشة.
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('items_list_fab'),
-        onPressed: () => context.go('/inventory/item-form'),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l10n.visFixItemsAddFab),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: FinSearchField(
-              controller: _searchController,
-              onChanged: vm.onQueryChanged,
-              fieldKey: const Key('items_search_field'),
-              hint: l10n.itemsListSearchHint,
-              onCleared: () {
-                _searchController.clear();
-                unawaited(vm.setQuery(''));
-              },
-            ),
-          ),
-          if (!state.loading && state.categories.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-              child: ItemsCategoryFilterBar(
-                categories: state.categories,
-                selected: state.categoryId,
-                onSelect: vm.setCategory,
-              ),
-            ),
-          const SizedBox(height: 10),
-          Expanded(child: _buildContent(context, vm)),
-        ],
       ),
     );
   }
@@ -217,27 +307,34 @@ class _ItemsListBodyState extends State<_ItemsListBody> {
         ],
       );
     }
+    // خريطة معرّف الفئة → اسمها لسطر الميتا بكل صف.
+    String? categoryNameOf(int? categoryId) {
+      if (categoryId == null) return null;
+      for (final category in state.categories) {
+        if (category.id == categoryId) return category.name;
+      }
+      return null;
+    }
+
     return ListView(
       // القائمة الرئيسية تحت FAB.extended — قاع 96 يمنع تراكب الزر
-      // على آخر صنف (نمط قائمة الأطراف).
-      padding: const EdgeInsets.fromLTRB(
-        FinSpacing.xl,
-        FinSpacing.sm,
-        FinSpacing.xl,
-        FinSpacing.fabClearance,
-      ),
+      // على آخر صنف.
+      padding: const EdgeInsets.only(bottom: FinSpacing.fabClearance),
       children: [
         for (final info in state.items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: ItemsListCard(
-              info: info,
-              baseDecimals: state.baseCurrency?.decimals ?? 2,
-            ),
+          SimProductRow(
+            info: info,
+            baseDecimals: state.baseCurrency?.decimals ?? 2,
+            categoryName: categoryNameOf(info.item.categoryId),
           ),
         if (state.hasMore)
           Padding(
-            padding: const EdgeInsets.only(top: 2),
+            padding: const EdgeInsets.fromLTRB(
+              FinSpacing.xl,
+              10,
+              FinSpacing.xl,
+              0,
+            ),
             child: ItemsLoadMoreButton(
               loading: vm.loadingMore,
               shown: state.shownCount,

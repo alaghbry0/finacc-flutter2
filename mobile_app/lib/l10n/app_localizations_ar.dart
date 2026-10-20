@@ -5086,4 +5086,72 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get simMoreActionsTitle => 'أكثر';
+
+  @override
+  String get simClientsTitle => 'عميل / المورد';
+
+  @override
+  String get simClientsTutorial => 'كيفية إضافة عميل أو مورد';
+
+  @override
+  String get simClientsTabClient => 'عميل';
+
+  @override
+  String get simClientsTabSupplier => 'المورد';
+
+  @override
+  String get simAddClientAction => 'اضافة عميل جديد';
+
+  @override
+  String get simAddSupplierAction => 'اضافة مورد جديد';
+
+  @override
+  String get simClientsHelpSteps =>
+      '١. اضغط زر «اضافة عميل جديد» أو «اضافة مورد جديد» بالأعلى.\n٢. أدخل الاسم (إلزامي) والهاتف والرصيد الافتتاحي بعملته.\n٣. احفظ فيظهر الطرف في القائمة فوراً وتستطيع فتح كشف حسابه بالنقر عليه.';
+
+  @override
+  String get simProductsTitle => 'قائمة المنتجات';
+
+  @override
+  String get simProductsTutorial => 'كيفية إضافة منتج أو خدمة';
+
+  @override
+  String get simProductsHelpSteps =>
+      '١. اضغط زر «تسجيل صنف» بالأسفل.\n٢. أدخل الاسم (إلزامي) والباركود والفئة والسعر.\n٣. الأصناف الخدمية بلا مخزون — حدّد الخيار ليتخفى حقل الكمية.';
+
+  @override
+  String get simStockOn => 'جرد ممكن';
+
+  @override
+  String get simStockOut => 'نفد المخزون';
+
+  @override
+  String get simPartyHubLink => 'ملخص الأطراف والأسعار';
+
+  @override
+  String get simInventoryHubLink => 'مركز المخزون';
+
+  @override
+  String get simBatchesLink => 'دفعات المخزون';
+
+  @override
+  String get simExportTooltip => 'تصدير CSV';
+
+  @override
+  String simExportCopiedToast(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صف',
+      many: '$count صفاً',
+      few: '$count صفوف',
+      two: 'صفين',
+      one: 'صف واحد',
+      zero: 'لا صفوف',
+    );
+    return 'تم نسخ $_temp0 بصيغة CSV — ألصقها في Excel';
+  }
+
+  @override
+  String get simAddProductFab => 'إضافة المنتج';
 }
