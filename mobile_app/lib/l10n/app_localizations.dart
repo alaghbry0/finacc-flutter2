@@ -7213,6 +7213,66 @@ abstract class AppLocalizations {
   /// **'Compare book vs counted and settle diffs at snapshot cost'**
   String get reportsStocktakeDesc;
 
+  /// No description provided for @reportsHubPartyStatementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Party statement'**
+  String get reportsHubPartyStatementTitle;
+
+  /// No description provided for @reportsHubPartyStatementDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Official running-balance statement for a client or supplier'**
+  String get reportsHubPartyStatementDesc;
+
+  /// No description provided for @reportSimActionImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get reportSimActionImage;
+
+  /// No description provided for @reportSimActionPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get reportSimActionPdf;
+
+  /// No description provided for @reportSimActionExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel'**
+  String get reportSimActionExcel;
+
+  /// No description provided for @reportSimExportImageDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Report image was created'**
+  String get reportSimExportImageDone;
+
+  /// No description provided for @reportSimExportExcelDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel file was exported'**
+  String get reportSimExportExcelDone;
+
+  /// No description provided for @reportSimExportImageCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Report too long for a single image — use the PDF button'**
+  String get reportSimExportImageCap;
+
+  /// No description provided for @reportPdfPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get reportPdfPeriodLabel;
+
+  /// No description provided for @reportPdfDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Report date'**
+  String get reportPdfDateLabel;
+
   /// No description provided for @itemMovementTitle.
   ///
   /// In en, this message translates to:
@@ -7674,6 +7734,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Page {page} of {total}'**
   String pdfFixPageIndicator(int page, int total);
+
+  /// No description provided for @settingsSimRowBasicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic settings'**
+  String get settingsSimRowBasicTitle;
+
+  /// No description provided for @settingsSimRowBasicDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, country, base currency and logo'**
+  String get settingsSimRowBasicDesc;
+
+  /// No description provided for @settingsSimRowTemplateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice template settings'**
+  String get settingsSimRowTemplateTitle;
+
+  /// No description provided for @settingsSimRowTemplateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Template, colors and print options'**
+  String get settingsSimRowTemplateDesc;
+
+  /// No description provided for @settingsSimRowHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice header'**
+  String get settingsSimRowHeaderTitle;
+
+  /// No description provided for @settingsSimRowHeaderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Header, signatures, paid stamp and footer'**
+  String get settingsSimRowHeaderDesc;
+
+  /// No description provided for @settingsSimRowStockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory management'**
+  String get settingsSimRowStockTitle;
+
+  /// No description provided for @settingsSimRowStockDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock, stocktake and out-of-stock alerts'**
+  String get settingsSimRowStockDesc;
+
+  /// No description provided for @settingsSimRowCurrencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-currency settings'**
+  String get settingsSimRowCurrencyTitle;
+
+  /// No description provided for @settingsSimRowCurrencyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Currencies and daily exchange rates'**
+  String get settingsSimRowCurrencyDesc;
+
+  /// No description provided for @settingsSimRowCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product category settings'**
+  String get settingsSimRowCategoryTitle;
+
+  /// No description provided for @settingsSimRowCategoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Product categories and units'**
+  String get settingsSimRowCategoryDesc;
+
+  /// No description provided for @settingsSimMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More FinAcc settings'**
+  String get settingsSimMoreTitle;
 
   /// No description provided for @settings2CustomizationTitle.
   ///

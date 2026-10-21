@@ -24,7 +24,7 @@ class SimSubHeader extends StatelessWidget {
   const SimSubHeader({
     super.key,
     required this.title,
-    required this.onBack,
+    this.onBack,
     this.titleKey,
     this.actions = const [],
   });
@@ -32,8 +32,11 @@ class SimSubHeader extends StatelessWidget {
   /// عنوان الترويسة (مثل «عميل / المورد» أو «قائمة المنتجات»).
   final String title;
 
-  /// زر الرجوع — في SIM يعود للمركز الرئيسي.
-  final VoidCallback onBack;
+  /// زر الرجوع — في SIM يعود للمركز الرئيسي. **V7 (نقد F9-a):
+  /// اختياري** — جذر تبويب (مثل /more و/reports) لا يعود إلى شيء
+  /// فإخفاء الزر عنده أصادق من رجوع اصطناعي إلى /home؛ الشاشات
+  /// المدفوعة تمرره كالسابق بلا أي تغيير.
+  final VoidCallback? onBack;
 
   /// مفتاح اختبار للعنوان (اختياري).
   final Key? titleKey;
@@ -57,14 +60,18 @@ class SimSubHeader extends StatelessWidget {
       padding: const EdgeInsetsDirectional.only(start: 4, end: 8),
       child: Row(
         children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context)
-                .backButtonTooltip,
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: scheme.onSurfaceVariant,
-            onPressed: onBack,
-          ),
-          const SizedBox(width: 4),
+          // V7 — بلا onBack (جذر تبويب) لا زر رجوع أصلًا: العنوان
+          // يبدأ من حافة البداية بإطار أوسع صادق.
+          if (onBack != null) ...[
+            IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back_rounded),
+              color: scheme.onSurfaceVariant,
+              onPressed: onBack,
+            ),
+            const SizedBox(width: 4),
+          ] else
+            const SizedBox(width: 8),
           Expanded(
             child: Text(
               title,
@@ -113,13 +120,97 @@ class SimSubHeaderAction extends StatelessWidget {
   }
 }
 
+/// V7 — صف إعداد SIM (نمط `.setting-row` بالنموذج الأولي حرفياً):
+/// بطاقة بيضاء بعنوان عريض 15sp (#263238) ووصف رمادي 12sp تحته
+/// وشيفرون بادئ (RTL: يسار) بلون #90A4AE — النقر كله يمشي للوجهة.
+/// [leading] اختياري لأيقونة صغيرة قبل العنوان (توسيع مسقبلي)،
+/// [valueLabel] اختياري لقيمة موجزة محاذاة قبل الشيفرون.
+class SimSettingRow extends StatelessWidget {
+  const SimSettingRow({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.titleKey,
+    this.leading,
+    this.valueLabel,
+  });
+
+  /// عنوان الصف (h5 بالنموذج).
+  final String title;
+
+  /// الوصف التفصيلي (p بالنموذج — رمادي).
+  final String subtitle;
+
+  /// النقر — يفتح الشاشة/الورقة الهدف.
+  final VoidCallback onTap;
+
+  /// مفتاح اختبار للعنوان.
+  final Key? titleKey;
+
+  final Widget? leading;
+
+  final String? valueLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    return Material(
+      color: scheme.surface,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 12)],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      key: titleKey,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              if (valueLabel != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  valueLabel!,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colors.neutral),
+                ),
+              ],
+              const SizedBox(width: 6),
+              Icon(Icons.chevron_left_rounded, size: 20, color: colors.neutral),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// البانر التعليمي — «كيفية إضافة …» بأيقونة تشغيل (نمطة يوتيوب الأصلية).
 class SimTutorialBanner extends StatelessWidget {
-  const SimTutorialBanner({
-    super.key,
-    required this.text,
-    this.onTap,
-  });
+  const SimTutorialBanner({super.key, required this.text, this.onTap});
 
   /// نص البانر (سؤال تعليمي).
   final String text;
@@ -165,10 +256,8 @@ class SimTutorialBanner extends StatelessWidget {
                     text,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: fg, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -219,10 +308,7 @@ class SimModeTabs extends StatelessWidget {
         children: [
           for (var i = 0; i < tabs.length; i++)
             Expanded(
-              child: _ModeTab(
-                spec: tabs[i],
-                selected: i == selectedIndex,
-              ),
+              child: _ModeTab(spec: tabs[i], selected: i == selectedIndex),
             ),
         ],
       ),
@@ -304,9 +390,8 @@ class SimAddWideButton extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
             ),
-            textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            textStyle: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           icon: const Icon(Icons.add_rounded, size: 20),
           label: Text(label),
@@ -337,10 +422,7 @@ class SimSheetTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
-      leading: Icon(
-        icon,
-        color: iconColor ?? FinColors.of(context).neutral,
-      ),
+      leading: Icon(icon, color: iconColor ?? FinColors.of(context).neutral),
       title: Text(
         label,
         style: Theme.of(context).textTheme.bodyLarge
@@ -385,9 +467,8 @@ class SimFabPill extends StatelessWidget {
         color: isDark ? scheme.primary : const Color(0xFF0288D1),
         borderRadius: BorderRadius.circular(25),
         elevation: isDark ? 4 : 6,
-        shadowColor: const Color(0xFF0288D1).withValues(
-          alpha: isDark ? 0.5 : 0.4,
-        ),
+        shadowColor: const Color(0xFF0288D1)
+            .withValues(alpha: isDark ? 0.5 : 0.4),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(25),

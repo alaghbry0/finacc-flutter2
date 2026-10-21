@@ -4127,6 +4127,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'Compare book vs counted and settle diffs at snapshot cost';
 
   @override
+  String get reportsHubPartyStatementTitle => 'Party statement';
+
+  @override
+  String get reportsHubPartyStatementDesc =>
+      'Official running-balance statement for a client or supplier';
+
+  @override
+  String get reportSimActionImage => 'Image';
+
+  @override
+  String get reportSimActionPdf => 'PDF';
+
+  @override
+  String get reportSimActionExcel => 'Excel';
+
+  @override
+  String get reportSimExportImageDone => 'Report image was created';
+
+  @override
+  String get reportSimExportExcelDone => 'Excel file was exported';
+
+  @override
+  String get reportSimExportImageCap =>
+      'Report too long for a single image — use the PDF button';
+
+  @override
+  String get reportPdfPeriodLabel => 'Period';
+
+  @override
+  String get reportPdfDateLabel => 'Report date';
+
+  @override
   String get itemMovementTitle => 'Item movement';
 
   @override
@@ -4417,6 +4449,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String pdfFixPageIndicator(int page, int total) {
     return 'Page $page of $total';
   }
+
+  @override
+  String get settingsSimRowBasicTitle => 'Basic settings';
+
+  @override
+  String get settingsSimRowBasicDesc => 'Name, country, base currency and logo';
+
+  @override
+  String get settingsSimRowTemplateTitle => 'Invoice template settings';
+
+  @override
+  String get settingsSimRowTemplateDesc => 'Template, colors and print options';
+
+  @override
+  String get settingsSimRowHeaderTitle => 'Invoice header';
+
+  @override
+  String get settingsSimRowHeaderDesc =>
+      'Header, signatures, paid stamp and footer';
+
+  @override
+  String get settingsSimRowStockTitle => 'Inventory management';
+
+  @override
+  String get settingsSimRowStockDesc =>
+      'Stock, stocktake and out-of-stock alerts';
+
+  @override
+  String get settingsSimRowCurrencyTitle => 'Multi-currency settings';
+
+  @override
+  String get settingsSimRowCurrencyDesc =>
+      'Currencies and daily exchange rates';
+
+  @override
+  String get settingsSimRowCategoryTitle => 'Product category settings';
+
+  @override
+  String get settingsSimRowCategoryDesc => 'Product categories and units';
+
+  @override
+  String get settingsSimMoreTitle => 'More FinAcc settings';
 
   @override
   String get settings2CustomizationTitle => 'Customization';

@@ -4153,6 +4153,38 @@ class AppLocalizationsAr extends AppLocalizations {
       'مقارنة الدفتري بالفعلي وتسوية الفروق بتكلفة اللقطة';
 
   @override
+  String get reportsHubPartyStatementTitle => 'كشف حساب طرف';
+
+  @override
+  String get reportsHubPartyStatementDesc =>
+      'كشف رسمي بالرصيد التراكمي لعميل أو مورد';
+
+  @override
+  String get reportSimActionImage => 'صورة';
+
+  @override
+  String get reportSimActionPdf => 'PDF';
+
+  @override
+  String get reportSimActionExcel => 'تفوق';
+
+  @override
+  String get reportSimExportImageDone => 'تم إنشاء صورة للتقرير';
+
+  @override
+  String get reportSimExportExcelDone => 'تم تصدير ملف Excel';
+
+  @override
+  String get reportSimExportImageCap =>
+      'التقرير طويل جداً لصورة واحدة — استخدم زر PDF';
+
+  @override
+  String get reportPdfPeriodLabel => 'الفترة';
+
+  @override
+  String get reportPdfDateLabel => 'تاريخ التقرير';
+
+  @override
   String get itemMovementTitle => 'حركة صنف';
 
   @override
@@ -4443,6 +4475,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String pdfFixPageIndicator(int page, int total) {
     return 'صفحة $page من $total';
   }
+
+  @override
+  String get settingsSimRowBasicTitle => 'الإعدادات ابتدائي';
+
+  @override
+  String get settingsSimRowBasicDesc => 'الاسم والبلد والعملة الأساسية والشعار';
+
+  @override
+  String get settingsSimRowTemplateTitle => 'اعدادات قالب الفاتورة';
+
+  @override
+  String get settingsSimRowTemplateDesc =>
+      'اختيار القالب والألوان وخصائص الطباعة';
+
+  @override
+  String get settingsSimRowHeaderTitle => 'رأس الفاتورة';
+
+  @override
+  String get settingsSimRowHeaderDesc =>
+      'الترويسة والتوقيعات وختم مدفوع والتذييل';
+
+  @override
+  String get settingsSimRowStockTitle => 'ادارة المخزون';
+
+  @override
+  String get settingsSimRowStockDesc => 'المخزون والجرد وتنبيهات النفاد';
+
+  @override
+  String get settingsSimRowCurrencyTitle => 'عملات متعددة إعدادات';
+
+  @override
+  String get settingsSimRowCurrencyDesc => 'العملات وأسعار الصرف اليومية';
+
+  @override
+  String get settingsSimRowCategoryTitle => 'إعداد تصنيف المنتج';
+
+  @override
+  String get settingsSimRowCategoryDesc => 'فئات المنتجات والوحدات';
+
+  @override
+  String get settingsSimMoreTitle => 'المزيد من إعدادات FinAcc';
 
   @override
   String get settings2CustomizationTitle => 'التخصيص';
