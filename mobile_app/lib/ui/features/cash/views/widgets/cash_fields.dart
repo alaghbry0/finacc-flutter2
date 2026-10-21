@@ -82,6 +82,10 @@ class CashBoxPickerField extends StatelessWidget {
     final colors = FinColors.of(context);
     return DropdownButtonFormField<int>(
       initialValue: selectedId,
+      // isExpanded — النص المختار (اسم الصندوق · العملة · الرصيد) يُقيَّد
+      // بعرض الحقل المتاح فيعمل ellipsis بدل الفيض الأفقي (كُشف بجولة V6:
+      // أول تغطية ويدجت لشاشة السند — كان يفيض ~210px على شاشة 390).
+      isExpanded: true,
       onChanged: enabled ? onChanged : null,
       decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
       items: [

@@ -2209,3 +2209,39 @@ Stage Summary:
 - **التطبيق يعمل عبر البوابة :81** بكل تدفقاته الحية (تأسيس ← عملاء/موردون ← حفظ حقيقي في القاعدة ← منتجات) و808/808 اختبارًا — **البيئة جاهزة تمامًا لجولة V6**.
 - إثراء منهجية QA بثلاث أدوات CDP جديدة + وصفة الإدخال الموثوقة (سيرشّح اعتمادها في بروتوكول §5 لجولة V6 كي لا نكرر ساعات التشخيص).
 - أولوية V6 كما حددتها R27: **معاينة الفاتورة (invoice-preview-view) ثم سند القبض/الإيصال** — بنفس بروتوكول المرجع التصميمي الإلزامي + لقطات Screenbox + تحليل البكسل + الوصفة الجديدة للإدخال.
+
+---
+Task ID: V6-A
+Agent: general-purpose (التفقيط + معاينة رقم السند)
+Task: الوحدة الأساس لجولة V6 — محول المبلغ بالكلمات (التفقيط العربي الفصيح) كخدمة نقية في domain/services + معاينة رقم السند القادم RVT/PMT بقراءة بلا استهلاك في مستودع النقدية + اختباراتهما.
+
+Work Log:
+- قراءة السياق: آخر جولتين R27/R28 من السجل + المرجع التصميمي + الأنماط القائمة (hijri_date/numerals للتوثيق، sale_reads.dart:16-24 نمطًا ملزمًا للمعاينة، رأس cash_repository.dart وكيف يكشف دوال أجزاء cash/، cash_voucher_flow.dart للتأكد أن الترقيم الفعلي يستخدم txDate.year حرفيًا في السطر `final year = txDate.year;`).
+- المهمة 1 — `lib/domain/services/amount_in_words.dart` (جديد): دالة نقية `amountInWords({amount, currencyName, currencyCode, decimals, withSuffix})` بالتوقيع الملزم؛ جداول كلمات ثابتة (وحدات/مراهق/عشرات/مئات بـ«مئة» لا «مائة»/رتب بجميع صورها) + محول مجموعات ثلاثية (آلاف/ملايين/مليارات + تريليون شبكة أمان) + قواعد المطابقة الموثقة في رأس الملف بثمانية قرارات: اسم الرتبة (1/2/3-10/11-99 منصوبًا/100+ مفردًا)، اسم العملة مفردًا في نهاية العدد (1→«{الاسم} واحد»، 2→«{الاسم}ان»)، الكسر بالكلمات + اسم الوحدة الفرعية من خريطة ثابتة (SAR هللة/USD سنت/AED+YER فلس/...) والرمز المجهول «و{كسر رقمي}» بلا اسم، decimals=0 يتخطى الكسر بعد تقريب المبلغ (قاعدة 5.4-9 — 5000.40 YER → «خمسة آلاف ريال يمني فقط»)، حمل تقريب الكسر (2.999 SAR → ثلاثة)، وأخطاء ArgumentError بالعربية للسالب/NaN/∞ وفوق السقف 999,999,999,999.99.
+- المهمة 2 — مستودع النقدية: دالة `previewVoucherNo(Database db, {isReceipt, year})` في `cash/cash_voucher_flow.dart` (مرآة حرفية لـ previewSaleInvoiceNo: DocSequenceService.lastIssuedNumber + 1 → formatDocNumber بنوع receiptVoucher/paymentVoucher) مكشوفة من الواجهة كـ `CashRepository.previewNextVoucherNo({isReceipt, year})` — إضافة صرفة بلا أي مساس بالسلوك القائم؛ year من txDate.year (موثق بالدليل من ترحيل السند نفسه).
+- المهمة 3 — اختباران: `test/domain/amount_in_words_test.dart` (58 اختبارًا / 60+ تحقق حرفي للسلاسل الكاملة: كل قيم المواصفة 0/0.5/1/2/3/8/10-22/99/100-999/1000-999999/ملايين/مليارات + كسور YER وSAR وUSD + رمز مجهول MAD رقميًا + withSuffix=false + حدود السقف بالحد الأقصى نفسه وتريليون + 5 حالات خطأ برسائلها العربية) و`test/data/cash_voucher_preview_no_test.dart` (6 اختبارات على قاعدة FFI بنمط void_invoice_test: فراغ → RVT-2026-00001، التقدم بعد الترحيل، استقلال سنتي 2025/2026، استقلال RVT عن PMT، قراءتان متتاليتان بلا استهلاك والترحيل التالي يلتقط الرقم المعروض، والسنة من txDate لا now بسند مؤرخ 2027).
+- البوابات: dart format نظيف · dart analyze صفر أخطاء وتحذيرات على كل الملفات الخمسة · `flutter test` للملفين فقط: **64/64 ناجحة** · فحص انحدار إضافي بملف واحد قائم يستعمل المستودع المعدَّل (void_invoice_test): 12/12 ناجحة — التعديل إضافة صرفة لم تكسر شيئًا.
+- ملاحظتا تصحيح ذاتي أثناء التطوير: (1) واو الكسر تلصق بأول كلمة الكسر وتفصل بمسافة عما قبلها («ريال سعودي وخمسون هللة») لا مباشرة بعد الاسم — طابقها الاختبار الحرفي مع مثال المواصفة؛ (2) شذرات المواصفة «وواحد سنت» و«وخمسة وعشرون سنت» عملتها بعملة الدولار (صاحبة السنت) وعملت نظائرها بالهللة لـ SAR — الخريطة هي مصدر الحقيقة.
+
+Stage Summary:
+- ملفات منشأة: `lib/domain/services/amount_in_words.dart`، `test/domain/amount_in_words_test.dart`، `test/data/cash_voucher_preview_no_test.dart`. معدلة (إضافة صرفة): `lib/data/repositories/cash/cash_voucher_flow.dart` (دالة previewVoucherNo) و`lib/data/repositories/cash_repository.dart` (previewNextVoucherNo).
+- قرارات معمارية: التفقيط في domain/services (النمط القائم — لا domain/utils) دالة نقية بلا اعتماديات؛ المعاينة في ملف تدفق السند (حيث imports الترقيم أصلًا) بنمط sale_reads وكشف من واجهة المستودع؛ العملة المجهولة → كسر رقمي غربي؛ تريليون شبكة أمان لتقريب الحد الأعلى بعملة بلا منازل.
+- لم تُمس إطلاقًا: ملفات .arb/l10n، شاشات UI، schema/migrations. لا git commit (المنسق يدمج).
+- جاهز للاستهلاك من وكلاء V6-B/V6-C: `amountInWords(...)` لسطر التفقيط تحت المبلغ، و`cash.previewNextVoucherNo(isReceipt: ..., year: voucherTxDate.year)` لعرض الرقم القادم في نموذج السند.
+
+---
+Task ID: V6-B
+Agent: general-purpose (مكتبة مستندات SIM + معاينة الفاتورة A4) — استكمل المنسق التحقق بعد انقطاع المهلة
+Task: مكتبة مستندات SIM المشتركة (sim_doc_widgets) + تبويبا نموذج الإدخال/معاينة في شاشة البيع + معاينة A4 حية من المسودة
+
+Work Log:
+- إنشاء lib/ui/core/widgets/sim_doc_widgets.dart (9 مكونات): SimA4Sheet (غلاف #CFD8DC فاتح/داكن منسجم — الورقة بيضاء دائمًا)، SimDocOrgHeader (حد 2px #333)، SimDocTitleRow، SimDocLogoBox (70×70 #ECEFF1)، SimDocBlueBar (#0288D1)، SimDocItemsTable/SimDocTableCell (رأس أزرق، خلايا رقمية LTR tabular)، SimDocBlueTotalBar، SimDocRow، SimDocSignatureArea.
+- تعديل sell_screen.dart: SimModeTabs (نموذج الإدخال/معاينة) فوق الجسم تحت AppBar — **تبديل شرطي if لا IndexedStack** (لا ازدواج find.text — اختبارات V4 القائمة محفوظة)، حالة الأكورديونات تسكن State فتبقى عبر العودة، الشريط الرباعي واحد مشترك خارج التبديل، مستمع FX/notice فوق التبويبات.
+- إنشاء widgets/sim_invoice_a4_preview.dart: ورقة من المسودة الحية — رأس المنشأة + صف (INV أزرق + التاريخ + «فاتورة») + «فاتورة إلى:» + جدول 5 أعمدة (العمود الخامس «المبلغ» — تصحيح خطأ النموذج المطبعي «كمية» المكررة) بمبلغ السطر netFinal + «مجاني: N» teal عند freeQty + صف الخصم عند وجوده + شريط «المبلغ الإجمالي» الأزرق بـ grandTotal + «توازن» + منطقة التوقيع. SliverFillRemaining للعرض الأدنى مع تمرير الفيض.
+- حذف موثق: صف ship-to (بلا شحن بنطاقنا — CartCustomer name+phone فقط)، صف مدفوع (مسودة بلا دفع — النموذج نفسه يخفيه عند paid=0)، زر التوقيع (مُرحَّل — يتطلب لوحة توقيع وهجرة schema).
+- اختبار test/ui/sim_invoice_a4_preview_test.dart: 8 اختبارات (البنية، التبديل، لا ازدواج، حفظ حالة الأكورديونات، مجانية، خصم=grandTotal، فراغ، الشريط في الوضعين).
+- تحقق المنسق بعد انقطاع المهلة: analyze صفر · format نظيف · 12/12 (الجديدة 8 + انحدار V4 4) · 64/64 لاختبارات V6-A.
+
+Stage Summary:
+- معاينة الفاتورة A4 حية كاملة في شاشة البيع بتبويبات SIM — صفر كسر سلوكي.
+- مكتبة مستندات جاهزة لاستهلاك شاشة السند (V6-C): SimA4Sheet/SimDocLogoBox/SimDocBlueBar/SimDocRow/SimDocBlueTotalBar/SimDocSignatureArea.

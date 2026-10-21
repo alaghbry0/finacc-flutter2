@@ -4,6 +4,11 @@
 /// كتلة المبلغ هي بطل السند (كبيرة عريضة بعملتها)، وشريط ذهبي يحمل
 /// رقم السند — هوية القصاصة. كل تسمية تأتي مسبقة التعريب من
 /// `VoucherLabels` — لا نص حرفي هنا غير اسم المنتج الثابت في التذييل.
+///
+/// V6-C — وسم المسودة: عند `labels.draftLabel` غير فارغ (اختياري — بلا
+/// قيمة افتراضياً فلا يتغير أي مخرج قائم) يُرسم شريط ذهبي رفيع بنص
+/// «مسودة — لم تُرحّل» تحت العنوان مباشرة (مسودة المعاينة من شاشة السند
+/// قبل الترحيل — الرقم معاينة لا تسلسلاً مستهلكاً).
 library;
 
 import 'package:pdf/pdf.dart' as pw;
@@ -55,6 +60,12 @@ class VoucherPdfBuilder {
         _brandBand(doc),
         pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
         _titleText(doc),
+        // V6-C — وسم المسودة (شرط عرض واحد): شريط ذهبي رفيع تحت
+        // العنوان؛ غياب التسمية يترك ترتيب الصفحة كما كان حرفياً.
+        if ((doc.labels.draftLabel ?? '').trim().isNotEmpty) ...[
+          pw.SizedBox(height: 2 * pw.PdfPageFormat.mm),
+          _draftBadge(doc),
+        ],
         pw.SizedBox(height: 3 * pw.PdfPageFormat.mm),
         _numberDateRow(doc),
         pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
@@ -137,6 +148,27 @@ class VoucherPdfBuilder {
         doc.isReceipt ? doc.labels.titleReceipt : doc.labels.titlePayment,
         style: PrintText.extraHead(color: PrintPalette.brandDeep),
         textDirection: pw.TextDirection.rtl,
+      ),
+    );
+  }
+
+  /// V6-C — شريط وسم المسودة: ذهبي رفيع بنص مركّز عريض (نفس روح شريط
+  /// الرقم) — يميّز بصرياً ورقة المعاينة عن السند المرقّم المُرحّل.
+  pw.Widget _draftBadge(VoucherPrintDoc doc) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PrintPalette.gold, width: 0.8),
+        borderRadius: pw.BorderRadius.circular(3),
+        color: PrintPalette.zebra,
+      ),
+      child: pw.Center(
+        child: pw.Text(
+          doc.labels.draftLabel!.trim(),
+          style: PrintText.head(color: PrintPalette.brandDeep, size: 9),
+          textDirection: pw.TextDirection.rtl,
+          textAlign: pw.TextAlign.center,
+        ),
       ),
     );
   }

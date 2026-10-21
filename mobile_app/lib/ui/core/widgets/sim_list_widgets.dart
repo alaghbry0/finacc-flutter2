@@ -414,3 +414,100 @@ class SimFabPill extends StatelessWidget {
     );
   }
 }
+
+/// زر واحد بشريط الإجراءات السفلي SIM — أيقونة فوق تسمية صغيرة.
+///
+/// (V6: انتقل من sell/views/widgets/sim_invoice_widgets.dart إلى core —
+/// صار مستهلكًا من ميزتين (البيع والنقدية) فمكانه الطبيعي هنا مع بقية
+/// مكونات SIM المشتركة، مع سقوط استيراد cash→sell المخالف للطبقات.)
+class SimBottomActionItem {
+  const SimBottomActionItem({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.enabled = true,
+    this.primary = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final bool primary;
+}
+
+/// شريط الإجراءات السفلي (حفظ/عرض/خصم/أكثر…) — خلفية سطح فاتحة وحد
+/// علوي وفواصل بين الأزرار؛ زر primary (الحفظ) بلون التطبيق وبقية
+/// الأزرار محايدة (لقطة 062621 البند G). قرار الأزرار عند المستدعي.
+class SimBottomActionBar extends StatelessWidget {
+  const SimBottomActionBar({super.key, required this.items});
+
+  final List<SimBottomActionItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(top: BorderSide(color: colors.cardBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 62,
+          child: Row(
+            children: [
+              for (var i = 0; i < items.length; i++) ...[
+                if (i > 0)
+                  Container(
+                    width: 1,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    color: colors.cardBorder,
+                  ),
+                Expanded(child: _ActionTile(item: items[i])),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({required this.item});
+
+  final SimBottomActionItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final active = item.enabled && item.onTap != null;
+    final color = !active
+        ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+        : item.primary
+        ? scheme.primary
+        : scheme.onSurfaceVariant;
+    return InkWell(
+      onTap: active ? item.onTap : null,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(item.icon, size: 22, color: color),
+          const SizedBox(height: 3),
+          Text(
+            item.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: item.primary ? FontWeight.w800 : FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -280,6 +280,7 @@ class VoucherLabels {
     required this.box,
     required this.signature,
     required this.footerThanks,
+    this.draftLabel,
   });
 
   /// عنوان سند القبض.
@@ -308,6 +309,13 @@ class VoucherLabels {
 
   /// عبارة الشكر في التذييل.
   final String footerThanks;
+
+  /// V6-C — نص وسم المسودة (مثل «مسودة — لم تُرحّل») — **اختياري بلا
+  /// كسر**: غيابه (null، الافتراضي لكل البناة القائمة) يرسم السند كما
+  /// هو حرفياً؛ حضوره يرسم شريط «مسودة» تحت العنوان بالقالب (مسودة
+  /// المعاينة قبل الترحيل من شاشة السند). نمط الإضافات الاختيارية نفسه
+  /// المتّبع في `InvoiceTemplateLabels`.
+  final String? draftLabel;
 }
 
 /// مستند سند مرقَّم قابل للطباعة (FR-04-10 + FR-10-05) — يغذي قالب A5.

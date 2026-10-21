@@ -80,17 +80,23 @@ class CashMovementTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    // V6-C: رقم السند مرن كالعنوان — كان بلا قيد فيفيض
+                    // الصف 61px عند الأسماء الطويلة (كُشف بأول تغطية ويدجت
+                    // تصل لمحور النقدية بعد ترحيل سند).
                     if (movement.voucherNo != null) ...[
                       const SizedBox(width: 6),
-                      Text(
-                        movement.voucherNo!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontFeatures: FinText.tabularNums,
-                          fontWeight: FontWeight.w800,
-                          color: scheme.onSurfaceVariant,
+                      Flexible(
+                        child: Text(
+                          movement.voucherNo!,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontFeatures: FinText.tabularNums,
+                                fontWeight: FontWeight.w800,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                     if (movement.isVoided) ...[

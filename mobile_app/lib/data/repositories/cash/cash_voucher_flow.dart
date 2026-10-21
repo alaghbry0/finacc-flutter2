@@ -66,6 +66,26 @@ Future<List<OpenInvoiceLine>> partyOpenInvoices(
 
 // ─────────────────────────────────────────────────────────────────────
 
+/// معاينة رقم RVT/PMT القادم للسنة (آخر مُصدر + 1) — عرضٌ فقط بلا
+/// استهلاك؛ الترقيم الحقيقي يستهلك ذرّياً داخل معاملة ترحيل السند
+/// نفسها (`createVoucherFlow` أدناه — قاعدة 5.4-1). مرآة حرفية لنمط
+/// `previewSaleInvoiceNo` في مستودع المبيعات (sale_reads).
+///
+/// [isReceipt]: سند قبض (RVT) أم صرف (PMT). [year]: سنة تاريخ السند
+/// `txDate.year` — لا سنة اليوم — لأن الترقيم الفعلي أدناه يُصدر بسنة
+/// `txDate` نفسها، فلا بد أن يتطابق المعروض مع المرقَّم عند الحفظ.
+Future<String> previewVoucherNo(
+  Database db, {
+  required bool isReceipt,
+  required int year,
+}) async {
+  final type = isReceipt
+      ? DocSequenceType.receiptVoucher
+      : DocSequenceType.paymentVoucher;
+  final last = await DocSequenceService(db).lastIssuedNumber(type, year);
+  return formatDocNumber(type, year, last + 1);
+}
+
 /// **ترحيل سند قبض/صرف** — معاملة ذرّية واحدة: رقم RVT/PMT + حركة
 /// الصندوق + تحديث دفاتر الفواتير المخصصة (FIFO) + صفوف التخصيص +
 /// قيد التدقيق (الخريطة برأس الملف — القرارات 2/3/4).
@@ -129,6 +149,19 @@ Future<Result<VoucherPostedReceipt, String>> createVoucherFlow(
       );
     }
     final partyName = partyRows.first['name'] as String;
+
+    // V6-C (ن-7 من تدقيق الخطة): رمز عملة السند للإيصال المرجَع — كان
+    // يُhardcode بـ'' فتظهر SnackBar الترحيل بلا رمز عملة إطلاقًا.
+    final currencyRows = await db.query(
+      'currency',
+      columns: ['code'],
+      where: 'id = ?',
+      whereArgs: [draft.currencyId],
+      limit: 1,
+    );
+    final voucherCurrencyCode = currencyRows.isNotEmpty
+        ? currencyRows.first['code'] as String? ?? ''
+        : '';
 
     final vRate = await cashRateForDay(
       db,
@@ -303,7 +336,7 @@ Future<Result<VoucherPostedReceipt, String>> createVoucherFlow(
           cashTxId: cashTxId,
           voucherNo: voucherNo,
           amount: amount,
-          currencyCode: '',
+          currencyCode: voucherCurrencyCode,
           allocations: plan,
           fxGainLoss: fxGainLoss,
         ),

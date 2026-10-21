@@ -2,6 +2,10 @@
 /// منتقي طرف بعملته + مبلغ + صندوق + تاريخ + خيار التخصيص (على الحساب
 /// أو تخصيص تلقائي FIFO مع معاينة «يُخصص على: INV-x 500 / INV-y 300»)
 /// + بوابة صرف عند عملة سند تخالف عملة صندوقها (FR-08-09 / 5.4-7).
+///
+/// V6-C — إضافات هوية SIM: [previewVoucherNo] (معاينة رقم RVT/PMT
+/// القادم بسنة `txDate` بقراءة بلا استهلاك — V6-A) و[voucherCurrency]
+/// (عملة السند الحالية باسمها/رمزها/منازلها لسطر التفقيط بالمستند).
 library;
 
 import 'dart:async';
@@ -68,10 +72,33 @@ class VoucherViewModel extends ChangeNotifier {
 
   String? _saveError;
 
+  /// V6-C — معاينة رقم السند القادم (RVT/PMT-السنة-… بلا استهلاك)
+  /// بسنة `txDate` حصراً؛ null أثناء التحميل/الفشل الصامت.
+  String? _previewVoucherNo;
+
   bool get loading => _loading;
   bool get saving => _saving;
   Object? get error => _error;
   String? get saveError => _saveError;
+
+  /// V6-C — رقم السند المتوقع للترحيل التالي (معاينة، لا يستهلك تسلسلاً).
+  String? get previewVoucherNo => _previewVoucherNo;
+
+  /// V6-C — عملة السند الحالية كاملة (name/code/decimals) لسطر التفقيط
+  /// وسطر المبلغ بمستند المعاينة — null قبل التحميل/عملة غير معروفة.
+  Currency? get voucherCurrency {
+    for (final c in _currencies) {
+      if (c.id == _voucherCurrencyId) return c;
+    }
+    return null;
+  }
+
+  /// V6-C (مراجعة 🟡-3) — منازل عملة السند للعرض: منازل العملة إن
+  /// عُرفت وإلا منازل رمزها بنمط `AmountText.decimalsFor` الموحد.
+  /// مصدر واحد للشاشة ومسودة PDF كليهما (كان مكررًا حرفيًا).
+  int get voucherDecimals =>
+      voucherCurrency?.decimals ??
+      AmountText.decimalsFor(voucherCurrency?.code);
   List<CashboxWithBalance> get boxes => _boxes;
   int? get partyId => _partyId;
   String? get partyName => _partyName;
@@ -209,11 +236,28 @@ class VoucherViewModel extends ChangeNotifier {
       _boxId = preferred?.box.id;
       _voucherCurrencyId = preferred?.box.currencyId;
       _loading = false;
+      unawaited(_refreshPreviewVoucherNo());
     } catch (e) {
       _error = e;
       _loading = false;
     }
     notifyListeners();
+  }
+
+  /// V6-C — يعيد قراءة معاينة رقم السند القادم بسنة `txDate` الحالية
+  /// (بلا استهلاك — V6-A). صمت كامل عند الفشل (null) كي لا يكسر النموذج
+  /// أبداً؛ المعاينة زينة هوية لا شرط عمل. يُستدعى بعد التحميل وكل
+  /// `setDate` (السنة قد تتغير) واختيار الطرف/العملة (بنص المواصفة).
+  Future<void> _refreshPreviewVoucherNo() async {
+    try {
+      _previewVoucherNo = await _cash.previewNextVoucherNo(
+        isReceipt: isReceipt,
+        year: _txDate.year,
+      );
+    } catch (_) {
+      _previewVoucherNo = null;
+    }
+    if (!_loading) notifyListeners();
   }
 
   /// اختيار الطرف (سطر رصيد واحد = طرف + عملة سياق).
@@ -227,6 +271,7 @@ class VoucherViewModel extends ChangeNotifier {
     _saveError = null;
     notifyListeners();
     unawaited(_reloadOpenInvoices());
+    unawaited(_refreshPreviewVoucherNo());
   }
 
   void setBox(int? boxId) {
@@ -241,6 +286,7 @@ class VoucherViewModel extends ChangeNotifier {
     _saveError = null;
     notifyListeners();
     unawaited(_reloadOpenInvoices());
+    unawaited(_refreshPreviewVoucherNo());
   }
 
   void setAmount(double? amount) {
@@ -252,6 +298,8 @@ class VoucherViewModel extends ChangeNotifier {
   void setDate(DateTime date) {
     _txDate = date;
     notifyListeners();
+    // V6-C — سنة المعاينة تتبع سنة السند (الترقيم الفعلي بسنة txDate).
+    unawaited(_refreshPreviewVoucherNo());
   }
 
   void setAllocateFifo(bool value) {
@@ -319,27 +367,36 @@ class VoucherViewModel extends ChangeNotifier {
 
   /// **ترحيل السند** — رقم RVT/PMT + الحركة + التخصيص داخل معاملة
   /// واحدة (المستودع). أي رفض يعيد رسالة عربية تُعرض كما هي.
+  ///
+  /// V6-C — رفض فحوص الصلاحية المبكرة (طرف/صندوق/عملة/مبلغ/تخصيص)
+  /// يُسجَّل في [saveError] أيضاً كي يظهر فوق شريط الإجراءات (كانت تُبتلع
+  /// صامتة — الزر القديم لم يكن يعرض شيئاً لها)؛ قيمة النتيجة نفسها
+  /// بلا أي تغيير فلا يتأثر مستدعي قائم.
   Future<Result<VoucherPostedReceipt, String>> save() async {
     final amount = _amount;
     final partyId = _partyId;
     final boxId = _boxId;
     final currencyId = _voucherCurrencyId;
+    Err<VoucherPostedReceipt, String> reject(String message) {
+      _saveError = message;
+      notifyListeners();
+      return Err(message);
+    }
+
     if (partyId == null) {
-      return const Err('اختر الطرف أولاً (عميلاً للقبض أو مورداً للصرف).');
+      return reject('اختر الطرف أولاً (عميلاً للقبض أو مورداً للصرف).');
     }
     if (boxId == null) {
-      return const Err('اختر الصندوق أولاً.');
+      return reject('اختر الصندوق أولاً.');
     }
     if (currencyId == null) {
-      return const Err('اختر عملة السند أولاً.');
+      return reject('اختر عملة السند أولاً.');
     }
     if (amount == null || amount <= 0) {
-      return const Err('أدخل مبلغاً أكبر من صفر أولاً.');
+      return reject('أدخل مبلغاً أكبر من صفر أولاً.');
     }
     if (_allocateFifo && openDuesTotal <= 0.005) {
-      return const Err(
-        'لا مديونية مفتوحة بعملة السند لتخصيصها — اختر «على الحساب».',
-      );
+      return reject('لا مديونية مفتوحة بعملة السند لتخصيصها — اختر «على الحساب».');
     }
     _saving = true;
     _saveError = null;

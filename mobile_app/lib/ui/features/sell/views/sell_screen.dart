@@ -1,11 +1,19 @@
 /// شاشة البيع/الكاشير — قلب التطبيق. **V4: هيكل نموذج فاتورة Simple
-/// Invoice Manager** (لقطة 062621 + المرجع التصميمي §3.7):
+/// Invoice Manager** (لقطة 062621 + المرجع التصميمي §3.7)، و**V6-B:
+/// تبويبا نموذج الإدخال/معاينة فوق الجسم** (نمط النموذج الأولي) والمعاينة
+/// ورقة A4 حية من المسودة (`SimInvoiceA4Preview`):
 ///
 /// سطر INV العلوي (رقم كبير عريض + تاريخ بأيقونة تقويم) ← أكورديون
 /// العميل (أبيض) ← شريط «إجمالي عناصر» الأزرق النشط (يتوسع لقائمة
 /// البنود + زر «اضافة عنصر» المربع) ← أكورديون الخصومات ← شريط
 /// «مجموع» الداكن ← شريط الإجراءات السفلي الرباعي (حفظ/عرض سعر/خصم/
 /// أكثر).
+///
+/// **آلية التبويب ملزمة**: تبديل شرطي `if` لا IndexedStack — في كل لحظة
+/// شجرة وضع واحد فقط (لا ازدواج find.text باختبارات V4 القائمة)، وحالة
+/// الأكورديونات (`_clientExpanded` إلخ) تسكن State فتبقى محفوظة عبر
+/// الذهاب للمعاينة والعودة. الشريط السفلي واحد مشترك خارج التبديل
+/// (ظاهر في الوضعين كالنموذج الأولي).
 ///
 /// الأفعال كلها كما كانت حرفياً (§6.5): منتقي العميل/النقدي، منتقي
 /// الصنف، نافذة الدفع (الترحيل)، حفظ كعرض سعر، خصم الفاتورة/السطر،
@@ -24,6 +32,7 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/print_on_save.dart';
 import '../view_models/sell_cart_session.dart';
 import '../view_models/sell_cart_view_model.dart';
@@ -37,6 +46,7 @@ import 'widgets/sell_cart_line_card.dart';
 import 'widgets/sell_checkout_helpers.dart';
 import 'widgets/sell_targets_strip.dart';
 import 'widgets/sell_widgets.dart';
+import 'widgets/sim_invoice_a4_preview.dart';
 import 'widgets/sim_invoice_widgets.dart';
 import '../../../core/widgets/amount_text.dart';
 
@@ -79,6 +89,11 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
   bool _discountsExpanded = false;
   bool _fxGateOpen = false;
   bool _noticeShown = false;
+
+  /// V6-B — وضع العرض: 0 نموذج الإدخال، 1 معاينة A4. تبديل شرطي `if`
+  /// (لا IndexedStack) فشجرة وضع واحد فقط بالشاشة في كل لحظة، وحالة
+  /// الأكورديونات تسكن State فتبقى محفوظة عبر الذهاب والعودة.
+  int _modeTab = 0;
 
   /// النموذج يُخزَّن حقلاً — قراءة context داخل dispose غير آمنة (عنصر
   /// معطّل) وتكسر تفكيك الشجرة عند مغادرة الكاشير (أصل استثناء Hero
@@ -392,8 +407,7 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
         state.lines.isNotEmpty &&
         !hasError &&
         state.warehouseId != null;
-    final canQuotation =
-        !state.posting && state.lines.isNotEmpty && !hasError;
+    final canQuotation = !state.posting && state.lines.isNotEmpty && !hasError;
     final decimals = _decimalsFor(priced?.totals.grandTotal);
     final itemsTotal = priced?.totals.subtotal;
     final discountsTotal = priced == null
@@ -406,99 +420,131 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       bottom: false,
       child: Column(
         children: [
+          // V6-B — تبويبا نموذج/معاينة فوق الجسم مباشرة (تحت الـAppBar)
+          // بنمط النموذج الأولي — الافتراضي نموذج الإدخال.
+          SimModeTabs(
+            tabs: [
+              SimModeTabSpec(
+                label: l10n.simModeTabForm,
+                onTap: () {
+                  if (_modeTab != 0) setState(() => _modeTab = 0);
+                },
+              ),
+              SimModeTabSpec(
+                label: l10n.simModeTabPreview,
+                onTap: () {
+                  if (_modeTab != 1) setState(() => _modeTab = 1);
+                },
+              ),
+            ],
+            selectedIndex: _modeTab,
+          ),
+          // تبديل شرطي `if` (لا IndexedStack) — شجرة وضع واحد فقط في كل
+          // لحظة؛ حالة الأكورديونات تسكن State فتبقى محفوظة عبر العودة.
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: 12),
-              children: [
-                // سطر INV العلوي — الرقم كبير عريض + التاريخ بتقويم.
-                SimInvoiceTopRow(
-                  invoiceNo:
-                      state.nextInvoiceNo ?? l10n.sellNewInvoiceLabel,
-                ),
-                if (state.postError != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: SellPostErrorBanner(message: state.postError!),
-                  ),
-                // UX-2a — `invoicing.discount_below_margin`: لافتة
-                // تحذير عند بيع أسطر تحت التكلفة (تحذير لا منع).
-                if (belowCostNames.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: SellBelowCostBanner(lineNames: belowCostNames),
-                  ),
-
-                // أكورديون العميل — أبيض بأيقونة شخص واسم حي.
-                SellClientSection(
-                  expanded: _clientExpanded,
-                  onToggle: () =>
-                      setState(() => _clientExpanded = !_clientExpanded),
-                  onPickCustomer: _openCustomerPicker,
-                  onPickCash: () =>
-                      context.read<SellCartViewModel>().setCashCustomer(),
-                  onPickCurrency: (currencyId) =>
-                      context.read<SellCartViewModel>().setCurrency(currencyId),
-                ),
-
-                // شريط «إجمالي عناصر» الأزرق — رأس قسم البنود.
-                SimItemsTotalBar(
-                  label: l10n.simItemsTotalTitle,
-                  amount: itemsTotal == null
-                      ? '0'
-                      : AmountText.formatFor(context, itemsTotal, decimals),
-                  itemCount: state.lines.length,
-                  expanded: _itemsExpanded,
-                  onToggle: () =>
-                      setState(() => _itemsExpanded = !_itemsExpanded),
-                ),
-                if (_itemsExpanded) ...[
-                  if (state.lines.isEmpty)
-                    SellEmptyCart(onAdd: _openItemPicker)
-                  else
-                    for (var i = 0; i < state.lines.length; i++)
-                      Padding(
-                        // 10px فاصلة بين البطاقات وبين الشريط الأزرق
-                        // والأولى — إيقاع القائمة القديم نفسه.
-                        padding: EdgeInsets.fromLTRB(
-                          12,
-                          i == 0 ? 10 : 0,
-                          12,
-                          10,
-                        ),
-                        child: SellCartLineCard(index: i),
+            child: _modeTab == 0
+                ? ListView(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    children: [
+                      // سطر INV العلوي — الرقم كبير عريض + التاريخ بتقويم.
+                      SimInvoiceTopRow(
+                        invoiceNo:
+                            state.nextInvoiceNo ?? l10n.sellNewInvoiceLabel,
                       ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: SimAddItemSquareButton(
-                      label: l10n.sellAddItem,
-                      onTap: _openItemPicker,
-                    ),
-                  ),
-                ],
+                      if (state.postError != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                          child: SellPostErrorBanner(message: state.postError!),
+                        ),
+                      // UX-2a — `invoicing.discount_below_margin`: لافتة
+                      // تحذير عند بيع أسطر تحت التكلفة (تحذير لا منع).
+                      if (belowCostNames.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                          child: SellBelowCostBanner(lineNames: belowCostNames),
+                        ),
 
-                // أكورديون الخصومات — خصم الرأس + ملخص خصوم الأسطر.
-                if (state.showDiscounts)
-                  _DiscountsSection(
-                    expanded: _discountsExpanded,
-                    onToggle: () => setState(
-                      () => _discountsExpanded = !_discountsExpanded,
-                    ),
-                    discountsTotal: discountsTotal,
-                    lineDiscountsTotal: priced?.totals.lineDiscountsTotal,
-                    invoiceDiscount: priced?.totals.invoiceDiscount,
-                    decimals: decimals,
-                    onEditInvoiceDiscount: _editInvoiceDiscount,
-                  ),
+                      // أكورديون العميل — أبيض بأيقونة شخص واسم حي.
+                      SellClientSection(
+                        expanded: _clientExpanded,
+                        onToggle: () =>
+                            setState(() => _clientExpanded = !_clientExpanded),
+                        onPickCustomer: _openCustomerPicker,
+                        onPickCash: () =>
+                            context.read<SellCartViewModel>().setCashCustomer(),
+                        onPickCurrency: (currencyId) => context
+                            .read<SellCartViewModel>()
+                            .setCurrency(currencyId),
+                      ),
 
-                // شريط «مجموع» الداكن — الصافي بعد الخصومات.
-                SimDarkTotalBar(
-                  label: l10n.simTotalBarLabel,
-                  amount: grandTotal == null
-                      ? '0'
-                      : AmountText.formatFor(context, grandTotal, decimals),
-                ),
-              ],
-            ),
+                      // شريط «إجمالي عناصر» الأزرق — رأس قسم البنود.
+                      SimItemsTotalBar(
+                        label: l10n.simItemsTotalTitle,
+                        amount: itemsTotal == null
+                            ? '0'
+                            : AmountText.formatFor(
+                                context,
+                                itemsTotal,
+                                decimals,
+                              ),
+                        itemCount: state.lines.length,
+                        expanded: _itemsExpanded,
+                        onToggle: () =>
+                            setState(() => _itemsExpanded = !_itemsExpanded),
+                      ),
+                      if (_itemsExpanded) ...[
+                        if (state.lines.isEmpty)
+                          SellEmptyCart(onAdd: _openItemPicker)
+                        else
+                          for (var i = 0; i < state.lines.length; i++)
+                            Padding(
+                              // 10px فاصلة بين البطاقات وبين الشريط الأزرق
+                              // والأولى — إيقاع القائمة القديم نفسه.
+                              padding: EdgeInsets.fromLTRB(
+                                12,
+                                i == 0 ? 10 : 0,
+                                12,
+                                10,
+                              ),
+                              child: SellCartLineCard(index: i),
+                            ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: SimAddItemSquareButton(
+                            label: l10n.sellAddItem,
+                            onTap: _openItemPicker,
+                          ),
+                        ),
+                      ],
+
+                      // أكورديون الخصومات — خصم الرأس + ملخص خصوم الأسطر.
+                      if (state.showDiscounts)
+                        _DiscountsSection(
+                          expanded: _discountsExpanded,
+                          onToggle: () => setState(
+                            () => _discountsExpanded = !_discountsExpanded,
+                          ),
+                          discountsTotal: discountsTotal,
+                          lineDiscountsTotal: priced?.totals.lineDiscountsTotal,
+                          invoiceDiscount: priced?.totals.invoiceDiscount,
+                          decimals: decimals,
+                          onEditInvoiceDiscount: _editInvoiceDiscount,
+                        ),
+
+                      // شريط «مجموع» الداكن — الصافي بعد الخصومات.
+                      SimDarkTotalBar(
+                        label: l10n.simTotalBarLabel,
+                        amount: grandTotal == null
+                            ? '0'
+                            : AmountText.formatFor(
+                                context,
+                                grandTotal,
+                                decimals,
+                              ),
+                      ),
+                    ],
+                  )
+                : _buildA4Preview(context, vm, state),
           ),
           if (hasError) _CartErrorStrip(message: vm.cartError!),
           SimBottomActionBar(
@@ -533,6 +579,34 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
           ),
         ],
       ),
+    );
+  }
+
+  /// V6-B — تبويب المعاينة: ورقة A4 حية من المسودة الحالية (قارئة
+  /// فقط) تملأ منطقة العرض على الأقل (`SliverFillRemaining`) وتتمرر عند
+  /// فيض المحتوى — خلفية منطقة A4 من `SimA4Sheet.pageBackgroundOf`.
+  Widget _buildA4Preview(
+    BuildContext context,
+    SellCartViewModel vm,
+    SellCartState state,
+  ) {
+    final app = context.read<AppController>();
+    final l10n = AppLocalizations.of(context)!;
+    final priced = vm.pricedCart;
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: SimInvoiceA4Preview(
+            invoiceNo: state.nextInvoiceNo ?? l10n.sellNewInvoiceLabel,
+            customer: state.customer,
+            pricedCart: priced,
+            companyName: app.company?.name ?? '',
+            currencyCode: state.selectedCurrency?.code,
+            decimals: _decimalsFor(priced?.totals.grandTotal),
+          ),
+        ),
+      ],
     );
   }
 }
