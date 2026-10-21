@@ -70,6 +70,13 @@ class VoucherPdfBuilder {
         _numberDateRow(doc),
         pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
         _amountHero(doc),
+        // V6-C (مراجعة 🟡-3) — كتلة التفقيط (شرط عرض واحد): تحت المبلغ
+        // البطل مباشرة؛ غياب القيمة أو التسمية يترك الترتيب كما كان حرفياً.
+        if ((doc.amountWords ?? '').trim().isNotEmpty &&
+            (doc.labels.wordsLabel ?? '').trim().isNotEmpty) ...[
+          pw.SizedBox(height: 2 * pw.PdfPageFormat.mm),
+          _wordsBlock(doc),
+        ],
         pw.SizedBox(height: 5 * pw.PdfPageFormat.mm),
         ..._fieldRows(doc),
         if ((doc.description ?? '').trim().isNotEmpty) ...[
@@ -253,6 +260,34 @@ class VoucherPdfBuilder {
           ),
           pw.Text(
             doc.description!.trim(),
+            style: PrintText.body(size: 10),
+            textDirection: pw.TextDirection.rtl,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// V6-C (مراجعة 🟡-3) — كتلة التفقيط تحت المبلغ البطل: إطار خفيف
+  /// بتسمية أعلى النص (نفس بنية كتلة البيان حرفياً)؛ النص يلتف
+  /// بحرية فجملة التفقيط قد تطول («مئة ألف وأربعة وعشرون ريالاً…»).
+  pw.Widget _wordsBlock(VoucherPrintDoc doc) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(6),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PrintPalette.rule, width: 0.6),
+        borderRadius: pw.BorderRadius.circular(3),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: [
+          pw.Text(
+            doc.labels.wordsLabel!.trim(),
+            style: PrintText.head(color: PrintPalette.inkSoft, size: 8.5),
+            textDirection: pw.TextDirection.rtl,
+          ),
+          pw.Text(
+            doc.amountWords!.trim(),
             style: PrintText.body(size: 10),
             textDirection: pw.TextDirection.rtl,
           ),

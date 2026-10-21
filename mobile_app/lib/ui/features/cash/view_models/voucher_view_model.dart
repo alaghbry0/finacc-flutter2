@@ -21,6 +21,8 @@ import '../../../../domain/core/result.dart';
 import '../../../../domain/models/cash.dart';
 import '../../../../domain/models/company.dart';
 import '../../../../domain/models/party.dart';
+import '../../../../domain/services/amount_in_words.dart';
+import '../../../core/widgets/amount_text.dart';
 
 class VoucherViewModel extends ChangeNotifier {
   VoucherViewModel({
@@ -99,6 +101,28 @@ class VoucherViewModel extends ChangeNotifier {
   int get voucherDecimals =>
       voucherCurrency?.decimals ??
       AmountText.decimalsFor(voucherCurrency?.code);
+
+  /// V6-C (مراجعة 🟡-3) — سطر التفقيط للمبلغ الحي بعملة السند: مصدر
+  /// واحد لمعاينة الشاشة ومسودة PDF كليهما (كان محسوبًا في كل منهما
+  /// على حدة). المبلغ الفارغ يُعامل صفرًا صادقًا («مجموع صفر … فقط» —
+  /// يطابق سطر المبلغ المعروض 0)؛ الحارس (مراجعة 🔴-1) يتخطى السطر
+  /// عند السالب/غير المنتهي/فوق سقف عقد `amountInWords`
+  /// (999,999,999,999.99 — لصق رقم ضخم كان ينهار التبويب كاملاً).
+  String? get amountWords {
+    final currency = voucherCurrency;
+    if (currency == null) return null;
+    final amount = _amount ?? 0;
+    if (!amount.isFinite || amount < 0 || amount > 999999999999.99) {
+      return null;
+    }
+    return amountInWords(
+      amount: amount,
+      currencyName: currency.name,
+      currencyCode: currency.code,
+      decimals: currency.decimals,
+    );
+  }
+
   List<CashboxWithBalance> get boxes => _boxes;
   int? get partyId => _partyId;
   String? get partyName => _partyName;
@@ -396,7 +420,9 @@ class VoucherViewModel extends ChangeNotifier {
       return reject('أدخل مبلغاً أكبر من صفر أولاً.');
     }
     if (_allocateFifo && openDuesTotal <= 0.005) {
-      return reject('لا مديونية مفتوحة بعملة السند لتخصيصها — اختر «على الحساب».');
+      return reject(
+        'لا مديونية مفتوحة بعملة السند لتخصيصها — اختر «على الحساب».',
+      );
     }
     _saving = true;
     _saveError = null;

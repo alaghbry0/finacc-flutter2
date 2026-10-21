@@ -33,7 +33,9 @@ import 'cash_widgets.dart';
 /// التعريب من l10n والمبلغ عبر `AmountText.format` بمنازل عملة السند
 /// (قاعدة 5.4-9). [isDraft] يضيف وسم «مسودة — لم تُرحّل» (والقيمة
 /// معاينة للرقم القادم — لا تسلسل مستهلك). [company] اختياري لرأس
-/// المنشأة بنمط `movementVoucherPrintDoc` حرفياً.
+/// المنشأة بنمط `movementVoucherPrintDoc` حرفياً. [amountWords]
+/// (مراجعة 🟡-3) سطر التفقيط من قارئ النموذج — يحضر كتلة
+/// «المبلغ بالكلمات» تحت المبلغ البطل بالقالب عند توفره.
 VoucherPrintDoc buildVoucherDraftPrintDoc(
   AppLocalizations l10n, {
   required bool isReceipt,
@@ -46,6 +48,7 @@ VoucherPrintDoc buildVoucherDraftPrintDoc(
   required String boxName,
   required bool isDraft,
   Company? company,
+  String? amountWords,
 }) {
   return VoucherPrintDoc(
     header: PrintHeader(
@@ -62,6 +65,7 @@ VoucherPrintDoc buildVoucherDraftPrintDoc(
     currencyCode: currencyCode,
     description: description,
     boxName: boxName,
+    amountWords: amountWords,
     labels: VoucherLabels(
       titleReceipt: l10n.printingVoucherReceiptTitle,
       titlePayment: l10n.printingVoucherPaymentTitle,
@@ -73,6 +77,7 @@ VoucherPrintDoc buildVoucherDraftPrintDoc(
       signature: l10n.printingLblSignature,
       footerThanks: l10n.printingFooterThanks,
       draftLabel: isDraft ? l10n.simRcptDraftBadge : null,
+      wordsLabel: l10n.printingLblAmountWords,
     ),
   );
 }
@@ -91,19 +96,16 @@ void openVoucherDraftPdfPreview(BuildContext context, VoucherViewModel vm) {
   final voucherNo = vm.previewVoucherNo ?? (isReceipt ? 'RVT' : 'PMT');
   final dateLabel = cashFormatDate(vm.txDate);
   final partyName = vm.partyName;
-  final currency = vm.voucherCurrency;
-  final decimals = currency?.decimals ?? AmountText.decimalsFor(
-    currency?.code,
-  );
+  // مراجعة 🟡-3 — المنازل والتفقيط من قارئي النموذج (مصدر واحد مع
+  // معاينة الشاشة — كانا محسوبين هنا على حدة حرفياً).
+  final decimals = vm.voucherDecimals;
+  final amountWords = vm.amountWords;
   final amountLabel = AmountText.format(vm.amount ?? 0, decimals);
   final currencyCode = vm.voucherCurrencyCode ?? '';
   final description = vm.notes.trim().isEmpty ? null : vm.notes.trim();
   final boxName = vm.selectedBox?.box.name ?? '';
   final whatsappPhone = company?.whatsapp;
-  final shareMessage = l10n.printingShareMessageVoucher(
-    voucherNo,
-    amountLabel,
-  );
+  final shareMessage = l10n.printingShareMessageVoucher(voucherNo, amountLabel);
   unawaited(
     showPdfPreviewDialog(
       context,
@@ -121,6 +123,7 @@ void openVoucherDraftPdfPreview(BuildContext context, VoucherViewModel vm) {
           boxName: boxName,
           isDraft: true,
           company: company,
+          amountWords: amountWords,
         ),
       ),
       whatsappPhone: whatsappPhone,

@@ -3138,6 +3138,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get printingLblAmount => 'المبلغ';
 
   @override
+  String get printingLblAmountWords => 'المبلغ بالكلمات';
+
+  @override
   String get printingLblDate => 'التاريخ';
 
   @override

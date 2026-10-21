@@ -5498,6 +5498,12 @@ abstract class AppLocalizations {
   /// **'Amount'**
   String get printingLblAmount;
 
+  /// No description provided for @printingLblAmountWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount in words'**
+  String get printingLblAmountWords;
+
   /// No description provided for @printingLblDate.
   ///
   /// In en, this message translates to:

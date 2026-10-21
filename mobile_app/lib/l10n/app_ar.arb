@@ -906,6 +906,7 @@
   "printingLblCustomer": "العميل",
   "printingLblParty": "الطرف",
   "printingLblAmount": "المبلغ",
+  "printingLblAmountWords": "المبلغ بالكلمات",
   "printingLblDate": "التاريخ",
   "printingLblCurrency": "العملة",
   "printingLblItem": "الصنف",

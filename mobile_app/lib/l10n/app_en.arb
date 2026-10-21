@@ -906,6 +906,7 @@
   "printingLblCustomer": "Customer",
   "printingLblParty": "Party",
   "printingLblAmount": "Amount",
+  "printingLblAmountWords": "Amount in words",
   "printingLblDate": "Date",
   "printingLblCurrency": "Currency",
   "printingLblItem": "Item",

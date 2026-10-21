@@ -23,6 +23,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/ui/core/router/app_router.dart';
 import 'package:mobile_app/ui/core/session/app_controller.dart';
 import 'package:mobile_app/ui/core/widgets/sim_doc_widgets.dart';
+import 'package:mobile_app/ui/core/widgets/sim_list_widgets.dart';
 import 'package:mobile_app/ui/features/sell/view_models/sell_cart_session.dart';
 import 'package:mobile_app/ui/features/sell/view_models/sell_cart_view_model.dart';
 import 'package:mobile_app/ui/features/sell/views/widgets/sim_invoice_widgets.dart';

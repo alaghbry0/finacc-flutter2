@@ -31,7 +31,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../domain/models/company.dart';
-import '../../../../domain/services/amount_in_words.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_colors.dart';
@@ -453,24 +452,11 @@ class _VoucherReceiptPreview extends StatelessWidget {
         ? amountLabel
         : '$amountLabel $currencyCode';
 
-    // سطر التفقيط — عملة السند معروفة فقط (وإلا يُتخطى السطر بشرط).
-    // **حارس السقف (مراجعة V6 🔴-1)**: حقل المبلغ يقبل لصق أرقام ضخمة
-    // (`\d*` بلا سقف) وعقد `amountInWords` الرمي فوق 999,999,999,999.99
-    // — بلا الحارس ينهار تبويب المعاينة كاملاً. فوق السقف أو سالب أو صفر
-    // أو غير منته: يُتخطى السطر (الرقم ظاهر أعلاه أصلاً) بلا كذب.
-    final wordsAmount = vm.amount;
-    final words = (currency == null ||
-            wordsAmount == null ||
-            !wordsAmount.isFinite ||
-            wordsAmount <= 0 ||
-            wordsAmount > 999999999999.99)
-        ? null
-        : amountInWords(
-            amount: wordsAmount,
-            currencyName: currency.name,
-            currencyCode: currency.code,
-            decimals: currency.decimals,
-          );
+    // سطر التفقيط — قارئ النموذج (مراجعة 🟡-3): مصدر واحد مع مسودة
+    // PDF؛ حارس السقف (🔴-1) داخل القارئ (لصق رقم ضخم فوق
+    // 999,999,999,999.99 أو سالب/غير منته → يُتخطى السطر بلا كذب —
+    // الرقم ظاهر أعلاه أصلاً)، والفراغ يُفلق «صفر … فقط» صادقاً.
+    final words = vm.amountWords;
 
     return CustomScrollView(
       slivers: [
@@ -659,18 +645,26 @@ class _PartyAmountRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: Text(
-              amountLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: FinText.fontFamily,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF263238),
-                fontFeatures: FinText.tabularNums,
+          // مبلغ طويل (لصق رقم ضخم مثلاً) لا يفيض: Flexible +
+          // scaleDown يقيسه كاملاً للعرض المتاح بدل اقتصاصه — كل
+          // الخانات تبقى مقروءة في مستند مالي (كشفه اختبار الحارس ١١).
+          Flexible(
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  amountLabel,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontFamily: FinText.fontFamily,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF263238),
+                    fontFeatures: FinText.tabularNums,
+                  ),
+                ),
               ),
             ),
           ),

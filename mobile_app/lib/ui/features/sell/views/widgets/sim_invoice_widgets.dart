@@ -9,9 +9,10 @@
 /// - [SimDarkTotalBar]: شريط «مجموع» الداكن (#546E7A = colors.neutral) —
 ///   نص أبيض عريض 15sp.
 /// - [SimAddItemSquareButton]: زر «اضافة عنصر» المربع الأزرق.
-/// - [SimBottomActionBar]: شريط الإجراءات السفلي الرباعي (أيقونة فوق
-///   تسمية 11sp، فواصل، خلفية #F5F7F8 وحد علوي) — قرار الأزرار عند
-///   المستدعي لأنها دلالات نطاق البيع لا مظهر SIM.
+///
+/// (شريط الإجراءات السفلي `SimBottomActionBar` انتقل إلى المكتبة
+/// المشتركة `ui/core/widgets/sim_list_widgets.dart` بجولة V6 — مراجعة
+/// 🔴-2: شاشة السند تستهلكه أيضاً فصار مكون نطاق عام لا خاص بالبيع.)
 ///
 /// الألوان من توكنات الثيم الدلالية (neutral/primary) فتتبع وضع
 /// التباين العالي تلقائياً؛ المبالغ بتنسيق AmountText (أرقام Noto
@@ -125,9 +126,7 @@ class SimAccordionHeader extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: colors.cardBorder),
-            ),
+            border: Border(bottom: BorderSide(color: colors.cardBorder)),
           ),
           child: Row(
             children: [
@@ -138,9 +137,8 @@ class SimAccordionHeader extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               if (requiredMark) ...[
@@ -285,10 +283,8 @@ class SimDarkTotalBar extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
             ),
           ),
           Text(
@@ -331,9 +327,8 @@ class SimAddItemSquareButton extends StatelessWidget {
         icon: const Icon(Icons.add_rounded, size: 20),
         label: Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.labelLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -342,4 +337,3 @@ class SimAddItemSquareButton extends StatelessWidget {
 
 /// (V6: SimBottomActionItem/SimBottomActionBar انتقلا إلى
 /// `ui/core/widgets/sim_list_widgets.dart` — مستهلكون من ميزتين.)
-

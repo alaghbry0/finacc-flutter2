@@ -3122,6 +3122,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get printingLblAmount => 'Amount';
 
   @override
+  String get printingLblAmountWords => 'Amount in words';
+
+  @override
   String get printingLblDate => 'Date';
 
   @override

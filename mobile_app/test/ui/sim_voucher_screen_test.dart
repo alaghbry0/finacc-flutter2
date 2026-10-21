@@ -33,7 +33,6 @@ import 'package:mobile_app/ui/features/cash/views/cash_home_screen.dart';
 import 'package:mobile_app/ui/features/cash/views/widgets/voucher_draft_pdf.dart';
 import 'package:mobile_app/ui/features/cash/views/widgets/voucher_party_card.dart';
 import 'package:mobile_app/ui/features/printing/services/voucher_pdf_builder.dart';
-import 'package:mobile_app/ui/features/sell/views/widgets/sim_invoice_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/app_for_tests.dart';
@@ -524,8 +523,13 @@ void main() {
           currencyCode: 'YER',
           boxName: 'الصندوق الرئيسي',
           isDraft: true,
+          amountWords: 'مئتان وخمسون ريالاً يمنياً فقط',
         );
         expect(draft.labels.draftLabel, l10n.simRcptDraftBadge);
+        // V6 (مراجعة 🟡-3) — سطر التفقيط يصل المسقط كاملاً (قارئ النموذج
+        // → المستند → القالب) مع تسميته.
+        expect(draft.amountWords, 'مئتان وخمسون ريالاً يمنياً فقط');
+        expect(draft.labels.wordsLabel, l10n.printingLblAmountWords);
         expect(draft.isReceipt, isTrue);
         expect(draft.voucherNo, 'RVT-2026-00001');
 
@@ -534,9 +538,12 @@ void main() {
         expect(String.fromCharCodes(bytes, 0, 4), '%PDF');
         expect(pdfPageCount(bytes), 1, reason: 'المسودة صفحة A5 واحدة');
 
-        // المستند المُرحّل (movement) بلا وسم — سلوك القالب القائم حرفياً.
+        // المستند المُرحّل (movement) بلا وسم ولا تفقيط — سلوك القالب
+        // القائم حرفياً (الحقول الاختيارية null افتراضياً).
         final posted = voucherDocForTests(l10n);
         expect(posted.labels.draftLabel, isNull);
+        expect(posted.amountWords, isNull);
+        expect(posted.labels.wordsLabel, isNull);
         final postedBytes = await (await const VoucherPdfBuilder().build(
           posted,
         )).save();
@@ -544,5 +551,43 @@ void main() {
         expect(pdfPageCount(postedBytes), 1);
       });
     }, timeout: const Timeout(Duration(minutes: 2)));
+
+    testWidgets('١١) حارس سقف التفقيط (🔴-1): لصق رقم ضخم لا يكسر المعاينة', (
+      tester,
+    ) async {
+      // حقل المبلغ يقبل لصق أرقام بلا سقف (`\d*`) وعقد `amountInWords`
+      // يرمي فوق 999,999,999,999.99 — قبل الحارس كان تبويب المعاينة
+      // ينهار كاملاً؛ الآن يُتخطى سطر الكلمات فقط (الرقم ظاهر أعلاه).
+      tester.view.physicalSize = const Size(390, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.runAsync(() async {
+        await openDb();
+        final router = await bootApp(tester);
+        await openVoucher(tester, router, 'receipt');
+
+        // 15 خانة = 999 تريليون ≫ السقف — أعلى من أي مبلغ تجاري.
+        await enterAmount(tester, '999999999999999');
+
+        await tester.tap(find.text('معاينة'));
+        await pumpQuietly(tester);
+
+        // المعاينة حية (لا انهيار) والورقة موجودة…
+        expect(find.byType(SimA4Sheet), findsOneWidget);
+        // …وسطر الكلمات متخطى بلا كذب (لا «فقط» والرقم الضخم ظاهر أعلاه).
+        expect(find.textContaining('فقط'), findsNothing);
+
+        // العودة للنموذج ومبلغ طبيعي تعيد السطر فوراً (الحارس ديناميكي).
+        await tester.tap(find.text('إيصال'));
+        await pumpQuietly(tester);
+        await enterAmount(tester, '250');
+        await tester.tap(find.text('معاينة'));
+        await pumpQuietly(tester);
+        expect(find.textContaining('مئتان وخمسون'), findsOneWidget);
+        expect(find.textContaining('فقط'), findsOneWidget);
+        router.dispose();
+      });
+    });
   });
 }

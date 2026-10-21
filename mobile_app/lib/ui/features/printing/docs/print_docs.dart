@@ -281,6 +281,7 @@ class VoucherLabels {
     required this.signature,
     required this.footerThanks,
     this.draftLabel,
+    this.wordsLabel,
   });
 
   /// عنوان سند القبض.
@@ -316,6 +317,11 @@ class VoucherLabels {
   /// المعاينة قبل الترحيل من شاشة السند). نمط الإضافات الاختيارية نفسه
   /// المتّبع في `InvoiceTemplateLabels`.
   final String? draftLabel;
+
+  /// V6-C (مراجعة 🟡-3) — تسمية كتلة التفقيط (مثل «المبلغ بالكلمات»)
+  /// — **اختيارية بلا كسر** بنمط `draftLabel`: حضورها مع قيمة
+  /// `VoucherPrintDoc.amountWords` يرسم الكتلة تحت المبلغ البطل.
+  final String? wordsLabel;
 }
 
 /// مستند سند مرقَّم قابل للطباعة (FR-04-10 + FR-10-05) — يغذي قالب A5.
@@ -330,6 +336,7 @@ class VoucherPrintDoc {
     required this.currencyCode,
     this.description,
     required this.boxName,
+    this.amountWords,
     required this.labels,
   });
 
@@ -359,6 +366,13 @@ class VoucherPrintDoc {
 
   /// اسم الصندوق.
   final String boxName;
+
+  /// V6-C (مراجعة 🟡-3) — المبلغ بالكلمات (التفقيط العربي الصادق من
+  /// قارئ النموذج) — **اختياري بلا كسر**: غيابه (null، الافتراضي لكل
+  /// البناة القائمة) يترك السند كما هو حرفياً؛ حضوره مع تسمية
+  /// `VoucherLabels.wordsLabel` يرسم كتلة التفقيط تحت المبلغ البطل
+  /// (بنمط كتلة البيان) — سطر احترافي مضاد للتلاعب بالمستند.
+  final String? amountWords;
 
   /// كل تسميات المستند (مسبقة التعريب).
   final VoucherLabels labels;
