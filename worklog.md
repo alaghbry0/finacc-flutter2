@@ -2290,3 +2290,32 @@ Stage Summary:
 - مراجعة الكود المستقلة أغلقت كل بنودها (إلزاميان + تحسينات) + إصلاح فيض جذري إضافي اكتشفه اختبار الحارس.
 - الإيداع: 6b9d57a (أعمال الوكلاء + إصلاحات جزئية) + إيداع V6 الختامي بالوسم v6 — مدفوعان للبعيد.
 - **أولوية V7 (بترتيب المرجع التصميمي)**: شاشة مركز المعاملات/النقدية (dashboard) بهوية SIM + سندات القبض/الصرف من نموذج SIM إن بقيت فجوات + نموذج إدخال الصنف/العميل بهوية SIM (ذكرت R27 كمتبقية) — تُحدد بدقة بقراءة المرجع § وشاشات Screenbox المتبقية غير المغطاة.
+
+---
+Task ID: V7-A
+Agent: general-purpose (شاشة الإعدادات بهوية SIM) — استكمل المنسق التحقق بعد انقطاع المهلة، وثّقت أعماله بإيداع 7fe0198
+Task: إعادة جلد شاشة الإعدادات (جذر تبويب /more) بهوية SIM وفق screen-settings بالنموذج الأولي مع حفظ كل وجهة/فعل قائم.
+
+Work Log:
+- البنية الجديدة: SimSubHeader بعنوان «إعدادات» **بلا زر رجوع** (جذر تبويب — قرار نقد F9-a) + بطاقة المنشأة كما هي حرفيًا (FR-12-05 محمية) + 6 صفوف SimSettingRow المقفلة (ابتدائي→/more/company، قالب الفاتورة→/more/print-templates، رأس الفاتورة→/more/print-templates، ادارة المخزون→/inventory، عملات متعددة→/parties/rates، تصنيف المنتج→/inventory/categories-units — إصلاح نقد F1) + فاصل «المزيد من إعدادات FinAcc» + أقسام التخصيص/الأمان/البيانات/التقارير بنفس لغة الصفوف (sim_settings_sections.dart بديلًا عن settings_sections.dart القديم) + بطاقة «حول» أسفل القائمة.
+- تحصينان جانبيان مكتشفان أثناء العمل: (1) StatusChip بعرض غير محدود كان يفيض بشرائط صفراء (جملة تحذير 76 حرفًا كتسمية رقاقة داخل بطاقة 296px) — Flexible+ellipsis، (2) بطاقة أسعار الصرف — الرقاقة بخلاصة قصيرة والجملة الكاملة نص تفسيري أسفلها (لا فقد معلومة).
+- اختبارات جديدة: sim_settings_screen_test.dart (الترويسة بلا رجوع + الصفوف الستة + وجهات كل صف + بطاقة المنشأة + قسم المزيد + عينات وجهات الأقسام) + تحديث settings_and_audit_test.dart للهيكلة الجديدة — 13+ اختبارًا خضراء.
+
+Stage Summary:
+- كل وجهة/فعل من الشاشة القائمة محفوظ وموثق بجدول تغطية + الصفوف الستة بأوصاف صادقة مقفلة.
+- الإيداع 7fe0198 (استُكمل تسجيله بعد انقطاع المهلة وإعادة تشغيل الساندبوكس).
+
+---
+Task ID: V7-B
+Agent: general-purpose (عدة تصدير التقارير) — استكمل المنسق التحقق، وثّقت أعماله بإيداع 7fe0198
+Task: بناء عدة تصدير التقارير (PDF جدولي عام + Excel حقيقي + صورة PNG) للموجة التالية.
+
+Work Log:
+- report_print_doc.dart + report_pdf_builder.dart (345 سطرًا): ReportColumnSpec/ReportPrintDoc (قيم مسبقة التنسيق) + باني A4 عمودي MultiPage بنمط بنّاء السند (ترويسة brandBand + عنوان + صف الفترة/التاريخ + جدول RTL فيزيائي — قلب ترتيب الأعمدة + خلايا رقمية tabular LTR + صف إجمالي داكن + تذييل printFooterLine).
+- report_excel_export.dart (141 سطرًا): buildReportExcelBytes عبر حزمة excel القائمة (xlsx حقيقي — قرار نقد V7-5: ليس CSV) + exportReportExcel عالية المستوى بتنزيل web_download وSnackBar اختياري + sanitizeReportFileName بنمط pdf_preview_dialog.
+- report_image_export.dart (147 سطرًا): exportReportImage (ترسيم PDF بPrinting.raster dpi150 — قرار نقد V7-5: بدل RepaintBoundary المحفوف بالقوائم الكسولة) + تركيب الصفحات عموديًا PNG واحد + سقف maxPages=12 مع ImageExportResult.tooLong (المستدعي يعرض مفتاح السقف المقفل).
+- اختبارات: report_pdf_builder_test.dart (447 سطرًا — %PDF + صفحة واحدة + أعمدة RTL + إجمالي داكن + جدول >30 صفًا متعدد الصفحات) + report_excel_export_test.dart (PK zip + إعادة فتح بالحزمة + قيم عربية + أرقام كأرقام) + report_image_export_test.dart (تركيب نقي + سقف + فراغ بArgumentError) — كلها خضراء.
+
+Stage Summary:
+- عقد استهلاك الوكيل التالي (C): ReportPrintDoc/ReportPdfBuilder للمسقط العام + exportReportExcel/buildReportExcelBytes + exportReportImage/composePngPagesVertically + sanitizeReportFileName.
+- الإيداع 7fe0198.
