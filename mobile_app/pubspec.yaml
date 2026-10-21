@@ -59,6 +59,11 @@ dependencies:
   # مشاركة ملف النسخة عبر نظام التشغيل (FR-11-08 — واتساب/درايف/بلوتوث)
   # وبديل الحفظ في Downloads — Java فقط بلا NDK.
   share_plus: ^13.3.1
+  # ── تنزيل ملفات التصدير من متصفح الويب (V7 — تقارير: صورة/تفوق/PDF) ──
+  # روابط W3C الرسمية الحديثة (Blob + URL.createObjectURL + anchor) —
+  # بديل dart:html المهمل (يكسر analyze 0/0 بتحذيرات إهمال) ومتوافق مع
+  # بناءات WASM المستقبلية. يستخدم عبر مساعد مشروط: core/utils/web_download.dart
+  web: ^1.1.1
 
 # ── قيد البيئة: NDK ──
 # path_provider_android 2.3.x تعتمد على حزمة jni ذات كود C++ أصلي (CMake/NDK)

@@ -69,10 +69,19 @@ class StatusChip extends StatelessWidget {
             Icon(icon, size: 13, color: fg),
             const SizedBox(width: 4),
           ],
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(color: fg, fontWeight: FontWeight.w700),
+          // V7-A (تحصين): التسمية مرنة بأحرف محذوفة — الرقائق بعرض غير
+          // محدود كانت تفيض بشرائط صفراء (كُشف بمركز الإعدادات → أسعار
+          // الصرف: جملة تحذير كاملة كتسمية رقاقة 737px داخل 296px). كل
+          // مواضع الاستخدام الحالية سياقها محدود العرض فلا انهيار flex
+          // غير المحدود، والتسميات القصيرة يتطابق تخطيطها.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall
+                  ?.copyWith(color: fg, fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

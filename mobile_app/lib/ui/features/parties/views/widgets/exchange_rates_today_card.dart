@@ -89,18 +89,28 @@ class ExchangeRatesTodayCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          // V7-A (تحصين): جملة التحذير الكاملة (76 حرفاً ≈ 737px) كانت
+          // تسمية رقاقة واحدة فتفيض داخل بطاقة 296px — الرقاقة الآن
+          // بخلاصة قصيرة والجملة نص تفسيري أسفلها (لا فقد معلومة).
           if (state.complete)
             StatusChip(
               label: l10n.fxAllComplete,
               tone: ChipTone.positive,
               icon: Icons.check_circle_rounded,
             )
-          else
+          else ...[
             StatusChip(
-              label: l10n.fxMissingWarning,
+              label: l10n.fxMissingToday,
               tone: ChipTone.warning,
               icon: Icons.warning_amber_rounded,
             ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.fxMissingWarning,
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
           const SizedBox(height: 10),
           Text(
             l10n.fxBaseNote(state.baseCurrency?.code ?? ''),

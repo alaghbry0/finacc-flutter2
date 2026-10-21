@@ -54,13 +54,16 @@ void main() {
       // قسم الأمان: تغيير PIN وسجل التدقيق والقفل.
       expect(find.textContaining('تغيير رمز'), findsOneWidget);
       expect(find.text('سجل التدقيق'), findsOneWidget);
-      // البيانات (المسح المحروس) وبوابات التخصيص الثلاث (UX-2a — الثيم
-      // والأرقام انتقلا من المركز إلى شاشة «العرض والمظهر» المتخصصة،
-      // وتغطيهما اختبارات settings2_screens هناك).
+      // البيانات (المسح المحروس) وبوابات التخصيص الباقية (V7-A: بيانات
+      // المنشأة ارتفعت للصف الأساسي المقفل «الإعدادات ابتدائي» بنمط SIM
+      // — نفس الوجهة /more/company؛ الثيم والأرقام بصف «العرض والمظهر»).
       expect(find.textContaining('مسح كل البيانات'), findsOneWidget);
-      expect(find.text('بيانات المنشأة'), findsOneWidget);
+      expect(find.text('الإعدادات ابتدائي'), findsOneWidget);
       expect(find.text('تفضيلات البيع'), findsOneWidget);
       expect(find.text('العرض والمظهر'), findsOneWidget);
+      // هوية SIM (V7): ترويسة «إعدادات» + فاصل «المزيد».
+      expect(find.text('إعدادات'), findsOneWidget);
+      expect(find.text('المزيد من إعدادات FinAcc'), findsOneWidget);
       vm.dispose();
       controller.dispose();
     });

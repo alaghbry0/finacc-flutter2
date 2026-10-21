@@ -1,11 +1,11 @@
-/// شاشة «المزيد» — **مركز أقسام الإعدادات** (UX-2a): بطاقات أقسام بنمط
-/// التطبيق (FinCard) تفتح شاشات فرعية متخصصة:
-/// بطاقة المنشأة (شعار + مدة القفل التلقائي القابلة للضبط — FR-12-05)
-/// → بيانات المنشأة `/more/company` · تفضيلات البيع `/more/sale-prefs` ·
-/// العرض والمظهر `/more/appearance` · قوالب طباعة الفواتير
-/// `/more/print-templates` (UX-3) · الأمان (تغيير PIN/سجل التدقيق/
-/// القفل الفوري) · البيانات (النسخ/المسح المحروس) · مركز التقارير · حول.
-/// الأقسام كلها بملفاتها المركزّة بجوارها (R19-D3b).
+/// شاشة «إعدادات» (جذر تبويب `/more`) — **مركز SIM** (V7): ترويسة فرعية
+/// بعنوان «إعدادات» **بلا زر رجوع** (جذر تبويب في StatefulShellRoute لا
+/// أب يُرجَع إليه — قرار نقد F9-a المحسوم)، بطاقة المنشأة أعلى كما هي
+/// (شعار + مدة القفل التلقائي القابلة للضبط — FR-12-05)، ثم الصفوف
+/// الستة المقفلة بنمط `.setting-row` من النموذج الأولي، ثم فاصل
+/// «المزيد من إعدادات FinAcc» والأقسام الباقية بصفوف SIM (التخصيص/
+/// الأمان/البيانات/مركز التقارير) وبطاقة «حول» أسفل القائمة — كل
+/// وجهة/فعل من الشاشة القائمة محفوظ (`widgets/sim_settings_sections.dart`).
 library;
 
 import 'dart:async';
@@ -17,10 +17,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/settings_view_model.dart';
 import 'widgets/settings_about_card.dart';
 import 'widgets/settings_company_card.dart';
-import 'widgets/settings_sections.dart';
+import 'widgets/sim_settings_sections.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, this.viewModel});
@@ -62,36 +63,70 @@ class _SettingsBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: Text(l10n.tabMore)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          if (state.loading)
-            const ListSkeleton()
-          else if (state.error != null)
-            ErrorState(
-              title: l10n.genericErrorTitle,
-              message: l10n.dbOpenErrorMessage,
-              technicalDetails: state.error.toString(),
-              retryLabel: l10n.commonRetry,
-              onRetry: vm.load,
-              compact: true,
-            )
-          else ...[
-            SettingsCompanyCard(state: state),
-            const SizedBox(height: 16),
-            // مركز التقارير (الشريحة 10) — بوابة الأرباح والرقابة اليومية.
-            const SettingsReportsSection(),
-            const SizedBox(height: 16),
-            SettingsCustomizationSection(state: state),
-            const SizedBox(height: 16),
-            const SettingsSecuritySection(),
-            const SizedBox(height: 16),
-            const SettingsDataSection(),
-            const SizedBox(height: 16),
-            SettingsAboutCard(state: state),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // جذر تبويب: بلا onBack — لا زر رجوع اصطناعي إلى /home.
+            SimSubHeader(
+              titleKey: const Key('sim_settings_title'),
+              title: l10n.homeSettingsLabel,
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
+                children: [
+                  if (state.loading)
+                    const ListSkeleton()
+                  else if (state.error != null)
+                    ErrorState(
+                      title: l10n.genericErrorTitle,
+                      message: l10n.dbOpenErrorMessage,
+                      technicalDetails: state.error.toString(),
+                      retryLabel: l10n.commonRetry,
+                      onRetry: vm.load,
+                      compact: true,
+                    )
+                  else ...[
+                    // بطاقة المنشأة — كما هي حرفيًا (FR-12-05 محمية).
+                    SettingsCompanyCard(state: state),
+                    const SizedBox(height: 16),
+                    // الصفوف الستة المقفلة (screen-settings بالنموذج).
+                    const SimSettingsCoreRows(),
+                    const SizedBox(height: 20),
+                    // فاصل القسم: بقية إعدادات FinAcc خلف نموذج SIM.
+                    SimSettingsSectionLabel(
+                      labelKey: const Key('sim_settings_more_title'),
+                      title: l10n.settingsSimMoreTitle,
+                      prominent: true,
+                    ),
+                    const SizedBox(height: 8),
+                    SimSettingsSectionLabel(
+                      title: l10n.settings2CustomizationTitle,
+                    ),
+                    const SizedBox(height: 8),
+                    const SimSettingsCustomizationRows(),
+                    const SizedBox(height: 16),
+                    SimSettingsSectionLabel(title: l10n.settingsSecurity),
+                    const SizedBox(height: 8),
+                    const SimSettingsSecurityRows(),
+                    const SizedBox(height: 16),
+                    SimSettingsSectionLabel(title: l10n.settingsData),
+                    const SizedBox(height: 8),
+                    const SimSettingsDataRows(),
+                    const SizedBox(height: 16),
+                    SimSettingsSectionLabel(title: l10n.reportsTitle),
+                    const SizedBox(height: 8),
+                    const SimSettingsReportsRows(),
+                    const SizedBox(height: 16),
+                    // بطاقة «حول» — كما هي أسفل القائمة (بلا مسار).
+                    SettingsAboutCard(state: state),
+                  ],
+                ],
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
