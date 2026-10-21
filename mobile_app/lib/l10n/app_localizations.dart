@@ -8904,6 +8904,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add product'**
   String get simAddProductFab;
+
+  /// No description provided for @simModeTabForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Input Form'**
+  String get simModeTabForm;
+
+  /// No description provided for @simModeTabPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get simModeTabPreview;
+
+  /// No description provided for @simRcptDocTabReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get simRcptDocTabReceipt;
+
+  /// No description provided for @simRcptDocTabPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher'**
+  String get simRcptDocTabPayment;
+
+  /// No description provided for @simA4InvoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice'**
+  String get simA4InvoiceTitle;
+
+  /// No description provided for @simA4BillTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill To:'**
+  String get simA4BillTo;
+
+  /// No description provided for @simA4ColNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get simA4ColNo;
+
+  /// No description provided for @simA4ColProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get simA4ColProduct;
+
+  /// No description provided for @simA4ColQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get simA4ColQty;
+
+  /// No description provided for @simA4ColRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get simA4ColRate;
+
+  /// No description provided for @simA4ColAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get simA4ColAmount;
+
+  /// No description provided for @simA4TotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Amount'**
+  String get simA4TotalLabel;
+
+  /// No description provided for @simA4BalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get simA4BalanceLabel;
+
+  /// No description provided for @simA4DiscountRowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get simA4DiscountRowLabel;
+
+  /// No description provided for @simA4NotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes:'**
+  String get simA4NotesLabel;
+
+  /// No description provided for @simA4SignatureLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature:'**
+  String get simA4SignatureLabel;
+
+  /// No description provided for @simA4FreeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Free:'**
+  String get simA4FreeLabel;
+
+  /// No description provided for @simA4EmptyItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No items in the invoice yet — add items from the input form'**
+  String get simA4EmptyItems;
+
+  /// No description provided for @simRcptReceivedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Received From:'**
+  String get simRcptReceivedFrom;
+
+  /// No description provided for @simRcptPaidTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid To:'**
+  String get simRcptPaidTo;
+
+  /// No description provided for @simRcptThanksReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your payment against the invoice'**
+  String get simRcptThanksReceipt;
+
+  /// No description provided for @simRcptThanksPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for receiving this payment'**
+  String get simRcptThanksPayment;
+
+  /// No description provided for @simRcptAgainstInvoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Against Invoices:'**
+  String get simRcptAgainstInvoices;
+
+  /// No description provided for @simRcptOnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'On account — no invoice allocation'**
+  String get simRcptOnAccount;
+
+  /// No description provided for @simRcptWordsPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get simRcptWordsPrefix;
+
+  /// No description provided for @simRcptDraftBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft — not posted'**
+  String get simRcptDraftBadge;
+
+  /// No description provided for @simRcptSendAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get simRcptSendAction;
+
+  /// No description provided for @simRcptPrintAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get simRcptPrintAction;
 }
 
 class _AppLocalizationsDelegate

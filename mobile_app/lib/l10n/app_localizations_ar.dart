@@ -5154,4 +5154,89 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get simAddProductFab => 'إضافة المنتج';
+
+  @override
+  String get simModeTabForm => 'نموذج الإدخال';
+
+  @override
+  String get simModeTabPreview => 'معاينة';
+
+  @override
+  String get simRcptDocTabReceipt => 'إيصال';
+
+  @override
+  String get simRcptDocTabPayment => 'سند';
+
+  @override
+  String get simA4InvoiceTitle => 'فاتورة';
+
+  @override
+  String get simA4BillTo => 'فاتورة إلى:';
+
+  @override
+  String get simA4ColNo => 'رقم';
+
+  @override
+  String get simA4ColProduct => 'المنتج';
+
+  @override
+  String get simA4ColQty => 'كمية';
+
+  @override
+  String get simA4ColRate => 'معدل';
+
+  @override
+  String get simA4ColAmount => 'المبلغ';
+
+  @override
+  String get simA4TotalLabel => 'المبلغ الإجمالي';
+
+  @override
+  String get simA4BalanceLabel => 'توازن';
+
+  @override
+  String get simA4DiscountRowLabel => 'الخصم';
+
+  @override
+  String get simA4NotesLabel => 'يرجى الملاحظة:';
+
+  @override
+  String get simA4SignatureLabel => 'التوقيع:';
+
+  @override
+  String get simA4FreeLabel => 'مجاني:';
+
+  @override
+  String get simA4EmptyItems =>
+      'لا بنود في الفاتورة بعد — أضف عناصر من نموذج الإدخال';
+
+  @override
+  String get simRcptReceivedFrom => 'تسلم من:';
+
+  @override
+  String get simRcptPaidTo => 'دفع إلى:';
+
+  @override
+  String get simRcptThanksReceipt => 'شكرا لدفعك ضد الفاتورة';
+
+  @override
+  String get simRcptThanksPayment => 'شكرا لاستلامكم هذا الدفع';
+
+  @override
+  String get simRcptAgainstInvoices => 'مقابل الفواتير:';
+
+  @override
+  String get simRcptOnAccount => 'على الحساب — بلا تخصيص فواتير';
+
+  @override
+  String get simRcptWordsPrefix => 'مجموع';
+
+  @override
+  String get simRcptDraftBadge => 'مسودة — لم تُرحَّل';
+
+  @override
+  String get simRcptSendAction => 'إرسال';
+
+  @override
+  String get simRcptPrintAction => 'طباعة';
 }

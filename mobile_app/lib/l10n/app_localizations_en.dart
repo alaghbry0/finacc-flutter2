@@ -5122,4 +5122,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simAddProductFab => 'Add product';
+
+  @override
+  String get simModeTabForm => 'Input Form';
+
+  @override
+  String get simModeTabPreview => 'Preview';
+
+  @override
+  String get simRcptDocTabReceipt => 'Receipt';
+
+  @override
+  String get simRcptDocTabPayment => 'Voucher';
+
+  @override
+  String get simA4InvoiceTitle => 'Invoice';
+
+  @override
+  String get simA4BillTo => 'Bill To:';
+
+  @override
+  String get simA4ColNo => 'No';
+
+  @override
+  String get simA4ColProduct => 'Product';
+
+  @override
+  String get simA4ColQty => 'Qty';
+
+  @override
+  String get simA4ColRate => 'Rate';
+
+  @override
+  String get simA4ColAmount => 'Amount';
+
+  @override
+  String get simA4TotalLabel => 'Total Amount';
+
+  @override
+  String get simA4BalanceLabel => 'Balance';
+
+  @override
+  String get simA4DiscountRowLabel => 'Discount';
+
+  @override
+  String get simA4NotesLabel => 'Notes:';
+
+  @override
+  String get simA4SignatureLabel => 'Signature:';
+
+  @override
+  String get simA4FreeLabel => 'Free:';
+
+  @override
+  String get simA4EmptyItems =>
+      'No items in the invoice yet — add items from the input form';
+
+  @override
+  String get simRcptReceivedFrom => 'Received From:';
+
+  @override
+  String get simRcptPaidTo => 'Paid To:';
+
+  @override
+  String get simRcptThanksReceipt =>
+      'Thank you for your payment against the invoice';
+
+  @override
+  String get simRcptThanksPayment => 'Thank you for receiving this payment';
+
+  @override
+  String get simRcptAgainstInvoices => 'Against Invoices:';
+
+  @override
+  String get simRcptOnAccount => 'On account — no invoice allocation';
+
+  @override
+  String get simRcptWordsPrefix => 'Total';
+
+  @override
+  String get simRcptDraftBadge => 'Draft — not posted';
+
+  @override
+  String get simRcptSendAction => 'Send';
+
+  @override
+  String get simRcptPrintAction => 'Print';
 }
