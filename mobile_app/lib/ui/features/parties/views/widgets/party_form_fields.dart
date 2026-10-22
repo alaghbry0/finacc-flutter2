@@ -1,14 +1,44 @@
-/// حقول نموذج الطرف (اسم/هاتف/واتساب/عنوان/منطقة/حد ائتمان/ملاحظات) +
-/// زر الحفظ ولافتة خطأ التحقق — مستخرجة من party_form_screen (R20-D3b:
-/// نقل حرفي بلا أي تغيير سلوكي؛ المتحكمات يملكها الأب المشيد للحقول).
+/// حقول نموذج الطرف بهوية Simple Invoice Manager (V10-B) — الاسم/الهاتف/
+/// الواتساب/العنوان/الحي/حد الائتمان/الملاحظات حقول سطرية بنمط
+/// `input-line` (حد سفلي فقط) داخل بطاقات الشاشة، مع تلميحات صغيرة
+/// أسفل الحقول التي كان لها hintText/helperText — جلد بصري فقط فوق
+/// نفس المنطق (R20-D3b → V10-B): المتحكمات يملكها الأب، وonChanged
+/// والمدققون ومفاتيح الاختبار كما كانت حرفياً. زر الحفظ القديم
+/// (PartyFormSaveButton) انتقل إلى شريط SimFormSaveBar الثابت أسفل
+/// الشاشة، ولافتة خطأ التحقق باقية بلا أي تغيير.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/sim_form_widgets.dart';
 import '../../view_models/party_form_view_model.dart';
 import 'parties_widgets.dart';
+
+/// تلميح صغير أسفل الحقل (12sp رمادي) — يحمل نصوص hintText/helperText
+/// القديمة (مثال الاسم، دلالات حد الائتمان) بنمط وصف سطر المفتاح
+/// بالعدة (SimFormSwitchRow.description).
+class _FieldHint extends StatelessWidget {
+  const _FieldHint(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+      child: Text(
+        text,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(fontSize: 12, color: scheme.onSurfaceVariant),
+      ),
+    );
+  }
+}
 
 class PartyFormNameField extends StatelessWidget {
   const PartyFormNameField({
@@ -23,18 +53,20 @@ class PartyFormNameField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_name_field'),
-      controller: controller,
-      onChanged: vm.setName,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormNameLabel,
-        hintText: l10n.partyFormNameHint,
-        prefixIcon: const Icon(Icons.badge_rounded),
-      ),
-      validator: (value) =>
-          (value ?? '').trim().isEmpty ? l10n.partyFormNameRequired : null,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SimFormLineField(
+          fieldKey: const Key('party_form_name_field'),
+          hint: l10n.partyFormNameLabel,
+          controller: controller,
+          onChanged: vm.setName,
+          required: true,
+          validator: (value) =>
+              (value ?? '').trim().isEmpty ? l10n.partyFormNameRequired : null,
+        ),
+        _FieldHint(l10n.partyFormNameHint),
+      ],
     );
   }
 }
@@ -52,16 +84,12 @@ class PartyFormPhoneField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_phone_field'),
+    return SimFormLineField(
+      fieldKey: const Key('party_form_phone_field'),
+      hint: l10n.partyFormPhoneLabel,
       controller: controller,
       onChanged: vm.setPhone,
       keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormPhoneLabel,
-        prefixIcon: const Icon(Icons.call_rounded),
-      ),
     );
   }
 }
@@ -79,17 +107,18 @@ class PartyFormWhatsappField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_whatsapp_field'),
-      controller: controller,
-      onChanged: vm.setWhatsapp,
-      keyboardType: TextInputType.phone,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormWhatsappLabel,
-        hintText: l10n.partyFormWhatsappHint,
-        prefixIcon: const Icon(Icons.chat_rounded),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SimFormLineField(
+          fieldKey: const Key('party_form_whatsapp_field'),
+          hint: l10n.partyFormWhatsappLabel,
+          controller: controller,
+          onChanged: vm.setWhatsapp,
+          keyboardType: TextInputType.phone,
+        ),
+        _FieldHint(l10n.partyFormWhatsappHint),
+      ],
     );
   }
 }
@@ -107,17 +136,12 @@ class PartyFormAddressField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_address_field'),
+    return SimFormLineField(
+      fieldKey: const Key('party_form_address_field'),
+      hint: l10n.partyFormAddressLabel,
       controller: controller,
       onChanged: vm.setAddress,
-      textInputAction: TextInputAction.next,
-      minLines: 1,
       maxLines: 3,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormAddressLabel,
-        prefixIcon: const Icon(Icons.location_on_rounded),
-      ),
     );
   }
 }
@@ -135,20 +159,18 @@ class PartyFormAreaField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_area_field'),
+    return SimFormLineField(
+      fieldKey: const Key('party_form_area_field'),
+      hint: l10n.partyFormAreaLabel,
       controller: controller,
       onChanged: vm.setArea,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormAreaLabel,
-        prefixIcon: const Icon(Icons.map_rounded),
-      ),
     );
   }
 }
 
-/// حد الائتمان — دلالة القيمة الصارمة مشروحة تحت الحقل حرفياً.
+/// حد الائتمان — دلالة القيمة الصارمة مشروحة تحت الحقل حرفياً
+/// (فارغ = بلا حد · صفر = منع الآجل · رقم = الحد) مع رقاقة حية
+/// بجانب الحقل تفسر القيمة الحالية.
 class PartyFormCreditLimitField extends StatelessWidget {
   const PartyFormCreditLimitField({
     super.key,
@@ -164,30 +186,32 @@ class PartyFormCreditLimitField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_credit_field'),
-      controller: controller,
-      enabled: true,
-      onChanged: vm.setCreditLimitText,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormCreditLimitLabel,
-        hintText: l10n.partyFormCreditLimitHint,
-        prefixIcon: const Icon(Icons.speed_rounded),
-        helperText: l10n.partyFormCreditLimitHelp,
-        helperMaxLines: 3,
-        suffixIcon: CreditLimitChip(creditLimit: state.parsedCreditLimit),
-      ),
-      validator: (value) {
-        final text = (value ?? '').trim();
-        if (text.isEmpty) return null;
-        final parsed = double.tryParse(text);
-        if (parsed == null || parsed < 0) {
-          return l10n.partyFormCreditLimitInvalid;
-        }
-        return null;
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SimFormLineField(
+          fieldKey: const Key('party_form_credit_field'),
+          hint: l10n.partyFormCreditLimitLabel,
+          controller: controller,
+          onChanged: vm.setCreditLimitText,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          // 🟡-12 — أرقام غربية فقط (نمط حقول المبالغ القائم بالتطبيق).
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*[\.,]?\d{0,4}')),
+          ],
+          suffix: CreditLimitChip(creditLimit: state.parsedCreditLimit),
+          validator: (value) {
+            final text = (value ?? '').trim();
+            if (text.isEmpty) return null;
+            final parsed = double.tryParse(text);
+            if (parsed == null || parsed < 0) {
+              return l10n.partyFormCreditLimitInvalid;
+            }
+            return null;
+          },
+        ),
+        _FieldHint(l10n.partyFormCreditLimitHelp),
+      ],
     );
   }
 }
@@ -205,46 +229,18 @@ class PartyFormNotesField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TextFormField(
-      key: const Key('party_form_notes_field'),
-      controller: controller,
-      onChanged: vm.setNotes,
-      minLines: 2,
-      maxLines: 5,
-      decoration: InputDecoration(
-        labelText: l10n.partyFormNotesLabel,
-        hintText: l10n.partyFormNotesHint,
-        prefixIcon: const Icon(Icons.sticky_note_2_rounded),
-      ),
-    );
-  }
-}
-
-class PartyFormSaveButton extends StatelessWidget {
-  const PartyFormSaveButton({
-    super.key,
-    required this.saving,
-    required this.onPressed,
-  });
-
-  final bool saving;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return FilledButton.icon(
-      key: const Key('party_form_save_btn'),
-      onPressed: saving ? null : onPressed,
-      icon: saving
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.save_rounded),
-      label: Text(saving ? l10n.fxSavingLabel : l10n.partyFormSaveLabel),
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SimFormLineField(
+          fieldKey: const Key('party_form_notes_field'),
+          hint: l10n.partyFormNotesLabel,
+          controller: controller,
+          onChanged: vm.setNotes,
+          maxLines: 3,
+        ),
+        _FieldHint(l10n.partyFormNotesHint),
+      ],
     );
   }
 }

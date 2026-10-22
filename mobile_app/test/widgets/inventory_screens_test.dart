@@ -19,6 +19,8 @@ import 'package:mobile_app/data/services/item_import_service.dart';
 import 'package:mobile_app/domain/models/item.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/ui/core/session/app_controller.dart';
+import 'package:mobile_app/ui/core/widgets/sim_form_widgets.dart';
+import 'package:mobile_app/ui/core/widgets/sim_list_widgets.dart';
 import 'package:mobile_app/ui/features/inventory/view_models/import_view_model.dart';
 import 'package:mobile_app/ui/features/inventory/view_models/inventory_home_view_model.dart';
 import 'package:mobile_app/ui/features/inventory/view_models/item_detail_view_model.dart';
@@ -188,6 +190,32 @@ void main() {
         });
       });
       final l10n = await _pump(tester, (_) => ItemFormScreen(viewModel: vm));
+
+      // 0) هوية SIM (V10): الترويسة الفرعية «نموذج إدخال المنتج» + شريط
+      //    «حفظ المنتج» الثابت + بطاقات النموذج وحقل الاسم بنجمة الإلزام.
+      expect(find.byType(SimSubHeader), findsOneWidget);
+      expect(find.text(l10n.itemFormSimTitle), findsOneWidget);
+      expect(find.byType(SimFormSaveBar), findsOneWidget);
+      expect(find.text(l10n.itemFormSimSave), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ListView),
+          matching: find.byType(SimFormSaveBar),
+        ),
+        findsNothing,
+        reason: 'شريط الحفظ ثابت خارج التمرير',
+      );
+      expect(find.byType(SimFormCard), findsWidgets);
+      final nameTextField = tester.widget<TextField>(
+        find.descendant(
+          of: find.byKey(const Key('item_form_name_field')),
+          matching: find.byType(TextField),
+        ),
+      );
+      expect(
+        nameTextField.decoration?.hintText,
+        '${l10n.itemFormNameLabel} *',
+      );
 
       // 1) الاسم إلزامي (تحقق متزامن من الواجهة).
       await tester.ensureVisible(find.byKey(const Key('item_form_save_btn')));

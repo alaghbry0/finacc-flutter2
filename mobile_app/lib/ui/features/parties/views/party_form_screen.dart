@@ -1,9 +1,13 @@
-/// شاشتا نموذج الطرف — «تسجيل عميل جديد/تعديله» و«تسجيل مورد جديد/
-/// تعديله» (دليل 06/02 و05/01): الاسم إلزامي، حد الائتمان بدلالاته
-/// الثلاث مع شرح دقيق، ورصيد افتتاحي بعملته وتاريخه (مقفل عند وجود
-/// حركات)، وحفظ عبر المستودع مع تحقق فوري وأخطاء مترجمة.
-/// الحقول وقسم الافتتاحي بملفاتها المركزّة بجوارها (R20-D3b) — هذا
+/// شاشتا نموذج الطرف — «إضافة عميل / مورد جديد/تعديل» (دليل 06/02 و
+/// 05/01): الاسم إلزامي، حد الائتمان بدلالاته الثلاث مع شرح دقيق، ورصيد
+/// افتتاحي بعملته وتاريخه (مقفل عند وجود حركات)، وحفظ عبر المستودع مع
+/// تحقق فوري وأخطاء مترجمة.
+/// الحقول وقسم الافتتاحي بملفاتها المركزّية بجوارها (R20-D3b) — هذا
 /// الملف: آلة الحالة (المتحكمات + لقطة التغييرات + حرّاس التحميل).
+/// V10-B: جلد بصري بهوية Simple Invoice Manager فقط — ترويسة فرعية
+/// (SimSubHeader) بدل AppBar وبطاقات حقول سطرية وشريط حفظ أزرق ثابت
+/// أسفل الشاشة؛ كل المنطق (R17/P1-4/_controllersReady/SnackBar/
+/// validate-أولاً) محفوظ حرفياً.
 library;
 
 import 'dart:async';
@@ -16,8 +20,9 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/info_note.dart';
-import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_form_widgets.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/party_form_view_model.dart';
 import '../view_models/party_kind.dart';
 import '../view_models/party_lookup.dart';
@@ -246,6 +251,10 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
     final isCustomer = state.kind == PartyKind.customer;
+    final scheme = Theme.of(context).colorScheme;
+    // النموذج جاهز للعرض (لا هيكل تحميل ولا خطأ فتح) — شريط الحفظ
+    // الثابت يظهر معه فقط.
+    final formReady = !state.loading && state.loadError == null;
 
     // حماية التغييرات غير المحفوظة (P1-4): الرجوع المباشر يعرض حوار
     // «مغادرة/بقاء» — القرار الصريح وحده يفتح الباب.
@@ -253,103 +262,158 @@ class _PartyFormBodyState extends State<_PartyFormBody> {
       isDirty: _dirty,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(title: Text(_titleFor(l10n, state))),
-        body: state.loading
-            ? ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: const [ListSkeleton()],
-              )
-            : state.loadError != null
-            ? ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: [
-                  ErrorState(
-                    title: l10n.genericErrorTitle,
-                    message: l10n.dbOpenErrorMessage,
-                    technicalDetails: state.loadError.toString(),
-                    retryLabel: l10n.commonRetry,
-                    onRetry: vm.load,
-                    compact: true,
-                  ),
-                ],
-              )
-            : Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                  children: [
-                    if (state.editMode && state.openingLocked) ...[
-                      InfoNote(
-                        icon: Icons.lock_rounded,
-                        message: l10n.partyFormOpeningLockedNote,
-                        warning: true,
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-                    PartyFormNameField(controller: _name, vm: vm),
-                    const SizedBox(height: 14),
-                    PartyFormPhoneField(controller: _phone, vm: vm),
-                    if (isCustomer) ...[
-                      const SizedBox(height: 14),
-                      PartyFormWhatsappField(controller: _whatsapp, vm: vm),
-                    ],
-                    const SizedBox(height: 14),
-                    PartyFormAddressField(controller: _address, vm: vm),
-                    if (isCustomer) ...[
-                      const SizedBox(height: 14),
-                      PartyFormAreaField(controller: _area, vm: vm),
-                      const SizedBox(height: 14),
-                      PartyFormCreditLimitField(
-                        controller: _creditLimit,
-                        vm: vm,
-                        state: state,
-                      ),
-                    ],
-                    const SizedBox(height: 18),
-                    FinSectionTitle(
-                      icon: Icons.account_balance_wallet_rounded,
-                      title: l10n.partyFormOpeningSection,
-                    ),
-                    const SizedBox(height: 8),
-                    PartyFormOpeningSection(
-                      vm: vm,
-                      state: state,
-                      openingController: _opening,
-                      openingDateController: _openingDate,
-                      onPickOpeningDate: () => unawaited(_pickOpeningDate()),
-                    ),
-                    const SizedBox(height: 18),
-                    PartyFormNotesField(controller: _notes, vm: vm),
-                    if (state.validationError != null) ...[
-                      const SizedBox(height: 14),
-                      PartyFormValidationErrorBanner(
-                        message: _validationMessage(
-                          l10n,
-                          state.validationError!,
+        body: Column(
+          children: [
+            // ترويسة SIM الفرعية — رجوع بmaybePop (🔴-4) كي يمر زر
+            // الترويسة بنفس طريق إيماءة النظام الذي يحرسه DirtyFormGuard.
+            SimSubHeader(
+              titleKey: const Key('party_form_sim_title'),
+              title: _titleFor(l10n, state),
+              onBack: () => Navigator.of(context).maybePop(),
+            ),
+            Expanded(
+              child: state.loading
+                  ? ListView(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
+                      children: const [ListSkeleton()],
+                    )
+                  : state.loadError != null
+                  ? ListView(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
+                      children: [
+                        ErrorState(
+                          title: l10n.genericErrorTitle,
+                          message: l10n.dbOpenErrorMessage,
+                          technicalDetails: state.loadError.toString(),
+                          retryLabel: l10n.commonRetry,
+                          onRetry: vm.load,
+                          compact: true,
                         ),
+                      ],
+                    )
+                  : Form(
+                      key: _formKey,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+                        children: [
+                          // قفل الافتتاحي — إشعار تحذيري فوق البطاقات.
+                          if (state.editMode && state.openingLocked) ...[
+                            InfoNote(
+                              icon: Icons.lock_rounded,
+                              message: l10n.partyFormOpeningLockedNote,
+                              warning: true,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          // بطاقة البيانات — الحقول السطرية بنمط input-line.
+                          SimFormCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PartyFormNameField(controller: _name, vm: vm),
+                                const SizedBox(height: 12),
+                                PartyFormPhoneField(controller: _phone, vm: vm),
+                                if (isCustomer) ...[
+                                  const SizedBox(height: 12),
+                                  PartyFormWhatsappField(
+                                    controller: _whatsapp,
+                                    vm: vm,
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                PartyFormAddressField(
+                                  controller: _address,
+                                  vm: vm,
+                                ),
+                                if (isCustomer) ...[
+                                  const SizedBox(height: 12),
+                                  PartyFormAreaField(controller: _area, vm: vm),
+                                  const SizedBox(height: 12),
+                                  PartyFormCreditLimitField(
+                                    controller: _creditLimit,
+                                    vm: vm,
+                                    state: state,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // بطاقة الرصيد الافتتاحي — رأس عريض 14sp ثم
+                          // القسم القائم كما هو داخلياً.
+                          SimFormCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.partyFormOpeningSection,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: scheme.onSurface,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                PartyFormOpeningSection(
+                                  vm: vm,
+                                  state: state,
+                                  openingController: _opening,
+                                  openingDateController: _openingDate,
+                                  onPickOpeningDate: () =>
+                                      unawaited(_pickOpeningDate()),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // الملاحظات — بطاقة مستقلة بحقل متعدد الأسطر.
+                          SimFormCard(
+                            child: PartyFormNotesField(
+                              controller: _notes,
+                              vm: vm,
+                            ),
+                          ),
+                          if (state.validationError != null) ...[
+                            const SizedBox(height: 12),
+                            PartyFormValidationErrorBanner(
+                              message: _validationMessage(
+                                l10n,
+                                state.validationError!,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                    const SizedBox(height: 20),
-                    PartyFormSaveButton(
-                      saving: state.saving,
-                      onPressed: _onSavePressed,
                     ),
-                  ],
-                ),
-              ),
+            ),
+          ],
+        ),
+        // شريط الحفظ الثابت (CTA أزرق «حفظ هذا») — bottomNavigationBar
+        // يبقى ظاهراً فوق لوحة المفاتيح (resizeToAvoidBottomInset الافتراضي
+        // يرفع القاع معه).
+        bottomNavigationBar: formReady
+            ? SimFormSaveBar(
+                buttonKey: const Key('party_form_save_btn'),
+                label: l10n.partyFormSimSave,
+                onPressed: _onSavePressed,
+                loading: state.saving,
+              )
+            : null,
       ),
     );
   }
 
   static String _titleFor(AppLocalizations l10n, PartyFormState state) {
-    if (state.kind == PartyKind.customer) {
-      return state.editMode
+    if (state.editMode) {
+      return state.kind == PartyKind.customer
           ? l10n.partyFormEditCustomerTitle
-          : l10n.partyFormAddCustomerTitle;
+          : l10n.partyFormEditSupplierTitle;
     }
-    return state.editMode
-        ? l10n.partyFormEditSupplierTitle
-        : l10n.partyFormAddSupplierTitle;
+    // إنشاء — عنوان النموذج الأولي الموحد (modal-add-client).
+    return l10n.partyFormSimAddTitle;
   }
 
   Future<void> _pickOpeningDate() async {

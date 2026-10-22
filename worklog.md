@@ -2392,3 +2392,37 @@ Stage Summary:
 - 20 قرارًا مرقمًا (7 🔴 إلزامية / 8 🟡 تحسينية / 5 🟢 تأكيدات) — أخطرها: إعادة تصميم منطق الصنف العابر (أرشفة بعد الترحيل لا قبله + isService إلزامي) وإصلاح فجوة قفل l10n للعناوين/التسميات قبل انطلاق الوكلاء.
 - تقسيم الوكيلين سليم ملفيًا (لا تقاطع) مع توصية بتقسيم B إلى مرحلتين لأن الإضافة السريعة ميزة وظيفية لا جلدًا.
 - الخطة قابلة للتنفيذ بعد إغلاق البنود السبعة الحمراء — بلا أي كتابة كود من هذا الوكيل.
+---
+Task ID: V10-A
+Agent: general-purpose (شاشة نموذج الصنف بهوية SIM)
+Task: تحويل شاشة نموذج الصنف (إضافة/تعديل) لهوية Simple Invoice Manager (modal-product-edit سطر 1399 بالنموذج الأولي) — تحويل بصري ONLY بمنطق محفوظ حرفيًا، مع تحديث اختباراتها واختبار جديد.
+
+Work Log:
+- **قراءة ما قبل التنفيذ**: آخر 3 أقسام بworklog (V7/V7-POST/V10-CRIT — 20 قرارًا) + عدة sim_form_widgets الجاهزة + sim_list_widgets + نموذج المرجع html:1399-1415 + توأم الجولة sim_party_form_test/party_form_fields (اكتمل تحويلها بالتوازي) — توحد نمط الاختبار والتلميحات معه.
+- **item_form_screen.dart (بنية جديدة بنفس الحالة)**: Scaffold بلا AppBar — الجسم Column: SimSubHeader (رجوع بmaybePop + عنوان «نموذج إدخال المنتج» itemFormSimTitle بالإنشاء وitemFormEditTitle القائم الأدق بالتعديل — نفس قرار توأم الجولة B بعناوينه) ثم Expanded(Form(ListView)) بحشو أفقي 14؛ **bottomNavigationBar = SimFormSaveBar** («حفظ المنتج» itemFormSimSave بمفتاح item_form_save_btn القديم + loading) يظهر مع النموذج الجاهز فقط — ثابت خارج التمرير ويرتفع فوق لوحة المفاتيح (resizeToAvoidBottomInset:true محفوظ حرفيًا)؛ بطاقات ثلاث: البيانات (اسم ← باركود ← فئة ← وحدة ← تكلفة ← خدمي ← دفعات ← صف صندوقي حد أدنى+افتتاحية إنشاءً فقط، وبالتعديل الحد الأدنى وحده) ثم الأسعار (عنوان القسم القائم 13sp/700 + سطر رقمي بكل عملة بلاحقة رمز العملة بدل suffixText) ثم الملاحظات (maxLines:3).
+- **كل قرارات 🔴 محفوظة حرفيًا (بلا أي تعديل)**: R16-B (مفتاح _validationBannerKey + Scrollable.ensureVisible — اللافتة آخر عنصر بالتمرير فوق الشريط الثابت فالإسقاط يعمل)، R17 (تأجيل maybePop بإطار لاحق بعد الحفظ)، P1-4 (_dirty بمقارنة اللقطة + DirtyFormGuard)، resizeToAvoidBottomInset:true + keyboardDismissBehavior:onDrag، مزامنة الباركود المولَّد للحقل، شرطا editMode (إخفاء الافتتاحية + InfoNote التعديل)، ترتيب _onSavePressed (validate أولًا ثم VM — لا تضاعف رسائل)، VM نفسه لا يمس، الحوارات (🟡-13) وقسما الباركود/الفئة/الوحدة **معاد استخدامها كما هي حرفيًا** داخل البطاقة (لا مكون قوائم منسدلة بالعدة أصلاً).
+- **item_form_fields.dart**: الاسم/التكلفة/الأسعار/الملاحظات → SimFormLineField (الاسم بنجمة required «اسم الصنف *»)، الحد الأدنى/الافتتاحية → SimFormBoxField داخل SimFormBoxRow؛ 🟡-12: كل الحقول الرقمية (تكلفة/حد/افتتاحية/أسعار) بFilteringTextInputFormatter.allow(RegExp(r'[0-9.]')) + keyboardType numberWithOptions(decimal) بنمط ItemCostField القائم؛ **_FieldHint** (12sp رمادي) تحت الاسم/الحد/الافتتاحية/الملاحظات يحفظ نصوص التلميحات الإرشادية القائمة كلها مستخدمة (نمط توأم الجولة)؛ ItemSaveButton حُذف (SimFormSaveBar يحل محله) وItemFormValidationErrorBanner باقية بلا أي تعديل؛ كل مفاتيح fieldKey القائمة محفوظة (item_form_name/cost/min_stock/opening_qty/price_*/notes_field).
+- **item_form_sections.dart**: المفتاحان الخدمي/تتبع الدفعات → SimFormSwitchRow بنفس المفتاحين (item_form_service_switch/item_form_batches_switch) ونصي l10n القائمين (تسمية+وصف) — المنطق vm.setIsService/setTrackBatches كما هو.
+- **l10n**: صفر مفاتيح جديدة وصفر مساس بarb/pubspec/VMs/core (استيراد فقط)؛ كل المفاتيح المستخدمة باقية إلا الثلاثة المتجاوزين صراحةً بالتصميم المقفل V10-0b: itemFormAddTitle (← itemFormSimTitle) وitemFormSave/itemFormSaving (← itemFormSimSave) — نفس إسقاط توأم الجولة B لعناوين/زر الإضافة القديمة؛ itemFormEditTitle أبقي مستخدمًا بالتعديل.
+- **الاختبارات**: (1) مجموعة ItemFormScreen بinventory_screens_test.dart حُدثت: تأكيدات SIM جديدة (SimSubHeader + العنوان + SimFormSaveBar + التسمية + الشريط خارج ListView + SimFormCard + تلميح الاسم بالنجمة عبر decoration.hintText) **مع بقاء كل التأكيدات الوظيفية القائمة** (اسم فارغ ← خطأ، توليد EAN-13، الخدمي يخفي الافتتاحية). (2) **test/ui/sim_item_form_test.dart جديد (6 اختبارات)** بنمط sim_party_form_test (قاعدة FFI حقيقية + Seam نموذج يُحمَّل بعد بناء الشاشة فتُلتقط لقطة الأساس + راوتر بمسارين متداخلين + كل التفاعل داخل runAsync): الترويسة بعنوانها وزر رجوعها يعمل (maybePop نظيف يخرج بلا حوار)، شريط «حفظ المنتج» الثابت + بوابة validate-أولاً (خطأ الحقل بلا لافتة/SnackBar/رجوع)، تحويل بصري سليم (3 بطاقات + النجمة + الباركود والقائمتان + حقل YER + 🟡-12 تصفية «x1500y»←«1500»)، التبديل الخدمي يخفي كل حقول المخزون والأسعار باقية، حارس المغادرة (تعديل ← حوار ← «بقاء» يبقي ← إفراغ ← رجوع مباشر)، حفظ ناجح (SnackBar «تم حفظ الصنف بنجاح» + رجوع R17 + صف product خُلق فعليًا بالقاعدة).
+- **البوابات**: flutter analyze = 0 issues (ظهر ب/momentين issue بمَلف scratch_dump_test المؤقت للوكيل B بالتوازي ثم اختفى بحذفه — ملفاتي نظيفة طوال الجولة) · **15/15 اختبارًا أخضر**: inventory_screens_test 6/6 + sim_item_form_test 6/6 (جديدة) + سانيتي dirty_form_guard_test 3/3 (يتضمن تكامل ItemFormScreen بالإنتاج بلا seam) وsim_form_widgets_test 6/6.
+
+Stage Summary:
+- شاشة نموذج الصنف بهوية SIM كاملة (ترويسة فرعية + بطاقات حقول سطور/صناديق + مفتاحا 48dp + CTA ثابت) وكل منطق الحالة والحماية والحفظ محفوظ حرفيًا — إسقاطات l10n الثلاثة المتجاوزة موثقة أعلاه بقرار التصميم المقفل.
+- عقد توأم الجولة متحقق: نفس أنماط الترويسة/الشريط/_FieldHint/الاختبار بين النموذجين (الصنف والطرف) — واجهات نماذج V10 متجانسة.
+- التالي للمنسق: التحقق الحي (بناء الويب) + دمج إيداع الجولة مع أعمال B.
+
+---
+Task ID: V10-B (وكيل تنفيذ — انقطع قبل التسجيل؛ أكمل المنسق خلفه)
+Agent: Z.ai Code (المنسق الرئيسي بالنيابة)
+Task: تحويل شاشة نموذج الطرف (عميل/مورد) لهوية SIM — تحويل بصري فقط.
+
+Work Log:
+- الوكيل B أُطلق بالتوازي مع A فانقطعت مهلة الإطلاق بعد إنجاز العمل على القرص (النمط المألوف) — المنسق أكمل البوابات خلفه.
+- التحويل: SimSubHeader بعنوان «إضافة عميل / مورد جديد» (إنشاء) والعناوين القائمة (تعديل) + رجوع maybePop (🔴-4) + ثلاث بطاقات SimFormCard (بيانات/افتتاحي/ملاحظات) + حقول SimFormLineField (phone keyboard للهواتف، decimal+filter للأرقام — 🟡-12) + SimFormSaveBar «حفظ هذا».
+- محفوظ حرفيًا: R17 (تأجيل maybePop)، P1-4 (_dirty باللقطة + DirtyFormGuard)، _controllersReady، InfoNote قفل الافتتاحي، PartyFormValidationErrorBanner، validate-قبل-VM، قسم PartyFormOpeningSection وظيفيًا كما هو، كل مفاتيح l10n، VM لم يُمس.
+- اختبار جديد كامل: test/ui/sim_party_form_test.dart (8 اختبارات — الترويسة/الرجوع/الشريط/حقول kind/الحارس/حفظ R17/فشل التحقق).
+
+Stage Summary:
+- البوابات بعد الاثنين معًا: analyze 0/0 + 14/14 (الاختباران الجديدان) + 32/32 (الحزم المتأثرة: inventory_screens + parties_view_models + dirty_form_guard + sim_clients_products + sim_form_widgets).
+- الإيداع ضمن نقطة تفتيش فورية لحماية العمل من إعادة التشغيل.

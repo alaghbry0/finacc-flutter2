@@ -1,8 +1,13 @@
-/// شاشة نموذج الصنف (إضافة/تعديل — دليل 02/02): اسم إلزامي، باركود مع
-/// توليد EAN-13 ومعاينة (FR-01-02)، فئة ووحدة بإضافة فورية، أسعار بكل
-/// العملات النشطة، صنف خدمي بلا مخزون (FR-01-16)، وكمية افتتاحية في
-/// الإنشاء فقط. الحقول والأقسام والحوارات بملفاتها المركزّة بجوارها
-/// (R19-D3b) — هذا الملف: إدارة الحالة وحماية المغادرة والحفظ.
+/// شاشة نموذج الصنف (إضافة/تعديل — دليل 02/02) بهوية Simple Invoice
+/// Manager (V10 — modal-product-edit بالنموذج الأولي): ترويسة فرعية
+/// «نموذج إدخال المنتج» (والتعديل بعنوانه القائم الأدق)، الحقول ببطاقات
+/// SIM (بيانات/أسعار/ملاحظات) مع تلميحات إرشادية صغيرة تحفظ نصوص l10n
+/// القائمة، وشريط «حفظ المنتج» الأزرق الثابت أسفل الشاشة. كل منطق الحالة
+/// محفوظ حرفياً: اسم إلزامي، باركود بتوليد EAN-13 ومعاينة (FR-01-02)
+/// ومزامنة المولَّد للحقل، فئة ووحدة بإضافة فورية، أسعار بكل العملات
+/// النشطة، صنف خدمي بلا مخزون (FR-01-16)، وكمية افتتاحية في الإنشاء
+/// فقط. الحقول والأقسام والحوارات بملفاتها المركزّة بجوارها (R19-D3b)
+/// — هذا الملف: إدارة الحالة وحماية المغادرة والحفظ.
 library;
 
 import 'dart:async';
@@ -18,8 +23,9 @@ import '../../../core/session/app_controller.dart';
 import '../../../core/widgets/dirty_form_guard.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/info_note.dart';
-import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_form_widgets.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/item_form_view_model.dart';
 import 'widgets/item_form_fields.dart';
 import 'widgets/item_form_sections.dart';
@@ -66,9 +72,9 @@ class _ItemFormBody extends StatefulWidget {
 class _ItemFormBodyState extends State<_ItemFormBody> {
   final _formKey = GlobalKey<FormState>();
 
-  /// R16-b — مفتاح لافتة خطأ التحقير (أعلى زر الحفظ أسفل النموذج):
-  /// يُسقَط إليها تلقائياً عند ظهورها كي يرى المستخدم سبب رفض الحفظ
-  /// حتى لو كان أسفل الشاشة (نموذج أطول من الشاشة).
+  /// R16-b — مفتاح لافتة خطأ التحقير (آخر عنصر بالتمرير فوق شريط
+  /// الحفظ الثابت): يُسقَط إليها تلقائياً عند ظهورها كي يرى المستخدم
+  /// سبب رفض الحفظ حتى لو كان أسفل الشاشة (نموذج أطول من الشاشة).
   final GlobalKey _validationBannerKey = GlobalKey();
 
   late final TextEditingController _name;
@@ -231,100 +237,157 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         // R16-b — النموذج أطول من الشاشة على الجوال: تفعيل صريح لتقليص
         // الجسم مع لوحة المفاتيح (resizeToAvoidBottomInset) حتى تبقى
-        // الحقول السفلية — الكمية الافتتاحية/الأسعار/زر الحفظ — قابلة
-        // للتمرير إليها دائماً ولا تُحجب خلفها.
+        // الحقول السفلية — الكمية الافتتاحية/الأسعار/شريط الحفظ — قابلة
+        // للتمرير إليها دائماً ولا تُحجب خلفها، ويرتفع شريط الحفظ الثابت
+        // فوق اللوحة فلا يُفقد زر CTA.
         resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          title: Text(
-            state.editMode ? l10n.itemFormEditTitle : l10n.itemFormAddTitle,
-          ),
-        ),
-        body: state.loading
-            ? ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: const [ListSkeleton()],
-              )
-            : state.loadError != null
-            ? ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                children: [
-                  ErrorState(
-                    title: l10n.genericErrorTitle,
-                    message: l10n.dbOpenErrorMessage,
-                    technicalDetails: state.loadError.toString(),
-                    retryLabel: l10n.commonRetry,
-                    onRetry: vm.load,
-                    compact: true,
-                  ),
-                ],
-              )
-            : Form(
-                key: _formKey,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                  // R16-b: تمرير مؤكد للجسم الطويل — سحب بالإصبع يطوي
-                  // لوحة المفاتيح فوراً (onDrag) فلا يعوق الوصول للحقول
-                  // السفلية على الشاشات القصيرة.
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  children: [
-                    if (state.editMode) ...[
-                      InfoNote(
-                        icon: Icons.info_rounded,
-                        message: l10n.itemFormEditNote,
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-                    ItemNameField(controller: _name, vm: vm),
-                    const SizedBox(height: 14),
-                    ItemBarcodeSection(controller: _barcode, vm: vm),
-                    const SizedBox(height: 14),
-                    ItemCategoryRow(vm: vm),
-                    const SizedBox(height: 14),
-                    ItemUnitRow(vm: vm),
-                    const SizedBox(height: 14),
-                    ItemCostField(controller: _cost, vm: vm),
-                    const SizedBox(height: 14),
-                    ItemServiceSwitch(vm: vm),
-                    if (!state.isService) ...[
-                      const SizedBox(height: 14),
-                      ItemMinStockField(controller: _minStock, vm: vm),
-                      if (!state.editMode) ...[
-                        const SizedBox(height: 14),
-                        ItemOpeningQtyField(controller: _openingQty, vm: vm),
-                      ],
-                      const SizedBox(height: 14),
-                      ItemTrackBatchesSwitch(vm: vm),
-                    ],
-                    const SizedBox(height: 18),
-                    FinSectionTitle(
-                      icon: Icons.sell_rounded,
-                      title: l10n.itemFormPricesSection,
-                    ),
-                    const SizedBox(height: 8),
-                    for (final currency in state.currencies)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: _priceField(vm, currency),
-                      ),
-                    ItemNotesField(controller: _notes, vm: vm),
-                    if (state.validationError != null) ...[
-                      const SizedBox(height: 14),
-                      ItemFormValidationErrorBanner(
-                        key: _validationBannerKey,
-                        message: _validationMessage(
-                          l10n,
-                          state.validationError!,
+        // V10 (SIM) — الترويسة الفرعية داخل الجسم (لا AppBar): رجوع
+        // نظامي maybePop + عنوان «نموذج إدخال المنتج» المقفل.
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              SimSubHeader(
+                titleKey: const Key('item_form_sim_title'),
+                // إنشاء — عنوان النموذج الأولي الموحد (modal-product-edit
+                // «نموذج إدخال المنتج»)؛ تعديل — العنوان القائم الأدق.
+                title: state.editMode
+                    ? l10n.itemFormEditTitle
+                    : l10n.itemFormSimTitle,
+                onBack: () => Navigator.of(context).maybePop(),
+              ),
+              Expanded(
+                child: state.loading
+                    ? ListView(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 32),
+                        children: const [ListSkeleton()],
+                      )
+                    : state.loadError != null
+                    ? ListView(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 32),
+                        children: [
+                          ErrorState(
+                            title: l10n.genericErrorTitle,
+                            message: l10n.dbOpenErrorMessage,
+                            technicalDetails: state.loadError.toString(),
+                            retryLabel: l10n.commonRetry,
+                            onRetry: vm.load,
+                            compact: true,
+                          ),
+                        ],
+                      )
+                    : Form(
+                        key: _formKey,
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
+                          // R16-b: تمرير مؤكد للجسم الطويل — سحب بالإصبع
+                          // يطوي لوحة المفاتيح فوراً (onDrag) فلا يعوق
+                          // الوصول للحقول السفلية على الشاشات القصيرة.
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          children: [
+                            if (state.editMode) ...[
+                              InfoNote(
+                                icon: Icons.info_rounded,
+                                message: l10n.itemFormEditNote,
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            // بطاقة البيانات: الاسم ← الباركود ← الفئة ←
+                            // الوحدة ← التكلفة ← الخدمي ← المخزون.
+                            SimFormCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ItemNameField(controller: _name, vm: vm),
+                                  const SizedBox(height: 12),
+                                  ItemBarcodeSection(
+                                    controller: _barcode,
+                                    vm: vm,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ItemCategoryRow(vm: vm),
+                                  const SizedBox(height: 12),
+                                  ItemUnitRow(vm: vm),
+                                  const SizedBox(height: 12),
+                                  ItemCostField(controller: _cost, vm: vm),
+                                  ItemServiceSwitch(vm: vm),
+                                  if (!state.isService) ...[
+                                    ItemTrackBatchesSwitch(vm: vm),
+                                    if (!state.editMode)
+                                      SimFormBoxRow(
+                                        start: ItemMinStockField(
+                                          controller: _minStock,
+                                          vm: vm,
+                                        ),
+                                        end: ItemOpeningQtyField(
+                                          controller: _openingQty,
+                                          vm: vm,
+                                        ),
+                                      )
+                                    else
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: ItemMinStockField(
+                                          controller: _minStock,
+                                          vm: vm,
+                                        ),
+                                      ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // بطاقة الأسعار: عنوان القسم القائم + سطر رقمي
+                            // لكل عملة نشطة (المتحكمات بخريطة الأب كما هي).
+                            SimFormCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _ItemFormSectionTitle(
+                                    l10n.itemFormPricesSection,
+                                  ),
+                                  for (final currency in state.currencies)
+                                    _priceField(vm, currency),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SimFormCard(
+                              child: ItemNotesField(
+                                controller: _notes,
+                                vm: vm,
+                              ),
+                            ),
+                            if (state.validationError != null) ...[
+                              const SizedBox(height: 12),
+                              ItemFormValidationErrorBanner(
+                                key: _validationBannerKey,
+                                message: _validationMessage(
+                                  l10n,
+                                  state.validationError!,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 20),
-                    ItemSaveButton(
-                      saving: state.saving,
-                      onPressed: _onSavePressed,
-                    ),
-                  ],
-                ),
+              ),
+            ],
+          ),
+        ),
+        // V10 (SIM) — شريط «حفظ المنتج» الثابت أسفل الشاشة: لا يختفي
+        // بالتمرير (خارج قائمة الجسم) ويتحول لعجلة انتظار أثناء الحفظ؛
+        // يظهر مع النموذج الجاهز فقط (لا مع التحميل/الخطأ).
+        bottomNavigationBar: (state.loading || state.loadError != null)
+            ? null
+            : SimFormSaveBar(
+                buttonKey: const Key('item_form_save_btn'),
+                label: l10n.itemFormSimSave,
+                loading: state.saving,
+                onPressed: _onSavePressed,
               ),
       ),
     );
@@ -347,4 +410,26 @@ class _ItemFormBodyState extends State<_ItemFormBody> {
         ItemFormError.noWarehouse => l10n.genericErrorTitle,
         ItemFormError.noUser => l10n.genericErrorTitle,
       };
+}
+
+/// عنوان قسم داخل بطاقة نموذج SIM (بطاقة الأسعار) — 13sp/700 بنمط
+/// عناوين البطاقات بالمرجع التصميمي.
+class _ItemFormSectionTitle extends StatelessWidget {
+  const _ItemFormSectionTitle(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
 }

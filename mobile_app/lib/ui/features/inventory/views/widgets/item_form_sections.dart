@@ -1,6 +1,10 @@
-/// أقسام نموذج الصنف: الباركود/الفئة/الوحدة/مفتاحا الخدمي والدفعات —
-/// مستخرجة من item_form_screen (R19-D3b: نقل حرفي بلا أي تغيير سلوكي؛
-/// الحالة تُقرأ من المتحكم الذي يملكها الأب المشيد لهذه الأقسام).
+/// أقسام نموذج الصنف بهوية Simple Invoice Manager (V10): قسم الباركود
+/// وصفا الفئة/الوحدة **باقيان كما هما حرفياً** (البادئة توليد EAN-13
+/// والمعاينة والقوائم المنسدلة بأزرار الإضافة الفورية وقرار 🟡-13
+/// بحواراتها)، بينما انتقل مفتاحا «صنف خدمي» و«تتبع الدفعات» إلى
+/// `SimFormSwitchRow` بنفس المفاتيح ونصوص l10n القائمة (سطر مفتاح 48dp
+/// بنمط «تمكين جرد المنتج» بالنموذج الأولي). الحالة تُقرأ من المتحكم
+/// الذي يملكها الأب المشيد لهذه الأقسام — تحويل بصري فقط.
 library;
 
 import 'dart:async';
@@ -8,8 +12,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/fin_card.dart';
+import '../../../../core/widgets/sim_form_widgets.dart';
 import '../../view_models/item_form_view_model.dart';
 import 'inventory_widgets.dart';
 import 'item_form_dialogs.dart';
@@ -161,7 +165,8 @@ class ItemUnitRow extends StatelessWidget {
   }
 }
 
-/// مفتاح الصنف الخدمي (FR-01-16) — بلا مخزون ولا كميات.
+/// مفتاح الصنف الخدمي (FR-01-16) — بلا مخزون ولا كميات؛ سطر مفتاح SIM
+/// بنفس نصي l10n القائمين (التسمية والوصف).
 class ItemServiceSwitch extends StatelessWidget {
   const ItemServiceSwitch({super.key, required this.vm});
 
@@ -171,45 +176,18 @@ class ItemServiceSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
-    return FinCard(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Material(
-        // ListTile فوق بطاقة مزيّنة — يلزمه Material خاص كي لا تُبتلع
-        // خلفيته وموج الحبر داخل DecoratedBox البطاقة.
-        color: Colors.transparent,
-        child: SwitchListTile(
-          key: const Key('item_form_service_switch'),
-          value: state.isService,
-          onChanged: vm.setIsService,
-          title: Text(
-            l10n.itemFormServiceLabel,
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(
-            l10n.itemFormServiceDesc,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          secondary: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.tertiary
-                  .withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.miscellaneous_services_rounded,
-              color: Theme.of(context).colorScheme.tertiary,
-            ),
-          ),
-        ),
-      ),
+    return SimFormSwitchRow(
+      key: const Key('item_form_service_switch'),
+      label: l10n.itemFormServiceLabel,
+      description: l10n.itemFormServiceDesc,
+      value: state.isService,
+      onChanged: vm.setIsService,
     );
   }
 }
 
-/// مفتاح تتبع الدفعات — للصنف غير الخدمي حصراً.
+/// مفتاح تتبع الدفعات — للصنف غير الخدمي حصراً؛ سطر مفتاح SIM بنفس
+/// نصي l10n القائمين.
 class ItemTrackBatchesSwitch extends StatelessWidget {
   const ItemTrackBatchesSwitch({super.key, required this.vm});
 
@@ -219,36 +197,12 @@ class ItemTrackBatchesSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = vm.state;
-    final colors = FinColors.of(context);
-    return FinCard(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Material(
-        // نفس علاج المفتاح الأول — Material شفاف فوق بطاقة مزيّنة.
-        color: Colors.transparent,
-        child: SwitchListTile(
-          key: const Key('item_form_batches_switch'),
-          value: state.trackBatches,
-          onChanged: vm.setTrackBatches,
-          title: Text(
-            l10n.itemFormTrackBatchesLabel,
-            style: Theme.of(context).textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          subtitle: Text(
-            l10n.itemFormTrackBatchesDesc,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          secondary: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: colors.warning.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.layers_rounded, color: colors.warning),
-          ),
-        ),
-      ),
+    return SimFormSwitchRow(
+      key: const Key('item_form_batches_switch'),
+      label: l10n.itemFormTrackBatchesLabel,
+      description: l10n.itemFormTrackBatchesDesc,
+      value: state.trackBatches,
+      onChanged: vm.setTrackBatches,
     );
   }
 }
