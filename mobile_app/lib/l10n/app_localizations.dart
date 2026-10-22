@@ -9216,6 +9216,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Print'**
   String get simRcptPrintAction;
+
+  /// No description provided for @sellQuickAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get sellQuickAddTitle;
+
+  /// No description provided for @sellQuickAddNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Item name'**
+  String get sellQuickAddNameHint;
+
+  /// No description provided for @sellQuickAddPriceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit price'**
+  String get sellQuickAddPriceHint;
+
+  /// No description provided for @sellQuickAddSaveToProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Save item to products list'**
+  String get sellQuickAddSaveToProducts;
+
+  /// No description provided for @sellQuickAddOneOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Without saving: item is created for this invoice only and archived from lists'**
+  String get sellQuickAddOneOffHint;
+
+  /// No description provided for @sellQuickAddContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get sellQuickAddContinue;
+
+  /// No description provided for @sellQuickAddNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Item name is required'**
+  String get sellQuickAddNameRequired;
+
+  /// No description provided for @sellQuickAddPriceInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit price is invalid'**
+  String get sellQuickAddPriceInvalid;
+
+  /// No description provided for @sellQuickAddNewTile.
+  ///
+  /// In en, this message translates to:
+  /// **'New item'**
+  String get sellQuickAddNewTile;
+
+  /// No description provided for @sellQuickAddCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created \"{name}\" and added to the invoice'**
+  String sellQuickAddCreated(Object name);
+
+  /// No description provided for @sellQuickAddCreateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the item'**
+  String get sellQuickAddCreateError;
 }
 
 class _AppLocalizationsDelegate

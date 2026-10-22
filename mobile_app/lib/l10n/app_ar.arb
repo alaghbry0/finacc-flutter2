@@ -1568,5 +1568,49 @@
   "simRcptWordsPrefix": "مجموع",
   "simRcptDraftBadge": "مسودة — لم تُرحَّل",
   "simRcptSendAction": "إرسال",
-  "simRcptPrintAction": "طباعة"
+  "simRcptPrintAction": "طباعة",
+  "sellQuickAddTitle": "إضافة بند",
+  "sellQuickAddNameHint": "اسم الصنف",
+  "sellQuickAddPriceHint": "سعر الوحدة",
+  "sellQuickAddSaveToProducts": "حفظ الصنف في قائمة المنتجات",
+  "sellQuickAddOneOffHint": "بدون حفظ: يُنشأ الصنف لهذه الفاتورة فقط ويؤرشف من القوائم",
+  "sellQuickAddContinue": "متابعة",
+  "sellQuickAddNameRequired": "اسم الصنف مطلوب",
+  "sellQuickAddPriceInvalid": "سعر الوحدة غير صالح",
+  "sellQuickAddNewTile": "صنف جديد",
+  "sellQuickAddCreated": "أُنشئ «{name}» وأُضيف للفاتورة",
+  "sellQuickAddCreateError": "تعذر إنشاء الصنف",
+  "@sellQuickAddTitle": {
+    "description": "عنوان نافذة إضافة بند سريع داخل الفاتورة"
+  },
+  "@sellQuickAddNameHint": {
+    "description": "تلميح حقل اسم الصنف بالنافذة السريعة"
+  },
+  "@sellQuickAddPriceHint": {
+    "description": "تلميح حقل سعر الوحدة بالنافذة السريعة"
+  },
+  "@sellQuickAddSaveToProducts": {
+    "description": "خيار حفظ الصنف الجديد في قائمة المنتجات"
+  },
+  "@sellQuickAddOneOffHint": {
+    "description": "شرح خيار عدم الحفظ (صنف لهذه الفاتورة فقط)"
+  },
+  "@sellQuickAddContinue": {
+    "description": "زر المتابعة بالنافذة السريعة"
+  },
+  "@sellQuickAddNameRequired": {
+    "description": "خطأ: اسم الصنف مطلوب"
+  },
+  "@sellQuickAddPriceInvalid": {
+    "description": "خطأ: سعر الوحدة غير صالح"
+  },
+  "@sellQuickAddNewTile": {
+    "description": "تلميح بطاقة صنف جديد في منتقي الأصناف"
+  },
+  "@sellQuickAddCreated": {
+    "description": "رسالة نجاح إنشاء الصنف وإضافته ({name})"
+  },
+  "@sellQuickAddCreateError": {
+    "description": "خطأ فشل إنشاء الصنف"
+  }
 }

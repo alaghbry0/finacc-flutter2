@@ -1685,5 +1685,16 @@
   "simRcptWordsPrefix": "Total",
   "simRcptDraftBadge": "Draft — not posted",
   "simRcptSendAction": "Send",
-  "simRcptPrintAction": "Print"
+  "simRcptPrintAction": "Print",
+  "sellQuickAddTitle": "Add Item",
+  "sellQuickAddNameHint": "Item name",
+  "sellQuickAddPriceHint": "Unit price",
+  "sellQuickAddSaveToProducts": "Save item to products list",
+  "sellQuickAddOneOffHint": "Without saving: item is created for this invoice only and archived from lists",
+  "sellQuickAddContinue": "Continue",
+  "sellQuickAddNameRequired": "Item name is required",
+  "sellQuickAddPriceInvalid": "Unit price is invalid",
+  "sellQuickAddNewTile": "New item",
+  "sellQuickAddCreated": "Created \"{name}\" and added to the invoice",
+  "sellQuickAddCreateError": "Could not create the item"
 }

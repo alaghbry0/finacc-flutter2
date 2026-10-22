@@ -5315,4 +5315,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get simRcptPrintAction => 'طباعة';
+
+  @override
+  String get sellQuickAddTitle => 'إضافة بند';
+
+  @override
+  String get sellQuickAddNameHint => 'اسم الصنف';
+
+  @override
+  String get sellQuickAddPriceHint => 'سعر الوحدة';
+
+  @override
+  String get sellQuickAddSaveToProducts => 'حفظ الصنف في قائمة المنتجات';
+
+  @override
+  String get sellQuickAddOneOffHint =>
+      'بدون حفظ: يُنشأ الصنف لهذه الفاتورة فقط ويؤرشف من القوائم';
+
+  @override
+  String get sellQuickAddContinue => 'متابعة';
+
+  @override
+  String get sellQuickAddNameRequired => 'اسم الصنف مطلوب';
+
+  @override
+  String get sellQuickAddPriceInvalid => 'سعر الوحدة غير صالح';
+
+  @override
+  String get sellQuickAddNewTile => 'صنف جديد';
+
+  @override
+  String sellQuickAddCreated(Object name) {
+    return 'أُنشئ «$name» وأُضيف للفاتورة';
+  }
+
+  @override
+  String get sellQuickAddCreateError => 'تعذر إنشاء الصنف';
 }

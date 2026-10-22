@@ -5285,4 +5285,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simRcptPrintAction => 'Print';
+
+  @override
+  String get sellQuickAddTitle => 'Add Item';
+
+  @override
+  String get sellQuickAddNameHint => 'Item name';
+
+  @override
+  String get sellQuickAddPriceHint => 'Unit price';
+
+  @override
+  String get sellQuickAddSaveToProducts => 'Save item to products list';
+
+  @override
+  String get sellQuickAddOneOffHint =>
+      'Without saving: item is created for this invoice only and archived from lists';
+
+  @override
+  String get sellQuickAddContinue => 'Continue';
+
+  @override
+  String get sellQuickAddNameRequired => 'Item name is required';
+
+  @override
+  String get sellQuickAddPriceInvalid => 'Unit price is invalid';
+
+  @override
+  String get sellQuickAddNewTile => 'New item';
+
+  @override
+  String sellQuickAddCreated(Object name) {
+    return 'Created \"$name\" and added to the invoice';
+  }
+
+  @override
+  String get sellQuickAddCreateError => 'Could not create the item';
 }
