@@ -5,6 +5,7 @@
 /// خارج package:web الرسمي (متوافق JS/WASM معًا).
 library;
 
+import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
@@ -31,7 +32,8 @@ void downloadBytes(
   web.URL.revokeObjectURL(url);
 }
 
-/// ينزّل نصًا (UTF-8) — صيغة ملائمة لملفات CSV النصية إن لزمت.
+/// ينزّل نصًا (UTF-8 — **مراجعة V7 🟡-6**: كان يكتب codeUnits كـUTF-16
+/// فينزل النص العربي مشوهًا) — صيغة ملائمة لملفات CSV النصية.
 void downloadText(String text, String fileName, {String mime = 'text/plain'}) {
-  downloadBytes(text.codeUnits, fileName, mime: mime);
+  downloadBytes(utf8.encode(text), fileName, mime: mime);
 }

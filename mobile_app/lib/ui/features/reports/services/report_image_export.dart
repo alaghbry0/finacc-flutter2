@@ -60,8 +60,13 @@ Future<ImageExportResult> exportReportImage({
 }) async {
   final pdf = await buildPdf();
   final bytes = await pdf.save();
-  // ترسيم كل الصفحات بدقة 150 — بنمط pdf_preview_dialog القائم حرفيًا.
-  final pages = await Printing.raster(bytes, dpi: 150).toList();
+  // ترسيم الصفحات بدقة 150 — بنمط pdf_preview_dialog. **مراجعة V7 🟡-5:
+  // نأخذ سقف+1 فقط** — تقرير من 50 صفحة كان يُرسَم كاملاً (~435MB
+  // نقطية) قبل رفض السقف؛ الآن الذروة محصورة عند 13 صفحة ثم القرار.
+  final pages = await Printing.raster(
+    bytes,
+    dpi: 150,
+  ).take(maxPages + 1).toList();
 
   // السقف أولًا — قبل أي ترميز PNG أو تنزيل.
   if (evaluateImagePageCap(pages.length, maxPages: maxPages) ==

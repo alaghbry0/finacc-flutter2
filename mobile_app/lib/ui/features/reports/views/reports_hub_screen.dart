@@ -1,13 +1,14 @@
-/// مركز التقارير — جذر مسار /reports (الشريحة 10): بطاقة بطل + أقسام
-/// تعرض كل تقارير الرقابة المتاحة (الأرباح عبر خريطة الترحيل، أعمار
-/// الديون، الجرد الفعلي، الحد الأدنى، الصلاحية) مع روابط عميقة لوحدات
-/// المخزون. تُلحق بها تقارير الشريحة 10 الباقية (حركة صنف/ملخص حركة/
-/// المبيعات حسب) فور تسليم وكلاءها.
+/// مركز التقارير — جذر مسار /reports (الشريحة 10) بهوية Simple Invoice
+/// Manager (V7-C): ترويسة فرعية بعنوان «التقارير» **بلا زر رجوع** (قرار
+/// نقد F9-a — نمط جذر /more)، بطاقة البطل القائمة ببياناتها، ثم مجموعات
+/// التقارير الأربع (المالية/التدفقات/الديون/المخزون) بصفوف SIM
+/// (`.setting-row` — بطاقات بيضاء بحدود cardBorder وفواصل 1px وشيفرون
+/// RTL)، مع **صف «كشف حساب طرف»** الجديد (V7-7: الكشف موجود وظيفيًا
+/// لكل طرف من محور الأطراف → /parties).
 ///
-/// R16-b: زر عودة برأس الشاشة — المسار جذري خارج هيكل التبويبات
-/// (يُفتح من «المزيد») فلا يفترض المحرك زر رجوع تلقائياً وكان المالك
-/// يحاصر بلا مخرج (شكوى مؤكدة حياً). الرجوع الفعلي: pop إن كان
-/// متاحاً، وإلا عودة صريحة إلى «المزيد» (نمط الشاشات العلوية).
+/// كل وجهة من الشاشة القائمة محفوظة بنفس مسارها: الأرباح وخريطة
+/// الترحيل، أعمار الديون، حركة صنف/ملخص المخزون/المبيعات حسب، والروابط
+/// العميقة لوحدات المخزون (الجرد/الحد الأدنى/الصلاحية).
 library;
 
 import 'package:flutter/material.dart';
@@ -15,11 +16,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/fin_card.dart';
+import '../../../core/theme/fin_tokens.dart';
 import '../../../core/widgets/fin_section_title.dart';
 import '../../../core/widgets/hub_hero_card.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 
-/// شاشة مركز التقارير — قائمة ثابتة من بطاقات الأقسام (لا حالة تحميل؛
+/// شاشة مركز التقارير — قائمة ثابتة من مجموعات الصفوف (لا حالة تحميل؛
 /// كل تقرير يحمّل بياناته عند فتحه).
 class ReportsHubScreen extends StatelessWidget {
   const ReportsHubScreen({super.key});
@@ -29,38 +31,44 @@ class ReportsHubScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(l10n.reportsTitle),
-        // R16-b — زر العودة: يعمل دوماً (pop عند توفره، وإلا عودة
-        // صريحة إلى تبويب «المزيد» الذي فُتح منه المركز). الأيقونة
-        // BackButtonIcon (تنعكس تلقائياً بالـRTL) وtooltip من مفتاح
-        // l10n القائم commonBack — BackButton هنا بلا وسيط tooltip.
-        leading: IconButton(
-          tooltip: l10n.commonBack,
-          icon: const BackButtonIcon(),
-          onPressed: () {
-            final navigator = Navigator.of(context);
-            if (navigator.canPop()) {
-              navigator.maybePop();
-            } else {
-              context.go('/more');
-            }
-          },
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // مسار علوي خارج الهيكل (لا شريط سفلي/درج هنا) — زر رجوع
+            // إلزامي كي لا يُحاصر المستخدم (رجوع R16-b — مراجعة V7 🔴-1):
+            // pop عند توفره (دخلت من شاشة قائمة) وإلا عودة صريحة للرئيسية
+            // بنمط محور الأطراف /parties نفسه.
+            SimSubHeader(
+              titleKey: const Key('reports_hub_title'),
+              title: l10n.reportsTitle,
+              onBack: () {
+                final navigator = Navigator.of(context);
+                if (navigator.canPop()) {
+                  navigator.maybePop();
+                } else {
+                  context.go('/home');
+                }
+              },
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 32),
+                children: const [
+                  _HeroCard(),
+                  SizedBox(height: 16),
+                  _FinanceSection(),
+                  SizedBox(height: 16),
+                  _FlowsSection(),
+                  SizedBox(height: 16),
+                  _DebtsSection(),
+                  SizedBox(height: 16),
+                  _InventoryControlSection(),
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: const [
-          _HeroCard(),
-          SizedBox(height: 16),
-          _FinanceSection(),
-          SizedBox(height: 16),
-          _FlowsSection(),
-          SizedBox(height: 16),
-          _DebtsSection(),
-          SizedBox(height: 16),
-          _InventoryControlSection(),
-        ],
       ),
     );
   }
@@ -86,116 +94,101 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-/// صف تقرير واحد — أيقونة داخل حاوية مصبوغة + عنوان/وصف + سهم،
-/// بحركة دخول متدرجة (نمط صفوف لوحة المخزن).
-class _ReportRow extends StatelessWidget {
-  const _ReportRow({
-    required this.index,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.route,
-    this.accentColor,
-  });
+/// بطاقة مجموعة تقارير SIM — سطح أبيض بحد رقيق وزوايا 8px والصفوف
+/// بينها فواصل 1px (نمط `.list-content` — مطابقة لبطاقات إعدادات V7-A).
+class _ReportsGroupCard extends StatelessWidget {
+  const _ReportsGroupCard({required this.children});
 
-  final int index;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final String route;
-
-  /// لون شارة جانبية مميزة (اختياري — بطاقة الأرباح الذهبية).
-  final Color? accentColor;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final start = (index * 0.08).clamp(0.0, 0.6);
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 420),
-      curve: Interval(start, 1, curve: Curves.easeOutCubic),
-      builder: (context, t, child) {
-        return Opacity(
-          opacity: t.clamp(0, 1),
-          child: Transform.translate(
-            offset: Offset(0, (1 - t) * 12),
-            child: child,
-          ),
-        );
-      },
-      child: InkWell(
-        onTap: () => context.go(route),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+    final isDark = scheme.brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(FinRadius.chip),
+        border: Border.all(color: FinColors.of(context).cardBorder),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(FinRadius.chip - 1),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: isDark
+                      ? scheme.outlineVariant.withValues(alpha: 0.4)
+                      : const Color(0xFFF0F0F0),
                 ),
-                child: Icon(icon, size: 21, color: color),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        if (accentColor != null) ...[
-                          const SizedBox(width: 6),
-                          Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 14,
-                            color: accentColor,
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+              children[i],
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// فاصل رفيع بين الصفوف.
-class _RowDivider extends StatelessWidget {
-  const _RowDivider();
+/// عنوان مجموعة التقارير — FinSectionTitle القائم بنمطه (أيقونة + نص).
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      color: Theme.of(context).colorScheme.outlineVariant
-          .withValues(alpha: 0.4),
+    return Padding(
+      padding: const EdgeInsets.only(right: 4, bottom: 8),
+      child: FinSectionTitle(icon: icon, title: title),
+    );
+  }
+}
+
+/// حاوية أيقونة صف التقرير — مربع 34×34 مصبوغ بشفافية اللون (نمط صفوف
+/// إعدادات V7-A)؛ لون أيقونة كل تقرير محفوظ كما كان.
+Widget _rowIcon(IconData icon, Color color) => Container(
+  width: 34,
+  height: 34,
+  decoration: BoxDecoration(
+    color: color.withValues(alpha: 0.12),
+    borderRadius: BorderRadius.circular(FinRadius.chip),
+  ),
+  child: Icon(icon, size: 18, color: color),
+);
+
+/// صف تقرير واحد بلغة SimSettingRow — العنوان والوصف والوجهة كما كانا؛
+/// [titleKey] مفتاح ثابت للاختبارات (نقر الصف → مساره).
+class _ReportRow extends StatelessWidget {
+  const _ReportRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.route,
+    required this.titleKey,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final String route;
+  final Key titleKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return SimSettingRow(
+      titleKey: titleKey,
+      leading: _rowIcon(icon, color),
+      title: title,
+      subtitle: subtitle,
+      onTap: () => context.go(route),
     );
   }
 }
@@ -211,25 +204,21 @@ class _FinanceSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 4, bottom: 8),
-          child: FinSectionTitle(
-            icon: Icons.account_balance_wallet_rounded,
-            title: l10n.reportsSectionFinance,
-          ),
+        _GroupLabel(
+          icon: Icons.account_balance_wallet_rounded,
+          title: l10n.reportsSectionFinance,
         ),
-        FinCard(
-          accent: colors.gold,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: _ReportRow(
-            index: 0,
-            icon: Icons.trending_up_rounded,
-            title: l10n.profitTitle,
-            subtitle: l10n.reportsPnlDesc,
-            color: colors.positive,
-            route: '/reports/profit',
-            accentColor: colors.gold,
-          ),
+        _ReportsGroupCard(
+          children: [
+            _ReportRow(
+              icon: Icons.trending_up_rounded,
+              title: l10n.profitTitle,
+              subtitle: l10n.reportsPnlDesc,
+              color: colors.positive,
+              route: '/reports/profit',
+              titleKey: const Key('reports_hub_row_profit'),
+            ),
+          ],
         ),
       ],
     );
@@ -249,52 +238,45 @@ class _FlowsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 4, bottom: 8),
-          child: FinSectionTitle(
-            icon: Icons.swap_vert_rounded,
-            title: l10n.reportsSectionFlows,
-          ),
+        _GroupLabel(
+          icon: Icons.swap_vert_rounded,
+          title: l10n.reportsSectionFlows,
         ),
-        FinCard(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Column(
-            children: [
-              _ReportRow(
-                index: 1,
-                icon: Icons.receipt_long_rounded,
-                title: l10n.itemMovementTitle,
-                subtitle: l10n.reportsItemMovementDesc,
-                color: scheme.primary,
-                route: '/reports/item-movement',
-              ),
-              const _RowDivider(),
-              _ReportRow(
-                index: 2,
-                icon: Icons.inventory_2_rounded,
-                title: l10n.stockSummaryTitle,
-                subtitle: l10n.reportsStockSummaryDesc,
-                color: scheme.tertiary,
-                route: '/reports/stock-summary',
-              ),
-              const _RowDivider(),
-              _ReportRow(
-                index: 3,
-                icon: Icons.bar_chart_rounded,
-                title: l10n.salesByTitle,
-                subtitle: l10n.reportsSalesByDesc,
-                color: colors.positive,
-                route: '/reports/sales-by',
-              ),
-            ],
-          ),
+        _ReportsGroupCard(
+          children: [
+            _ReportRow(
+              icon: Icons.receipt_long_rounded,
+              title: l10n.itemMovementTitle,
+              subtitle: l10n.reportsItemMovementDesc,
+              color: scheme.primary,
+              route: '/reports/item-movement',
+              titleKey: const Key('reports_hub_row_item_movement'),
+            ),
+            _ReportRow(
+              icon: Icons.inventory_2_rounded,
+              title: l10n.stockSummaryTitle,
+              subtitle: l10n.reportsStockSummaryDesc,
+              color: scheme.tertiary,
+              route: '/reports/stock-summary',
+              titleKey: const Key('reports_hub_row_stock_summary'),
+            ),
+            _ReportRow(
+              icon: Icons.bar_chart_rounded,
+              title: l10n.salesByTitle,
+              subtitle: l10n.reportsSalesByDesc,
+              color: colors.positive,
+              route: '/reports/sales-by',
+              titleKey: const Key('reports_hub_row_sales_by'),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-/// قسم الديون والتحصيل — أعمار الديون (الشريحة 9).
+/// قسم الديون والتحصيل — أعمار الديون (الشريحة 9) + كشف حساب طرف
+/// (V7-7: الكشف الرسمي بالرصيد التراكمي متاح لكل طرف من محور الأطراف).
 class _DebtsSection extends StatelessWidget {
   const _DebtsSection();
 
@@ -302,26 +284,33 @@ class _DebtsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
+    final colors = FinColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 4, bottom: 8),
-          child: FinSectionTitle(
-            icon: Icons.schedule_send_rounded,
-            title: l10n.reportsSectionDebts,
-          ),
+        _GroupLabel(
+          icon: Icons.schedule_send_rounded,
+          title: l10n.reportsSectionDebts,
         ),
-        FinCard(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: _ReportRow(
-            index: 1,
-            icon: Icons.event_busy_rounded,
-            title: l10n.agingTitle,
-            subtitle: l10n.agingHubSubtitle,
-            color: scheme.primary,
-            route: '/reports/aging',
-          ),
+        _ReportsGroupCard(
+          children: [
+            _ReportRow(
+              icon: Icons.event_busy_rounded,
+              title: l10n.agingTitle,
+              subtitle: l10n.agingHubSubtitle,
+              color: scheme.primary,
+              route: '/reports/aging',
+              titleKey: const Key('reports_hub_row_aging'),
+            ),
+            _ReportRow(
+              icon: Icons.receipt_long_rounded,
+              title: l10n.reportsHubPartyStatementTitle,
+              subtitle: l10n.reportsHubPartyStatementDesc,
+              color: colors.gold,
+              route: '/parties',
+              titleKey: const Key('reports_hub_row_party_statement'),
+            ),
+          ],
         ),
       ],
     );
@@ -340,46 +329,37 @@ class _InventoryControlSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 4, bottom: 8),
-          child: FinSectionTitle(
-            icon: Icons.fact_check_rounded,
-            title: l10n.reportsSectionInventory,
-          ),
+        _GroupLabel(
+          icon: Icons.fact_check_rounded,
+          title: l10n.reportsSectionInventory,
         ),
-        FinCard(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Column(
-            children: [
-              _ReportRow(
-                index: 2,
-                icon: Icons.checklist_rounded,
-                title: l10n.stocktakeTitle,
-                subtitle: l10n.reportsStocktakeDesc,
-                color: colors.gold,
-                route: '/inventory/stocktake',
-                accentColor: colors.gold,
-              ),
-              const _RowDivider(),
-              _ReportRow(
-                index: 3,
-                icon: Icons.trending_down_rounded,
-                title: l10n.inventoryHubLowStock,
-                subtitle: l10n.inventoryHubLowStockDesc,
-                color: colors.warning,
-                route: '/inventory/low-stock',
-              ),
-              const _RowDivider(),
-              _ReportRow(
-                index: 4,
-                icon: Icons.schedule_rounded,
-                title: l10n.inventoryHubBatches,
-                subtitle: l10n.inventoryHubBatchesDesc,
-                color: colors.negative,
-                route: '/inventory/batches',
-              ),
-            ],
-          ),
+        _ReportsGroupCard(
+          children: [
+            _ReportRow(
+              icon: Icons.checklist_rounded,
+              title: l10n.stocktakeTitle,
+              subtitle: l10n.reportsStocktakeDesc,
+              color: colors.gold,
+              route: '/inventory/stocktake',
+              titleKey: const Key('reports_hub_row_stocktake'),
+            ),
+            _ReportRow(
+              icon: Icons.trending_down_rounded,
+              title: l10n.inventoryHubLowStock,
+              subtitle: l10n.inventoryHubLowStockDesc,
+              color: colors.warning,
+              route: '/inventory/low-stock',
+              titleKey: const Key('reports_hub_row_low_stock'),
+            ),
+            _ReportRow(
+              icon: Icons.schedule_rounded,
+              title: l10n.inventoryHubBatches,
+              subtitle: l10n.inventoryHubBatchesDesc,
+              color: colors.negative,
+              route: '/inventory/batches',
+              titleKey: const Key('reports_hub_row_batches'),
+            ),
+          ],
         ),
       ],
     );

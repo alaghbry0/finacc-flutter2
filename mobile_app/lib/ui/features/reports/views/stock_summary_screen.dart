@@ -1,7 +1,13 @@
-/// شاشة «ملخص حركة المخزون» (FR-09-04 — الشريحة 10): لكل صنف **تحرّك**
-/// في الفترة — أعمدة الوارد/الصادر/المرتجع/التسوية + الرصيد الختامي
-/// وقيمته بالتكلفة، مرتّبة بالقيمة تنازلياً. الرأس: عدد الأصناف
-/// المتحركة + إجمالي قيمة المخزون بالتكلفة.
+/// شاشة «ملخص حركة المخزون» (FR-09-04 — الشريحة 10) بهوية Simple
+/// Invoice Manager (V7-C): ترويسة فرعية برجوع منطقي إلى مركز
+/// التقارير، شريط الفترات وصفوف الملخص كما هي، و**شريط التصدير
+/// الثلاثي الثابت أسفل الشاشة** (صورة/PDF/تفوق) بمسقط جدولي من صفوف
+/// النموذج (الصنف + أعمدة التدفق + الرصيد + القيمة) وصف إجمالي بقيمة
+/// المخزون (مجموع الكميات عبر وحدات مختلفة بلا معنى — «—» صادقة).
+///
+/// لكل صنف **تحرّك** في الفترة — أعمدة الوارد/الصادر/المرتجع/التسوية
+/// + الرصيد الختامي وقيمته بالتكلفة، مرتّبة بالقيمة تنازلياً. الرأس:
+/// عدد الأصناف المتحركة + إجمالي قيمة المخزون بالتكلفة.
 ///
 /// V1 مخزن واحد (بلا مرشح مخزن — قرار البريف)؛ الرصيد الختامي مصدر
 /// الحقيقة من كل الحركات حتى نهاية الفترة (رأس المستودع).
@@ -10,6 +16,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/movement_reports_repository.dart';
@@ -22,8 +29,12 @@ import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
+import '../../sell/views/widgets/sim_invoice_widgets.dart' show SimDarkTotalBar;
 import '../view_models/movement_reports_view_model.dart';
 import 'widgets/period_preset_bar.dart';
+import 'widgets/report_print_projection.dart';
+import 'widgets/sim_report_export_bar.dart';
 
 /// شاشة ملخص حركة المخزون — مسار مقترح `/reports/stock-summary`.
 class StockSummaryScreen extends StatelessWidget {
@@ -64,44 +75,62 @@ class _StockSummaryBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(l10n.stockSummaryTitle),
-            if (state.rows != null && state.rows!.isNotEmpty)
-              Text(
-                l10n.stockSummaryTotalItems(state.rows!.length),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            SimSubHeader(
+              titleKey: const Key('stock_summary_title'),
+              title: l10n.stockSummaryTitle,
+              onBack: () => _backToReports(context),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: vm.refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    PeriodPresetBar(
+                      selected: state.period,
+                      currentFrom: state.from,
+                      currentTo: state.to,
+                      onPeriodSelected: (period) =>
+                          unawaited(vm.setPeriod(period)),
+                      onCustomRange: (from, to) =>
+                          unawaited(vm.setCustomRange(from, to)),
+                    ),
+                    const SizedBox(height: 14),
+                    ..._buildContent(context, vm),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: vm.refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            children: [
-              PeriodPresetBar(
-                selected: state.period,
-                currentFrom: state.from,
-                currentTo: state.to,
-                onPeriodSelected: (period) => unawaited(vm.setPeriod(period)),
-                onCustomRange: (from, to) =>
-                    unawaited(vm.setCustomRange(from, to)),
+      // الثلاثية الثابتة بمسقط من صفوف الملخص الحية (تعطيل حتى تكتمل).
+      bottomNavigationBar: SimReportExportBar(
+        title: l10n.stockSummaryTitle,
+        doc: state.rows == null
+            ? null
+            : buildStockSummaryPrintDoc(
+                l10n: l10n,
+                company: context.read<AppController>().company,
+                state: state,
               ),
-              const SizedBox(height: 14),
-              ..._buildContent(context, vm),
-            ],
-          ),
-        ),
       ),
     );
+  }
+
+  /// رجوع منطقي: pop إن كان متاحاً وإلا عودة صريحة لمركز التقارير.
+  void _backToReports(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.maybePop();
+    } else {
+      context.go('/reports');
+    }
   }
 
   List<Widget> _buildContent(BuildContext context, StockSummaryViewModel vm) {
@@ -190,7 +219,9 @@ class _StockSummaryBody extends StatelessWidget {
   }
 }
 
-/// رأس الشاشة: عدد الأصناف المتحركة + إجمالي قيمة المخزون بالتكلفة.
+/// رأس الشاشة (V7-C — هوية SIM): بطاقة بيضاء بعدد الأصناف المتحركة
+/// وعملتها، ثم شريط **الإجمالي الداكن** بنمط SimDarkTotalBar لقيمة
+/// المخزون بالتكلفة — نفس بيانات الرأس القائمة.
 class _TotalsCard extends StatelessWidget {
   const _TotalsCard({super.key, required this.state});
 
@@ -200,33 +231,22 @@ class _TotalsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = FinColors.of(context);
-    return FinCard(
-      accent: colors.gold,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.stockSummaryTotalItems(state.rows?.length ?? 0),
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FinCard(
+          padding: const EdgeInsets.all(14),
+          child: Row(
             children: [
               Expanded(
                 child: Text(
-                  l10n.stockSummaryTotalValue,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  l10n.stockSummaryTotalItems(state.rows?.length ?? 0),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
-              AmountText(
-                amount: state.totalValueAtCost,
-                size: AmountSize.large,
-                decimals: state.decimals,
-              ),
               if (state.currencyCode.isNotEmpty) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Text(
                   state.currencyCode,
                   style: Theme.of(context).textTheme.labelSmall
@@ -235,8 +255,17 @@ class _TotalsCard extends StatelessWidget {
               ],
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        SimDarkTotalBar(
+          label: l10n.stockSummaryTotalValue,
+          amount: AmountText.formatFor(
+            context,
+            state.totalValueAtCost,
+            state.decimals,
+          ),
+        ),
+      ],
     );
   }
 }

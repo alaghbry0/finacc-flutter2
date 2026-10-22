@@ -1,9 +1,15 @@
-/// شاشة «حركة صنف» (FR-09-03 — الشريحة 10): بطاقة صنف كاملة في فترة —
-/// كل حركاته (شراء/بيع/مرتجعات/تسويات) مع **الباقي التراكمي** بعد كل
-/// حركة، معروضة تنازلياً (الأحدث أولاً) بينما يُحسب الرصيد تصاعدياً في
-/// المستودع. رأس الشاشة: رصيد ما قبل الفترة + إجماليا الوارد/الصادر +
-/// التكلفة الحالية للوحدة. اختيار الصنف عبر نافذة بحث (اسم/باركود)
-/// ببطاقات تُظهر المخزون — بنمط نافذة اختيار صنف البيع.
+/// شاشة «حركة صنف» (FR-09-03 — الشريحة 10) بهوية Simple Invoice Manager
+/// (V7-C): ترويسة فرعية برجوع منطقي إلى مركز التقارير، منتقي الصنف
+/// والفترات القائمة والباقي التراكمي كما هي، و**شريط التصدير الثلاثي
+/// الثابت أسفل الشاشة** (صورة/PDF/تفوق) بمسقط دفتر تصاعدي (التاريخ/
+/// البيان/الكمية/الباقي) وصف إجمالي بوارد/صادر الفترة والباقي الختامي.
+///
+/// بطاقة الصنف الكاملة في فترة — كل حركاته (شراء/بيع/مرتجعات/تسويات)
+/// مع **الباقي التراكمي** بعد كل حركة، معروضة تنازلياً (الأحدث أولاً)
+/// بينما يُحسب الرصيد تصاعدياً في المستودع. رأس الشاشة: رصيد ما قبل
+/// الفترة + إجماليا الوارد/الصادر + التكلفة الحالية للوحدة. اختيار
+/// الصنف عبر نافذة بحث (اسم/باركود) ببطاقات تُظهر المخزون — بنمط نافذة
+/// اختيار صنف البيع.
 ///
 /// رقاقة النوع ملوّنة بالفئة: وارد أخضر / صادر أحمر / مرتجع تيل
 /// (الأساس البراندي) / تسوية ذهبي (زوج التحذير الدافئ — لا يوجد زوج
@@ -16,6 +22,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/movement_reports_repository.dart';
@@ -26,12 +33,15 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/movement_reports_view_model.dart';
 import 'widgets/item_movement_hero_card.dart';
 import 'widgets/item_movement_picker_sheet.dart';
 import 'widgets/item_movement_summary_card.dart';
 import 'widgets/item_movement_tile.dart';
 import 'widgets/period_preset_bar.dart';
+import 'widgets/report_print_projection.dart';
+import 'widgets/sim_report_export_bar.dart';
 
 /// شاشة تقرير حركة صنف — مسار مقترح `/reports/item-movement`.
 class ItemMovementScreen extends StatelessWidget {
@@ -76,46 +86,64 @@ class _ItemMovementBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(l10n.itemMovementTitle),
-            if (state.report != null)
-              Text(
-                state.report!.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            SimSubHeader(
+              titleKey: const Key('item_movement_title'),
+              title: l10n.itemMovementTitle,
+              onBack: () => _backToReports(context),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: vm.refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    PeriodPresetBar(
+                      selected: state.period,
+                      currentFrom: state.from,
+                      currentTo: state.to,
+                      onPeriodSelected: (period) =>
+                          unawaited(vm.setPeriod(period)),
+                      onCustomRange: (from, to) =>
+                          unawaited(vm.setCustomRange(from, to)),
+                    ),
+                    const SizedBox(height: 14),
+                    ..._buildContent(context, vm),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: vm.refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            children: [
-              PeriodPresetBar(
-                selected: state.period,
-                currentFrom: state.from,
-                currentTo: state.to,
-                onPeriodSelected: (period) => unawaited(vm.setPeriod(period)),
-                onCustomRange: (from, to) =>
-                    unawaited(vm.setCustomRange(from, to)),
+      // الثلاثية الثابتة بمسقط دفتر الحركة الحي (تعطيل حتى يكتمل الصنف).
+      bottomNavigationBar: SimReportExportBar(
+        title: state.report == null
+            ? l10n.itemMovementTitle
+            : '${l10n.itemMovementTitle} — ${state.report!.name}',
+        doc: state.report == null
+            ? null
+            : buildItemMovementPrintDoc(
+                l10n: l10n,
+                company: context.read<AppController>().company,
+                report: state.report!,
               ),
-              const SizedBox(height: 14),
-              ..._buildContent(context, vm),
-            ],
-          ),
-        ),
       ),
     );
+  }
+
+  /// رجوع منطقي: pop إن كان متاحاً وإلا عودة صريحة لمركز التقارير.
+  void _backToReports(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.maybePop();
+    } else {
+      context.go('/reports');
+    }
   }
 
   /// محتوى الشاشة بحرّاس خروج مبكرين: لا صنف ← تحميل ← خطأ ← لا تقرير ←

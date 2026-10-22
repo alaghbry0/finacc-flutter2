@@ -95,13 +95,13 @@ void main() {
       );
 
       expect(find.text('المبيعات حسب'), findsOneWidget);
-      // رقائق الأبعاد الأربعة بمفاتيحها الثابتة + تسمية الترويسة الفرعية.
+      // رقائق الأبعاد الأربعة بمفاتيحها الثابتة (V7-C: العنوان الفرعي
+      // للترويسة القديمة سقط مع هوية SIM — رقاقة البعد الجاري تعلنه).
       expect(find.byKey(const Key('salesByTabCustomer')), findsOneWidget);
       expect(find.byKey(const Key('salesByTabCategory')), findsOneWidget);
       expect(find.byKey(const Key('salesByTabItem')), findsOneWidget);
       expect(find.byKey(const Key('salesByTabDay')), findsOneWidget);
-      // «العميل» مرتين: رقاقة البعد + الترويسة الفرعية للبعد الجاري.
-      expect(find.text('العميل'), findsNWidgets(2));
+      expect(find.text('العميل'), findsOneWidget);
       expect(find.text('الفئة'), findsOneWidget);
       expect(find.text('الصنف'), findsOneWidget);
       // «اليوم» مرتين: رقاقة البعد + رقاقة «فترة اليوم» في الشريط المشترك.
@@ -172,8 +172,8 @@ void main() {
         findsNothing,
         reason: 'إجمالي العملاء القديم اختفى',
       );
-      // «الصنف» مرتين الآن: الرقاقة + الترويسة الفرعية للبعد الجديد.
-      expect(find.text('الصنف'), findsNWidgets(2));
+      // «الصنف» رقاقة البعد المختار (V7-C: بلا عنوان فرعي للترويسة).
+      expect(find.text('الصنف'), findsOneWidget);
 
       await app.close();
       controller.dispose();

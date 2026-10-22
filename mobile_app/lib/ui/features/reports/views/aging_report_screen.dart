@@ -1,9 +1,12 @@
-/// شاشة «أعمار الديون» (FR-09-05 — الشريحة 9): أرصدة العملاء مصنّفة
-/// (٠–٣٠ / ٣١–٦٠ / ٦١–٩٠ / +٩٠) على أساس FIFO بعملة واحدة، مع بطاقة
-/// ملخص ملوّنة تدرّجياً، شريط دلاء مصغّر لكل عميل، توسيع لتفاصيل
-/// الفواتير المفتوحة، وتذكير واتساب (wa.me) لكل مدين.
+/// شاشة «أعمار الديون» (FR-09-05 — الشريحة 9) بهوية Simple Invoice
+/// Manager (V7-C): ترويسة فرعية برجوع **الأصل القائم** (AgingOriginTracker
+/// — مركز التقارير أو محور الأطراف حسب المدخل؛ المجهول → المركز)،
+/// منتقي العملة وبطاقة الملخص بشرائحها الملونة وسطور العملاء القابلة
+/// للتوسيع وأزرار wa.me كلها محفوظة حرفيًا، و**شريط التصدير الثلاثي
+/// الثابت أسفل الشاشة** (صورة/PDF/تفوق) بمسقط جدولي من دلاء التقرير
+/// (الطرف + الشرائح الأربعة + الرصيد + صف الإجمالي العام).
 ///
-/// (R19-D3a: الويدجت المركزّة في `widgets/` — منتقي العملة وبطاقة
+/// (R19-D3a: الويدجت المركزّزة في `widgets/` — منتقي العملة وبطاقة
 /// الملخص وسطر العميل وتفاصيل الفواتير والتذييل والمساعدات.)
 library;
 
@@ -21,12 +24,14 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/refresh_on_return.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../view_models/aging_view_model.dart';
 import 'widgets/aging_currency_selector.dart';
 import 'widgets/aging_customer_card.dart';
 import 'widgets/aging_footer_card.dart';
-import 'widgets/aging_format.dart';
 import 'widgets/aging_summary_card.dart';
+import 'widgets/report_print_projection.dart';
+import 'widgets/sim_report_export_bar.dart';
 
 /// شاشة تقرير أعمار الديون — `/reports/aging`.
 class AgingReportScreen extends StatelessWidget {
@@ -118,43 +123,48 @@ class _AgingBodyState extends State<_AgingBody> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(l10n.agingTitle),
-            if (report != null)
-              Text(
-                l10n.agingAsOfLabel(agingFormatDate(context, report.asOf)),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            SimSubHeader(
+              titleKey: const Key('aging_report_title'),
+              title: l10n.agingTitle,
+              // رجوع صريح إلى أصل الدخول (A6/R17-b: مركز التقارير أو محور
+              // الأطراف حسب المدخل؛ المجهول → المركز جذر وحدة التقرير)
+              // بدل التصلّب على محور واحد — المنطق القائم كما هو.
+              onBack: () => context.go(widget.origin ?? '/reports'),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: vm.refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    if (state.currencies.isNotEmpty) ...[
+                      AgingCurrencySelector(state: state),
+                      const SizedBox(height: 14),
+                    ],
+                    ..._buildContent(context, vm),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
-        // مسار علوي خارج الهيكل — رجوع صريح إلى أصل الدخول (A6/R17-b:
-        // مركز التقارير أو محور الأطراف حسب المدخل؛ المجهول → المركز
-        // جذر وحدة التقرير) بدل التصلّب على محور واحد.
-        leading: BackButton(
-          onPressed: () => context.go(widget.origin ?? '/reports'),
-        ),
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: vm.refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            children: [
-              if (state.currencies.isNotEmpty) ...[
-                AgingCurrencySelector(state: state),
-                const SizedBox(height: 14),
-              ],
-              ..._buildContent(context, vm),
-            ],
-          ),
-        ),
+      // الثلاثية الثابتة بمسقط من دلاء التقرير الحية (تعطيل حتى يكتمل).
+      bottomNavigationBar: SimReportExportBar(
+        title: l10n.agingTitle,
+        doc: report == null
+            ? null
+            : buildAgingPrintDoc(
+                l10n: l10n,
+                company: context.read<AppController>().company,
+                report: report,
+                decimals: state.decimals,
+              ),
       ),
     );
   }

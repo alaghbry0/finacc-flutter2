@@ -1,8 +1,14 @@
-/// شاشة «المبيعات حسب» (FR-09-06 — الشريحة 10): تجميع مبيعات الفترة
-/// (فواتير البيع المكتملة بالعملة الأساسية) حسب العميل/الفئة/الصنف/
-/// اليوم عبر رقائق أبعاد + شريط الفترات. كل صف: التسمية + المبلغ +
-/// عدد الفواتير + **رقاقة النسبة** عن الفترة السابقة المساوية في
-/// الطول (أخضر ارتفاع / أحمر انخفاض / محجوبة عند null — لا سابقة).
+/// شاشة «المبيعات حسب» (FR-09-06 — الشريحة 10) بهوية Simple Invoice
+/// Manager (V7-C): ترويسة فرعية برجوع منطقي إلى مركز التقارير، رقائق
+/// الأبعاد وشريط الفترات والصفوف كما هي، و**شريط التصدير الثلاثي
+/// الثابت أسفل الشاشة** (صورة/PDF/تفوق) بمسقط جدولي من صفوف التجميع
+/// الحية (تسمية البعد + المبلغ) وصف إجمالي بمجموع الفترة.
+///
+/// تجميع مبيعات الفترة (فواتير البيع المكتملة بالعملة الأساسية) حسب
+/// العميل/الفئة/الصنف/اليوم عبر رقائق أبعاد + شريط الفترات. كل صف:
+/// التسمية + المبلغ + عدد الفواتير + **رقاقة النسبة** عن الفترة
+/// السابقة المساوية في الطول (أخضر ارتفاع / أحمر انخفاض / محجوبة
+/// عند null — لا سابقة).
 ///
 /// التسمية الفارغة تُترجم حسب البعد: «عميل نقدي» (بلا عميل) أو
 /// «غير مصنّف» (قرار 10 برأس المستودع)؛ بعد «اليوم» يعرض التاريخ
@@ -12,6 +18,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/movement_reports_repository.dart';
@@ -26,8 +33,12 @@ import '../../../core/widgets/fin_card.dart';
 import '../../../core/widgets/fin_date_text.dart';
 import '../../../core/widgets/loading_state.dart';
 import '../../../core/widgets/numerals_scope.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
+import '../../sell/views/widgets/sim_invoice_widgets.dart' show SimDarkTotalBar;
 import '../view_models/movement_reports_view_model.dart';
 import 'widgets/period_preset_bar.dart';
+import 'widgets/report_print_projection.dart';
+import 'widgets/sim_report_export_bar.dart';
 
 /// شاشة المبيعات حسب — مسار مقترح `/reports/sales-by`.
 class SalesByScreen extends StatelessWidget {
@@ -68,49 +79,68 @@ class _SalesByBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(l10n.salesByTitle),
-            Text(
-              _dimensionLabel(l10n, state.dimension),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            SimSubHeader(
+              titleKey: const Key('sales_by_title'),
+              title: l10n.salesByTitle,
+              onBack: () => _backToReports(context),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: vm.refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    _DimensionBar(
+                      selected: state.dimension,
+                      onSelected: (dimension) =>
+                          unawaited(vm.setDimension(dimension)),
+                    ),
+                    const SizedBox(height: 12),
+                    PeriodPresetBar(
+                      selected: state.period,
+                      currentFrom: state.from,
+                      currentTo: state.to,
+                      onPeriodSelected: (period) =>
+                          unawaited(vm.setPeriod(period)),
+                      onCustomRange: (from, to) =>
+                          unawaited(vm.setCustomRange(from, to)),
+                    ),
+                    const SizedBox(height: 14),
+                    ..._buildContent(context, vm),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: vm.refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            children: [
-              _DimensionBar(
-                selected: state.dimension,
-                onSelected: (dimension) =>
-                    unawaited(vm.setDimension(dimension)),
+      // الثلاثية الثابتة بمسقط من صفوف التجميع الحية (تعطيل حتى تكتمل).
+      bottomNavigationBar: SimReportExportBar(
+        title: l10n.salesByTitle,
+        doc: state.rows == null
+            ? null
+            : buildSalesByPrintDoc(
+                l10n: l10n,
+                company: context.read<AppController>().company,
+                state: state,
               ),
-              const SizedBox(height: 12),
-              PeriodPresetBar(
-                selected: state.period,
-                currentFrom: state.from,
-                currentTo: state.to,
-                onPeriodSelected: (period) => unawaited(vm.setPeriod(period)),
-                onCustomRange: (from, to) =>
-                    unawaited(vm.setCustomRange(from, to)),
-              ),
-              const SizedBox(height: 14),
-              ..._buildContent(context, vm),
-            ],
-          ),
-        ),
       ),
     );
+  }
+
+  /// رجوع منطقي: pop إن كان متاحاً وإلا عودة صريحة لمركز التقارير.
+  void _backToReports(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.maybePop();
+    } else {
+      context.go('/reports');
+    }
   }
 
   List<Widget> _buildContent(BuildContext context, SalesByViewModel vm) {
@@ -266,7 +296,9 @@ String _dimensionLabel(AppLocalizations l10n, SalesByDimension dimension) =>
       SalesByDimension.day => l10n.salesByDay,
     };
 
-/// رأس الشاشة: إجمالي مبيعات الفترة بالعملة الأساسية.
+/// رأس الشاشة (V7-C — هوية SIM): شريط **الإجمالي الداكن** بنمط
+/// SimDarkTotalBar لإجمالي مبيعات الفترة بالعملة الأساسية — نفس بيانات
+/// بطاقة الإجمالي القائمة (التسمية والمبلغ والعملة).
 class _TotalCard extends StatelessWidget {
   const _TotalCard({super.key, required this.state});
 
@@ -276,33 +308,28 @@ class _TotalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = FinColors.of(context);
-    return FinCard(
-      accent: colors.gold,
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Expanded(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SimDarkTotalBar(
+          label: l10n.salesByTotal,
+          amount: AmountText.formatFor(
+            context,
+            state.totalSalesBase,
+            state.decimals,
+          ),
+        ),
+        if (state.currencyCode.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Center(
             child: Text(
-              l10n.salesByTotal,
-              style: Theme.of(context).textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ),
-          AmountText(
-            amount: state.totalSalesBase,
-            size: AmountSize.display,
-            decimals: state.decimals,
-          ),
-          if (state.currencyCode.isNotEmpty) ...[
-            const SizedBox(width: 4),
-            Text(
               state.currencyCode,
               style: Theme.of(context).textTheme.labelSmall
                   ?.copyWith(color: colors.gold),
             ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }

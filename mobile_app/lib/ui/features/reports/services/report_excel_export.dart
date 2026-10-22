@@ -51,6 +51,10 @@ Uint8List buildReportExcelBytes({
   }
   final sheet = excel[sheetName];
 
+  // مراجعة V7 🟡-3 — الورقة RTL: التقرير العربي يفتح باتجاه القراءة
+  // الصحيح (العمود الأول أقصى اليمين) بدل LTR الافتراضي.
+  sheet.isRTL = true;
+
   // صف الرؤوس ثم صفوف البيانات — appendRow يكتب بعد آخر صف معبأ.
   sheet.appendRow([for (final header in headers) TextCellValue(header)]);
   for (final row in rows) {

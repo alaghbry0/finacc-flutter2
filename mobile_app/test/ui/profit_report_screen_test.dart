@@ -16,6 +16,7 @@ import 'package:mobile_app/data/repositories/profit_report_repository.dart';
 import 'package:mobile_app/ui/core/session/app_controller.dart';
 import 'package:mobile_app/ui/core/theme/app_colors.dart';
 import 'package:mobile_app/ui/core/widgets/fin_card.dart';
+import 'package:mobile_app/ui/core/widgets/sim_list_widgets.dart';
 import 'package:mobile_app/ui/features/reports/view_models/profit_report_view_model.dart';
 import 'package:mobile_app/ui/features/reports/views/profit_report_screen.dart';
 import 'package:mobile_app/ui/features/reports/views/widgets/period_preset_bar.dart';
@@ -105,7 +106,12 @@ void main() {
       expect(find.text('صافي ما بقي للمالك'), findsOneWidget);
       expect(find.text('+400'), findsOneWidget, reason: '490 − 90 مسحوبات');
       expect(find.text('مسحوبات المالك (خارج المصاريف)'), findsOneWidget);
-      expect(find.text('تقرير PDF'), findsOneWidget);
+      // V7-C: زر PDF القديم داخل الجسم حل محله شريط التصدير الثلاثي
+      // الثابت أسفل الشاشة (PDF يستهلك الباني الغني القائم نفسه).
+      expect(find.byType(SimBottomActionBar), findsOneWidget);
+      expect(find.text('صورة'), findsOneWidget);
+      expect(find.text('PDF'), findsOneWidget);
+      expect(find.text('تفوق'), findsOneWidget);
       // تفصيل عدد الفواتير الرخيص من المستودع.
       expect(find.textContaining('فواتير'), findsWidgets);
 

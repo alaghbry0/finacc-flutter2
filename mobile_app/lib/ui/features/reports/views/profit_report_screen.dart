@@ -1,20 +1,23 @@
-/// شاشة «الأرباح والخسائر» (FR-09-02 — الشريحة 10): تقرير الفترة عبر
-/// خريطة الترحيل (ملحق و) — شريط فترات مسبقة/مخصصة، بطاقة البنود
-/// بأقسام (الإيراد/التكلفة/التسويات/المصاريف) بإشارات ملوّنة، بطاقة
-/// الربح الذهبية البارزة، مسحوبات المالك المستقلة، وسطر الإغلاق
-/// «صافي ما بقي للمالك»، مع تقرير PDF عبر نافذة المعاينة.
+/// شاشة «الأرباح والخسائر» (FR-09-02 — الشريحة 10) بهوية Simple Invoice
+/// Manager (V7-C): ترويسة فرعية برجوع منطقي إلى مركز التقارير، شريط
+/// الفترات المسبقة/المخصصة القائم، بطاقات البنود والربح والمسحوبات
+/// والإغلاق كما هي، و**شريط التصدير الثلاثي الثابت أسفل الشاشة**
+/// (صورة/PDF/تفوق): زر PDF يستهلك **بانيها الغني القائم** كما هو
+/// (قرار نقد V7: لا يُستبدل بالعام)، وزرا الصورة والتفوق بمسقط جدولي
+/// عام من بيانات نموذجها (`buildProfitTableDoc`).
 ///
 /// اصطلاح العرض: إشارة كل سطر = **إسهامه في الربح** (+ يزيد/− يقلّ) —
 /// الدهشة المحاسبية الوحيدة: تكلفة المرتجع تظهر موجبة لأنها تُخصم من
 /// COGS داخل الصيغة الملزمة.
 ///
 /// بطاقات التقرير وسطوره ومساعداته بملفاتها المركزّزة بجوارها
-/// (R20-D3d) — هذا الملف: إنشاء النموذج والحرّاس ومعاينة PDF.
+/// (R20-D3d) — هذا الملف: إنشاء النموذج والحرّاس ومعاينة PDF الغنية.
 library;
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/profit_report_repository.dart';
@@ -25,6 +28,7 @@ import '../../../core/widgets/amount_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_state.dart';
+import '../../../core/widgets/sim_list_widgets.dart';
 import '../../printing/services/profit_report_pdf_builder.dart';
 import '../../printing/views/pdf_preview_dialog.dart';
 import '../view_models/profit_report_view_model.dart';
@@ -35,6 +39,8 @@ import 'widgets/profit_report_lines_card.dart';
 import 'widgets/profit_report_meta_footer.dart';
 import 'widgets/profit_report_owner_card.dart';
 import 'widgets/profit_report_total_card.dart';
+import 'widgets/report_print_projection.dart';
+import 'widgets/sim_report_export_bar.dart';
 
 /// شاشة تقرير الأرباح والخسائر — مسار مقترح `/reports/profit`.
 class ProfitReportScreen extends StatelessWidget {
@@ -75,55 +81,68 @@ class _ProfitBody extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Text(l10n.profitTitle),
-            if (state.report != null)
-              Text(
-                state.currencyCode.isEmpty
-                    ? l10n.profitBaseCurrencyNote
-                    : '${l10n.profitBaseCurrencyNote} (${state.currencyCode})',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            SimSubHeader(
+              titleKey: const Key('profit_report_title'),
+              title: l10n.profitTitle,
+              onBack: () => _backToReports(context),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: vm.refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    PeriodPresetBar(
+                      selected: state.period,
+                      currentFrom: state.from,
+                      currentTo: state.to,
+                      onPeriodSelected: (period) =>
+                          unawaited(vm.setPeriod(period)),
+                      onCustomRange: (from, to) =>
+                          unawaited(vm.setCustomRange(from, to)),
+                    ),
+                    const SizedBox(height: 14),
+                    ..._buildContent(context, vm),
+                  ],
                 ),
               ),
+            ),
           ],
         ),
-        actions: [
-          // معاينة PDF — متاحة فور اكتمال التقرير.
-          if (state.report != null)
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf_rounded),
-              tooltip: l10n.profitPdfButton,
-              onPressed: () => _openProfitPdf(context, vm),
-            ),
-        ],
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: vm.refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            children: [
-              PeriodPresetBar(
-                selected: state.period,
-                currentFrom: state.from,
-                currentTo: state.to,
-                onPeriodSelected: (period) => unawaited(vm.setPeriod(period)),
-                onCustomRange: (from, to) =>
-                    unawaited(vm.setCustomRange(from, to)),
+      // الثلاثية الثابتة: PDF = الباني الغني القائم، صورة/تفوق بمسقط
+      // جدولي عام من حالة النموذج الحية (تعطيل حتى يكتمل التقرير).
+      bottomNavigationBar: SimReportExportBar(
+        title: l10n.profitPdfTitle,
+        doc: state.report == null
+            ? null
+            : buildProfitTableDoc(
+                l10n: l10n,
+                company: context.read<AppController>().company,
+                report: state.report!,
+                decimals: state.decimals,
               ),
-              const SizedBox(height: 14),
-              ..._buildContent(context, vm),
-            ],
-          ),
-        ),
+        onOpenPdf: state.report == null
+            ? null
+            : () => _openProfitPdf(context, vm),
       ),
     );
+  }
+
+  /// رجوع منطقي: pop إن كان متاحاً وإلا عودة صريحة لمركز التقارير
+  /// (نمط رأس الشاشة القائم R16-b قبل هوية SIM).
+  void _backToReports(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.maybePop();
+    } else {
+      context.go('/reports');
+    }
   }
 
   List<Widget> _buildContent(BuildContext context, ProfitReportViewModel vm) {
@@ -193,21 +212,13 @@ class _ProfitBody extends StatelessWidget {
       const SizedBox(height: 14),
       ProfitReportMetaFooter(state: state, report: report),
       const SizedBox(height: 8),
-      // زر PDF سفلي — إجراء أساسي للتقرير (مع إجراء الترويسة).
-      SizedBox(
-        height: 48,
-        child: FilledButton.icon(
-          onPressed: () => _openProfitPdf(context, vm),
-          icon: const Icon(Icons.picture_as_pdf_rounded, size: 20),
-          label: Text(l10n.profitPdfButton),
-        ),
-      ),
     ];
   }
 }
 
 /// يفتح معاينة PDF — كل القيم تُلتقط قبل أي await (لا سياق عبر فجوة
-/// غير متزامنة — نمط تقرير الوردية).
+/// غير متزامنة — نمط تقرير الوردية). **الباني الغني القائم كما هو**
+/// (V7-C: زر PDF بالشريط الثلاثي يستهلكه حرفيًا).
 void _openProfitPdf(BuildContext context, ProfitReportViewModel vm) {
   final l10n = AppLocalizations.of(context)!;
   final app = context.read<AppController>();

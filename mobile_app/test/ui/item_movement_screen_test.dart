@@ -143,16 +143,13 @@ void main() {
         productId: 1,
       );
 
-      // رأس البطاقة: الاسم (الترويسة + البطاقة) + الرصيد الافتتاحي + الإجماليان + WAC.
+      // رأس البطاقة: الاسم (بطاقة الرأس — V7-C: العنوان الفرعي للترويسة
+      // القديمة سقط مع هوية SIM) + الرصيد الافتتاحي + الإجماليان + WAC.
       expect(
         find.byKey(const Key('itemMovement_summary_card')),
         findsOneWidget,
       );
-      expect(
-        find.text('أرز بسمتي'),
-        findsNWidgets(2),
-        reason: 'العنوان الفرعي + بطاقة الرأس',
-      );
+      expect(find.text('أرز بسمتي'), findsOneWidget, reason: 'بطاقة الرأس');
       expect(find.text('رصيد ما قبل الفترة'), findsOneWidget);
       // الرصيد الافتتاحي **بلا إشارة** (رصيد لا تدفق — _qtyPlain).
       expect(find.text('10'), findsOneWidget);
@@ -260,11 +257,7 @@ void main() {
         find.byKey(const Key('itemMovement_summary_card')),
         findsOneWidget,
       );
-      expect(
-        find.text('صنف صامت'),
-        findsNWidgets(2),
-        reason: 'العنوان الفرعي + بطاقة الرأس',
-      );
+      expect(find.text('صنف صامت'), findsOneWidget, reason: 'بطاقة الرأس');
       expect(find.byKey(const Key('itemMovement_row_0')), findsNothing);
 
       await app.close();

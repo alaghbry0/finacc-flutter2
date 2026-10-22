@@ -90,12 +90,9 @@ void main() {
 
       expect(find.text('ملخص حركة المخزون'), findsOneWidget);
       expect(find.byKey(const Key('stockSummary_totals_card')), findsOneWidget);
-      // عدد الأصناف المتحركة (plural two) + إجمالي القيمة بالتكلفة.
-      expect(
-        find.text('صنفان متحركان'),
-        findsNWidgets(2),
-        reason: 'الترويسة + بطاقة الرأس',
-      );
+      // عدد الأصناف المتحركة (plural two) — بطاقة الرأس (V7-C: العنوان
+      // الفرعي للترويسة القديمة سقط مع هوية SIM — البطاقة تكفي).
+      expect(find.text('صنفان متحركان'), findsOneWidget, reason: 'بطاقة الرأس');
       expect(find.text('إجمالي قيمة المخزون بالتكلفة'), findsOneWidget);
       // 3,000 + 750 = 3,750 (YER منازل 0 بفواصل آلاف).
       expect(find.text('3,750'), findsOneWidget);
