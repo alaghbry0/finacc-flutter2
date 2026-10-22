@@ -1573,7 +1573,7 @@
   "sellQuickAddNameHint": "اسم الصنف",
   "sellQuickAddPriceHint": "سعر الوحدة",
   "sellQuickAddSaveToProducts": "حفظ الصنف في قائمة المنتجات",
-  "sellQuickAddOneOffHint": "بدون حفظ: يُنشأ الصنف لهذه الفاتورة فقط ويؤرشف من القوائم",
+  "sellQuickAddOneOffHint": "بدون حفظ: يُنشأ الصنف لهذه الفاتورة فقط ويؤرشف من القوائم بعد إتمامها",
   "sellQuickAddContinue": "متابعة",
   "sellQuickAddNameRequired": "اسم الصنف مطلوب",
   "sellQuickAddPriceInvalid": "سعر الوحدة غير صالح",
@@ -1612,5 +1612,21 @@
   },
   "@sellQuickAddCreateError": {
     "description": "خطأ فشل إنشاء الصنف"
+  },
+  "itemFormSimTitle": "نموذج إدخال المنتج",
+  "itemFormSimSave": "حفظ المنتج",
+  "partyFormSimAddTitle": "إضافة عميل / مورد جديد",
+  "partyFormSimSave": "حفظ هذا",
+  "@itemFormSimTitle": {
+    "description": "عنوان نموذج الصنف بنص النموذج الأولي (modal-product-edit)"
+  },
+  "@itemFormSimSave": {
+    "description": "زر حفظ نموذج الصنف بنص النموذج الأولي"
+  },
+  "@partyFormSimAddTitle": {
+    "description": "عنوان نموذج الطرف بنص النموذج الأولي (modal-add-client)"
+  },
+  "@partyFormSimSave": {
+    "description": "زر حفظ نموذج الطرف بنص لقطة 064839"
   }
 }

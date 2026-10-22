@@ -5300,7 +5300,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sellQuickAddOneOffHint =>
-      'Without saving: item is created for this invoice only and archived from lists';
+      'Without saving: the item is created for this invoice only and archived from lists after it completes';
 
   @override
   String get sellQuickAddContinue => 'Continue';
@@ -5321,4 +5321,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sellQuickAddCreateError => 'Could not create the item';
+
+  @override
+  String get itemFormSimTitle => 'Product Entry Form';
+
+  @override
+  String get itemFormSimSave => 'Save Product';
+
+  @override
+  String get partyFormSimAddTitle => 'Add New Client / Supplier';
+
+  @override
+  String get partyFormSimSave => 'Save This';
 }

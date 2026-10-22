@@ -260,8 +260,10 @@ class SimFormSwitchRow extends StatelessWidget {
       onTap: onChanged == null ? null : () => onChanged!(!value),
       child: Column(
         children: [
+          // 🟡-11 (نقد V10) — حشو عمودي 14 يرفع هدف لمس السطر كله إلى
+          // ≈48dp (نص 13sp ≈18dp + 28dp حشو) بدل ≈41dp السابق.
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             child: Row(
               children: [
                 Expanded(

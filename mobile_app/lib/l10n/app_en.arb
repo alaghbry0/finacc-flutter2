@@ -1690,11 +1690,15 @@
   "sellQuickAddNameHint": "Item name",
   "sellQuickAddPriceHint": "Unit price",
   "sellQuickAddSaveToProducts": "Save item to products list",
-  "sellQuickAddOneOffHint": "Without saving: item is created for this invoice only and archived from lists",
+  "sellQuickAddOneOffHint": "Without saving: the item is created for this invoice only and archived from lists after it completes",
   "sellQuickAddContinue": "Continue",
   "sellQuickAddNameRequired": "Item name is required",
   "sellQuickAddPriceInvalid": "Unit price is invalid",
   "sellQuickAddNewTile": "New item",
   "sellQuickAddCreated": "Created \"{name}\" and added to the invoice",
-  "sellQuickAddCreateError": "Could not create the item"
+  "sellQuickAddCreateError": "Could not create the item",
+  "itemFormSimTitle": "Product Entry Form",
+  "itemFormSimSave": "Save Product",
+  "partyFormSimAddTitle": "Add New Client / Supplier",
+  "partyFormSimSave": "Save This"
 }

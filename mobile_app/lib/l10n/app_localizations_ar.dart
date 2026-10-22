@@ -5330,7 +5330,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sellQuickAddOneOffHint =>
-      'بدون حفظ: يُنشأ الصنف لهذه الفاتورة فقط ويؤرشف من القوائم';
+      'بدون حفظ: يُنشأ الصنف لهذه الفاتورة فقط ويؤرشف من القوائم بعد إتمامها';
 
   @override
   String get sellQuickAddContinue => 'متابعة';
@@ -5351,4 +5351,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sellQuickAddCreateError => 'تعذر إنشاء الصنف';
+
+  @override
+  String get itemFormSimTitle => 'نموذج إدخال المنتج';
+
+  @override
+  String get itemFormSimSave => 'حفظ المنتج';
+
+  @override
+  String get partyFormSimAddTitle => 'إضافة عميل / مورد جديد';
+
+  @override
+  String get partyFormSimSave => 'حفظ هذا';
 }

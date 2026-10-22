@@ -9244,7 +9244,7 @@ abstract class AppLocalizations {
   /// No description provided for @sellQuickAddOneOffHint.
   ///
   /// In en, this message translates to:
-  /// **'Without saving: item is created for this invoice only and archived from lists'**
+  /// **'Without saving: the item is created for this invoice only and archived from lists after it completes'**
   String get sellQuickAddOneOffHint;
 
   /// No description provided for @sellQuickAddContinue.
@@ -9282,6 +9282,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not create the item'**
   String get sellQuickAddCreateError;
+
+  /// No description provided for @itemFormSimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Entry Form'**
+  String get itemFormSimTitle;
+
+  /// No description provided for @itemFormSimSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Product'**
+  String get itemFormSimSave;
+
+  /// No description provided for @partyFormSimAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Client / Supplier'**
+  String get partyFormSimAddTitle;
+
+  /// No description provided for @partyFormSimSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save This'**
+  String get partyFormSimSave;
 }
 
 class _AppLocalizationsDelegate
