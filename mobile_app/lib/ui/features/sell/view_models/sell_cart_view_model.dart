@@ -332,8 +332,23 @@ class SellCartViewModel extends ChangeNotifier {
   /// حذف سطر بالفهرس.
   void removeLine(int index) {
     if (index < 0 || index >= _state.lines.length) return;
+    final removed = _state.lines[index];
     final lines = [..._state.lines]..removeAt(index);
-    _state = sellCartStateWith(_state, lines: lines);
+    // V10-REVIEW 🔴-1 — قص العابرة مع آخر سطر لها: السطر محذوف فلا
+    // معنى لأرشفته عند ترحيل لاحق لفاتورة لا تحمله (والصنف يبقى
+    // مرئيًا للقوائم — الحذف قرار مستخدم صريح والأرشفة اليدوية متاحة).
+    var oneOffs = _state.oneOffItemIds;
+    if (oneOffs.contains(removed.productId) &&
+        !lines.any((l) => l.productId == removed.productId)) {
+      oneOffs = {...oneOffs}..remove(removed.productId);
+    }
+    _state = sellCartStateWith(
+      _state,
+      lines: lines,
+      oneOffItemIds: identical(oneOffs, _state.oneOffItemIds)
+          ? null
+          : oneOffs,
+    );
     notifyListeners();
   }
 
@@ -519,6 +534,10 @@ class SellCartViewModel extends ChangeNotifier {
       postError: null,
       notice: null,
       lastReceipt: null,
+      // V10-REVIEW 🔴-1 — العابرة تُصفّر مع السلة: فاتورة جديدة لا
+      // ترث أصنافًا عابرة من سلة مهجورة وإلا أُرشفت ظلمًا عند أول
+      // ترحيل ناجح لاحق (عابرة من فاتورة أخرى).
+      oneOffItemIds: const <int>{},
     );
     notifyListeners();
   }

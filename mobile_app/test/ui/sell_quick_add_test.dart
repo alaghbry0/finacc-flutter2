@@ -105,8 +105,9 @@ void main() {
       expect(posted.isOk, isTrue, reason: posted.errorOrNull ?? '');
       expect(vm.state.lines, isEmpty);
       expect(vm.state.oneOffItemIds, isEmpty);
-      // أرشفة best-effort غير متزامنة — نمنحها دورة أحداث كاملة.
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      // أرشفة best-effort غير متزامنة — استقصاء دوري (V10-REVIEW 🟡-3).
+      final archivedId0 = created.valueOrNull!.item.id;
+      await _pollUntil(() async => await _isArchived(handle, archivedId0));
 
       final archivedId = created.valueOrNull!.item.id;
       final rows = await handle.db.query(
@@ -123,6 +124,95 @@ void main() {
     });
   });
 
+    test('V10-REVIEW 🔴-1 — تفريغ السلة يصفّر العابرة (لا وراثة لفاتورة أخرى)',
+        () async {
+      await open();
+      final vm = buildVm();
+      await vm.load();
+      final app = _FakeApp(items: items, companies: companies);
+
+      // سلة مهجورة بعابر غير مرحّل ثم «فاتورة جديدة».
+      final abandoned = await createQuickSellItem(
+        app,
+        vm,
+        'عابر مهجور',
+        500,
+        saveToProducts: false,
+      );
+      expect(abandoned.isOk, isTrue);
+      expect(vm.state.oneOffItemIds, {abandoned.valueOrNull!.item.id});
+      vm.startNewInvoice();
+      expect(vm.state.oneOffItemIds, isEmpty,
+          reason: 'تفريغ السلة يجب أن يصفّر العابرة');
+
+      // فاتورة لاحقة بصنف سليم — لا تؤرشف العابر المهجور.
+      final normal = await createQuickSellItem(
+        app,
+        vm,
+        'صنف لاحق سليم',
+        700,
+        saveToProducts: true,
+      );
+      vm.addItemFromInfo(normal.valueOrNull!);
+      final posted = await vm.postSale(
+        paidCash: 700,
+        method: SalePaymentMethod.cash,
+      );
+      expect(posted.isOk, isTrue, reason: posted.errorOrNull ?? '');
+      // مهلة سكون لأي أرشفة متأخرة مفترضة (لا شيء يجب أن يُؤرشف).
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      final abandonedArchived =
+          await _isArchived(handle, abandoned.valueOrNull!.item.id);
+      expect(abandonedArchived, isFalse,
+          reason: 'العابر المهجور لا يُؤرشف بترحيل فاتورة أخرى');
+    });
+
+    test('V10-REVIEW 🔴-1 — حذف آخر سطر للعابر يقصّه من المجموعة', () async {
+      await open();
+      final vm = buildVm();
+      await vm.load();
+      final app = _FakeApp(items: items, companies: companies);
+      final oneOff = await createQuickSellItem(
+        app,
+        vm,
+        'عابر سيُحذف',
+        250,
+        saveToProducts: false,
+      );
+      vm.addItemFromInfo(oneOff.valueOrNull!);
+      expect(vm.state.oneOffItemIds, {oneOff.valueOrNull!.item.id});
+      vm.removeLine(0);
+      expect(vm.state.lines, isEmpty);
+      expect(vm.state.oneOffItemIds, isEmpty,
+          reason: 'حذف آخر سطر يقصّ العابر — لا أرشفة بفاتورة لا تحمله');
+    });
+
+    test('V10-REVIEW 🟡-3 — فشل الترحيل لا يؤرشف (السلة لا تُفقد)',
+        () async {
+      await open();
+      final vm = buildVm();
+      await vm.load();
+      final app = _FakeApp(items: items, companies: companies);
+      final oneOff = await createQuickSellItem(
+        app,
+        vm,
+        'عابر برفض ترحيل',
+        900,
+        saveToProducts: false,
+      );
+      vm.addItemFromInfo(oneOff.valueOrNull!);
+      // رفض مضمون: آجل لعميل نقدي مجهول (قيد خط أحمر بالسلة).
+      final posted = await vm.postSale(
+        paidCash: 0,
+        method: SalePaymentMethod.credit,
+      );
+      expect(posted.isErr, isTrue);
+      expect(vm.state.lines, hasLength(1), reason: 'السلة لا تُفقد عند الرفض');
+      expect(vm.state.oneOffItemIds, {oneOff.valueOrNull!.item.id});
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(await _isArchived(handle, oneOff.valueOrNull!.item.id), isFalse,
+          reason: 'لا أرشفة إلا بعد نجاح الترحيل حصرًا');
+    });
   group('المساعد createQuickSellItem (V10 — نقد 🔴-2)', () {
     test('صنف خدمي دائمًا بسعر العملة النشطة — المحفوظ لا يُسجَّل عابرًا',
         () async {
@@ -564,4 +654,27 @@ class _FakeApp extends ChangeNotifier implements AppController {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// استقصاء دوري حتى تحقق الشرط أو مهلة 5 ثوانٍ (V10-REVIEW 🟡-3).
+Future<void> _pollUntil(Future<bool> Function() condition) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 5));
+  while (DateTime.now().isBefore(deadline)) {
+    if (await condition()) return;
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+}
+
+/// هل الصنف مؤرشف بجدول product؟ (itemId=0 يعيد false دومًا — ماسك
+/// استقصاء غير ذي معنى).
+Future<bool> _isArchived(AppDatabase handle, int itemId) async {
+  if (itemId <= 0) return false;
+  final rows = await handle.db.query(
+    'product',
+    where: 'id = ?',
+    whereArgs: [itemId],
+    columns: ['is_archived'],
+  );
+  if (rows.isEmpty) return false;
+  return (rows.first['is_archived'] as int? ?? 0) == 1;
 }
