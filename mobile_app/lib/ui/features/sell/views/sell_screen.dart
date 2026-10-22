@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../domain/models/item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../core/session/app_controller.dart';
 import '../../../core/theme/app_typography.dart';
@@ -40,6 +41,7 @@ import 'widgets/customer_picker_sheet.dart';
 import 'widgets/fx_rate_gate_sheet.dart';
 import 'widgets/invoice_pdf_preview.dart';
 import 'widgets/item_picker_sheet.dart';
+import 'widgets/sim_quick_add_dialog.dart';
 import 'widgets/payment_sheet.dart';
 import 'widgets/sell_cart_banners.dart';
 import 'widgets/sell_cart_line_card.dart';
@@ -182,7 +184,33 @@ class _SellScreenBodyState extends State<_SellScreenBody> {
       decimals: state.selectedCurrency?.decimals ?? 2,
       currencyCode: state.selectedCurrency?.code,
       onPick: vm.addItemFromInfo,
+      // V10 — «إضافة بند» السريعة داخل الفاتورة: نافذة اسم+سعر+حفظ؛
+      // النجاح يعرض إشعار الإضافة ثم يغلق المنتقي بالسطر الجديد.
+      onQuickAdd: _quickAddItem,
     );
+  }
+
+  /// V10 — يفتح نافذة «إضافة بند» بنص البحث الحالي مبدئياً، ينشئ صنفاً
+  /// خدمياً عابراً (أو محفوظاً بتعليم «حفظ في المنتجات») ويعيده
+  /// للمنتقي ليضيفه للسلة ويغلق — مع SnackBar نجاح.
+  Future<ItemStockInfo?> _quickAddItem(String query) async {
+    final app = context.read<AppController>();
+    final vm = context.read<SellCartViewModel>();
+    final info = await showQuickAddItemDialog(
+      context,
+      initialName: query,
+      onCreate: (name, price, saveToProducts) =>
+          createQuickSellItem(app, vm, name, price, saveToProducts: saveToProducts),
+    );
+    if (info != null && mounted) {
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.sellQuickAddCreated(info.item.name))),
+        );
+    }
+    return info;
   }
 
   Future<void> _openPayment() async {

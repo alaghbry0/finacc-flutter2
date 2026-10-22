@@ -3,6 +3,7 @@
 library;
 
 import '../../../../../domain/core/result.dart';
+import '../../../../../domain/models/item.dart';
 import '../../../../../domain/models/party.dart';
 import '../../../../../domain/services/credit_limit.dart';
 import '../../../../core/session/app_controller.dart';
@@ -67,5 +68,61 @@ Future<CreditLimitGate?> resolveSellCreditGate(
     creditLimit: check.creditLimit,
     action: action,
     currentBalance: check.balance,
+  );
+}
+
+/// ينشئ صنف «الإضافة السريعة» من نافذة «إضافة بند» داخل الفاتورة
+/// (V10 — لقطة Screenbox_20261019_065028 + نقد 🔴-2): **خدمي دائماً**
+/// (بلا كمية افتتاحية بالنافذة فغير الخدمي يرفضه فحص التوفر «الكمية
+/// غير متوفر») بسعر عملة الفاتورة الحالية.
+///
+/// [saveToProducts]: عند إلغاء التعليم يُسجَّل الصنف عند السلة
+/// (`vm.registerOneOff`) فتُؤرشف القوائم **بعد نجاح الترحيل حصراً**
+/// (نقد 🔴-1 — الأرشفة الفورية يرفضها `sale_post_flow`).
+Future<Result<ItemStockInfo, String>> createQuickSellItem(
+  AppController app,
+  SellCartViewModel vm,
+  String name,
+  double price, {
+  required bool saveToProducts,
+}) async {
+  final items = app.items;
+  final companies = app.companies;
+  final currencyId = vm.state.currencyId;
+  if (items == null || companies == null || currencyId == null) {
+    return const Err<ItemStockInfo, String>(
+      'المستودعات غير جاهزة — أعد فتح الشاشة ثم حاول.',
+    );
+  }
+  final userId = (await companies.findAdminUserId()) ?? 1;
+  final warehouseId =
+      vm.state.warehouseId ?? (await companies.findDefaultWarehouseId());
+  if (warehouseId == null) {
+    return const Err<ItemStockInfo, String>(
+      'لا مخزن افتراضي — عيّن مخزناً من الإعدادات ثم أعد المحاولة.',
+    );
+  }
+  final draft = ItemDraft(
+    name: name,
+    isService: true,
+    prices: [ItemPrice(currencyId: currencyId, price: price)],
+  );
+  final result = await items.createItem(
+    draft,
+    warehouseId: warehouseId,
+    userId: userId,
+  );
+  if (result.isErr) {
+    return Err<ItemStockInfo, String>(result.errorOrNull!);
+  }
+  final id = result.valueOrNull!;
+  if (!saveToProducts) {
+    vm.registerOneOff(id);
+  }
+  return Ok<ItemStockInfo, String>(
+    ItemStockInfo(
+      item: Item(id: id, name: name, isService: true),
+      retailPrice: price,
+    ),
   );
 }

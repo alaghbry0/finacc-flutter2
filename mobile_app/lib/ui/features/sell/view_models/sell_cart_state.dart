@@ -138,6 +138,7 @@ class SellCartState {
     this.overAvailPolicy = 'warn',
     this.showDiscounts = true,
     this.warnBelowMargin = false,
+    this.oneOffItemIds = const <int>{},
   });
 
   final bool loading;
@@ -193,6 +194,12 @@ class SellCartState {
   /// `invoicing.discount_below_margin`).
   final bool warnBelowMargin;
 
+  /// أصناف «الإضافة السريعة» العابرة (V10 — نقد 🔴-1/🔴-2): أُنشئت
+  /// من نافذة «إضافة بند» بلا تعليم «حفظ في المنتجات» فتُؤرشف من
+  /// القوائم **بعد نجاح ترحيل الفاتورة حصراً** — الأرشفة الفورية
+  /// يرفضها الترحيل («مؤرشف — لا يُباع») فالمعاملة تُدفع بعد الإتمام.
+  final Set<int> oneOffItemIds;
+
   Currency? get selectedCurrency {
     for (final currency in currencies) {
       if (currency.id == currencyId) return currency;
@@ -238,6 +245,7 @@ SellCartState sellCartStateWith(
   String? overAvailPolicy,
   bool? showDiscounts,
   bool? warnBelowMargin,
+  Set<int>? oneOffItemIds,
 }) => SellCartState(
   loading: loading ?? state.loading,
   error: state.error,
@@ -270,6 +278,7 @@ SellCartState sellCartStateWith(
   overAvailPolicy: overAvailPolicy ?? state.overAvailPolicy,
   showDiscounts: showDiscounts ?? state.showDiscounts,
   warnBelowMargin: warnBelowMargin ?? state.warnBelowMargin,
+  oneOffItemIds: oneOffItemIds ?? state.oneOffItemIds,
 );
 
 /// نص كمية للرسائل (نفس نمط sellQtyText بلا استيراد طبقة العرض).

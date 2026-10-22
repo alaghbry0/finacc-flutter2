@@ -19,6 +19,8 @@
 /// الأولى من هنا فبقيت استيرادات المستدعين كما هي.)
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -252,6 +254,18 @@ class SellCartViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// تسجيل صنف «إضافة سريعة» عابر (V10 — نقد 🔴-1): يُؤرشف من القوائم
+  /// بعد نجاح ترحيل الفاتورة (لا قبله — الأرشفة الفورية يرفضها
+  /// الترحيل «مؤرشف — لا يُباع» والسطر في السلة نسخة لقطة فلا يتضرر).
+  void registerOneOff(int itemId) {
+    if (_state.oneOffItemIds.contains(itemId)) return;
+    _state = sellCartStateWith(
+      _state,
+      oneOffItemIds: {..._state.oneOffItemIds, itemId},
+    );
+    notifyListeners();
+  }
+
   /// مسح باركود بإدخال يدوي — أول تطابق يضاف مباشرة بكمية 1.
   Future<bool> addByBarcode(String code) async {
     final trimmed = code.trim();
@@ -390,6 +404,11 @@ class SellCartViewModel extends ChangeNotifier {
     );
     if (result.isOk) {
       final receipt = result.valueOrNull!;
+      // V10 (نقد 🔴-1) — العابرة تُؤرشف بعد نجاح الترحيل حصراً: نلتقط
+      // المعرفات قبل تفريغ السلة ثم نؤرشف بأفضل جهد (الفاتورة مرحّلة
+      // والأرشفة تنظيف للقوائم — فشلها لا يبطل شيئاً ولا يُخفي الخطأ
+      // عن الكونسول).
+      final oneOffs = _state.oneOffItemIds.toList(growable: false);
       _state = sellCartStateWith(
         _state,
         posting: false,
@@ -400,8 +419,12 @@ class SellCartViewModel extends ChangeNotifier {
         postError: null,
         notice: null,
         nextInvoiceNo: await _nextInvoicePreview(),
+        oneOffItemIds: const <int>{},
       );
       notifyListeners();
+      if (oneOffs.isNotEmpty) {
+        unawaited(_archiveOneOffItems(oneOffs));
+      }
     } else {
       _state = sellCartStateWith(
         _state,
@@ -423,6 +446,19 @@ class SellCartViewModel extends ChangeNotifier {
       notifyListeners();
     }
     return check.failure;
+  }
+
+  /// أرشفة أصناف «الإضافة السريعة» العابرة بعد ترحيل ناجح (V10 —
+  /// نقد 🔴-1): بأفضل جهد — الفاتورة مرحّلة والأرشفة تنظيف للقوائم
+  /// (السطر بالفاتورة نسخة لقطة تعمل بلا الصنف)؛ الفشل يُطبع ولا
+  /// يبطل شيئًا.
+  Future<void> _archiveOneOffItems(List<int> itemIds) async {
+    for (final id in itemIds) {
+      final result = await _items.archiveItem(id, userId: _userId ?? 1);
+      if (result.isErr) {
+        debugPrint('V10 quick-add: تعذر أرشفة الصنف #$id — ${result.errorOrNull}');
+      }
+    }
   }
 
   // ───────────────────────────────────────────────────────────────────

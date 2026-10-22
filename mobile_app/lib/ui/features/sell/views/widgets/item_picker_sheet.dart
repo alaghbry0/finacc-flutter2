@@ -24,6 +24,11 @@ import '../../view_models/item_picker_view_model.dart';
 import 'sell_widgets.dart';
 
 /// يفتح نافذة اختيار الصنف — [onPick] يُستدعى عند كل إضافة (كمية 1).
+///
+/// [onQuickAdd] (V10): عند توفّره تظهر بطاقة «صنف جديد» أول الشبكة
+/// وفي حالتي الفراغ — نقرة تفتح نافذة «إضافة بند» (يُمرر نص البحث
+/// الحالي كاسم مبدئي)؛ نجاحها يضيف السطر ويغلق المنتقي (المستخدم
+/// وجد ضالته فلا لبث هنا).
 Future<void> showItemPickerSheet(
   BuildContext context, {
   required ItemRepository itemRepo,
@@ -31,6 +36,7 @@ Future<void> showItemPickerSheet(
   required int decimals,
   required String? currencyCode,
   required ValueChanged<ItemStockInfo> onPick,
+  Future<ItemStockInfo?> Function(String query)? onQuickAdd,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -49,6 +55,7 @@ Future<void> showItemPickerSheet(
         decimals: decimals,
         currencyCode: currencyCode,
         onPick: onPick,
+        onQuickAdd: onQuickAdd,
       ),
     ),
   );
@@ -59,11 +66,15 @@ class _ItemPickerSheet extends StatefulWidget {
     required this.decimals,
     required this.currencyCode,
     required this.onPick,
+    this.onQuickAdd,
   });
 
   final int decimals;
   final String? currencyCode;
   final ValueChanged<ItemStockInfo> onPick;
+
+  /// مدخل الإضافة السريعة (V10) — null = لا بطاقة «صنف جديد».
+  final Future<ItemStockInfo?> Function(String query)? onQuickAdd;
 
   @override
   State<_ItemPickerSheet> createState() => _ItemPickerSheetState();
@@ -124,6 +135,17 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
     Future<void>.delayed(const Duration(milliseconds: 650), () {
       if (mounted) setState(() => _flashedProductId = null);
     });
+  }
+
+  /// V10 — بطاقة «صنف جديد»: نافذة الإضافة السريعة بنص البحث الحالي
+  /// مبدئياً؛ نجاحها يضيف السطر ويغلق المنتقي (ضالته وُجدت).
+  Future<void> _quickAdd(ItemPickerViewModel vm) async {
+    final onQuickAdd = widget.onQuickAdd;
+    if (onQuickAdd == null) return;
+    final info = await onQuickAdd(vm.state.query);
+    if (!mounted || info == null) return;
+    widget.onPick(info);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -219,6 +241,35 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
       );
     }
     if (state.results.isEmpty) {
+      // V10 — الفراغ ليس طريقًا مسدودًا: بطاقة «صنف جديد» عند توفر
+      // الإضافة السريعة (بالبحث الفارغ والنتائج الفارغة معًا).
+      if (widget.onQuickAdd != null) {
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              state.query.isEmpty
+                  ? EmptyState(
+                      icon: Icons.inventory_2_rounded,
+                      title: l10n.sellPickerEmptyTitle,
+                      message: l10n.sellPickerEmptyBody,
+                      compact: true,
+                    )
+                  : EmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: l10n.sellPickerNoResultsTitle,
+                      message: l10n.sellPickerNoResultsBody,
+                      compact: true,
+                    ),
+              const SizedBox(height: 8),
+              _QuickAddTile(
+                compact: true,
+                onTap: () => unawaited(_quickAdd(vm)),
+              ),
+            ],
+          ),
+        );
+      }
       return Center(
         child: state.query.isEmpty
             ? EmptyState(
@@ -235,6 +286,9 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
               ),
       );
     }
+    // V10 — بطاقة «صنف جديد» أول خلية بالشبكة (قبل النتائج) عند
+    // توفر الإضافة السريعة.
+    final hasQuickAdd = widget.onQuickAdd != null;
     return GridView.builder(
       key: const Key('sell_picker_grid'),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -243,9 +297,12 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
         crossAxisSpacing: 10,
         childAspectRatio: 0.98,
       ),
-      itemCount: state.results.length,
+      itemCount: state.results.length + (hasQuickAdd ? 1 : 0),
       itemBuilder: (context, index) {
-        final info = state.results[index];
+        if (hasQuickAdd && index == 0) {
+          return _QuickAddTile(onTap: () => unawaited(_quickAdd(vm)));
+        }
+        final info = state.results[hasQuickAdd ? index - 1 : index];
         return _PickerItemCard(
           info: info,
           decimals: widget.decimals,
@@ -254,6 +311,107 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
           onTap: () => _pick(info),
         );
       },
+    );
+  }
+}
+
+/// بطاقة «صنف جديد» — خلية الشبكة الأولى (V10): إطار متقطع وأيقونة
+/// زرقاء كبيرة وتسمية «صنف جديد» — بنفس أبعاد بطاقة الصنف العادية.
+/// [compact] (حالة الفراغ): شريط أفقي مقتصد لا يفيض فوق EmptyState.
+class _QuickAddTile extends StatelessWidget {
+  const _QuickAddTile({required this.onTap, this.compact = false});
+
+  final VoidCallback onTap;
+
+  /// وضع الشريط الأفقي المقتصد (حالة الفراغ).
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Material(
+          color: scheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: scheme.primary.withValues(alpha: 0.55),
+              width: 1.2,
+            ),
+          ),
+          child: InkWell(
+            key: const Key('sell_picker_quick_add_tile'),
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_rounded, size: 20, color: scheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.sellQuickAddNewTile,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Material(
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: scheme.primary.withValues(alpha: 0.55),
+          width: 1.4,
+        ),
+      ),
+      child: InkWell(
+        key: const Key('sell_picker_quick_add_tile'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  size: 30,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.sellQuickAddNewTile,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
