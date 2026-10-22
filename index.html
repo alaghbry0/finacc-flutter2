@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/finacc-flutter2/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="FinAcc — إدارة الفواتير والمخزون: نظام محاسبي متكامل يعمل بلا إنترنت">
+  <!-- R25: هوية Simple Invoice Manager (V3+) — الأزرق #1976D2 بدل الأخضر القديم -->
+  <meta name="theme-color" content="#1976D2">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="FinAcc">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>FinAcc — إدارة الفواتير</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* خلفية الافتتاح بلون هوية SIM (V3+) قبل تهيئة المحرك — نفس لون
+       سطح التطبيق #F6F8FA فلا وميض لوني بين السبلاش وأول إطار. */
+    html, body { margin: 0; padding: 0; background: #F6F8FA; height: 100%; }
+    #splash-brand {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      background: radial-gradient(circle at 50% 38%, #E9F2FB 0%, #F6F8FA 62%);
+      color: #263238; font-family: system-ui, "Segoe UI", Tahoma, sans-serif; z-index: 9999;
+      transition: opacity .45s ease;
+    }
+    #splash-brand .logo {
+      width: 84px; height: 84px; border-radius: 50%;
+      background: linear-gradient(135deg, #2196F3, #0D47A1);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 34px rgba(25, 118, 210, .38);
+    }
+    #splash-brand .title { font-size: 22px; font-weight: 800; letter-spacing: .5px; color: #1B5FBF; }
+    #splash-brand .sub { font-size: 13px; color: #78909C; }
+    #splash-brand.hidden { opacity: 0; pointer-events: none; }
+
+    /* ── إصلاح انزياح شجرة الوصولية في RTL (خلل محرك Flutter Web) ──
+       المحرك يضع flt-semantics-host بمحاذاة حافة RTL مع direction:rtl
+       الموروثة من <html dir="rtl">، فتنزاح عقد الوصولية عن مواضعها
+       البصرية وتخطف نقرات عناصر خاطئة (اكتُشف بالتحقق الحي 2026-10-07:
+       النقر على زر «الرئيسية» كان يفتح «المزيد»). التثبيت أدناه يعيد
+       العقد لمواضعها الصحيحة — ويب فقط (لا أثر على أندرويد/APK). */
+    flt-semantics-host {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      direction: ltr !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="splash-brand">
+    <div class="logo">
+      <svg width="42" height="42" viewBox="0 0 48 48" fill="none">
+        <rect x="12" y="10" width="24" height="30" rx="4" fill="#FFFFFF"/>
+        <path d="M17 18h14M17 23h9M17 28h12M17 33h7" stroke="#1976D2" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="33" cy="15" r="6.5" fill="#FFB300"/>
+        <circle cx="33" cy="15" r="4" stroke="#B27700" stroke-width="1.6" fill="none"/>
+      </svg>
+    </div>
+    <div class="title">FinAcc</div>
+    <div class="sub">إدارة الفواتير والمخزون — يعمل بلا إنترنت</div>
+  </div>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <!-- pdf.js محلي (إصلاح UX-audit A7 — موجة 1-a): معاينة الطباعة على
+       الويب كانت تكسر بلا شبكة لأن حزمة printing 5.14.3 تجلب pdf.js
+       من unpkg CDN وقت التشغيل.
+
+       **R16-b (إصلاح جذري لعلة المعاينة)**: المسار القديم كان يضبط
+       `window.dartPdfJsBaseUrl = 'pdfjs/'` لتوجيه الحزمة إلى النسخة
+       المحلية — لكن حزمة printing 5.14.3 تقرأ هذا المتغير عبر
+       `window.getProperty('dartPdfJsBaseUrl')` بلا وسيط نوع، فيترجمه
+       المترجم إلى `getProperty<Never>` ويرمي وقت التشغيل:
+       `TypeError: "pdfjs/": type 'String' is not a subtype of
+       type 'Never'` — فتتعطل المعاينة (رسالة «خطأ تحديث المستند»)،
+       وتظل مزامنة الحزمة الداخلية مقفلة للأبد فتعلق «إعادة المحاولة»
+       في loading نهائياً (شكوى المالك الحية).
+
+       العلاج: نحمّل pdf.js المحلي (نفس إصدار الحزمة 3.2.146) بأنفسنا
+       قبل إقلاع التطبيق ونضبط مسار الـ worker — فتجد الحزمة
+       `pdfjsLib` جاهزة (`GlobalWorkerOptions.workerSrc` غير فارغ)
+       وتتخطى مسار التحميل المعطوب كلياً (المسار النسبي يتبع base-href
+       النهائي مثل أي أصلي آخر بالصفحة). -->
+  <script src="pdfjs/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.min.js';
+    }
+  </script>
+  <script src="flutter_bootstrap.js" defer></script>
+  <script>
+    // إخفاء شاشة الافتتاح فور أول إطار فلاتر.
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('splash-brand');
+      if (el) {
+        el.classList.add('hidden');
+        setTimeout(function () { el.remove(); }, 500);
+      }
+    });
+  </script>
+</body>
+</html>
